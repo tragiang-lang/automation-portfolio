@@ -1,11 +1,13 @@
 import { getHealthStatus } from "./Health";
+import { handleApiRequest } from "./Api";
 
 /**
  * doGet/doPost entrypoints only — per the module boundary in the Phase 0
  * spec (§B/§T), Code.ts must not contain routing, validation, or any
- * business logic. Action-based routing (getConfig, createReservation, ...)
- * is added to Api.ts in a later phase; for Phase 1 this only proves the
- * deployed Web App responds.
+ * business logic itself. doPost only extracts the raw request body and
+ * hands it to Api.ts's handleApiRequest, which owns the action dispatch
+ * (Phase 3A implements only the "getConfig" action; every other action
+ * name currently returns a VALIDATION_ERROR — see Api.ts).
  */
 function doGet(): GoogleAppsScript.Content.TextOutput {
   return ContentService.createTextOutput(
@@ -13,10 +15,14 @@ function doGet(): GoogleAppsScript.Content.TextOutput {
   ).setMimeType(ContentService.MimeType.JSON);
 }
 
-function doPost(): GoogleAppsScript.Content.TextOutput {
-  // Phase 1: no action routing yet. Every POST gets the same liveness
-  // response as doGet until Api.ts implements the action dispatch (§G).
-  return doGet();
+function doPost(
+  e: GoogleAppsScript.Events.DoPost,
+): GoogleAppsScript.Content.TextOutput {
+  const rawBody = e?.postData?.contents;
+  const response = handleApiRequest(rawBody);
+  return ContentService.createTextOutput(
+    JSON.stringify(response),
+  ).setMimeType(ContentService.MimeType.JSON);
 }
 
 // esbuild bundles this file into an IIFE (see esbuild.config.js), so
