@@ -1,5 +1,6 @@
 import { getHealthStatus } from "./Health";
 import { handleApiRequest } from "./Api";
+import { setupDemoSheets } from "./SetupDemoSheets";
 
 /**
  * doGet/doPost entrypoints only — per the module boundary in the Phase 0
@@ -33,3 +34,6 @@ function doPost(
 (
   globalThis as unknown as { doGet: typeof doGet; doPost: typeof doPost }
 ).doPost = doPost;
+(
+  globalThis as unknown as { setupDemoSheets: typeof setupDemoSheets }
+).setupDemoSheets = setupDemoSheets;
