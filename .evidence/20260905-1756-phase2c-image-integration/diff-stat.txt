@@ -1,0 +1,10 @@
+ apps/salon-portfolio/web/app/contact/page.tsx |  10 +-
+ apps/salon-portfolio/web/app/globals.css      | 151 +++++++++++++++++++++++---
+ apps/salon-portfolio/web/app/layout.tsx       |  56 ++++++++--
+ apps/salon-portfolio/web/app/page.tsx         |  87 ++++++++++++++-
+ apps/salon-portfolio/web/eslint.config.mjs    |  18 +++
+ apps/salon-portfolio/web/jest.setup.ts        |  34 ++++++
+ apps/salon-portfolio/web/next.config.ts       |   7 +-
+ apps/salon-portfolio/web/package-lock.json    |  15 +++
+ apps/salon-portfolio/web/package.json         |   1 +
+ 9 files changed, 343 insertions(+), 36 deletions(-)

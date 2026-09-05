@@ -1,0 +1,497 @@
+diff --git a/apps/salon-portfolio/web/app/contact/page.tsx b/apps/salon-portfolio/web/app/contact/page.tsx
+index 1b10e94..f1f60ec 100644
+--- a/apps/salon-portfolio/web/app/contact/page.tsx
++++ b/apps/salon-portfolio/web/app/contact/page.tsx
+@@ -1,10 +1,10 @@
+-import { PagePlaceholder } from "@/components/ui/PagePlaceholder";
++import { ContactSection } from "@/components/sections/ContactSection";
++import { SITE_CONFIG } from "@/config/demo-content";
+ 
+ export default function ContactPage() {
+   return (
+-    <PagePlaceholder
+-      title="Contact — coming in a later phase"
+-      description="The contact form (createInquiry) is not implemented yet."
+-    />
++    <main className="flex flex-1 flex-col">
++      <ContactSection business={SITE_CONFIG.business} />
++    </main>
+   );
+ }
+diff --git a/apps/salon-portfolio/web/app/globals.css b/apps/salon-portfolio/web/app/globals.css
+index a2dc41e..b9bf03a 100644
+--- a/apps/salon-portfolio/web/app/globals.css
++++ b/apps/salon-portfolio/web/app/globals.css
+@@ -1,26 +1,149 @@
+ @import "tailwindcss";
+ 
++/*
++ * Design tokens — Phase 2A §2 (color), §3 (typography), §5 (breakpoints).
++ * Presentation-only tokens live here per Phase 2A §18; business content
++ * never appears in this file.
++ */
+ :root {
+-  --background: #ffffff;
+-  --foreground: #171717;
++  /* Color system — "Kinari to Sumi" (Phase 2A §2) */
++  --color-background: #faf7f2;
++  --color-surface: #ffffff;
++  --color-surface-sunken: #f1ece3;
++  --color-primary: #2b2622;
++  --color-on-primary: #faf7f2;
++  --color-secondary: #6b5f55;
++  --color-accent: #9c4b3f;
++  --color-on-accent: #ffffff;
++  --color-text: #2b2622;
++  --color-muted: #7a6f63;
++  --color-border: #e3dcd1;
++  --color-success: #4b7a62;
++  --color-error: #b3261e;
++
++  /* Radius scale — 4 / 8 / 12px only (Phase 2A §1) */
++  --radius-sm: 4px;
++  --radius-md: 8px;
++  --radius-lg: 12px;
+ }
+ 
+ @theme inline {
+-  --color-background: var(--background);
+-  --color-foreground: var(--foreground);
+-  --font-sans: var(--font-geist-sans);
+-  --font-mono: var(--font-geist-mono);
++  --color-background: var(--color-background);
++  --color-surface: var(--color-surface);
++  --color-surface-sunken: var(--color-surface-sunken);
++  --color-primary: var(--color-primary);
++  --color-on-primary: var(--color-on-primary);
++  --color-secondary: var(--color-secondary);
++  --color-accent: var(--color-accent);
++  --color-on-accent: var(--color-on-accent);
++  --color-text: var(--color-text);
++  --color-muted: var(--color-muted);
++  --color-border: var(--color-border);
++  --color-success: var(--color-success);
++  --color-error: var(--color-error);
++
++  --radius-sm: var(--radius-sm);
++  --radius-md: var(--radius-md);
++  --radius-lg: var(--radius-lg);
++
++  --font-heading-ja: var(--font-shippori-mincho);
++  --font-heading-en: var(--font-cormorant-garamond);
++  --font-body-ja: var(--font-noto-sans-jp);
++  --font-body-en: var(--font-inter);
++
++  /* Large-desktop breakpoint moved from Tailwind's default 1280px to the
++     1440px named in Phase 2A §5, so xl: matches the spec's own name. */
++  --breakpoint-xl: 1440px;
+ }
+ 
+-@media (prefers-color-scheme: dark) {
+-  :root {
+-    --background: #0a0a0a;
+-    --foreground: #ededed;
+-  }
++/* This design deliberately does not ship a dark theme (Phase 2A §2,
++   "explicitly avoided ... dark mode (out of scope for v1)"). */
++html {
++  background: var(--color-background);
++  color-scheme: light;
+ }
+ 
+ body {
+-  background: var(--background);
+-  color: var(--foreground);
+-  font-family: Arial, Helvetica, sans-serif;
++  background: var(--color-background);
++  color: var(--color-text);
++  font-family: var(--font-body-ja), var(--font-body-en), "Noto Sans JP",
++    "Hiragino Kaku Gothic ProN", sans-serif;
++}
++
++h1,
++h2,
++h3 {
++  font-family: var(--font-heading-ja), var(--font-heading-en),
++    "Shippori Mincho", "Hiragino Mincho ProN", serif;
++}
++
++/* Visible focus ring everywhere, including over the dark hero image
++   (Phase 2A §19) — never removed without a replacement. */
++:focus-visible {
++  outline: 2px solid var(--color-accent);
++  outline-offset: 3px;
++  border-radius: var(--radius-sm);
++}
++
++::selection {
++  background: var(--color-accent);
++  color: var(--color-on-accent);
++}
++
++/* Hero entrance animation (Phase 2A §21) — single fade/rise on load,
++   pure CSS so it costs nothing on the main thread. */
++@keyframes hero-enter {
++  from {
++    opacity: 0;
++    transform: translateY(8px);
++  }
++  to {
++    opacity: 1;
++    transform: translateY(0);
++  }
++}
++
++.animate-hero-enter {
++  animation: hero-enter 400ms ease-out both;
++}
++
++/* Scroll-reveal primitive used by components/ui/Reveal.tsx. */
++.reveal-hidden {
++  opacity: 0;
++  transform: translateY(8px);
++}
++
++.reveal-visible {
++  opacity: 1;
++  transform: translateY(0);
++  transition:
++    opacity 300ms ease-out,
++    transform 300ms ease-out;
++}
++
++/* Stagger delays (Reveal's delayMs) are removed on mobile so quick
++   scrolling never feels like it's making content wait to appear
++   (Phase 2A §21/§22). */
++@media (max-width: 639px) {
++  [data-reveal] {
++    transition-delay: 0ms !important;
++  }
++}
++
++@media (prefers-reduced-motion: reduce) {
++  .animate-hero-enter {
++    animation: none;
++  }
++
++  .reveal-hidden,
++  .reveal-visible {
++    opacity: 1;
++    transform: none;
++    transition: none;
++  }
++
++  * {
++    animation-duration: 0.001ms !important;
++    transition-duration: 0.001ms !important;
++  }
+ }
+diff --git a/apps/salon-portfolio/web/app/layout.tsx b/apps/salon-portfolio/web/app/layout.tsx
+index 2dc1a4c..200372c 100644
+--- a/apps/salon-portfolio/web/app/layout.tsx
++++ b/apps/salon-portfolio/web/app/layout.tsx
+@@ -1,30 +1,64 @@
+ import type { Metadata } from "next";
+-import { Geist, Geist_Mono } from "next/font/google";
++import {
++  Shippori_Mincho,
++  Cormorant_Garamond,
++  Noto_Sans_JP,
++  Inter,
++} from "next/font/google";
++import { SiteHeader } from "@/components/layout/SiteHeader";
++import { SiteFooter } from "@/components/layout/SiteFooter";
++import { NAV_ITEMS, SITE_CONFIG } from "@/config/demo-content";
+ import "./globals.css";
+ 
+-const geistSans = Geist({
+-  variable: "--font-geist-sans",
++// Heading fonts — Japanese Mincho + a moderate-contrast Latin old-style
++// serif so the two scripts read as one typographic family (Phase 2A §3).
++// Only weight 500 is loaded: every heading role in the Phase 2A type scale
++// uses weight 500, so a second weight would be unused bytes.
++const shipporiMincho = Shippori_Mincho({
++  variable: "--font-shippori-mincho",
+   subsets: ["latin"],
++  weight: "500",
++  display: "swap",
+ });
+ 
+-const geistMono = Geist_Mono({
+-  variable: "--font-geist-mono",
++const cormorantGaramond = Cormorant_Garamond({
++  variable: "--font-cormorant-garamond",
+   subsets: ["latin"],
++  weight: "500",
++  display: "swap",
++});
++
++// Body fonts — weights 400 (body/caption/nav) and 500 (button label) only.
++const notoSansJP = Noto_Sans_JP({
++  variable: "--font-noto-sans-jp",
++  subsets: ["latin"],
++  weight: ["400", "500"],
++  display: "swap",
++});
++
++const inter = Inter({
++  variable: "--font-inter",
++  subsets: ["latin"],
++  weight: ["400", "500"],
++  display: "swap",
+ });
+ 
+ export const metadata: Metadata = {
+-  title: "Salon Portfolio (Phase 1 scaffold)",
+-  description:
+-    "Placeholder shell — business content is loaded from getConfig in a later phase, never hard-coded here.",
++  title: `${SITE_CONFIG.business.name} | ${SITE_CONFIG.business.nameLatin}`,
++  description: SITE_CONFIG.business.tagline,
+ };
+ 
+ export default function RootLayout({ children }: LayoutProps<"/">) {
+   return (
+     <html
+-      lang="en"
+-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
++      lang="ja"
++      className={`${shipporiMincho.variable} ${cormorantGaramond.variable} ${notoSansJP.variable} ${inter.variable} h-full antialiased`}
+     >
+-      <body className="min-h-full flex flex-col">{children}</body>
++      <body className="min-h-full flex flex-col bg-background text-text">
++        <SiteHeader business={SITE_CONFIG.business} navItems={NAV_ITEMS} />
++        <div className="flex flex-1 flex-col">{children}</div>
++        <SiteFooter config={SITE_CONFIG} navItems={NAV_ITEMS} />
++      </body>
+     </html>
+   );
+ }
+diff --git a/apps/salon-portfolio/web/app/page.tsx b/apps/salon-portfolio/web/app/page.tsx
+index f7bf9a6..31b6e32 100644
+--- a/apps/salon-portfolio/web/app/page.tsx
++++ b/apps/salon-portfolio/web/app/page.tsx
+@@ -1,10 +1,87 @@
+-import { PagePlaceholder } from "@/components/ui/PagePlaceholder";
++import { HeroSection } from "@/components/sections/HeroSection";
++import { ConceptSection } from "@/components/sections/ConceptSection";
++import { MenuSection } from "@/components/sections/MenuSection";
++import { StaffSection } from "@/components/sections/StaffSection";
++import { GallerySection } from "@/components/sections/GallerySection";
++import { ReservationCtaBand } from "@/components/sections/ReservationCtaBand";
++import { SalonFeaturesSection } from "@/components/sections/SalonFeaturesSection";
++import { CustomerFlowSection } from "@/components/sections/CustomerFlowSection";
++import { FaqSection } from "@/components/sections/FaqSection";
++import { AccessSection } from "@/components/sections/AccessSection";
++import { ContactSection } from "@/components/sections/ContactSection";
++import {
++  ACCESS_INFO,
++  CUSTOMER_FLOW_STEPS,
++  FAQ_ITEMS,
++  GALLERY_IMAGES,
++  SALON_FEATURES,
++  SERVICES,
++  SITE_CONFIG,
++  STAFF,
++} from "@/config/demo-content";
+ 
++// Page order matches Phase 2A §6 exactly: Header (layout) → Hero →
++// Concept → Menu → Staff → Gallery → Reservation CTA → Salon Features →
++// Customer Flow → FAQ → Access → Contact → Footer (layout). Configurable
++// sections are gated here by SITE_CONFIG.features, not by editing the
++// section components themselves.
+ export default function Home() {
+   return (
+-    <PagePlaceholder
+-      title="Landing page — coming in a later phase"
+-      description="This route is scaffolded only. Business content will be loaded from getConfig once the LP is implemented."
+-    />
++    <main className="flex flex-1 flex-col">
++      <HeroSection
++        headline={SITE_CONFIG.business.tagline}
++        subheadline="銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。"
++      />
++
++      <ConceptSection
++        eyebrow="Concept"
++        title="静けさの中で、指先を整える時間を"
++        paragraphs={[
++          "流行を追いかけるより、長く付き合える美しさを。当店では、派手さよりも一つひとつの仕上がりの丁寧さを大切にしています。",
++          "落ち着いた空間で過ごすひとときそのものも、施術と同じくらい価値のあるものだと考えています。",
++        ]}
++      />
++
++      <MenuSection services={SERVICES} />
++
++      <StaffSection
++        enabled={SITE_CONFIG.features.staffSelection}
++        staff={STAFF}
++        anyAvailableOption={SITE_CONFIG.staffAnyAvailableOption}
++        businessNameInitial={SITE_CONFIG.business.name}
++      />
++
++      <GallerySection images={GALLERY_IMAGES} />
++
++      {SITE_CONFIG.features.reservation ? (
++        <ReservationCtaBand
++          heading="仕上がりを見て、気持ちが決まったら"
++          message="ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。"
++        />
++      ) : null}
++
++      <SalonFeaturesSection features={SALON_FEATURES} />
++
++      <CustomerFlowSection steps={CUSTOMER_FLOW_STEPS} />
++
++      <FaqSection items={FAQ_ITEMS} />
++
++      <AccessSection
++        business={SITE_CONFIG.business}
++        hours={SITE_CONFIG.hours}
++        access={ACCESS_INFO}
++      />
++
++      {SITE_CONFIG.features.contactForm ? (
++        <ContactSection business={SITE_CONFIG.business} />
++      ) : null}
++
++      {SITE_CONFIG.features.reservation ? (
++        <ReservationCtaBand
++          heading="最後まで読んでくださり、ありがとうございます"
++          message="少しでも気になることがあれば、まずはご予約からお気軽にどうぞ。"
++        />
++      ) : null}
++    </main>
+   );
+ }
+diff --git a/apps/salon-portfolio/web/eslint.config.mjs b/apps/salon-portfolio/web/eslint.config.mjs
+index 05e726d..9ad5764 100644
+--- a/apps/salon-portfolio/web/eslint.config.mjs
++++ b/apps/salon-portfolio/web/eslint.config.mjs
+@@ -13,6 +13,24 @@ const eslintConfig = defineConfig([
+     "build/**",
+     "next-env.d.ts",
+   ]),
++  {
++    rules: {
++      // Components in this app deliberately destructure out props they
++      // must accept (a shared type) but not forward to the DOM element
++      // (e.g. Button.tsx separating link-only props from anchor
++      // pass-through). Underscore-prefixed/rest-sibling throwaways are
++      // the readable way to do that — flagging them as unused adds noise
++      // without catching a real bug.
++      "@typescript-eslint/no-unused-vars": [
++        "warn",
++        {
++          argsIgnorePattern: "^_",
++          varsIgnorePattern: "^_",
++          ignoreRestSiblings: true,
++        },
++      ],
++    },
++  },
+ ]);
+ 
+ export default eslintConfig;
+diff --git a/apps/salon-portfolio/web/jest.setup.ts b/apps/salon-portfolio/web/jest.setup.ts
+index d0de870..fdf8845 100644
+--- a/apps/salon-portfolio/web/jest.setup.ts
++++ b/apps/salon-portfolio/web/jest.setup.ts
+@@ -1 +1,35 @@
+ import "@testing-library/jest-dom";
++
++// jsdom does not implement IntersectionObserver. components/ui/Reveal.tsx
++// (used by most sections for scroll-reveal, Phase 2A §21) needs it to
++// exist at all; tests don't care about real viewport intersection, so a
++// no-op stub is enough — Reveal's content still renders (just stays in
++// its "hidden" transition state) either way.
++class MockIntersectionObserver implements IntersectionObserver {
++  readonly root: Element | Document | null = null;
++  readonly rootMargin: string = "";
++  readonly thresholds: ReadonlyArray<number> = [];
++  observe = jest.fn();
++  unobserve = jest.fn();
++  disconnect = jest.fn();
++  takeRecords = jest.fn(() => []);
++}
++
++// This setup file runs for every test file regardless of its
++// testEnvironment — route handler tests (e.g. app/api/health) opt into
++// the node environment via a `@jest-environment node` docblock, where
++// `window` does not exist at all, so guard the jsdom-only stub.
++if (typeof window !== "undefined") {
++  Object.defineProperty(window, "IntersectionObserver", {
++    writable: true,
++    configurable: true,
++    value: MockIntersectionObserver,
++  });
++}
++if (typeof global !== "undefined") {
++  Object.defineProperty(global, "IntersectionObserver", {
++    writable: true,
++    configurable: true,
++    value: MockIntersectionObserver,
++  });
++}
+diff --git a/apps/salon-portfolio/web/next.config.ts b/apps/salon-portfolio/web/next.config.ts
+index e9ffa30..186959d 100644
+--- a/apps/salon-portfolio/web/next.config.ts
++++ b/apps/salon-portfolio/web/next.config.ts
+@@ -1,7 +1,12 @@
+ import type { NextConfig } from "next";
+ 
+ const nextConfig: NextConfig = {
+-  /* config options here */
++  images: {
++    // Prefer AVIF, falling back to WebP, over the source JPEGs (Phase 2A
++    // §20 performance / Phase 2C §7) — Next tries formats in this order
++    // based on the request's `Accept` header.
++    formats: ["image/avif", "image/webp"],
++  },
+ };
+ 
+ export default nextConfig;
+diff --git a/apps/salon-portfolio/web/package-lock.json b/apps/salon-portfolio/web/package-lock.json
+index 03cbb77..89e6206 100644
+--- a/apps/salon-portfolio/web/package-lock.json
++++ b/apps/salon-portfolio/web/package-lock.json
+@@ -16,6 +16,7 @@
+         "@tailwindcss/postcss": "^4",
+         "@testing-library/jest-dom": "^7.0.1",
+         "@testing-library/react": "^16.3.3",
++        "@testing-library/user-event": "^14.6.7",
+         "@types/jest": "^30.0.0",
+         "@types/node": "^20",
+         "@types/react": "^19",
+@@ -3093,6 +3094,20 @@
+         }
+       }
+     },
++    "node_modules/@testing-library/user-event": {
++      "version": "14.6.7",
++      "resolved": "https://registry.npmjs.org/@testing-library/user-event/-/user-event-14.6.7.tgz",
++      "integrity": "sha512-MPCpX8bxe8zS+JmmTwLp8jd0dy1rAm60Te/SL8JrQM3qvQJcBOs1d7IefJMyZzqM3EWBrDn/LWDt1BCGu4ASfg==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12",
++        "npm": ">=6"
++      },
++      "peerDependencies": {
++        "@testing-library/dom": ">=7.21.4"
++      }
++    },
+     "node_modules/@tybys/wasm-util": {
+       "version": "0.10.3",
+       "resolved": "https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.3.tgz",
+diff --git a/apps/salon-portfolio/web/package.json b/apps/salon-portfolio/web/package.json
+index c990370..893a293 100644
+--- a/apps/salon-portfolio/web/package.json
++++ b/apps/salon-portfolio/web/package.json
+@@ -18,6 +18,7 @@
+     "@tailwindcss/postcss": "^4",
+     "@testing-library/jest-dom": "^7.0.1",
+     "@testing-library/react": "^16.3.3",
++    "@testing-library/user-event": "^14.6.7",
+     "@types/jest": "^30.0.0",
+     "@types/node": "^20",
+     "@types/react": "^19",

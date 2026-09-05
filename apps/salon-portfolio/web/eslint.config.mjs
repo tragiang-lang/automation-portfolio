@@ -13,6 +13,24 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Components in this app deliberately destructure out props they
+      // must accept (a shared type) but not forward to the DOM element
+      // (e.g. Button.tsx separating link-only props from anchor
+      // pass-through). Underscore-prefixed/rest-sibling throwaways are
+      // the readable way to do that — flagging them as unused adds noise
+      // without catching a real bug.
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

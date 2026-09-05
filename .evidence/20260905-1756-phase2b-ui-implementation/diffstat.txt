@@ -1,0 +1,21 @@
+warning: in the working copy of 'apps/salon-portfolio/web/app/contact/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/app/globals.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/app/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/eslint.config.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/jest.setup.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/changelog.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/roadmap.md', LF will be replaced by CRLF the next time Git touches it
+ apps/salon-portfolio/web/app/contact/page.tsx |  10 +-
+ apps/salon-portfolio/web/app/globals.css      | 151 +++++++++++++++++++++++---
+ apps/salon-portfolio/web/app/layout.tsx       |  56 ++++++++--
+ apps/salon-portfolio/web/app/page.tsx         |  87 ++++++++++++++-
+ apps/salon-portfolio/web/eslint.config.mjs    |  18 +++
+ apps/salon-portfolio/web/jest.setup.ts        |  34 ++++++
+ apps/salon-portfolio/web/package-lock.json    |  15 +++
+ apps/salon-portfolio/web/package.json         |   1 +
+ docs/changelog.md                             |  56 ++++++++++
+ docs/roadmap.md                               |  52 ++++++---
+ 10 files changed, 428 insertions(+), 52 deletions(-)

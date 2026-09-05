@@ -1,26 +1,149 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — Phase 2A §2 (color), §3 (typography), §5 (breakpoints).
+ * Presentation-only tokens live here per Phase 2A §18; business content
+ * never appears in this file.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Color system — "Kinari to Sumi" (Phase 2A §2) */
+  --color-background: #faf7f2;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f1ece3;
+  --color-primary: #2b2622;
+  --color-on-primary: #faf7f2;
+  --color-secondary: #6b5f55;
+  --color-accent: #9c4b3f;
+  --color-on-accent: #ffffff;
+  --color-text: #2b2622;
+  --color-muted: #7a6f63;
+  --color-border: #e3dcd1;
+  --color-success: #4b7a62;
+  --color-error: #b3261e;
+
+  /* Radius scale — 4 / 8 / 12px only (Phase 2A §1) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-primary: var(--color-primary);
+  --color-on-primary: var(--color-on-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --color-on-accent: var(--color-on-accent);
+  --color-text: var(--color-text);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-success: var(--color-success);
+  --color-error: var(--color-error);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+
+  --font-heading-ja: var(--font-shippori-mincho);
+  --font-heading-en: var(--font-cormorant-garamond);
+  --font-body-ja: var(--font-noto-sans-jp);
+  --font-body-en: var(--font-inter);
+
+  /* Large-desktop breakpoint moved from Tailwind's default 1280px to the
+     1440px named in Phase 2A §5, so xl: matches the spec's own name. */
+  --breakpoint-xl: 1440px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* This design deliberately does not ship a dark theme (Phase 2A §2,
+   "explicitly avoided ... dark mode (out of scope for v1)"). */
+html {
+  background: var(--color-background);
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body-ja), var(--font-body-en), "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading-ja), var(--font-heading-en),
+    "Shippori Mincho", "Hiragino Mincho ProN", serif;
+}
+
+/* Visible focus ring everywhere, including over the dark hero image
+   (Phase 2A §19) — never removed without a replacement. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+/* Hero entrance animation (Phase 2A §21) — single fade/rise on load,
+   pure CSS so it costs nothing on the main thread. */
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-enter {
+  animation: hero-enter 400ms ease-out both;
+}
+
+/* Scroll-reveal primitive used by components/ui/Reveal.tsx. */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 300ms ease-out,
+    transform 300ms ease-out;
+}
+
+/* Stagger delays (Reveal's delayMs) are removed on mobile so quick
+   scrolling never feels like it's making content wait to appear
+   (Phase 2A §21/§22). */
+@media (max-width: 639px) {
+  [data-reveal] {
+    transition-delay: 0ms !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-enter {
+    animation: none;
+  }
+
+  .reveal-hidden,
+  .reveal-visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

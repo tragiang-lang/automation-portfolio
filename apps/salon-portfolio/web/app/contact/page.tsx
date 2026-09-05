@@ -1,10 +1,10 @@
-import { PagePlaceholder } from "@/components/ui/PagePlaceholder";
+import { ContactSection } from "@/components/sections/ContactSection";
+import { SITE_CONFIG } from "@/config/demo-content";
 
 export default function ContactPage() {
   return (
-    <PagePlaceholder
-      title="Contact — coming in a later phase"
-      description="The contact form (createInquiry) is not implemented yet."
-    />
+    <main className="flex flex-1 flex-col">
+      <ContactSection business={SITE_CONFIG.business} />
+    </main>
   );
 }

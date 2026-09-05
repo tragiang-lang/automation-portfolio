@@ -1,0 +1,62 @@
+ M apps/salon-portfolio/web/app/contact/page.tsx
+ M apps/salon-portfolio/web/app/globals.css
+ M apps/salon-portfolio/web/app/layout.tsx
+ M apps/salon-portfolio/web/app/page.tsx
+ M apps/salon-portfolio/web/eslint.config.mjs
+ M apps/salon-portfolio/web/jest.setup.ts
+ M apps/salon-portfolio/web/next.config.ts
+ M apps/salon-portfolio/web/package-lock.json
+ M apps/salon-portfolio/web/package.json
+ M docs/changelog.md
+ M docs/roadmap.md
+?? .evidence/20260905-1756-phase2b-ui-implementation/
+?? .evidence/20260905-1756-phase2c-image-integration/
+?? apps/salon-portfolio/web/app/privacy/
+?? apps/salon-portfolio/web/app/terms/
+?? apps/salon-portfolio/web/components/forms/ContactForm.test.tsx
+?? apps/salon-portfolio/web/components/forms/ContactForm.tsx
+?? apps/salon-portfolio/web/components/forms/FormField.tsx
+?? apps/salon-portfolio/web/components/forms/HoneypotField.tsx
+?? apps/salon-portfolio/web/components/layout/MobileNav.tsx
+?? apps/salon-portfolio/web/components/layout/SiteFooter.tsx
+?? apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx
+?? apps/salon-portfolio/web/components/layout/SiteHeader.tsx
+?? apps/salon-portfolio/web/components/sections/AccessSection.tsx
+?? apps/salon-portfolio/web/components/sections/AnyAvailableStaffCard.tsx
+?? apps/salon-portfolio/web/components/sections/ConceptSection.tsx
+?? apps/salon-portfolio/web/components/sections/ContactSection.tsx
+?? apps/salon-portfolio/web/components/sections/CustomerFlowSection.tsx
+?? apps/salon-portfolio/web/components/sections/FaqAccordionItem.test.tsx
+?? apps/salon-portfolio/web/components/sections/FaqAccordionItem.tsx
+?? apps/salon-portfolio/web/components/sections/FaqSection.tsx
+?? apps/salon-portfolio/web/components/sections/GalleryImage.tsx
+?? apps/salon-portfolio/web/components/sections/GallerySection.tsx
+?? apps/salon-portfolio/web/components/sections/HeroSection.tsx
+?? apps/salon-portfolio/web/components/sections/MenuCategory.tsx
+?? apps/salon-portfolio/web/components/sections/MenuRow.tsx
+?? apps/salon-portfolio/web/components/sections/MenuSection.test.tsx
+?? apps/salon-portfolio/web/components/sections/MenuSection.tsx
+?? apps/salon-portfolio/web/components/sections/ReservationCtaBand.tsx
+?? apps/salon-portfolio/web/components/sections/SalonFeaturesSection.tsx
+?? apps/salon-portfolio/web/components/sections/StaffCard.tsx
+?? apps/salon-portfolio/web/components/sections/StaffSection.test.tsx
+?? apps/salon-portfolio/web/components/sections/StaffSection.tsx
+?? apps/salon-portfolio/web/components/ui/Button.test.tsx
+?? apps/salon-portfolio/web/components/ui/Button.tsx
+?? apps/salon-portfolio/web/components/ui/Container.tsx
+?? apps/salon-portfolio/web/components/ui/Divider.tsx
+?? apps/salon-portfolio/web/components/ui/PlaceholderImage.tsx
+?? apps/salon-portfolio/web/components/ui/Reveal.tsx
+?? apps/salon-portfolio/web/components/ui/SectionHeading.tsx
+?? apps/salon-portfolio/web/config/demo-content.ts
+?? apps/salon-portfolio/web/config/theme.ts
+?? apps/salon-portfolio/web/lib/constants/hours.ts
+?? apps/salon-portfolio/web/lib/utils/cn.ts
+?? apps/salon-portfolio/web/public/icons/pin.svg
+?? apps/salon-portfolio/web/public/images/SOURCES.md
+?? apps/salon-portfolio/web/public/images/gallery/
+?? apps/salon-portfolio/web/public/images/hero/
+?? apps/salon-portfolio/web/public/images/salon/
+?? apps/salon-portfolio/web/public/images/staff/
+?? apps/salon-portfolio/web/types/content.ts
+?? docs/phase2a-ui-ux-specification.md
