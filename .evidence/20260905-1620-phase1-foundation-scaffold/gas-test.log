@@ -1,0 +1,10 @@
+PASS tests/Health.test.ts
+  getHealthStatus
+    √ reports ok status for this service (3 ms)
+    √ returns a valid ISO 8601 timestamp
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.035 s, estimated 2 s
+Ran all test suites.

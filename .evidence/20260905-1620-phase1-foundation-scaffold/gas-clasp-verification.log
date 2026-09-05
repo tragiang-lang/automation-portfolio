@@ -1,0 +1,9 @@
+=== clasp --version ===
+2.5.0
+
+=== .clasp.json.example structure check ===
+{"scriptId":"REPLACE_WITH_YOUR_APPS_SCRIPT_PROJECT_ID","rootDir":"build"}
+rootDir exists: true
+
+=== confirm no real .clasp.json exists anywhere ===
+(empty above = none found, as expected)

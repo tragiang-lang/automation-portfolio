@@ -1,0 +1,54 @@
+########## WEB: tsc --noEmit + eslint ##########
+=== WEB: tsc --noEmit ===
+exit code: 0
+
+=== WEB: eslint . ===
+exit code: 0
+
+########## WEB: next build ##########
+▲ Next.js 16.3.4 (Turbopack)
+✓ Running next.config.ts took 35ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 610ms
+  Running TypeScript ...
+  Finished TypeScript in 2.2s ...
+  Collecting page data using 10 workers ...
+  Generating static pages using 10 workers (0/9) ...
+  Generating static pages using 10 workers (2/9) 
+  Generating static pages using 10 workers (4/9) 
+  Generating static pages using 10 workers (6/9) 
+✓ Generating static pages using 10 workers (9/9) in 912ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/health
+├ ○ /contact
+├ ○ /reservation
+├ ○ /reservation/cancel
+└ ○ /thanks
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+########## GAS: tsc --noEmit ##########
+=== GAS: tsc --noEmit ===
+exit code: 0
+
+########## GAS: esbuild ##########
+(no output = esbuild succeeded silently)
+
+########## GAS: clasp verification (no deploy) ##########
+=== clasp --version ===
+2.5.0
+
+=== .clasp.json.example structure check ===
+{"scriptId":"REPLACE_WITH_YOUR_APPS_SCRIPT_PROJECT_ID","rootDir":"build"}
+rootDir exists: true
+
+=== confirm no real .clasp.json exists anywhere ===
+(empty above = none found, as expected)

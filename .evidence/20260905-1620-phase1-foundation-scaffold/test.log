@@ -1,0 +1,18 @@
+########## WEB: jest --ci --verbose ##########
+Test Suites: 3 passed, 3 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        1.723 s
+Ran all test suites.
+
+########## GAS: jest --ci --verbose ##########
+PASS tests/Health.test.ts
+  getHealthStatus
+    √ reports ok status for this service (3 ms)
+    √ returns a valid ISO 8601 timestamp
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        1.035 s, estimated 2 s
+Ran all test suites.

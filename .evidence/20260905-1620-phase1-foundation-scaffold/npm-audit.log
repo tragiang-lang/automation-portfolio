@@ -1,0 +1,38 @@
+########## WEB: npm audit ##########
+found 0 vulnerabilities
+
+########## GAS: npm audit ##########
+# npm audit report
+
+@google/clasp  <=3.3.0
+Severity: high
+@google/clasp vulnerable to unsafe path traversal cloning or pulling a malicious script - https://github.com/advisories/GHSA-hqjg-pww4-pcgq
+Depends on vulnerable versions of googleapis
+fix available via `npm audit fix --force`
+Will install @google/clasp@3.4.1, which is a breaking change
+node_modules/@google/clasp
+
+esbuild  <=0.24.2
+Severity: moderate
+esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
+fix available via `npm audit fix --force`
+Will install esbuild@0.28.2, which is a breaking change
+node_modules/esbuild
+
+uuid  <11.1.1
+Severity: moderate
+uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided - https://github.com/advisories/GHSA-w5hq-g745-h8pq
+fix available via `npm audit fix --force`
+Will install @google/clasp@3.4.1, which is a breaking change
+node_modules/uuid
+  googleapis-common  <=7.2.0
+  Depends on vulnerable versions of uuid
+  node_modules/googleapis-common
+    googleapis  33.0.0 - 149.0.0
+    Depends on vulnerable versions of googleapis-common
+    node_modules/googleapis
+
+5 vulnerabilities (4 moderate, 1 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force

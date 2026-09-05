@@ -1,0 +1,14 @@
+# Each app under apps/ keeps its own .gitignore for tool-specific output
+# (node_modules, .next, build/, .clasp.json, etc). This root file only
+# covers things that could appear anywhere in the repo.
+
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.local
+.env.*.local
+
+# evidence logs are a durable audit trail — tracked, not ignored (see
+# .claude/rules/evidence-reporting.md), so re-include them despite *.log above
+!.evidence/**

@@ -1,0 +1,84 @@
+On branch master
+
+No commits yet
+
+Changes to be committed:
+  (use "git rm --cached <file>..." to unstage)
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/build.log
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/diff.patch
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/gas-build.log
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/gas-clasp-verification.log
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/gas-test.log
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/gas-typecheck.log
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/status.txt
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/test.log
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/web-build.log
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/web-test.log
+	new file:   .evidence/20260905-1620-phase1-foundation-scaffold/web-typecheck-lint.log
+	new file:   .gitignore
+	new file:   MASTER_PROMPT_INSTRUCTION_LP_AUTOMATION_SAAS.md
+	new file:   README.md
+	new file:   apps/salon-portfolio/gas/.clasp.json.example
+	new file:   apps/salon-portfolio/gas/.gitignore
+	new file:   apps/salon-portfolio/gas/appsscript.json
+	new file:   apps/salon-portfolio/gas/esbuild.config.js
+	new file:   apps/salon-portfolio/gas/jest.config.js
+	new file:   apps/salon-portfolio/gas/package-lock.json
+	new file:   apps/salon-portfolio/gas/package.json
+	new file:   apps/salon-portfolio/gas/src/Code.ts
+	new file:   apps/salon-portfolio/gas/src/Health.ts
+	new file:   apps/salon-portfolio/gas/src/availability/.gitkeep
+	new file:   apps/salon-portfolio/gas/src/ids/.gitkeep
+	new file:   apps/salon-portfolio/gas/src/models/.gitkeep
+	new file:   apps/salon-portfolio/gas/tests/Health.test.ts
+	new file:   apps/salon-portfolio/gas/tests/availability/.gitkeep
+	new file:   apps/salon-portfolio/gas/tsconfig.json
+	new file:   apps/salon-portfolio/web/.gitignore
+	new file:   apps/salon-portfolio/web/AGENTS.md
+	new file:   apps/salon-portfolio/web/CLAUDE.md
+	new file:   apps/salon-portfolio/web/README.md
+	new file:   apps/salon-portfolio/web/app/api/health/route.test.ts
+	new file:   apps/salon-portfolio/web/app/api/health/route.ts
+	new file:   apps/salon-portfolio/web/app/contact/page.tsx
+	new file:   apps/salon-portfolio/web/app/favicon.ico
+	new file:   apps/salon-portfolio/web/app/globals.css
+	new file:   apps/salon-portfolio/web/app/layout.tsx
+	new file:   apps/salon-portfolio/web/app/page.tsx
+	new file:   apps/salon-portfolio/web/app/reservation/cancel/page.tsx
+	new file:   apps/salon-portfolio/web/app/reservation/page.tsx
+	new file:   apps/salon-portfolio/web/app/thanks/page.tsx
+	new file:   apps/salon-portfolio/web/components/forms/.gitkeep
+	new file:   apps/salon-portfolio/web/components/layout/.gitkeep
+	new file:   apps/salon-portfolio/web/components/reservation/.gitkeep
+	new file:   apps/salon-portfolio/web/components/sections/.gitkeep
+	new file:   apps/salon-portfolio/web/components/ui/PagePlaceholder.test.tsx
+	new file:   apps/salon-portfolio/web/components/ui/PagePlaceholder.tsx
+	new file:   apps/salon-portfolio/web/config/.gitkeep
+	new file:   apps/salon-portfolio/web/eslint.config.mjs
+	new file:   apps/salon-portfolio/web/jest.config.ts
+	new file:   apps/salon-portfolio/web/jest.setup.ts
+	new file:   apps/salon-portfolio/web/lib/api/.gitkeep
+	new file:   apps/salon-portfolio/web/lib/constants/.gitkeep
+	new file:   apps/salon-portfolio/web/lib/utils/health.test.ts
+	new file:   apps/salon-portfolio/web/lib/utils/health.ts
+	new file:   apps/salon-portfolio/web/lib/validation/.gitkeep
+	new file:   apps/salon-portfolio/web/next.config.ts
+	new file:   apps/salon-portfolio/web/package-lock.json
+	new file:   apps/salon-portfolio/web/package.json
+	new file:   apps/salon-portfolio/web/postcss.config.mjs
+	new file:   apps/salon-portfolio/web/public/icons/.gitkeep
+	new file:   apps/salon-portfolio/web/public/images/.gitkeep
+	new file:   apps/salon-portfolio/web/tsconfig.json
+	new file:   apps/salon-portfolio/web/types/.gitkeep
+	new file:   docs/api-documentation.md
+	new file:   docs/architecture-overview.md
+	new file:   docs/changelog.md
+	new file:   docs/folder-structure.md
+	new file:   docs/phase0-specification.md
+	new file:   docs/roadmap.md
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .evidence/20260905-1620-phase1-foundation-scaffold/status.txt
+
