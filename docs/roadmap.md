@@ -26,9 +26,15 @@ fixed template.
       `getStaff` exist. Frontend UI only — no reservation backend, GAS
       API, Sheets, Calendar, Gmail, `getConfig`, auth, Supabase, or real
       form submission. Lint/typecheck/tests/production build all pass.
-- [ ] **Phase 3 — CONFIG system.** `ConfigStore.ts`, the `CONFIG`/`HOLIDAYS`
-      sheet reader, `getConfig` action, `AppConfig` type (Phase 0 §D);
-      wires real business content into the Phase 2B UI.
+- [x] **Phase 3A — GAS configuration + data layer.** `ConfigStore.ts`,
+      `ConfigParser.ts`/`ConfigValidator.ts`, `Sheets.ts`/`RowMapper.ts`,
+      `SheetSchemas.ts` for all nine Phase 0 §C tabs, `Api.ts`'s
+      `getConfig` action + dispatcher, `Utils.ts`/`ids/ReservationId.ts`,
+      and `DemoSeed.ts`/`SetupDemoSheets.ts`. Frontend is still on
+      `config/demo-content.ts` — not wired to real GAS yet.
+- [ ] **Phase 3B — Frontend CONFIG integration.** Replace
+      `web/config/demo-content.ts` with a real `getConfig` fetch; no new
+      GAS actions.
 - [ ] **Phase 4 — Sheets/Calendar/Gmail adapters.** `Sheets.ts`,
       `Calendar.ts`, `Mail.ts` as thin wrappers (Phase 0 §T), plus the
       SERVICES/STAFF catalog actions.
@@ -43,5 +49,5 @@ fixed template.
       instead of speculative. Japanese operations guide (Phase 0 §S) also
       ships around this point.
 
-Phase 2B is the newest code in the repo; Phase 3 (`ConfigStore`/`getConfig`)
-is the next phase and has not been started.
+Phase 3A is the newest code in the repo; Phase 3B (frontend `getConfig`
+integration) is the next phase and has not been started.

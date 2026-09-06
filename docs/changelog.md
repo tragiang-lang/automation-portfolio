@@ -4,6 +4,51 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 3A: GAS configuration + data layer
+
+- `apps/salon-portfolio/gas/src/SheetNames.ts` + `SheetSchemas.ts`:
+  canonical names and column/header definitions for all nine Phase 0 §C
+  sheets (`CONFIG`, `HOLIDAYS`, `SERVICES`, `STAFF`, `RESERVATIONS`,
+  `CANCELLATION_REQUESTS`, `INQUIRIES`, `EMAIL_LOG`, `ERROR_LOG`).
+- `RowMapper.ts`: pure header-mapping and row↔object serialization,
+  with explicit missing-header detection (`MissingHeadersError`).
+- `Sheets.ts`: thin `SpreadsheetApp` adapter (`getSheet`, `getHeaderMap`,
+  `readRawRows`, `appendRow`, `updateRow`), reading the target spreadsheet
+  from the new `SPREADSHEET_ID` Script Property convention (documented in
+  `docs/config-and-sheets-guide.md`) rather than a hard-coded ID.
+- `models/Config.ts`, `ConfigParser.ts`, `ConfigValidator.ts`,
+  `PublicConfig.ts`, `ConfigStore.ts`: the full CONFIG pipeline — strict
+  boolean/number/string parsing (no "yes"/"no"/"1"/"0"), business-rule
+  validation (timezone, ranges, business-hours format, holiday dates,
+  the staff-selection/any-available-staff combination), and a
+  public/private projection so `calendarId` and the owner-facing email
+  settings never leave the server.
+- `models/ErrorCodes.ts`, `models/Api.ts`, `Api.ts`: the shared
+  `{ok,data}`/`{ok:false,error}` envelope, Phase 0 §H's 10 error codes
+  plus a new `CONFIG_INVALID` code, and the `getConfig` action + `doPost`
+  dispatcher (every other action name returns `VALIDATION_ERROR` — no
+  other action exists yet).
+- `Code.ts`: `doPost` now routes through `Api.ts`'s dispatcher; `doGet`
+  is unchanged (still the Phase 1 liveness check).
+- `Utils.ts` (Asia/Tokyo timestamp helpers, fixed UTC+9 offset — Japan has
+  no DST) and `ids/ReservationId.ts` (`RES-YYYYMMDD-XXXXXX` generator,
+  injectable date/random source) — generator only, no reservation
+  workflow calls it yet.
+- `DemoSeed.ts` + `SetupDemoSheets.ts`: safe, non-destructive demo data
+  for all nine sheets and a manual-run `setupDemoSheets()` utility that
+  never overwrites an existing sheet.
+- `docs/config-and-sheets-guide.md`: new operator/developer guide for the
+  CONFIG sheet and the sheet data layer.
+- 60+ new Jest tests across the parser, validator, row mapper, schema
+  definitions, ID generator, timestamp helper, API dispatch logic, and
+  demo-seed/schema consistency. `Sheets.ts` and `SetupDemoSheets.ts` are
+  GAS-service wrappers and are intentionally not unit tested (Phase 0 §Q)
+  — see the new guide for manual verification steps.
+- Not included (deliberately out of scope, per the Phase 3A task
+  prompt): reservation/contact/cancellation workflows, Calendar, Gmail,
+  authentication, Supabase, frontend `getConfig` integration,
+  `getServices`/`getStaff`/`healthCheck` actions, `clasp push`.
+
 ### Added — Phase 2B: real LP UI implementation
 
 - Full "Kinari to Sumi" design system implemented from
