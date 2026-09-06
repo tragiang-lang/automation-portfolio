@@ -1,11 +1,19 @@
+jest.mock("../src/ConfigStore", () => {
+  const actual = jest.requireActual("../src/ConfigStore");
+  return { ...actual, getConfig: jest.fn() };
+});
+
 import {
   buildErrorResponse,
   buildSuccessResponse,
+  getConfigAction,
   handleApiRequest,
   mapConfigErrorToResponse,
+  mapMissingHeadersErrorToResponse,
   parseApiRequest,
 } from "../src/Api";
-import { ConfigError } from "../src/ConfigStore";
+import { ConfigError, getConfig } from "../src/ConfigStore";
+import { MissingHeadersError } from "../src/RowMapper";
 import { ERROR_CODES } from "../src/models/ErrorCodes";
 
 describe("parseApiRequest", () => {
@@ -64,6 +72,48 @@ describe("mapConfigErrorToResponse", () => {
       expect(serialized).not.toContain("calendar.id");
       expect(serialized).not.toContain("missing or empty string");
     }
+  });
+});
+
+describe("mapMissingHeadersErrorToResponse", () => {
+  it("maps to a stable SHEET_ERROR without leaking the missing header names", () => {
+    const error = new MissingHeadersError(["Key", "Value"]);
+    const response = mapMissingHeadersErrorToResponse(error);
+    expect(response).toEqual({
+      ok: false,
+      error: {
+        code: "SHEET_ERROR",
+        message:
+          "スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。",
+      },
+    });
+    const serialized = JSON.stringify(response);
+    expect(serialized).not.toContain("Key");
+    expect(serialized).not.toContain("Value");
+  });
+});
+
+describe("getConfigAction", () => {
+  afterEach(() => {
+    (getConfig as jest.Mock).mockReset();
+  });
+
+  it("maps a MissingHeadersError thrown by ConfigStore.getConfig to SHEET_ERROR", () => {
+    (getConfig as jest.Mock).mockImplementation(() => {
+      throw new MissingHeadersError(["Key", "Value"]);
+    });
+    const response = getConfigAction();
+    expect(response).toEqual({
+      ok: false,
+      error: {
+        code: "SHEET_ERROR",
+        message:
+          "スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。",
+      },
+    });
+    const serialized = JSON.stringify(response);
+    expect(serialized).not.toContain("Key");
+    expect(serialized).not.toContain("Value");
   });
 });
 

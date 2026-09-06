@@ -14,6 +14,7 @@ import {
 } from "./ConfigParser";
 import { ConfigValidationIssue, validateAppConfig } from "./ConfigValidator";
 import { AppConfig } from "./models/Config";
+import { formatDateYYYYMMDDDashedInTokyo } from "./Utils";
 
 /** Thrown whenever CONFIG/HOLIDAYS data fails parsing or validation.
  *  `issues` is for server-side diagnostics only (console.error) — Api.ts
@@ -49,6 +50,25 @@ export function buildAppConfigFromRawRows(
   return parseResult.config;
 }
 
+/** Normalizes HOLIDAYS.Date cells into `YYYY-MM-DD` strings. Google
+ *  Sheets auto-types a written date string (e.g. "2026-01-01") into a
+ *  native `Date` object when read back via `Range.getValues()` —
+ *  `String(dateObject)` would produce a locale-formatted, non-ISO string
+ *  that fails ConfigValidator's date pattern (Phase 3A final review
+ *  finding 1). A `Date` cell is reformatted via the Tokyo-calendar
+ *  helper; anything else (e.g. an already text-formatted date column)
+ *  falls back to the previous trim-to-string behavior. Pure and
+ *  Jest-testable — exported for that reason. */
+export function normalizeHolidayDates(rows: HolidayRow[]): string[] {
+  return rows
+    .map((row) =>
+      row.Date instanceof Date
+        ? formatDateYYYYMMDDDashedInTokyo(row.Date)
+        : String(row.Date ?? "").trim(),
+    )
+    .filter((date) => date.length > 0);
+}
+
 /** Reads CONFIG + HOLIDAYS from the real spreadsheet and returns the
  *  typed AppConfig. Thin orchestration only — not unit tested by Jest;
  *  buildAppConfigFromRawRows above carries all the tested logic (Phase 0
@@ -57,6 +77,10 @@ export function buildAppConfigFromRawRows(
 export function getConfig(): AppConfig {
   const configSheet = getSheet(SHEET_NAMES.CONFIG);
   const configHeaderMap = getHeaderMap(configSheet);
+  // rowsToObjects<T> requires T to satisfy Record<string, unknown>, but
+  // ConfigRow declares concrete field types (not an index signature) —
+  // the double cast is the standard TS escape hatch for "structurally
+  // compatible but not assignable" generic constraints here.
   const configRows = rowsToObjects(
     configHeaderMap,
     readRawRows(configSheet),
@@ -65,14 +89,15 @@ export function getConfig(): AppConfig {
 
   const holidaysSheet = getSheet(SHEET_NAMES.HOLIDAYS);
   const holidaysHeaderMap = getHeaderMap(holidaysSheet);
+  // Same reasoning as the ConfigRow cast above: HolidayRow has no index
+  // signature, so it isn't directly assignable from rowsToObjects<T>'s
+  // generic constraint despite being structurally compatible.
   const holidayRows = rowsToObjects(
     holidaysHeaderMap,
     readRawRows(holidaysSheet),
     HOLIDAYS_HEADERS,
   ) as unknown as HolidayRow[];
-  const holidayDates = holidayRows
-    .map((row) => String(row.Date ?? "").trim())
-    .filter((date) => date.length > 0);
+  const holidayDates = normalizeHolidayDates(holidayRows);
 
   return buildAppConfigFromRawRows(configRows, holidayDates);
 }

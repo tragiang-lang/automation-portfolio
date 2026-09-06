@@ -18,12 +18,30 @@ export function nowIso(clock: () => Date = () => new Date()): string {
   return clock().toISOString();
 }
 
+/** Shared Y/M/D breakdown of a Date in the Asia/Tokyo calendar day —
+ *  private helper backing both public formatters below so the fixed
+ *  UTC+9 offset logic lives in exactly one place. */
+function tokyoDateParts(date: Date): { year: number; month: number; day: number } {
+  const tokyoTime = new Date(date.getTime() + TOKYO_OFFSET_MS);
+  return {
+    year: tokyoTime.getUTCFullYear(),
+    month: tokyoTime.getUTCMonth() + 1,
+    day: tokyoTime.getUTCDate(),
+  };
+}
+
 /** Formats a Date as YYYYMMDD in the Asia/Tokyo calendar day — used by
  *  ID generators (Phase 3A §17). */
 export function formatDateYYYYMMDDInTokyo(date: Date): string {
-  const tokyoTime = new Date(date.getTime() + TOKYO_OFFSET_MS);
-  const year = tokyoTime.getUTCFullYear();
-  const month = String(tokyoTime.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(tokyoTime.getUTCDate()).padStart(2, "0");
-  return `${year}${month}${day}`;
+  const { year, month, day } = tokyoDateParts(date);
+  return `${year}${String(month).padStart(2, "0")}${String(day).padStart(2, "0")}`;
+}
+
+/** Formats a Date as YYYY-MM-DD (dashed) in the Asia/Tokyo calendar day —
+ *  used to normalize HOLIDAYS.Date cells that Sheets auto-typed into a
+ *  native Date object when read back via Range.getValues() (Phase 3A
+ *  final review finding 1). */
+export function formatDateYYYYMMDDDashedInTokyo(date: Date): string {
+  const { year, month, day } = tokyoDateParts(date);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }

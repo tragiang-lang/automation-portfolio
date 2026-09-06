@@ -3,6 +3,7 @@ import { ERROR_CODES, ErrorCode } from "./models/ErrorCodes";
 import { ConfigError, getConfig } from "./ConfigStore";
 import { buildPublicConfig } from "./PublicConfig";
 import { PublicConfig } from "./models/Config";
+import { MissingHeadersError } from "./RowMapper";
 
 /** Parses and shape-checks the raw POST body. Pure — never touches GAS
  *  globals — so the dispatch logic is Jest-testable independent of
@@ -62,6 +63,23 @@ export function mapConfigErrorToResponse(
   );
 }
 
+/** Maps a caught MissingHeadersError (RowMapper.ts — a required sheet
+ *  column is missing/renamed) to the stable public error contract — an
+ *  operator-fixable condition distinct from CONFIG_INVALID/INTERNAL_ERROR,
+ *  which is exactly what SHEET_ERROR exists to represent. The specific
+ *  missing header names are logged server-side only (console.error) and
+ *  never included in the client-facing message (Phase 3A §9, mirroring
+ *  mapConfigErrorToResponse above). */
+export function mapMissingHeadersErrorToResponse(
+  error: MissingHeadersError,
+): ApiResponse<never> {
+  console.error("[getConfig] SHEET_ERROR: missing headers:", error.missing.join(", "));
+  return buildErrorResponse(
+    ERROR_CODES.SHEET_ERROR,
+    "スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。",
+  );
+}
+
 /** `getConfig` action handler (Phase 0 §G/§H, Phase 3A §19). Thin: reads
  *  real CONFIG/HOLIDAYS sheets via ConfigStore, maps to the public
  *  projection, and translates a ConfigError into the stable error
@@ -75,6 +93,9 @@ export function getConfigAction(): ApiResponse<PublicConfig> {
   } catch (error) {
     if (error instanceof ConfigError) {
       return mapConfigErrorToResponse(error);
+    }
+    if (error instanceof MissingHeadersError) {
+      return mapMissingHeadersErrorToResponse(error);
     }
     console.error("[getConfig] unexpected error:", error);
     return buildErrorResponse(

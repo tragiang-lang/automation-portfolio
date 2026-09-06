@@ -1,0 +1,66 @@
+
+> salon-portfolio-gas@0.1.0 test
+> jest
+
+PASS tests/PublicConfig.test.ts
+PASS tests/RowMapper.test.ts
+PASS tests/ConfigValidator.test.ts
+PASS tests/Health.test.ts
+PASS tests/SheetSchemas.test.ts
+PASS tests/Utils.test.ts
+PASS tests/ReservationId.test.ts
+PASS tests/ConfigStore.test.ts
+PASS tests/ConfigParser.test.ts
+PASS tests/DemoSeed.test.ts
+PASS tests/Api.test.ts
+  ● Console
+
+    console.error
+      [getConfig] CONFIG_INVALID: [{"field":"calendar.id","reason":"missing or empty string"}]
+
+    [0m [90m 57 |[39m   error[33m:[39m [33mConfigError[39m[33m,[39m
+     [90m 58 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 59 |[39m   console[33m.[39merror([32m"[getConfig] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 60 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 61 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 62 |[39m     [32m"設定情報の読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:59:11)
+      at Object.<anonymous> (tests/Api.test.ts:67:46)
+
+    console.error
+      [getConfig] SHEET_ERROR: missing headers: Key, Value
+
+    [0m [90m 74 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 75 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 76 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 77 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 78 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 79 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:76:11)
+      at Object.<anonymous> (tests/Api.test.ts:81:54)
+
+    console.error
+      [getConfig] SHEET_ERROR: missing headers: Key, Value
+
+    [0m [90m 74 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 75 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 76 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 77 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 78 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 79 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:76:11)
+      at getConfigAction (src/Api.ts:98:14)
+      at Object.<anonymous> (tests/Api.test.ts:105:37)
+
+
+Test Suites: 11 passed, 11 total
+Tests:       82 passed, 82 total
+Snapshots:   0 total
+Time:        4.52 s
+Ran all test suites.

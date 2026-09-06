@@ -5,8 +5,9 @@ eyelash salon LP + reservation system) is the only project scaffolded so
 far.
 
 Full architecture and design decisions: [`docs/phase0-specification.md`](docs/phase0-specification.md).
-This README covers Phase 1 (tooling/foundation) only — no business logic,
-Sheets/Calendar/Gmail integration, or CONFIG system exists yet.
+This README covers Phase 1 (tooling/foundation) and Phase 3A (CONFIG +
+data layer) — reservation/contact business logic and Calendar/Gmail
+integration are still not implemented.
 
 ## Structure
 
@@ -49,6 +50,10 @@ npm test            # Jest, runs against src/**/*.ts directly, never the bundle
 npm run typecheck   # tsc --noEmit
 ```
 
+See [`docs/config-and-sheets-guide.md`](docs/config-and-sheets-guide.md) for
+the required `SPREADSHEET_ID` Script Property and demo-data setup — every
+call fails without it.
+
 ### First-time clasp setup (per environment)
 
 `.clasp.json` is gitignored because it holds a real Apps Script project ID.
@@ -67,11 +72,11 @@ npm run push                          # builds, then clasp push
 No `.clasp.json` is committed anywhere in this repo, and no placeholder
 script ID is treated as a real one — see `.clasp.json.example`.
 
-## What Phase 1 deliberately does NOT include
+## What this codebase deliberately does NOT include yet
 
-Reservation/contact/cancellation business logic, Sheets/Calendar/Gmail
-integration, the CONFIG system (`getConfig`), authentication, the real LP
-UI, and Supabase are all out of scope for this phase — see
-[`docs/roadmap.md`](docs/roadmap.md) and
+Reservation/contact/cancellation business logic, Calendar/Gmail
+integration, authentication, the real LP UI, and Supabase are all out of
+scope so far — see [`docs/roadmap.md`](docs/roadmap.md) and
 [`docs/phase0-specification.md`](docs/phase0-specification.md) for what
-each later phase adds.
+each later phase adds. (The CONFIG system's `getConfig` action, backed by
+Sheets, is implemented as of Phase 3A.)

@@ -1,5 +1,9 @@
-import { ConfigRow } from "../src/SheetSchemas";
-import { buildAppConfigFromRawRows, ConfigError } from "../src/ConfigStore";
+import { ConfigRow, HolidayRow } from "../src/SheetSchemas";
+import {
+  buildAppConfigFromRawRows,
+  ConfigError,
+  normalizeHolidayDates,
+} from "../src/ConfigStore";
 
 function validConfigRows(): ConfigRow[] {
   return [
@@ -29,6 +33,30 @@ function validConfigRows(): ConfigRow[] {
     { Key: "email.fromName", Value: "Demo Salon", Description: "" },
   ];
 }
+
+describe("normalizeHolidayDates", () => {
+  it("formats a native Date cell (Sheets auto-typing) as YYYY-MM-DD in Asia/Tokyo, including the rollover case", () => {
+    // 2025-12-31T15:00:00Z + 9h = 2026-01-01T00:00:00 JST
+    const rows: HolidayRow[] = [
+      { Date: new Date("2025-12-31T15:00:00.000Z"), Label: "New Year" },
+    ];
+    expect(normalizeHolidayDates(rows)).toEqual(["2026-01-01"]);
+  });
+
+  it("passes through an already-string cell unchanged (trimmed)", () => {
+    const rows: HolidayRow[] = [{ Date: " 2026-01-01 ", Label: "" }];
+    expect(normalizeHolidayDates(rows)).toEqual(["2026-01-01"]);
+  });
+
+  it("filters out empty/missing cells", () => {
+    const rows: HolidayRow[] = [
+      { Date: "", Label: "" },
+      { Date: undefined, Label: "" },
+      { Date: "2026-05-05", Label: "" },
+    ];
+    expect(normalizeHolidayDates(rows)).toEqual(["2026-05-05"]);
+  });
+});
 
 describe("buildAppConfigFromRawRows", () => {
   it("builds a valid AppConfig from valid rows", () => {

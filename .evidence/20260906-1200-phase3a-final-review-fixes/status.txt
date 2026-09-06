@@ -1,0 +1,20 @@
+On branch worktree-phase3a-gas-config-data-layer
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   README.md
+	modified:   apps/salon-portfolio/gas/src/Api.ts
+	modified:   apps/salon-portfolio/gas/src/ConfigParser.ts
+	modified:   apps/salon-portfolio/gas/src/ConfigStore.ts
+	modified:   apps/salon-portfolio/gas/src/Utils.ts
+	modified:   apps/salon-portfolio/gas/tests/Api.test.ts
+	modified:   apps/salon-portfolio/gas/tests/ConfigParser.test.ts
+	modified:   apps/salon-portfolio/gas/tests/ConfigStore.test.ts
+	modified:   apps/salon-portfolio/gas/tests/Utils.test.ts
+	modified:   docs/api-documentation.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.evidence/20260906-1200-phase3a-final-review-fixes/
+
+no changes added to commit (use "git add" and/or "git commit -a")

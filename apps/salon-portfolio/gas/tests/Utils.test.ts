@@ -1,4 +1,8 @@
-import { formatDateYYYYMMDDInTokyo, nowIso } from "../src/Utils";
+import {
+  formatDateYYYYMMDDDashedInTokyo,
+  formatDateYYYYMMDDInTokyo,
+  nowIso,
+} from "../src/Utils";
 
 describe("formatDateYYYYMMDDInTokyo", () => {
   it("formats a UTC instant that is still the previous day in Tokyo", () => {
@@ -19,6 +23,21 @@ describe("formatDateYYYYMMDDInTokyo", () => {
     expect(
       formatDateYYYYMMDDInTokyo(new Date("2026-03-05T01:00:00.000Z")),
     ).toBe("20260305");
+  });
+});
+
+describe("formatDateYYYYMMDDDashedInTokyo", () => {
+  it("formats the Asia/Tokyo rollover case with dashes", () => {
+    // 2025-12-31T15:00:00Z + 9h = 2026-01-01T00:00:00 JST
+    expect(
+      formatDateYYYYMMDDDashedInTokyo(new Date("2025-12-31T15:00:00.000Z")),
+    ).toBe("2026-01-01");
+  });
+
+  it("zero-pads single-digit months and days", () => {
+    expect(
+      formatDateYYYYMMDDDashedInTokyo(new Date("2026-03-05T01:00:00.000Z")),
+    ).toBe("2026-03-05");
   });
 });
 

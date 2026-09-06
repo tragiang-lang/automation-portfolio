@@ -150,13 +150,18 @@ export function parseAppConfig(
     hours[day] = (raw ?? "closed") as AppConfig["hours"][typeof day];
   }
 
+  const timezone = requireString("reservation.timezone");
   const reservation: AppConfig["reservation"] = {
-    timezone: "Asia/Tokyo",
+    // requireString returns a plain string, but AppConfig's reservation
+    // timezone is typed as the literal "Asia/Tokyo" — the cast keeps the
+    // typed shape here while ConfigValidator.ts is what actually enforces
+    // the value is really "Asia/Tokyo" at runtime (Phase 3A final review
+    // finding 2: parsing must not silently discard/hard-code this field).
+    timezone: timezone as AppConfig["reservation"]["timezone"],
     slotMinutes: requireNumber("reservation.slotMinutes"),
     minLeadHours: requireNumber("reservation.minLeadHours"),
     maxBookingDays: requireNumber("reservation.maxBookingDays"),
   };
-  requireString("reservation.timezone");
 
   const features: AppConfig["features"] = {
     contactForm: requireBoolean("features.contactForm"),

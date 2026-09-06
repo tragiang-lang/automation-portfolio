@@ -175,4 +175,14 @@ describe("parseAppConfig", () => {
       );
     }
   });
+
+  it("carries the sheet's actual reservation.timezone value through instead of hard-coding Asia/Tokyo (validation, not parsing, enforces the value)", () => {
+    const raw = validRawConfig();
+    raw["reservation.timezone"] = "America/New_York";
+    const result = parseAppConfig(raw, []);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.config.reservation.timezone).toBe("America/New_York");
+    }
+  });
 });
