@@ -4,6 +4,47 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 3B: frontend runtime config integration
+
+- `lib/api/gasClient.ts`: server-only `callGasAction` helper that POSTs
+  `{ action, payload }` to `GAS_WEBAPP_URL` with `cache: "no-store"` —
+  never bundled into the browser (no `"use client"` in its import chain,
+  no `NEXT_PUBLIC_*` variable introduced).
+- `lib/validation/runtimeConfigValidator.ts`: structural validation of the
+  `getConfig` response before any component ever sees it.
+- `lib/config/runtimeConfig.ts`: `getRuntimeConfig()` (wrapped in React's
+  `cache()`, one GAS call per request) resolving `demo-fallback` /
+  `runtime` / `runtime-error`, always falling back to
+  `config/demo-content.ts`-derived values so a real backend failure never
+  renders a blank page.
+- `lib/config/resolveSiteConfig.ts`: merges the runtime
+  `business`/`hours`/`holidays`/`features`/`staffAnyAvailableOption`
+  fields with the frontend-owned `nameLatin`/`tagline`/`postalCode`/
+  `socialLinks` into the existing `SiteConfig` view-model, so no Phase 2
+  section component needed to change.
+- `app/layout.tsx` (`generateMetadata` + `RootLayout`) and `app/page.tsx`
+  now call `getRuntimeConfig()` instead of importing
+  `config/demo-content.ts` directly. `components/layout/
+  RuntimeConfigNotice.tsx` renders a calm Japanese notice above the
+  header on the `runtime-error` path only.
+- `app/api/gas/route.ts`: new generic `POST /api/gas` proxy for a future
+  browser-initiated action (reservation/contact submission) — unused so
+  far in Phase 3B; `getConfig` is fetched directly from the server
+  boundary above instead, since a Server Component calling its own Route
+  Handler over HTTP is an anti-pattern Next.js recommends against. Never
+  echoes a caught error's message to the client.
+- Reservation CTA buttons in `SiteHeader`, `MobileNav`, and `SiteFooter`
+  are now gated on `features.reservation`, matching the existing
+  `StaffSection` pattern for `features.staffSelection`.
+- `docs/runtime-config-guide.md`: new guide documenting the data flow,
+  ownership boundary (what GAS/CONFIG owns vs. what stays
+  frontend-only), fallback/error behavior, caching/revalidation, and
+  security notes.
+- Not included (deliberately out of scope): no GAS/`gas/src/**` changes —
+  the Phase 3A `getConfig` contract was found fully sufficient; no
+  reservation/contact submission, Calendar, Gmail, auth, Supabase, or
+  deployment.
+
 ### Added — Phase 3A: GAS configuration + data layer
 
 - `apps/salon-portfolio/gas/src/SheetNames.ts` + `SheetSchemas.ts`:

@@ -15,6 +15,11 @@ Browser → Next.js (apps/salon-portfolio/web)
                         → Google Sheets / Calendar / Gmail
 ```
 
+As of Phase 3B, `apps/salon-portfolio/web` fetches `getConfig` from a
+Server Component boundary (`lib/config/runtimeConfig.ts`), not from the
+browser — see [`runtime-config-guide.md`](runtime-config-guide.md) for
+the full data flow, ownership boundary, and fallback behavior.
+
 ## What exists after Phase 3A
 
 - **`apps/salon-portfolio/web`** — unchanged since Phase 2C. Still on

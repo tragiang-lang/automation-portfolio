@@ -32,9 +32,17 @@ fixed template.
       `getConfig` action + dispatcher, `Utils.ts`/`ids/ReservationId.ts`,
       and `DemoSeed.ts`/`SetupDemoSheets.ts`. Frontend is still on
       `config/demo-content.ts` — not wired to real GAS yet.
-- [ ] **Phase 3B — Frontend CONFIG integration.** Replace
-      `web/config/demo-content.ts` with a real `getConfig` fetch; no new
-      GAS actions.
+- [x] **Phase 3B — Frontend CONFIG integration.** `web/app/layout.tsx`
+      (via `generateMetadata`) and `web/app/page.tsx` now source
+      `business`/`hours`/`holidays`/`features`/`staffAnyAvailableOption`/
+      `reservation` from the real `getConfig` action, through
+      `lib/api/gasClient.ts` -> `lib/validation/runtimeConfigValidator.ts`
+      -> `lib/config/runtimeConfig.ts` -> `lib/config/resolveSiteConfig.ts`.
+      Explicit `runtime`/`demo-fallback`/`runtime-error` status, with a
+      visible notice on the error path. Generic `app/api/gas/route.ts`
+      proxy added for future browser-initiated actions (unused so far).
+      No GAS changes. See
+      [`runtime-config-guide.md`](runtime-config-guide.md).
 - [ ] **Phase 4 — Sheets/Calendar/Gmail adapters.** `Sheets.ts`,
       `Calendar.ts`, `Mail.ts` as thin wrappers (Phase 0 §T), plus the
       SERVICES/STAFF catalog actions.
@@ -49,5 +57,6 @@ fixed template.
       instead of speculative. Japanese operations guide (Phase 0 §S) also
       ships around this point.
 
-Phase 3A is the newest code in the repo; Phase 3B (frontend `getConfig`
-integration) is the next phase and has not been started.
+Phase 3B (frontend `getConfig` integration) is the newest code in the
+repo; Phase 4 (Sheets/Calendar/Gmail adapters + SERVICES/STAFF catalog
+actions) is next and has not been started.
