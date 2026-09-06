@@ -7,7 +7,10 @@ import {
 } from "next/font/google";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { NAV_ITEMS, SITE_CONFIG } from "@/config/demo-content";
+import { RuntimeConfigNotice } from "@/components/layout/RuntimeConfigNotice";
+import { NAV_ITEMS } from "@/config/demo-content";
+import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
+import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
 import "./globals.css";
 
 // Heading fonts — Japanese Mincho + a moderate-contrast Latin old-style
@@ -43,21 +46,38 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: `${SITE_CONFIG.business.name} | ${SITE_CONFIG.business.nameLatin}`,
-  description: SITE_CONFIG.business.tagline,
-};
+// Dynamic per Phase 3B: title/description now reflect the runtime
+// business name/tagline, so this can no longer be a static `metadata`
+// export (Next.js requires `generateMetadata` for that). `getRuntimeConfig`
+// is React-`cache()`-wrapped, so this call and the one in `RootLayout`
+// below share a single GAS request per page load.
+export async function generateMetadata(): Promise<Metadata> {
+  const { config } = await getRuntimeConfig();
+  const siteConfig = resolveSiteConfig(config);
+  return {
+    title: `${siteConfig.business.name} | ${siteConfig.business.nameLatin}`,
+    description: siteConfig.business.tagline,
+  };
+}
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { status, config } = await getRuntimeConfig();
+  const siteConfig = resolveSiteConfig(config);
+
   return (
     <html
       lang="ja"
       className={`${shipporiMincho.variable} ${cormorantGaramond.variable} ${notoSansJP.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-text">
-        <SiteHeader business={SITE_CONFIG.business} navItems={NAV_ITEMS} />
+        <RuntimeConfigNotice show={status === "runtime-error"} />
+        <SiteHeader
+          business={siteConfig.business}
+          navItems={NAV_ITEMS}
+          reservationEnabled={siteConfig.features.reservation}
+        />
         <div className="flex flex-1 flex-col">{children}</div>
-        <SiteFooter config={SITE_CONFIG} navItems={NAV_ITEMS} />
+        <SiteFooter config={siteConfig} navItems={NAV_ITEMS} />
       </body>
     </html>
   );
