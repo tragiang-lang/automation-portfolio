@@ -1,6 +1,7 @@
 import {
   assertRequiredHeaders,
   buildHeaderMap,
+  findRowIndexByColumnValue,
   MissingHeadersError,
   objectToRow,
   rowsToObjects,
@@ -96,5 +97,30 @@ describe("objectToRow", () => {
     expect(() =>
       objectToRow(["Name", "CreatedAt"], { Name: "Alice", CreatedAt: new Date() }),
     ).toThrow(TypeError);
+  });
+});
+
+describe("findRowIndexByColumnValue", () => {
+  const headerMap = { ReservationID: 0, SubmissionID: 1, Status: 2 };
+  const dataRows = [
+    ["RES-A", "sub-1", "処理中"],
+    ["RES-B", "sub-2", "受付済"],
+  ];
+
+  it("returns the 0-based index of the first matching row", () => {
+    expect(findRowIndexByColumnValue(headerMap, dataRows, "SubmissionID", "sub-2")).toBe(1);
+  });
+
+  it("returns null when no row matches", () => {
+    expect(findRowIndexByColumnValue(headerMap, dataRows, "SubmissionID", "sub-missing")).toBeNull();
+  });
+
+  it("returns null when the column itself does not exist in the header map", () => {
+    expect(findRowIndexByColumnValue(headerMap, dataRows, "NotAColumn", "sub-1")).toBeNull();
+  });
+
+  it("coerces both sides through String() before comparing", () => {
+    const numericHeaderMap = { Code: 0 };
+    expect(findRowIndexByColumnValue(numericHeaderMap, [[42]], "Code", "42")).toBe(0);
   });
 });

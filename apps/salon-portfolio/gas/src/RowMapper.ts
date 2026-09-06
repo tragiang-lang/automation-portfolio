@@ -78,3 +78,22 @@ export function objectToRow(
     return value;
   });
 }
+
+/** Returns the 0-based index into `dataRows` of the first row whose
+ *  `columnName` cell equals `value` (both sides compared as strings), or
+ *  `null` if the column is absent from `headerMap` or no row matches.
+ *  Pure — the shared seam behind both the idempotency Sheet backstop and
+ *  locating a reservation row to update in place (Phase 4 Task 2). */
+export function findRowIndexByColumnValue(
+  headerMap: Record<string, number>,
+  dataRows: unknown[][],
+  columnName: string,
+  value: string,
+): number | null {
+  const columnIndex = headerMap[columnName];
+  if (columnIndex === undefined) {
+    return null;
+  }
+  const index = dataRows.findIndex((row) => String(row[columnIndex] ?? "") === value);
+  return index === -1 ? null : index;
+}
