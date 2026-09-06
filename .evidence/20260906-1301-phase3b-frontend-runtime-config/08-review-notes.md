@@ -13,7 +13,7 @@ Evidence dir: `.evidence/20260906-1301-phase3b-frontend-runtime-config/`
 
 ## Test count: before → after
 
-- **Before** (cited baseline, per task instructions — controller ran `npx jest` in this worktree before Task 1 was dispatched): **9 test suites / 26 tests, all passing.**
+- **Before** (traceable source: `.evidence/20260905-1756-phase2c-image-integration/test.log`, the last known-good web-frontend test run prior to Phase 3B — verified by direct read, tail shows `Test Suites: 9 passed, 9 total` / `Tests: 26 passed, 26 total`; `build.log` in the same folder confirms this evidence set belongs to the Next.js web app, not the GAS backend): **9 test suites / 26 tests, all passing.**
 - Corroborating trace: `.evidence/20260906-1200-task1-runtime-config/full-test.log` records **10 suites / 33 tests** immediately after Task 1 added exactly 1 new suite (`lib/config/runtimeConfig` did not exist yet at that point — the +1 suite/+7 tests there is `types`/first client test), consistent with a 9/26 starting point.
 - **After** (this task, `test.log`): **16 test suites / 67 tests, all passing.**
 - Delta: **+7 suites, +41 tests**, 0 regressions, 0 failures.
