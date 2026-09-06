@@ -62,6 +62,46 @@ the full data flow, ownership boundary, and fallback behavior.
   unit tested (Phase 0 §Q) — see `config-and-sheets-guide.md` for the
   manual verification steps.
 
+## What Phase 3C added
+
+Pure reservation-domain logic, still entirely disconnected from `Api.ts`'s
+dispatcher — `Code.ts`/`Api.ts` are unchanged from Phase 3A, so nothing
+routes a real request to any of this yet:
+
+- **`models/ReservationRequest.ts`** — the client-facing `ReservationRequest`/
+  `ReservationRecord`/`ReservationStatus` contracts (Phase 0 §E, §I) and the
+  `ANY_STAFF` sentinel.
+- **`models/ReservationDomain.ts`** — domain-internal types:
+  `ReservationIssueCode`/`ValidationIssue` (fine-grained, distinct from the
+  public `ErrorCodes.ts` union), `StaffSelectionResolution`, and the
+  `NormalizedReservation` output shape.
+- **`Validation.ts`** — common (Layer A), vertical-agnostic validation:
+  `normalizeReservationRequest` + `validateReservationRequestShape`. No
+  menu/staff/business-hours knowledge, so a future non-salon vertical can
+  reuse it unchanged.
+- **`ReservationRules.ts`** — salon-specific resolution and business rules:
+  `resolveService`, `resolveStaffSelection`, `evaluateBusinessDay`,
+  `checkDateWindow`, and the composed entry point
+  `evaluateReservationRequest`.
+- **`SlotEngine.ts`** — pure candidate-slot generation:
+  `generateCandidateSlots`.
+- **`ReservationMapper.ts`** — `buildNormalizedReservation`, the pure
+  mapping from a validated request + resolved service/staff/candidate data
+  into `NormalizedReservation`.
+- **`availability/{AvailabilityStrategy, CalendarOverlapAvailability,
+  SharedAvailabilityStrategy, StaffAvailabilityStrategy}.ts`** — the
+  replaceable availability seam (Strategy pattern per Phase 0 §J/§K): the
+  shared overlap primitive plus the no-staff-dimension and
+  staff-selection strategies built on top of it.
+
+Every module above is pure — no `SpreadsheetApp`/`CalendarApp`/`GmailApp`/
+`LockService` call anywhere in this layer — and covered by Jest. See
+[`reservation-domain-architecture.md`](reservation-domain-architecture.md)
+for the full request→validation→resolution→business-rules→SlotEngine→
+AvailabilityStrategy→NormalizedReservation flow, the availability
+architecture, concurrency caveats, the future orchestration contract, and
+documented current limitations.
+
 ## Why no shared `packages/` yet
 
 Per Phase 0 §B, `packages/` is intentionally deferred until the reusable
@@ -73,8 +113,9 @@ core is *extracted* from a working Project 1, not designed up front — see
 The seven GAS boundary modules (`Code`, `Api`, `Validation`, `Sheets`,
 `Calendar`, `Mail`, `SlotEngine`) and the availability-strategy seam are
 defined in [`phase0-specification.md`](phase0-specification.md) §D/§T/§U.
-Phase 3A populates `Code.ts` (entrypoints + dispatch wiring only), `Api.ts`
+Phase 3A populated `Code.ts` (entrypoints + dispatch wiring only), `Api.ts`
 (routing/orchestration for `getConfig` only), and `Sheets.ts` (thin data
-adapter). `Validation.ts`, `Calendar.ts`, `Mail.ts`, `SlotEngine.ts`, and
-the `availability/` strategies remain unpopulated — later phases implement
-the behavior they own.
+adapter). Phase 3C populated `Validation.ts` and `SlotEngine.ts` plus the
+`availability/` strategies — as pure logic only, never wired into `Api.ts`'s
+dispatcher (see "What Phase 3C added" above). `Calendar.ts` and `Mail.ts`
+remain unpopulated; later phases implement the behavior they own.

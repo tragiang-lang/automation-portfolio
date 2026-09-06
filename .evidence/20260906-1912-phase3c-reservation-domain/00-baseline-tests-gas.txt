@@ -1,0 +1,20 @@
+
+> salon-portfolio-gas@0.1.0 test
+> jest --silent
+
+PASS tests/PublicConfig.test.ts
+PASS tests/ReservationId.test.ts
+PASS tests/DemoSeed.test.ts
+PASS tests/ConfigParser.test.ts
+PASS tests/Utils.test.ts
+PASS tests/Api.test.ts
+PASS tests/RowMapper.test.ts
+PASS tests/ConfigValidator.test.ts
+PASS tests/ConfigStore.test.ts
+PASS tests/Health.test.ts
+PASS tests/SheetSchemas.test.ts
+
+Test Suites: 11 passed, 11 total
+Tests:       82 passed, 82 total
+Snapshots:   0 total
+Time:        4.426 s, estimated 5 s

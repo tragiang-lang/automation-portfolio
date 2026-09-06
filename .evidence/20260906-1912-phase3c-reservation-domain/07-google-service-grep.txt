@@ -1,0 +1,9 @@
+$ grep -rn "SpreadsheetApp\|CalendarApp\|GmailApp\|PropertiesService\|LockService" \
+    src/Validation.ts src/ReservationRules.ts src/SlotEngine.ts src/ReservationMapper.ts \
+    src/availability/ src/models/ReservationRequest.ts src/models/ReservationDomain.ts
+
+src/ReservationRules.ts:24: * Neither this file nor anything it calls ever reads `SpreadsheetApp` —
+src/ReservationRules.ts:164:   *  `CalendarApp` (Phase 3C §53/§56, hard rule). */
+src/availability/AvailabilityStrategy.ts:5: *  fetches events itself (Phase 3C §37/§53, hard rule: no `CalendarApp`
+src/availability/CalendarOverlapAvailability.ts:23: *  `CalendarApp` — `existingEvents` is supplied by the caller, which in a
+(exit code: 0)

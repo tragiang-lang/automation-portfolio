@@ -1,0 +1,26 @@
+ apps/salon-portfolio/gas/src/ReservationMapper.ts  |  46 +++
+ apps/salon-portfolio/gas/src/ReservationRules.ts   | 273 +++++++++++++++++
+ apps/salon-portfolio/gas/src/SlotEngine.ts         |  61 ++++
+ apps/salon-portfolio/gas/src/Utils.ts              |  90 ++++++
+ apps/salon-portfolio/gas/src/Validation.ts         |  91 ++++++
+ apps/salon-portfolio/gas/src/availability/.gitkeep |   0
+ .../gas/src/availability/AvailabilityStrategy.ts   |  51 ++++
+ .../availability/CalendarOverlapAvailability.ts    |  35 +++
+ .../src/availability/SharedAvailabilityStrategy.ts |  14 +
+ .../src/availability/StaffAvailabilityStrategy.ts  |  52 ++++
+ .../gas/src/models/ReservationDomain.ts            |  68 +++++
+ .../gas/src/models/ReservationRequest.ts           |  56 ++++
+ .../gas/tests/ReservationMapper.test.ts            |  82 +++++
+ .../gas/tests/ReservationRules.test.ts             | 333 +++++++++++++++++++++
+ apps/salon-portfolio/gas/tests/SlotEngine.test.ts  | 100 +++++++
+ apps/salon-portfolio/gas/tests/Utils.test.ts       |  67 +++++
+ apps/salon-portfolio/gas/tests/Validation.test.ts  | 103 +++++++
+ .../gas/tests/availability/.gitkeep                |   0
+ .../availability/AvailabilityStrategy.test.ts      |  27 ++
+ .../CalendarOverlapAvailability.test.ts            |  39 +++
+ .../SharedAvailabilityStrategy.test.ts             |  17 ++
+ .../availability/StaffAvailabilityStrategy.test.ts |  54 ++++
+ docs/architecture-overview.md                      |  49 ++-
+ docs/reservation-domain-architecture.md            | 234 +++++++++++++++
+ docs/roadmap.md                                    |  32 +-
+ 25 files changed, 1964 insertions(+), 10 deletions(-)

@@ -9,6 +9,8 @@
  * lib target).
  */
 
+import { BusinessHours } from "./models/Config";
+
 const TOKYO_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 /** Current instant as an ISO 8601 UTC string — the canonical internal
@@ -44,4 +46,92 @@ export function formatDateYYYYMMDDInTokyo(date: Date): string {
 export function formatDateYYYYMMDDDashedInTokyo(date: Date): string {
   const { year, month, day } = tokyoDateParts(date);
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Sunday-first order matching `Date.prototype.getUTCDay()`'s 0-6 index —
+ *  used only to translate a weekday index into `BusinessHours`' key
+ *  names, never to compute the index itself from a real instant (Phase
+ *  3C §22: business-hours evaluation operates on an already-resolved
+ *  calendar date string, not on "now"). */
+const WEEKDAY_ORDER: readonly (keyof BusinessHours)[] = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
+
+/** Weekday of a `YYYY-MM-DD` calendar date string. Pure calendar
+ *  arithmetic — once the date components are already known (as they are
+ *  for a reservation request's `date` field), no Asia/Tokyo offset
+ *  conversion is needed to find its weekday; `Date.UTC` is used only as a
+ *  proleptic-Gregorian calculator, never interpreted as an instant. */
+export function getWeekdayForDateString(dateStr: string): keyof BusinessHours {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const dayIndex = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return WEEKDAY_ORDER[dayIndex];
+}
+
+/** Parses a strict `HH:mm` string into minutes since midnight. Callers
+ *  (SlotEngine, ReservationRules) are responsible for validating the
+ *  format first — this assumes well-formed input. */
+export function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+/** Inverse of `timeToMinutes` for a same-day value (0-1439). */
+export function minutesToTimeString(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+/** Converts an Asia/Tokyo local `YYYY-MM-DD` + `HH:mm` pair into the real
+ *  UTC instant (epoch milliseconds) it represents — the one place this
+ *  domain converts a Tokyo-local wall-clock reading into something
+ *  comparable against a real `Date`/`now` (Phase 3C §12/§25). */
+export function tokyoDateTimeToInstant(dateStr: string, timeStr: string): number {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  return Date.UTC(year, month - 1, day, hours, minutes) - TOKYO_OFFSET_MS;
+}
+
+/** Adds `days` calendar days to a `YYYY-MM-DD` string, staying in pure
+ *  date arithmetic (no time-of-day, no timezone offset — a calendar day
+ *  is timezone-agnostic once you already have Y/M/D components). Used for
+ *  the `reservation.maxBookingDays` booking-horizon check. */
+export function addDaysToTokyoDateString(dateStr: string, days: number): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1, day) + days * 24 * 60 * 60 * 1000);
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}-${String(shifted.getUTCDate()).padStart(2, "0")}`;
+}
+
+/** True only for a string that is both `YYYY-MM-DD`-shaped and a real
+ *  calendar date (rejects 2026-02-30, 2026-13-01, etc.) — callers must
+ *  still check the format pattern first if they want a distinct
+ *  "malformed" vs "impossible date" error. */
+export function isValidCalendarDateString(dateStr: string): boolean {
+  const parts = dateStr.split("-").map(Number);
+  if (parts.length !== 3 || parts.some((part) => Number.isNaN(part))) {
+    return false;
+  }
+  const [year, month, day] = parts;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+/** Combines a date + time into one Tokyo-local string in a format that
+ *  sorts chronologically as a plain string (`YYYY-MM-DDTHH:mm`) — this is
+ *  the representation `BusyInterval`/`SlotCandidate` overlap comparisons
+ *  rely on (Phase 3C §38/§39: no `Date` parsing needed for the overlap
+ *  check itself). */
+export function toTokyoLocalDateTimeString(dateStr: string, timeStr: string): string {
+  return `${dateStr}T${timeStr}`;
 }

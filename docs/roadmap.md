@@ -43,12 +43,32 @@ fixed template.
       proxy added for future browser-initiated actions (unused so far).
       No GAS changes. See
       [`runtime-config-guide.md`](runtime-config-guide.md).
+- [x] **Phase 3C — Reservation domain, validation & availability
+      foundation.** `Validation.ts` (common field validation),
+      `ReservationRules.ts` (salon-specific resolution + business-hours/
+      holiday/date-window rules + the composed
+      `evaluateReservationRequest` entry point), `SlotEngine.ts` (pure
+      slot generation), `availability/` (`AvailabilityStrategy` interface,
+      `CalendarOverlapAvailability`, `SharedAvailabilityStrategy`,
+      `StaffAvailabilityStrategy`), `ReservationMapper.ts`,
+      `models/ReservationRequest.ts`/`models/ReservationDomain.ts`. Zero
+      Google service calls anywhere in this layer — see
+      [`reservation-domain-architecture.md`](reservation-domain-architecture.md).
+      No `createReservation` action, no Sheets/Calendar/Gmail writes, no
+      `LockService`, no frontend change (the reservation page has no form
+      yet to reconcile). Inserted ahead of the original Phase 4/5 split
+      because this pure-domain layer has no dependency on the
+      Sheets/Calendar adapters Phase 4 will add.
 - [ ] **Phase 4 — Sheets/Calendar/Gmail adapters.** `Sheets.ts`,
       `Calendar.ts`, `Mail.ts` as thin wrappers (Phase 0 §T), plus the
       SERVICES/STAFF catalog actions.
-- [ ] **Phase 5 — Availability & reservations.** `SlotEngine.ts`, both
-      availability strategies (Phase 0 §J/§K), `createReservation`
-      transaction flow (§U), idempotency (§P).
+- [ ] **Phase 5 — Reservation submission workflow.** Wires Phase 3C's
+      `evaluateReservationRequest` to real data: `getServices`/`getStaff`
+      actions (Phase 4), a real `Calendar.ts`-backed `BusyInterval[]`
+      supply for `availabilityFor`, the `createReservation` transaction
+      flow (`phase0-specification.md` §U: `処理中` row -> `LockService` ->
+      re-check availability -> Calendar event -> `受付済`/`要確認`),
+      idempotency (§P).
 - [ ] **Phase 6 — Contact & cancellation workflows.** `createInquiry`,
       `requestCancellation` (Phase 0 §L), email workflow (§M).
 - [ ] **Phase 7 — Reusable core extraction.** Move the generic parts
@@ -57,6 +77,6 @@ fixed template.
       instead of speculative. Japanese operations guide (Phase 0 §S) also
       ships around this point.
 
-Phase 3B (frontend `getConfig` integration) is the newest code in the
-repo; Phase 4 (Sheets/Calendar/Gmail adapters + SERVICES/STAFF catalog
-actions) is next and has not been started.
+Phase 3C (reservation domain, validation & availability foundation) is the
+newest code in the repo; Phase 4 (Sheets/Calendar/Gmail adapters +
+SERVICES/STAFF catalog actions) is next and has not been started.
