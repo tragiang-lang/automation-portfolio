@@ -1,0 +1,188 @@
+diff --git a/apps/salon-portfolio/web/components/layout/MobileNav.tsx b/apps/salon-portfolio/web/components/layout/MobileNav.tsx
+index 52c7454..8f20ecb 100644
+--- a/apps/salon-portfolio/web/components/layout/MobileNav.tsx
++++ b/apps/salon-portfolio/web/components/layout/MobileNav.tsx
+@@ -15,11 +15,13 @@ export function MobileNav({
+   onClose,
+   navItems,
+   triggerRef,
++  reservationEnabled = true,
+ }: {
+   open: boolean;
+   onClose: () => void;
+   navItems: NavItem[];
+   triggerRef: React.RefObject<HTMLButtonElement | null>;
++  reservationEnabled?: boolean;
+ }) {
+   const closeButtonRef = useRef<HTMLButtonElement>(null);
+ 
+@@ -81,9 +83,11 @@ export function MobileNav({
+             </li>
+           ))}
+         </ul>
+-        <Button href="/reservation" fullWidth className="mt-6">
+-          ご予約はこちら
+-        </Button>
++        {reservationEnabled ? (
++          <Button href="/reservation" fullWidth className="mt-6">
++            ご予約はこちら
++          </Button>
++        ) : null}
+       </nav>
+     </div>
+   );
+diff --git a/apps/salon-portfolio/web/components/layout/SiteFooter.test.tsx b/apps/salon-portfolio/web/components/layout/SiteFooter.test.tsx
+new file mode 100644
+index 0000000..6049e54
+--- /dev/null
++++ b/apps/salon-portfolio/web/components/layout/SiteFooter.test.tsx
+@@ -0,0 +1,46 @@
++import { render, screen } from "@testing-library/react";
++import { SiteFooter } from "@/components/layout/SiteFooter";
++import type { NavItem, SiteConfig } from "@/types/content";
++
++const config: SiteConfig = {
++  business: {
++    name: "凛",
++    nameLatin: "Rin Nail & Eyelash",
++    tagline: "静けさの中で、指先とまなざしを整える。",
++    phone: "03-1234-5678",
++    email: "info@example.com",
++    address: "東京都中央区銀座1-2-3",
++    postalCode: "〒104-0061",
++  },
++  hours: {
++    monday: "10:00-19:00",
++    tuesday: "10:00-19:00",
++    wednesday: "closed",
++    thursday: "10:00-19:00",
++    friday: "10:00-20:00",
++    saturday: "10:00-20:00",
++    sunday: "10:00-18:00",
++  },
++  features: { contactForm: true, reservation: true, staffSelection: true },
++  staffAnyAvailableOption: true,
++  socialLinks: [],
++};
++
++const navItems: NavItem[] = [{ label: "コンセプト", href: "#concept" }];
++
++describe("SiteFooter reservation flag", () => {
++  it("shows the reservation button when features.reservation is true", () => {
++    render(<SiteFooter config={config} navItems={navItems} />);
++    expect(screen.getByRole("link", { name: "ご予約はこちら" })).toBeInTheDocument();
++  });
++
++  it("hides the reservation button when features.reservation is false", () => {
++    render(
++      <SiteFooter
++        config={{ ...config, features: { ...config.features, reservation: false } }}
++        navItems={navItems}
++      />,
++    );
++    expect(screen.queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
++  });
++});
+diff --git a/apps/salon-portfolio/web/components/layout/SiteFooter.tsx b/apps/salon-portfolio/web/components/layout/SiteFooter.tsx
+index 81329de..664858c 100644
+--- a/apps/salon-portfolio/web/components/layout/SiteFooter.tsx
++++ b/apps/salon-portfolio/web/components/layout/SiteFooter.tsx
+@@ -84,9 +84,11 @@ export function SiteFooter({
+             <br />
+             {config.business.phone}
+           </p>
+-          <Button href="/reservation" variant="secondary" className="mt-6 border-on-primary/40 text-on-primary hover:bg-on-primary/10">
+-            ご予約はこちら
+-          </Button>
++          {config.features.reservation ? (
++            <Button href="/reservation" variant="secondary" className="mt-6 border-on-primary/40 text-on-primary hover:bg-on-primary/10">
++              ご予約はこちら
++            </Button>
++          ) : null}
+         </div>
+       </Container>
+ 
+diff --git a/apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx b/apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx
+index 3bd966a..8b3134b 100644
+--- a/apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx
++++ b/apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx
+@@ -58,3 +58,28 @@ describe("SiteHeader / MobileNav", () => {
+     expect(within(dialog).getByRole("link", { name: "メニュー" })).toBeInTheDocument();
+   });
+ });
++
++describe("SiteHeader reservation flag", () => {
++  it("shows the reservation buttons by default", () => {
++    render(<SiteHeader business={business} navItems={navItems} />);
++    // getAllByRole (not getByRole): the desktop button's visible text and
++    // the mobile button's aria-label both compute to the same accessible
++    // name "ご予約はこちら", and jsdom has no real Tailwind CSS loaded
++    // (jest.config.ts / next/jest stub out CSS imports), so the `hidden`
++    // / `sm:block` responsive classes that make only one of them visible
++    // in a real browser have no effect here — both stay in the tree.
++    expect(screen.getAllByRole("link", { name: "ご予約はこちら" }).length).toBeGreaterThan(0);
++  });
++
++  it("hides the header and mobile-nav reservation buttons when reservationEnabled is false", async () => {
++    const user = userEvent.setup();
++    render(<SiteHeader business={business} navItems={navItems} reservationEnabled={false} />);
++
++    expect(screen.queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
++    expect(screen.queryByRole("link", { name: "予約" })).not.toBeInTheDocument();
++
++    await user.click(screen.getByRole("button", { name: "メニューを開く" }));
++    const dialog = await screen.findByRole("dialog");
++    expect(within(dialog).queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
++  });
++});
+diff --git a/apps/salon-portfolio/web/components/layout/SiteHeader.tsx b/apps/salon-portfolio/web/components/layout/SiteHeader.tsx
+index fb95b49..07cff2f 100644
+--- a/apps/salon-portfolio/web/components/layout/SiteHeader.tsx
++++ b/apps/salon-portfolio/web/components/layout/SiteHeader.tsx
+@@ -21,9 +21,11 @@ import type { BusinessInfo, NavItem } from "@/types/content";
+ export function SiteHeader({
+   business,
+   navItems,
++  reservationEnabled = true,
+ }: {
+   business: BusinessInfo;
+   navItems: NavItem[];
++  reservationEnabled?: boolean;
+ }) {
+   const pathname = usePathname();
+   const isHome = pathname === "/";
+@@ -94,14 +96,18 @@ export function SiteHeader({
+                 variant overrides its own base utility, not an unrelated
+                 one. Toggling display on a wrapper sidesteps that clash
+                 entirely. */}
+-            <div className="hidden sm:block">
+-              <Button href="/reservation">ご予約はこちら</Button>
+-            </div>
+-            <div className="sm:hidden">
+-              <Button href="/reservation" aria-label="ご予約はこちら">
+-                予約
+-              </Button>
+-            </div>
++            {reservationEnabled ? (
++              <>
++                <div className="hidden sm:block">
++                  <Button href="/reservation">ご予約はこちら</Button>
++                </div>
++                <div className="sm:hidden">
++                  <Button href="/reservation" aria-label="ご予約はこちら">
++                    予約
++                  </Button>
++                </div>
++              </>
++            ) : null}
+             <button
+               ref={menuButtonRef}
+               type="button"
+@@ -131,6 +137,7 @@ export function SiteHeader({
+         onClose={() => setMobileOpen(false)}
+         navItems={navItems}
+         triggerRef={menuButtonRef}
++        reservationEnabled={reservationEnabled}
+       />
+     </>
+   );

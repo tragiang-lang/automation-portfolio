@@ -1,0 +1,6 @@
+ M apps/salon-portfolio/web/app/page.tsx
+?? .evidence/20260906-1200-task1-runtime-config/
+?? .evidence/20260906-task4-resolve-site-config/
+?? .evidence/20260906-task7-gate-reservation-cta/
+?? .evidence/20260906-task9-page-runtime-config/
+?? docs/superpowers/plans/2026-09-06-phase3b-frontend-runtime-config.md

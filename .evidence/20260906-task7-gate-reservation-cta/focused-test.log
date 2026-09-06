@@ -1,0 +1,6 @@
+
+Test Suites: 2 passed, 2 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        2.365 s
+Ran all test suites matching components/layout/SiteHeader.test.tsx|components/layout/SiteFooter.test.tsx.

@@ -1,0 +1,9 @@
+M  apps/salon-portfolio/web/components/layout/MobileNav.tsx
+A  apps/salon-portfolio/web/components/layout/SiteFooter.test.tsx
+M  apps/salon-portfolio/web/components/layout/SiteFooter.tsx
+M  apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx
+M  apps/salon-portfolio/web/components/layout/SiteHeader.tsx
+?? .evidence/20260906-1200-task1-runtime-config/
+?? .evidence/20260906-task4-resolve-site-config/
+?? .evidence/20260906-task7-gate-reservation-cta/
+?? docs/superpowers/plans/2026-09-06-phase3b-frontend-runtime-config.md

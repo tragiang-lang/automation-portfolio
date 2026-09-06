@@ -1,0 +1,15 @@
+cbb4051 feat(web): add runtime config type and GAS API client
+c15a02f docs: archive Phase 3A SDD workspace (task briefs/reports/ledger)
+commit cbb405101c025a6a96322a8cb2e9785ea3ec3bfd
+Author: Giang <tragiang.cooljapan@gmail.com>
+Date:   Sun Sep 6 12:03:32 2026 +0900
+
+    feat(web): add runtime config type and GAS API client
+    
+    Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01VzBtzUL4gs734j4ikgcCTk
+
+ apps/salon-portfolio/web/lib/api/gasClient.test.ts | 113 +++++++++++++++++++++
+ apps/salon-portfolio/web/lib/api/gasClient.ts      |  85 ++++++++++++++++
+ apps/salon-portfolio/web/types/runtime-config.ts   |  60 +++++++++++
+ 3 files changed, 258 insertions(+)

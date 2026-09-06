@@ -1,0 +1,128 @@
+diff --git a/apps/salon-portfolio/web/.gitignore b/apps/salon-portfolio/web/.gitignore
+index 1548d6f..37e9d40 100644
+--- a/apps/salon-portfolio/web/.gitignore
++++ b/apps/salon-portfolio/web/.gitignore
+@@ -33,6 +33,7 @@ yarn-error.log*
+ 
+ # env files (can opt-in for committing if needed)
+ .env*
++!.env.example
+ 
+ # vercel
+ .vercel
+diff --git a/docs/architecture-overview.md b/docs/architecture-overview.md
+index 8511ae4..c1bd2e8 100644
+--- a/docs/architecture-overview.md
++++ b/docs/architecture-overview.md
+@@ -15,6 +15,11 @@ Browser → Next.js (apps/salon-portfolio/web)
+                         → Google Sheets / Calendar / Gmail
+ ```
+ 
++As of Phase 3B, `apps/salon-portfolio/web` fetches `getConfig` from a
++Server Component boundary (`lib/config/runtimeConfig.ts`), not from the
++browser — see [`runtime-config-guide.md`](runtime-config-guide.md) for
++the full data flow, ownership boundary, and fallback behavior.
++
+ ## What exists after Phase 3A
+ 
+ - **`apps/salon-portfolio/web`** — unchanged since Phase 2C. Still on
+diff --git a/docs/changelog.md b/docs/changelog.md
+index ebcd5dd..4bb0459 100644
+--- a/docs/changelog.md
++++ b/docs/changelog.md
+@@ -4,6 +4,47 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+ 
+ ## [Unreleased]
+ 
++### Added — Phase 3B: frontend runtime config integration
++
++- `lib/api/gasClient.ts`: server-only `callGasAction` helper that POSTs
++  `{ action, payload }` to `GAS_WEBAPP_URL` with `cache: "no-store"` —
++  never bundled into the browser (no `"use client"` in its import chain,
++  no `NEXT_PUBLIC_*` variable introduced).
++- `lib/validation/runtimeConfigValidator.ts`: structural validation of the
++  `getConfig` response before any component ever sees it.
++- `lib/config/runtimeConfig.ts`: `getRuntimeConfig()` (wrapped in React's
++  `cache()`, one GAS call per request) resolving `demo-fallback` /
++  `runtime` / `runtime-error`, always falling back to
++  `config/demo-content.ts`-derived values so a real backend failure never
++  renders a blank page.
++- `lib/config/resolveSiteConfig.ts`: merges the runtime
++  `business`/`hours`/`holidays`/`features`/`staffAnyAvailableOption`
++  fields with the frontend-owned `nameLatin`/`tagline`/`postalCode`/
++  `socialLinks` into the existing `SiteConfig` view-model, so no Phase 2
++  section component needed to change.
++- `app/layout.tsx` (`generateMetadata` + `RootLayout`) and `app/page.tsx`
++  now call `getRuntimeConfig()` instead of importing
++  `config/demo-content.ts` directly. `components/layout/
++  RuntimeConfigNotice.tsx` renders a calm Japanese notice above the
++  header on the `runtime-error` path only.
++- `app/api/gas/route.ts`: new generic `POST /api/gas` proxy for a future
++  browser-initiated action (reservation/contact submission) — unused so
++  far in Phase 3B; `getConfig` is fetched directly from the server
++  boundary above instead, since a Server Component calling its own Route
++  Handler over HTTP is an anti-pattern Next.js recommends against. Never
++  echoes a caught error's message to the client.
++- Reservation CTA buttons in `SiteHeader`, `MobileNav`, and `SiteFooter`
++  are now gated on `features.reservation`, matching the existing
++  `StaffSection` pattern for `features.staffSelection`.
++- `docs/runtime-config-guide.md`: new guide documenting the data flow,
++  ownership boundary (what GAS/CONFIG owns vs. what stays
++  frontend-only), fallback/error behavior, caching/revalidation, and
++  security notes.
++- Not included (deliberately out of scope): no GAS/`gas/src/**` changes —
++  the Phase 3A `getConfig` contract was found fully sufficient; no
++  reservation/contact submission, Calendar, Gmail, auth, Supabase, or
++  deployment.
++
+ ### Added — Phase 3A: GAS configuration + data layer
+ 
+ - `apps/salon-portfolio/gas/src/SheetNames.ts` + `SheetSchemas.ts`:
+diff --git a/docs/roadmap.md b/docs/roadmap.md
+index 29a72c5..c9f4726 100644
+--- a/docs/roadmap.md
++++ b/docs/roadmap.md
+@@ -32,9 +32,17 @@ fixed template.
+       `getConfig` action + dispatcher, `Utils.ts`/`ids/ReservationId.ts`,
+       and `DemoSeed.ts`/`SetupDemoSheets.ts`. Frontend is still on
+       `config/demo-content.ts` — not wired to real GAS yet.
+-- [ ] **Phase 3B — Frontend CONFIG integration.** Replace
+-      `web/config/demo-content.ts` with a real `getConfig` fetch; no new
+-      GAS actions.
++- [x] **Phase 3B — Frontend CONFIG integration.** `web/app/layout.tsx`
++      (via `generateMetadata`) and `web/app/page.tsx` now source
++      `business`/`hours`/`holidays`/`features`/`staffAnyAvailableOption`/
++      `reservation` from the real `getConfig` action, through
++      `lib/api/gasClient.ts` -> `lib/validation/runtimeConfigValidator.ts`
++      -> `lib/config/runtimeConfig.ts` -> `lib/config/resolveSiteConfig.ts`.
++      Explicit `runtime`/`demo-fallback`/`runtime-error` status, with a
++      visible notice on the error path. Generic `app/api/gas/route.ts`
++      proxy added for future browser-initiated actions (unused so far).
++      No GAS changes. See
++      [`runtime-config-guide.md`](runtime-config-guide.md).
+ - [ ] **Phase 4 — Sheets/Calendar/Gmail adapters.** `Sheets.ts`,
+       `Calendar.ts`, `Mail.ts` as thin wrappers (Phase 0 §T), plus the
+       SERVICES/STAFF catalog actions.
+@@ -49,5 +57,6 @@ fixed template.
+       instead of speculative. Japanese operations guide (Phase 0 §S) also
+       ships around this point.
+ 
+-Phase 3A is the newest code in the repo; Phase 3B (frontend `getConfig`
+-integration) is the next phase and has not been started.
++Phase 3B (frontend `getConfig` integration) is the newest code in the
++repo; Phase 4 (Sheets/Calendar/Gmail adapters + SERVICES/STAFF catalog
++actions) is next and has not been started.
+diff --git a/apps/salon-portfolio/web/package.json b/apps/salon-portfolio/web/package.json
+index 893a293..73cccad 100644
+--- a/apps/salon-portfolio/web/package.json
++++ b/apps/salon-portfolio/web/package.json
+@@ -7,7 +7,8 @@
+     "build": "next build",
+     "start": "next start",
+     "lint": "eslint",
+-    "test": "jest"
++    "test": "jest",
++    "typecheck": "tsc --noEmit"
+   },
+   "dependencies": {
+     "next": "16.3.4",

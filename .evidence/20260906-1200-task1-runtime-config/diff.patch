@@ -1,0 +1,285 @@
+commit cbb405101c025a6a96322a8cb2e9785ea3ec3bfd
+Author: Giang <tragiang.cooljapan@gmail.com>
+Date:   Sun Sep 6 12:03:32 2026 +0900
+
+    feat(web): add runtime config type and GAS API client
+    
+    Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01VzBtzUL4gs734j4ikgcCTk
+
+diff --git a/apps/salon-portfolio/web/lib/api/gasClient.test.ts b/apps/salon-portfolio/web/lib/api/gasClient.test.ts
+new file mode 100644
+index 0000000..3541895
+--- /dev/null
++++ b/apps/salon-portfolio/web/lib/api/gasClient.test.ts
+@@ -0,0 +1,113 @@
++/**
++ * @jest-environment node
++ */
++import { callGasAction } from "./gasClient";
++
++const ORIGINAL_ENV = process.env;
++
++beforeEach(() => {
++  process.env = { ...ORIGINAL_ENV, GAS_WEBAPP_URL: "https://example.com/exec" };
++  global.fetch = jest.fn();
++});
++
++afterEach(() => {
++  process.env = ORIGINAL_ENV;
++  jest.restoreAllMocks();
++});
++
++function mockFetchOnce(body: unknown, init: { ok?: boolean; status?: number } = {}) {
++  (global.fetch as jest.Mock).mockResolvedValueOnce({
++    ok: init.ok ?? true,
++    status: init.status ?? 200,
++    json: async () => body,
++  });
++}
++
++describe("callGasAction", () => {
++  it("returns the parsed success envelope on a 200 ok response", async () => {
++    mockFetchOnce({ ok: true, data: { hello: "world" } });
++
++    const result = await callGasAction<{ hello: string }>("getConfig", {});
++
++    expect(result).toEqual({ ok: true, data: { hello: "world" } });
++    expect(global.fetch).toHaveBeenCalledWith(
++      "https://example.com/exec",
++      expect.objectContaining({
++        method: "POST",
++        body: JSON.stringify({ action: "getConfig", payload: {} }),
++      }),
++    );
++  });
++
++  it("returns the parsed error envelope when GAS reports ok:false", async () => {
++    mockFetchOnce({
++      ok: false,
++      error: { code: "CONFIG_INVALID", message: "設定情報の読み込みに失敗しました。" },
++    });
++
++    const result = await callGasAction("getConfig", {});
++
++    expect(result).toEqual({
++      ok: false,
++      error: { code: "CONFIG_INVALID", message: "設定情報の読み込みに失敗しました。" },
++    });
++  });
++
++  it("returns a NETWORK_ERROR result when fetch rejects", async () => {
++    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("boom"));
++
++    const result = await callGasAction("getConfig", {});
++
++    expect(result.ok).toBe(false);
++    if (!result.ok) {
++      expect(result.error.code).toBe("NETWORK_ERROR");
++    }
++  });
++
++  it("returns an HTTP_ERROR result for a non-2xx response without parsing its body", async () => {
++    mockFetchOnce({ irrelevant: true }, { ok: false, status: 500 });
++
++    const result = await callGasAction("getConfig", {});
++
++    expect(result.ok).toBe(false);
++    if (!result.ok) {
++      expect(result.error.code).toBe("HTTP_ERROR");
++    }
++  });
++
++  it("returns an INVALID_RESPONSE result when the response body is not valid JSON", async () => {
++    (global.fetch as jest.Mock).mockResolvedValueOnce({
++      ok: true,
++      status: 200,
++      json: async () => {
++        throw new Error("not json");
++      },
++    });
++
++    const result = await callGasAction("getConfig", {});
++
++    expect(result.ok).toBe(false);
++    if (!result.ok) {
++      expect(result.error.code).toBe("INVALID_RESPONSE");
++    }
++  });
++
++  it("returns an INVALID_RESPONSE result when the body doesn't match the envelope shape", async () => {
++    mockFetchOnce({ nonsense: true });
++
++    const result = await callGasAction("getConfig", {});
++
++    expect(result.ok).toBe(false);
++    if (!result.ok) {
++      expect(result.error.code).toBe("INVALID_RESPONSE");
++    }
++  });
++
++  it("throws when GAS_WEBAPP_URL is not configured", async () => {
++    delete process.env.GAS_WEBAPP_URL;
++
++    await expect(callGasAction("getConfig", {})).rejects.toThrow(
++      "GAS_WEBAPP_URL is not configured.",
++    );
++  });
++});
+diff --git a/apps/salon-portfolio/web/lib/api/gasClient.ts b/apps/salon-portfolio/web/lib/api/gasClient.ts
+new file mode 100644
+index 0000000..cce9dba
+--- /dev/null
++++ b/apps/salon-portfolio/web/lib/api/gasClient.ts
+@@ -0,0 +1,85 @@
++/**
++ * Thin server-only client for calling the GAS backend's single-action
++ * endpoint (Phase 0 §H / Phase 3A `Api.ts`). Never import this file from
++ * a Client Component — `GAS_WEBAPP_URL` (and any future shared secret)
++ * must stay server-side.
++ */
++
++export interface GasClientSuccess<T> {
++  ok: true;
++  data: T;
++}
++
++export interface GasClientFailure {
++  ok: false;
++  error: { code: string; message: string };
++}
++
++export type GasClientResult<T> = GasClientSuccess<T> | GasClientFailure;
++
++function failure(code: string, message: string): GasClientFailure {
++  return { ok: false, error: { code, message } };
++}
++
++/** True only for a plausible `{ ok: boolean, ... }` envelope — the same
++ *  shape GAS's `ApiResponse<T>` always produces (Api.ts). Does not
++ *  validate `data`'s inner shape; callers validate that themselves. */
++function isApiEnvelope(value: unknown): value is { ok: boolean } {
++  return (
++    typeof value === "object" &&
++    value !== null &&
++    "ok" in value &&
++    typeof (value as { ok: unknown }).ok === "boolean"
++  );
++}
++
++/**
++ * Calls one GAS action via its single-endpoint contract:
++ * `POST { action, payload } -> { ok, data } | { ok: false, error }`.
++ *
++ * Requires `GAS_WEBAPP_URL` to already be set — callers that need a
++ * demo/offline fallback (`lib/config/runtimeConfig.ts`) check that env
++ * var themselves before calling this, so this function stays a single-
++ * responsibility "talk to GAS" primitive.
++ */
++export async function callGasAction<T>(
++  action: string,
++  payload: unknown = {},
++): Promise<GasClientResult<T>> {
++  const url = process.env.GAS_WEBAPP_URL;
++  if (!url || url.trim().length === 0) {
++    throw new Error("GAS_WEBAPP_URL is not configured.");
++  }
++
++  let response: Response;
++  try {
++    response = await fetch(url, {
++      method: "POST",
++      headers: { "Content-Type": "application/json" },
++      body: JSON.stringify({ action, payload }),
++      // Business config (hours/holidays/feature flags) must never go
++      // stale behind Next.js's fetch cache.
++      cache: "no-store",
++    });
++  } catch (error) {
++    const message = error instanceof Error ? error.message : "unknown network error";
++    return failure("NETWORK_ERROR", `Failed to reach GAS: ${message}`);
++  }
++
++  if (!response.ok) {
++    return failure("HTTP_ERROR", `GAS responded with HTTP ${response.status}.`);
++  }
++
++  let parsed: unknown;
++  try {
++    parsed = await response.json();
++  } catch {
++    return failure("INVALID_RESPONSE", "GAS response was not valid JSON.");
++  }
++
++  if (!isApiEnvelope(parsed)) {
++    return failure("INVALID_RESPONSE", "GAS response did not match the expected envelope.");
++  }
++
++  return parsed as GasClientResult<T>;
++}
+diff --git a/apps/salon-portfolio/web/types/runtime-config.ts b/apps/salon-portfolio/web/types/runtime-config.ts
+new file mode 100644
+index 0000000..3b9f94d
+--- /dev/null
++++ b/apps/salon-portfolio/web/types/runtime-config.ts
+@@ -0,0 +1,60 @@
++/**
++ * Frontend mirror of the GAS `PublicConfig` contract (Phase 3A —
++ * apps/salon-portfolio/gas/src/models/Config.ts `PublicConfig`,
++ * apps/salon-portfolio/gas/src/PublicConfig.ts `buildPublicConfig`).
++ *
++ * This is the validated, backend-shaped runtime config — a distinct type
++ * from `types/content.ts`'s `SiteConfig` (the UI view-model). The mapping
++ * layer (`lib/config/resolveSiteConfig.ts`) converts one into the other;
++ * components never see this type directly.
++ */
++
++export interface PublicRuntimeBusinessInfo {
++  name: string;
++  phone: string;
++  email: string;
++  address: string;
++}
++
++export interface PublicRuntimeBusinessHours {
++  monday: string | "closed";
++  tuesday: string | "closed";
++  wednesday: string | "closed";
++  thursday: string | "closed";
++  friday: string | "closed";
++  saturday: string | "closed";
++  sunday: string | "closed";
++}
++
++export interface PublicRuntimeFeatureFlags {
++  contactForm: boolean;
++  reservation: boolean;
++  staffSelection: boolean;
++  calendar: boolean;
++  emailNotification: boolean;
++}
++
++export interface PublicRuntimeReservationSettings {
++  timezone: "Asia/Tokyo";
++  slotMinutes: number;
++  minLeadHours: number;
++  maxBookingDays: number;
++}
++
++export interface PublicRuntimeConfig {
++  business: PublicRuntimeBusinessInfo;
++  hours: PublicRuntimeBusinessHours;
++  holidays: string[];
++  features: PublicRuntimeFeatureFlags;
++  staffAnyAvailableOption: boolean;
++  reservation: PublicRuntimeReservationSettings;
++}
++
++/** Where a rendered page's runtime config actually came from — kept
++ *  explicit so a GAS outage never silently masquerades as demo content. */
++export type RuntimeConfigStatus = "runtime" | "demo-fallback" | "runtime-error";
++
++export interface RuntimeConfigResult {
++  status: RuntimeConfigStatus;
++  config: PublicRuntimeConfig;
++}

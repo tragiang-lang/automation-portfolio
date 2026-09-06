@@ -1,0 +1,82 @@
+diff --git a/apps/salon-portfolio/web/app/page.tsx b/apps/salon-portfolio/web/app/page.tsx
+index 31b6e32..ad94187 100644
+--- a/apps/salon-portfolio/web/app/page.tsx
++++ b/apps/salon-portfolio/web/app/page.tsx
+@@ -16,20 +16,30 @@ import {
+   GALLERY_IMAGES,
+   SALON_FEATURES,
+   SERVICES,
+-  SITE_CONFIG,
+   STAFF,
+ } from "@/config/demo-content";
++import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
++import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
+ 
+ // Page order matches Phase 2A §6 exactly: Header (layout) → Hero →
+ // Concept → Menu → Staff → Gallery → Reservation CTA → Salon Features →
+ // Customer Flow → FAQ → Access → Contact → Footer (layout). Configurable
+-// sections are gated here by SITE_CONFIG.features, not by editing the
+-// section components themselves.
+-export default function Home() {
++// sections are gated here by the resolved runtime config's `features`,
++// not by editing the section components themselves.
++//
++// SERVICES/STAFF/GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/
++// FAQ_ITEMS/ACCESS_INFO are not part of the Phase 3A `getConfig` contract
++// (no `services`/`staff` fields in `PublicConfig`) and stay on
++// `config/demo-content.ts` — see docs/runtime-config-guide.md for the
++// Phase 4 plan to move SERVICES/STAFF onto `getServices`/`getStaff`.
++export default async function Home() {
++  const { config } = await getRuntimeConfig();
++  const siteConfig = resolveSiteConfig(config);
++
+   return (
+     <main className="flex flex-1 flex-col">
+       <HeroSection
+-        headline={SITE_CONFIG.business.tagline}
++        headline={siteConfig.business.tagline}
+         subheadline="銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。"
+       />
+ 
+@@ -45,15 +55,15 @@ export default function Home() {
+       <MenuSection services={SERVICES} />
+ 
+       <StaffSection
+-        enabled={SITE_CONFIG.features.staffSelection}
++        enabled={siteConfig.features.staffSelection}
+         staff={STAFF}
+-        anyAvailableOption={SITE_CONFIG.staffAnyAvailableOption}
+-        businessNameInitial={SITE_CONFIG.business.name}
++        anyAvailableOption={siteConfig.staffAnyAvailableOption}
++        businessNameInitial={siteConfig.business.name}
+       />
+ 
+       <GallerySection images={GALLERY_IMAGES} />
+ 
+-      {SITE_CONFIG.features.reservation ? (
++      {siteConfig.features.reservation ? (
+         <ReservationCtaBand
+           heading="仕上がりを見て、気持ちが決まったら"
+           message="ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。"
+@@ -67,16 +77,16 @@ export default function Home() {
+       <FaqSection items={FAQ_ITEMS} />
+ 
+       <AccessSection
+-        business={SITE_CONFIG.business}
+-        hours={SITE_CONFIG.hours}
++        business={siteConfig.business}
++        hours={siteConfig.hours}
+         access={ACCESS_INFO}
+       />
+ 
+-      {SITE_CONFIG.features.contactForm ? (
+-        <ContactSection business={SITE_CONFIG.business} />
++      {siteConfig.features.contactForm ? (
++        <ContactSection business={siteConfig.business} />
+       ) : null}
+ 
+-      {SITE_CONFIG.features.reservation ? (
++      {siteConfig.features.reservation ? (
+         <ReservationCtaBand
+           heading="最後まで読んでくださり、ありがとうございます"
+           message="少しでも気になることがあれば、まずはご予約からお気軽にどうぞ。"
