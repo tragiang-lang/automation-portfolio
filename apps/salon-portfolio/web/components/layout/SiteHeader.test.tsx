@@ -58,3 +58,28 @@ describe("SiteHeader / MobileNav", () => {
     expect(within(dialog).getByRole("link", { name: "メニュー" })).toBeInTheDocument();
   });
 });
+
+describe("SiteHeader reservation flag", () => {
+  it("shows the reservation buttons by default", () => {
+    render(<SiteHeader business={business} navItems={navItems} />);
+    // getAllByRole (not getByRole): the desktop button's visible text and
+    // the mobile button's aria-label both compute to the same accessible
+    // name "ご予約はこちら", and jsdom has no real Tailwind CSS loaded
+    // (jest.config.ts / next/jest stub out CSS imports), so the `hidden`
+    // / `sm:block` responsive classes that make only one of them visible
+    // in a real browser have no effect here — both stay in the tree.
+    expect(screen.getAllByRole("link", { name: "ご予約はこちら" }).length).toBeGreaterThan(0);
+  });
+
+  it("hides the header and mobile-nav reservation buttons when reservationEnabled is false", async () => {
+    const user = userEvent.setup();
+    render(<SiteHeader business={business} navItems={navItems} reservationEnabled={false} />);
+
+    expect(screen.queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "予約" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "メニューを開く" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
+  });
+});

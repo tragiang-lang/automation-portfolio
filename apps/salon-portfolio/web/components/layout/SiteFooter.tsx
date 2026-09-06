@@ -84,9 +84,11 @@ export function SiteFooter({
             <br />
             {config.business.phone}
           </p>
-          <Button href="/reservation" variant="secondary" className="mt-6 border-on-primary/40 text-on-primary hover:bg-on-primary/10">
-            ご予約はこちら
-          </Button>
+          {config.features.reservation ? (
+            <Button href="/reservation" variant="secondary" className="mt-6 border-on-primary/40 text-on-primary hover:bg-on-primary/10">
+              ご予約はこちら
+            </Button>
+          ) : null}
         </div>
       </Container>
 

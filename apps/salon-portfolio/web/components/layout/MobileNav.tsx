@@ -15,11 +15,13 @@ export function MobileNav({
   onClose,
   navItems,
   triggerRef,
+  reservationEnabled = true,
 }: {
   open: boolean;
   onClose: () => void;
   navItems: NavItem[];
   triggerRef: React.RefObject<HTMLButtonElement | null>;
+  reservationEnabled?: boolean;
 }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -81,9 +83,11 @@ export function MobileNav({
             </li>
           ))}
         </ul>
-        <Button href="/reservation" fullWidth className="mt-6">
-          ご予約はこちら
-        </Button>
+        {reservationEnabled ? (
+          <Button href="/reservation" fullWidth className="mt-6">
+            ご予約はこちら
+          </Button>
+        ) : null}
       </nav>
     </div>
   );

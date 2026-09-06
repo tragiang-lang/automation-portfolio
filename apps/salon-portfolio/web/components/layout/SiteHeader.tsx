@@ -21,9 +21,11 @@ import type { BusinessInfo, NavItem } from "@/types/content";
 export function SiteHeader({
   business,
   navItems,
+  reservationEnabled = true,
 }: {
   business: BusinessInfo;
   navItems: NavItem[];
+  reservationEnabled?: boolean;
 }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -94,14 +96,18 @@ export function SiteHeader({
                 variant overrides its own base utility, not an unrelated
                 one. Toggling display on a wrapper sidesteps that clash
                 entirely. */}
-            <div className="hidden sm:block">
-              <Button href="/reservation">ご予約はこちら</Button>
-            </div>
-            <div className="sm:hidden">
-              <Button href="/reservation" aria-label="ご予約はこちら">
-                予約
-              </Button>
-            </div>
+            {reservationEnabled ? (
+              <>
+                <div className="hidden sm:block">
+                  <Button href="/reservation">ご予約はこちら</Button>
+                </div>
+                <div className="sm:hidden">
+                  <Button href="/reservation" aria-label="ご予約はこちら">
+                    予約
+                  </Button>
+                </div>
+              </>
+            ) : null}
             <button
               ref={menuButtonRef}
               type="button"
@@ -131,6 +137,7 @@ export function SiteHeader({
         onClose={() => setMobileOpen(false)}
         navItems={navItems}
         triggerRef={menuButtonRef}
+        reservationEnabled={reservationEnabled}
       />
     </>
   );
