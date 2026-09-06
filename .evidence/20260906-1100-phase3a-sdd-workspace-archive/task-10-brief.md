@@ -1,0 +1,255 @@
+## Task 10: Demo seed data and safe setup utility
+
+**Files:**
+- Create: `apps/salon-portfolio/gas/src/DemoSeed.ts`
+- Create: `apps/salon-portfolio/gas/src/SetupDemoSheets.ts`
+- Modify: `apps/salon-portfolio/gas/src/Code.ts`
+- Test: `apps/salon-portfolio/gas/tests/DemoSeed.test.ts`
+
+**Interfaces:**
+- Consumes: `SHEET_NAMES`, `SheetName` from `./SheetNames`; every `*_HEADERS` constant and `REQUIRED_HEADERS` from `./SheetSchemas`; `getConfiguredSpreadsheet` from `./Sheets`; `buildAppConfigFromRawRows` from `./ConfigStore` (test only).
+- Produces: `DemoSheetSeed { name: SheetName; headers: readonly string[]; rows: unknown[][] }`; `DEMO_SHEETS: DemoSheetSeed[]`; `setupDemoSheets(): string[]` (GAS-touching, manual-run only, never called from `doGet`/`doPost`).
+
+- [ ] **Step 1: Write the failing test `tests/DemoSeed.test.ts`**
+
+```ts
+import { SHEET_NAMES } from "../src/SheetNames";
+import { REQUIRED_HEADERS } from "../src/SheetSchemas";
+import { DEMO_SHEETS } from "../src/DemoSeed";
+import { buildAppConfigFromRawRows } from "../src/ConfigStore";
+import { ConfigRow, HolidayRow } from "../src/SheetSchemas";
+
+describe("DEMO_SHEETS", () => {
+  it("covers every canonical sheet name exactly once", () => {
+    const names = DEMO_SHEETS.map((seed) => seed.name).sort();
+    expect(names).toEqual(Object.values(SHEET_NAMES).sort());
+  });
+
+  it("each seed's headers match that sheet's REQUIRED_HEADERS", () => {
+    DEMO_SHEETS.forEach((seed) => {
+      expect(seed.headers).toEqual(REQUIRED_HEADERS[seed.name]);
+    });
+  });
+
+  it("every demo row has exactly as many cells as there are headers", () => {
+    DEMO_SHEETS.forEach((seed) => {
+      seed.rows.forEach((row) => {
+        expect(row).toHaveLength(seed.headers.length);
+      });
+    });
+  });
+
+  it("transactional sheets (RESERVATIONS, CANCELLATION_REQUESTS, INQUIRIES, EMAIL_LOG, ERROR_LOG) get no fabricated rows", () => {
+    const transactional = [
+      SHEET_NAMES.RESERVATIONS,
+      SHEET_NAMES.CANCELLATION_REQUESTS,
+      SHEET_NAMES.INQUIRIES,
+      SHEET_NAMES.EMAIL_LOG,
+      SHEET_NAMES.ERROR_LOG,
+    ];
+    DEMO_SHEETS.filter((seed) => transactional.includes(seed.name)).forEach(
+      (seed) => {
+        expect(seed.rows).toEqual([]);
+      },
+    );
+  });
+
+  it("the CONFIG demo rows produce a valid AppConfig end-to-end", () => {
+    const configSeed = DEMO_SHEETS.find((s) => s.name === SHEET_NAMES.CONFIG)!;
+    const holidaysSeed = DEMO_SHEETS.find(
+      (s) => s.name === SHEET_NAMES.HOLIDAYS,
+    )!;
+    const configRows: ConfigRow[] = configSeed.rows.map((row) => ({
+      Key: row[0],
+      Value: row[1],
+      Description: row[2],
+    }));
+    const holidayDates = holidaysSeed.rows.map((row) => String(row[0]));
+    expect(() =>
+      buildAppConfigFromRawRows(configRows, holidayDates),
+    ).not.toThrow();
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `cd apps/salon-portfolio/gas && npx jest tests/DemoSeed.test.ts`
+Expected: FAIL — `Cannot find module '../src/DemoSeed'`.
+
+- [ ] **Step 3: Write `DemoSeed.ts`**
+
+```ts
+import { SHEET_NAMES, SheetName } from "./SheetNames";
+import {
+  CANCELLATION_REQUESTS_HEADERS,
+  CONFIG_HEADERS,
+  EMAIL_LOG_HEADERS,
+  ERROR_LOG_HEADERS,
+  HOLIDAYS_HEADERS,
+  INQUIRIES_HEADERS,
+  RESERVATIONS_HEADERS,
+  SERVICES_HEADERS,
+  STAFF_HEADERS,
+} from "./SheetSchemas";
+
+export interface DemoSheetSeed {
+  name: SheetName;
+  headers: readonly string[];
+  rows: unknown[][];
+}
+
+/** Safe, non-production demo data for schema/data-layer verification
+ *  (Phase 3A §21/§22) — never real customer information. Transactional
+ *  sheets (RESERVATIONS, CANCELLATION_REQUESTS, INQUIRIES, EMAIL_LOG,
+ *  ERROR_LOG) get their header row only; seeding fake transactional
+ *  records would misrepresent real business activity. */
+export const DEMO_SHEETS: DemoSheetSeed[] = [
+  {
+    name: SHEET_NAMES.CONFIG,
+    headers: CONFIG_HEADERS,
+    rows: [
+      ["business.name", "Demo Salon", "店舗名"],
+      ["business.phone", "03-0000-0000", "電話番号"],
+      ["business.email", "owner@example.com", "店舗メール"],
+      ["business.address", "東京都千代田区1-1-1", "住所"],
+      ["hours.monday", "10:00-19:00", "月曜営業時間"],
+      ["hours.tuesday", "10:00-19:00", "火曜営業時間"],
+      ["hours.wednesday", "10:00-19:00", "水曜営業時間"],
+      ["hours.thursday", "10:00-19:00", "木曜営業時間"],
+      ["hours.friday", "10:00-19:00", "金曜営業時間"],
+      ["hours.saturday", "10:00-18:00", "土曜営業時間"],
+      ["hours.sunday", "closed", "日曜営業時間（定休日）"],
+      ["reservation.timezone", "Asia/Tokyo", "タイムゾーン"],
+      ["reservation.slotMinutes", 30, "予約枠の単位（分）"],
+      ["reservation.minLeadHours", 1, "予約締切（時間前）"],
+      ["reservation.maxBookingDays", 60, "予約可能期間（日）"],
+      ["features.contactForm", true, "問い合わせ受付"],
+      ["features.reservation", true, "予約受付"],
+      ["features.staffSelection", true, "スタッフ指名"],
+      ["features.calendar", true, "カレンダー連携"],
+      ["features.emailNotification", true, "メール通知"],
+      ["staff.anyAvailableOption", true, "指名なし（お任せ）を表示"],
+      ["calendar.id", "primary", "カレンダーID（開発用プレースホルダー）"],
+      ["email.ownerNotifyAddress", "owner@example.com", "店舗通知メール宛先"],
+      ["email.fromName", "Demo Salon", "送信者表示名"],
+    ],
+  },
+  {
+    name: SHEET_NAMES.HOLIDAYS,
+    headers: HOLIDAYS_HEADERS,
+    rows: [
+      ["2026-01-01", "元日"],
+      ["2026-01-02", "年始休業"],
+    ],
+  },
+  {
+    name: SHEET_NAMES.SERVICES,
+    headers: SERVICES_HEADERS,
+    rows: [
+      ["SV001", "ハンド | ジェルネイル", 60, 6000, true, true, 1],
+      ["SV002", "フット | ジェルペディキュア", 90, 8000, true, true, 2],
+      ["SV003", "その他 | パラフィンパック", 20, 1500, true, false, 3],
+    ],
+  },
+  {
+    name: SHEET_NAMES.STAFF,
+    headers: STAFF_HEADERS,
+    rows: [
+      ["ST001", "スタッフA", true, "", 1],
+      ["ST002", "スタッフB", true, "", 2],
+      ["ST003", "スタッフC", true, "", 3],
+    ],
+  },
+  { name: SHEET_NAMES.RESERVATIONS, headers: RESERVATIONS_HEADERS, rows: [] },
+  {
+    name: SHEET_NAMES.CANCELLATION_REQUESTS,
+    headers: CANCELLATION_REQUESTS_HEADERS,
+    rows: [],
+  },
+  { name: SHEET_NAMES.INQUIRIES, headers: INQUIRIES_HEADERS, rows: [] },
+  { name: SHEET_NAMES.EMAIL_LOG, headers: EMAIL_LOG_HEADERS, rows: [] },
+  { name: SHEET_NAMES.ERROR_LOG, headers: ERROR_LOG_HEADERS, rows: [] },
+];
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `cd apps/salon-portfolio/gas && npx jest tests/DemoSeed.test.ts`
+Expected: PASS.
+
+- [ ] **Step 5: Add `getConfiguredSpreadsheet` re-export check and write `SetupDemoSheets.ts`**
+
+No new test for this file — it calls `SpreadsheetApp` directly (same rationale as `Sheets.ts` in Task 2: thin GAS wrapper, manual-only verification).
+
+```ts
+import { getConfiguredSpreadsheet } from "./Sheets";
+import { DEMO_SHEETS } from "./DemoSeed";
+
+/**
+ * Explicit, safe demo-data setup (Phase 3A §21). Never overwrites or
+ * deletes an existing sheet — if a sheet with the target name already
+ * exists, it is left completely untouched and reported as "skipped".
+ * Must be run manually from the Apps Script editor (select
+ * `setupDemoSheets` in the function dropdown and click Run); it is never
+ * called from doGet/doPost.
+ */
+export function setupDemoSheets(): string[] {
+  const spreadsheet = getConfiguredSpreadsheet();
+  const results: string[] = [];
+
+  for (const seed of DEMO_SHEETS) {
+    const existing = spreadsheet.getSheetByName(seed.name);
+    if (existing) {
+      results.push(`skipped (already exists): ${seed.name}`);
+      continue;
+    }
+    const sheet = spreadsheet.insertSheet(seed.name);
+    sheet.getRange(1, 1, 1, seed.headers.length).setValues([[...seed.headers]]);
+    if (seed.rows.length > 0) {
+      sheet
+        .getRange(2, 1, seed.rows.length, seed.headers.length)
+        .setValues(seed.rows);
+    }
+    results.push(`created: ${seed.name} (${seed.rows.length} demo rows)`);
+  }
+
+  return results;
+}
+```
+
+- [ ] **Step 6: Wire `setupDemoSheets` into `Code.ts` so esbuild bundles it and it is runnable from the Apps Script editor**
+
+In `Code.ts`, add the import and a third `globalThis` attachment (the function is never invoked by `doGet`/`doPost` — only exposed for manual selection in the Apps Script IDE's function dropdown):
+
+```ts
+import { getHealthStatus } from "./Health";
+import { handleApiRequest } from "./Api";
+import { setupDemoSheets } from "./SetupDemoSheets";
+
+// ... doGet/doPost unchanged ...
+
+(
+  globalThis as unknown as { setupDemoSheets: typeof setupDemoSheets }
+).setupDemoSheets = setupDemoSheets;
+```
+
+- [ ] **Step 7: Typecheck and build**
+
+Run: `cd apps/salon-portfolio/gas && npm run typecheck && npm run build`
+Expected: PASS — `build/Code.js` contains `setupDemoSheets` (check with `grep -c setupDemoSheets build/Code.js`, expect ≥ 1).
+
+- [ ] **Step 8: Run the full test suite**
+
+Run: `cd apps/salon-portfolio/gas && npm test`
+Expected: PASS — every suite from Tasks 1–10 green, no regression on `Health.test.ts`.
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add apps/salon-portfolio/gas/src/DemoSeed.ts apps/salon-portfolio/gas/src/SetupDemoSheets.ts apps/salon-portfolio/gas/src/Code.ts apps/salon-portfolio/gas/tests/DemoSeed.test.ts
+git commit -m "feat(gas): add safe demo-data seed and setupDemoSheets utility"
+```
+
+---
+
