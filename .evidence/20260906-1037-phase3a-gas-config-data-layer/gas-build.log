@@ -1,0 +1,8 @@
+
+> salon-portfolio-gas@0.1.0 build
+> node esbuild.config.js
+
+doGet: 2
+doPost: 2
+setupDemoSheets: 2
+handleApiRequest: 2

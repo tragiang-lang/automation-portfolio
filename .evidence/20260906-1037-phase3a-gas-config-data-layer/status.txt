@@ -1,0 +1,3 @@
+?? .evidence/2026-0906-task10-demo-seed/
+?? .evidence/20260906-1037-phase3a-gas-config-data-layer/
+?? docs/superpowers/

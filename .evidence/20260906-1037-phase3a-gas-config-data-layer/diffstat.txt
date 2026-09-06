@@ -1,0 +1,36 @@
+ apps/salon-portfolio/gas/src/Api.ts                | 106 +++++++++++
+ apps/salon-portfolio/gas/src/Code.ts               |  24 ++-
+ apps/salon-portfolio/gas/src/ConfigParser.ts       | 192 ++++++++++++++++++++
+ apps/salon-portfolio/gas/src/ConfigStore.ts        |  78 ++++++++
+ apps/salon-portfolio/gas/src/ConfigValidator.ts    | 100 ++++++++++
+ apps/salon-portfolio/gas/src/DemoSeed.ts           |  91 ++++++++++
+ apps/salon-portfolio/gas/src/PublicConfig.ts       |  15 ++
+ apps/salon-portfolio/gas/src/RowMapper.ts          |  80 ++++++++
+ apps/salon-portfolio/gas/src/SetupDemoSheets.ts    |  33 ++++
+ apps/salon-portfolio/gas/src/SheetNames.ts         |  18 ++
+ apps/salon-portfolio/gas/src/SheetSchemas.ts       | 202 +++++++++++++++++++++
+ apps/salon-portfolio/gas/src/Sheets.ts             |  83 +++++++++
+ apps/salon-portfolio/gas/src/Utils.ts              |  29 +++
+ apps/salon-portfolio/gas/src/ids/.gitkeep          |   0
+ apps/salon-portfolio/gas/src/ids/ReservationId.ts  |  39 ++++
+ apps/salon-portfolio/gas/src/models/.gitkeep       |   0
+ apps/salon-portfolio/gas/src/models/Api.ts         |  11 ++
+ apps/salon-portfolio/gas/src/models/Config.ts      |  74 ++++++++
+ apps/salon-portfolio/gas/src/models/ErrorCodes.ts  |  22 +++
+ apps/salon-portfolio/gas/tests/Api.test.ts         |  90 +++++++++
+ .../salon-portfolio/gas/tests/ConfigParser.test.ts | 178 ++++++++++++++++++
+ apps/salon-portfolio/gas/tests/ConfigStore.test.ts |  64 +++++++
+ .../gas/tests/ConfigValidator.test.ts              | 121 ++++++++++++
+ apps/salon-portfolio/gas/tests/DemoSeed.test.ts    |  57 ++++++
+ .../salon-portfolio/gas/tests/PublicConfig.test.ts |  61 +++++++
+ .../gas/tests/ReservationId.test.ts                |  47 +++++
+ apps/salon-portfolio/gas/tests/RowMapper.test.ts   | 100 ++++++++++
+ .../salon-portfolio/gas/tests/SheetSchemas.test.ts |  46 +++++
+ apps/salon-portfolio/gas/tests/Utils.test.ts       |  32 ++++
+ docs/api-documentation.md                          |  84 ++++++++-
+ docs/architecture-overview.md                      |  76 +++++---
+ docs/changelog.md                                  |  45 +++++
+ docs/config-and-sheets-guide.md                    | 105 +++++++++++
+ docs/folder-structure.md                           |  75 ++++----
+ docs/roadmap.md                                    |  16 +-
+ 35 files changed, 2315 insertions(+), 79 deletions(-)

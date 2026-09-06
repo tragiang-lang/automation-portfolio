@@ -1,0 +1,7 @@
+?? .evidence/2026-0906-task10-demo-seed/
+?? docs/superpowers/
+ apps/salon-portfolio/gas/src/Code.ts            |  4 ++
+ apps/salon-portfolio/gas/src/DemoSeed.ts        | 91 +++++++++++++++++++++++++
+ apps/salon-portfolio/gas/src/SetupDemoSheets.ts | 33 +++++++++
+ apps/salon-portfolio/gas/tests/DemoSeed.test.ts | 57 ++++++++++++++++
+ 4 files changed, 185 insertions(+)
