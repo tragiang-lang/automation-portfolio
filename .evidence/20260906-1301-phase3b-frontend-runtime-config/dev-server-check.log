@@ -1,0 +1,23 @@
+=== Manual dev-server smoke check ===
+Command: npm run dev (background, apps/salon-portfolio/web)
+Command: curl -s -m 5 http://localhost:3000/ -o curl_test.html -w "HTTP_CODE:%{http_code}"
+
+Result: HTTP_CODE:200
+File size: 130170 bytes
+
+--- Business name present ("凛") — demo-fallback business name renders ---
+ipt src="/_next/static/chunks/components_00a5th5._.js" async=""></script><title>凛 | Rin Nail &amp; Eyelash</title><meta name="description" content="静けさの…
+-2 leading-none text-on-primary" href="/"><span class="text-[20px] font-medium">凛</span><span class="hidden text-[12px] tracking-[0.08em] uppercase sm:inline">Ri
+/ 1000"><span class="text-[56px] font-medium text-accent/70" aria-hidden="true">凛</span></div><p class="mt-4 text-[20px] leading-[1.4] font-medium text-primary">
+
+--- Reservation CTA links present (features.reservation === true gates these on) ---
+hover:bg-accent" href="/reservation">ご予約はこちら</a></div><div class="sm:hid
+isabled:hover:bg-accent" aria-label="ご予約はこちら" href="/reservation">予約
+-full sm:w-auto" href="/reservation">ご予約はこちら</a><a class="inline-flex it
+
+--- RuntimeConfigNotice banner text search ---
+Search string: "現在、最新の店舗情報を取得できませんでした"
+Matches found: 0
+Conclusion: PASS — banner absent, confirming status is demo-fallback (not runtime-error), since GAS_WEBAPP_URL is unset in this environment.
+
+Dev server stopped after check.
