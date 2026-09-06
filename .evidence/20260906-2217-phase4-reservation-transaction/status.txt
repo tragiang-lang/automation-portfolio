@@ -1,0 +1,37 @@
+ M apps/salon-portfolio/gas/src/Api.ts
+ M apps/salon-portfolio/gas/src/RowMapper.ts
+ M apps/salon-portfolio/gas/src/Utils.ts
+ M apps/salon-portfolio/gas/tests/Api.test.ts
+ M apps/salon-portfolio/gas/tests/RowMapper.test.ts
+ M apps/salon-portfolio/gas/tests/Utils.test.ts
+ M docs/api-documentation.md
+ M docs/architecture-overview.md
+ M docs/reservation-domain-architecture.md
+ M docs/roadmap.md
+?? .evidence/20260906-2217-phase4-reservation-transaction/
+?? apps/salon-portfolio/gas/src/Calendar.ts
+?? apps/salon-portfolio/gas/src/Catalog.ts
+?? apps/salon-portfolio/gas/src/CatalogParser.ts
+?? apps/salon-portfolio/gas/src/Idempotency.ts
+?? apps/salon-portfolio/gas/src/Logging.ts
+?? apps/salon-portfolio/gas/src/Mail.ts
+?? apps/salon-portfolio/gas/src/ReservationEmailTemplates.ts
+?? apps/salon-portfolio/gas/src/ReservationErrorMapping.ts
+?? apps/salon-portfolio/gas/src/ReservationRepository.ts
+?? apps/salon-portfolio/gas/src/RuntimeProperties.ts
+?? apps/salon-portfolio/gas/src/availability/ReservationAvailabilityFactory.ts
+?? apps/salon-portfolio/gas/src/ids/CancellationToken.ts
+?? apps/salon-portfolio/gas/tests/Calendar.test.ts
+?? apps/salon-portfolio/gas/tests/CatalogParser.test.ts
+?? apps/salon-portfolio/gas/tests/Idempotency.test.ts
+?? apps/salon-portfolio/gas/tests/Logging.test.ts
+?? apps/salon-portfolio/gas/tests/ReservationEmailTemplates.test.ts
+?? apps/salon-portfolio/gas/tests/ReservationErrorMapping.test.ts
+?? apps/salon-portfolio/gas/tests/ReservationRepository.test.ts
+?? apps/salon-portfolio/gas/tests/availability/ReservationAvailabilityFactory.test.ts
+?? apps/salon-portfolio/gas/tests/ids/
+?? apps/salon-portfolio/web/lib/api/reservationClient.test.ts
+?? apps/salon-portfolio/web/lib/api/reservationClient.ts
+?? apps/salon-portfolio/web/types/reservation.ts
+?? docs/reservation-transaction-architecture.md
+?? docs/superpowers/plans/2026-09-06-phase4-reservation-transaction-workflow.md

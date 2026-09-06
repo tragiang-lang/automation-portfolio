@@ -1,0 +1,305 @@
+
+> salon-portfolio-gas@0.1.0 test
+> jest --verbose
+
+PASS tests/ReservationId.test.ts
+  generateRandomSuffix
+    √ is exactly six characters (37 ms)
+    √ only uses uppercase letters and digits (1 ms)
+    √ uses the injected random source deterministically (1 ms)
+  generateReservationId
+    √ matches the RES-YYYYMMDD-XXXXXX format (1 ms)
+    √ uses the Asia/Tokyo date, not the UTC date (1 ms)
+    √ is not sequential — two calls with different random sources produce different suffixes
+
+PASS tests/Utils.test.ts
+  formatDateYYYYMMDDInTokyo
+    √ formats a UTC instant that is still the previous day in Tokyo (12 ms)
+    √ formats a UTC instant that has already rolled into the next Tokyo day (1 ms)
+    √ zero-pads single-digit months and days (1 ms)
+  formatDateYYYYMMDDDashedInTokyo
+    √ formats the Asia/Tokyo rollover case with dashes (1 ms)
+    √ zero-pads single-digit months and days (3 ms)
+  nowIso
+    √ returns a valid ISO 8601 string from the injected clock (2 ms)
+  getWeekdayForDateString
+    √ maps known dates to the correct weekday (1 ms)
+  timeToMinutes / minutesToTimeString
+    √ round-trips HH:mm through minutes (1 ms)
+  tokyoDateTimeToInstant
+    √ treats the date/time as Asia/Tokyo local, not UTC
+  addDaysToTokyoDateString
+    √ adds calendar days without drifting across a month boundary
+    √ supports zero days (same date) (1 ms)
+  isValidCalendarDateString
+    √ accepts a real calendar date (1 ms)
+    √ rejects an impossible date
+    √ rejects an out-of-range month (1 ms)
+  toTokyoLocalDateTimeString
+    √ combines date and time into one sortable local string
+
+PASS tests/ConfigValidator.test.ts
+  validateAppConfig
+    √ returns no issues for a fully valid config (21 ms)
+    √ rejects a timezone other than Asia/Tokyo (1 ms)
+    √ rejects a negative minLeadHours
+    √ rejects a non-positive slotMinutes or maxBookingDays
+    √ rejects malformed business hours
+    √ rejects an invalid holiday date
+    √ rejects a malformed business or owner-notification email (1 ms)
+    √ rejects staff.anyAvailableOption=true when features.staffSelection is false (1 ms)
+    √ allows staff.anyAvailableOption=false when features.staffSelection is false (1 ms)
+
+PASS tests/Health.test.ts
+  getHealthStatus
+    √ reports ok status for this service (12 ms)
+    √ returns a valid ISO 8601 timestamp (1 ms)
+
+PASS tests/ConfigParser.test.ts
+  buildRawConfigMap
+    √ trims keys and keeps values as-is (14 ms)
+    √ first occurrence of a duplicate key wins (1 ms)
+    √ ignores rows with an empty key (1 ms)
+  parseStrictBoolean
+    √ accepts a native boolean (1 ms)
+    √ accepts the exact strings true/false, any case, trimmed (1 ms)
+    √ rejects ambiguous values (2 ms)
+  parseStrictNumber
+    √ accepts a native finite number
+    √ accepts a strict numeric string (1 ms)
+    √ rejects non-numeric or malformed strings (1 ms)
+  parseNonEmptyString
+    √ trims and accepts a non-empty string
+    √ treats whitespace-only and non-string values as missing
+  parseJsonSafely
+    √ parses valid JSON (6 ms)
+    √ returns undefined for malformed JSON instead of throwing
+    √ returns undefined for empty or non-string input (3 ms)
+  parseAppConfig
+    √ parses a complete, well-typed raw config (2 ms)
+    √ reports every missing required key as an issue (2 ms)
+    √ reports a malformed boolean as an issue instead of coercing it (1 ms)
+    √ reports a malformed number as an issue instead of coercing it (1 ms)
+    √ carries the sheet's actual reservation.timezone value through instead of hard-coding Asia/Tokyo (validation, not parsing, enforces the value)
+
+PASS tests/availability/SharedAvailabilityStrategy.test.ts
+  createSharedAvailabilityStrategy
+    √ is available with no staff dimension when the shared calendar is free (4 ms)
+    √ reports CALENDAR_CONFLICT against the single shared calendar
+
+PASS tests/ReservationRules.test.ts
+  resolveService
+    √ resolves an active service by id (2 ms)
+    √ rejects an unknown serviceId (1 ms)
+    √ rejects an inactive service (1 ms)
+    √ rejects a service with a non-positive duration (1 ms)
+  resolveStaffSelection
+    √ resolves to 'none' when staffSelection is disabled, ignoring any staffId sent (1 ms)
+    √ resolves a valid specific active staff member (6 ms)
+    √ rejects an unknown staffId (1 ms)
+    √ rejects an inactive staffId (1 ms)
+    √ resolves ANY_STAFF to the active-staff-in-DisplayOrder list when the option is enabled (1 ms)
+    √ rejects ANY_STAFF when staff.anyAvailableOption is disabled (1 ms)
+    √ requires a staffId when staffSelection is enabled and none was sent
+  evaluateBusinessDay
+    √ is open on a normal weekday (1 ms)
+    √ is closed on the configured closed weekday (1 ms)
+    √ is closed on a holiday even though that weekday is normally open
+  checkDateWindow
+    √ accepts a date/time far enough in the future (1 ms)
+    √ rejects a date/time inside the minimum lead time
+    √ rejects a date beyond maxBookingDays (1 ms)
+    √ uses the Asia/Tokyo calendar date for 'today', not the UTC date
+  evaluateReservationRequest
+    √ succeeds end to end with no staff dimension and a free calendar (2 ms)
+    √ rejects a request with a shape validation issue before touching any business rule (1 ms)
+    √ blocks a reservation on a holiday even though the weekday is normally open (1 ms)
+    √ blocks a service whose duration would cross closing time (2 ms)
+    √ blocks a reservation that conflicts with an existing Calendar event (1 ms)
+    √ succeeds for 'any available staff' when at least one eligible staff member is free (2 ms)
+    √ fails 'any available staff' when every eligible staff member is busy (1 ms)
+
+PASS tests/ReservationMapper.test.ts
+  buildNormalizedReservation
+    √ takes duration/price/name from the resolved service, never from the request (8 ms)
+    √ generates a RES-YYYYMMDD-XXXXXX reservationId using the injected now/random (1 ms)
+    √ carries the assigned staffId through when the availability strategy resolved one
+    √ carries submissionId, contact fields, and notes through unchanged (1 ms)
+
+PASS tests/SlotEngine.test.ts
+  generateCandidateSlots
+    √ generates 30-minute-interval starts for a 60-minute service inside 10:00-19:00 (6 ms)
+    √ supports an interval coarser than the service duration (1 ms)
+    √ includes the exact final slot that fits closing time (1 ms)
+    √ excludes a service that would cross closing time entirely (1 ms)
+    √ returns no slots on a closed day (1 ms)
+    √ returns no slots on a holiday even if business hours are configured
+    √ returns no slots for a non-positive duration (1 ms)
+    √ returns no slots for a non-positive interval (1 ms)
+
+PASS tests/Validation.test.ts
+  normalizeReservationRequest
+    √ trims strings and lowercases the email (2 ms)
+    √ collapses an empty-after-trim optional field to undefined (1 ms)
+  validateReservationRequestShape
+    √ accepts a fully valid request with no issues
+    √ flags a missing name
+    √ flags a name over the length limit (1 ms)
+    √ flags a missing email
+    √ flags a malformed email (1 ms)
+    √ accepts common Japanese phone formats (1 ms)
+    √ flags an invalid phone
+    √ does not require phone at all (2 ms)
+    √ flags notes over the length limit (1 ms)
+    √ flags a malformed date
+    √ flags an impossible calendar date (1 ms)
+    √ flags a malformed time (1 ms)
+    √ flags a missing submissionId
+    √ flags a missing serviceId (1 ms)
+
+PASS tests/DemoSeed.test.ts
+  DEMO_SHEETS
+    √ covers every canonical sheet name exactly once (13 ms)
+    √ each seed's headers match that sheet's REQUIRED_HEADERS (2 ms)
+    √ every demo row has exactly as many cells as there are headers (3 ms)
+    √ transactional sheets (RESERVATIONS, CANCELLATION_REQUESTS, INQUIRIES, EMAIL_LOG, ERROR_LOG) get no fabricated rows (1 ms)
+    √ the CONFIG demo rows produce a valid AppConfig end-to-end (3 ms)
+
+PASS tests/availability/StaffAvailabilityStrategy.test.ts
+  createStaffAvailabilityStrategy — specific staff
+    √ is available when the named staff member has no conflict (1 ms)
+    √ reports STAFF_NOT_AVAILABLE when the named staff member conflicts (1 ms)
+  createStaffAvailabilityStrategy — ANY_STAFF
+    √ succeeds and assigns the first free staff in DisplayOrder when one of several is free
+    √ reports NO_STAFF_AVAILABLE when every eligible staff member conflicts (1 ms)
+    √ treats a staff member with no recorded busy intervals as free
+
+PASS tests/availability/AvailabilityStrategy.test.ts
+  intervalsOverlap
+    √ is available when the candidate starts exactly when the existing event ends (1 ms)
+    √ is available when the candidate ends exactly when the existing event starts (1 ms)
+    √ conflicts on an identical interval
+    √ conflicts when the candidate starts inside an existing event
+    √ conflicts when the existing event starts inside the candidate (1 ms)
+    √ conflicts when the existing event fully contains the candidate (1 ms)
+
+PASS tests/availability/CalendarOverlapAvailability.test.ts
+  isSlotFreeOfConflicts
+    √ no existing events -> free=[] (1 ms)
+    √ existing event ends before candidate starts -> free=[ [Object] ]
+    √ existing event starts after candidate ends -> free=[ [Object] ]
+    √ existing event identical to candidate -> free=[ [Object] ]
+    √ existing event overlaps the tail -> free=[ [Object] ] (1 ms)
+    √ existing event overlaps the head -> free=[ [Object] ]
+    √ existing event fully contains candidate -> free=[ [Object] ]
+  createCalendarOverlapAvailability
+    √ reports available when no busy interval conflicts
+    √ reports CALENDAR_CONFLICT when a busy interval overlaps (1 ms)
+
+PASS tests/ConfigStore.test.ts
+  normalizeHolidayDates
+    √ formats a native Date cell (Sheets auto-typing) as YYYY-MM-DD in Asia/Tokyo, including the rollover case (17 ms)
+    √ passes through an already-string cell unchanged (trimmed) (1 ms)
+    √ filters out empty/missing cells (1 ms)
+  buildAppConfigFromRawRows
+    √ builds a valid AppConfig from valid rows (2 ms)
+    √ throws ConfigError when a required key is missing (parse-level) (31 ms)
+    √ throws ConfigError carrying the field issues, for server-side logging only (1 ms)
+    √ throws ConfigError when a value is well-typed but semantically invalid (validation-level) (1 ms)
+
+  console.error
+    [getConfig] CONFIG_INVALID: [{"field":"calendar.id","reason":"missing or empty string"}]
+
+    [0m [90m 57 |[39m   error[33m:[39m [33mConfigError[39m[33m,[39m
+     [90m 58 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 59 |[39m   console[33m.[39merror([32m"[getConfig] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 60 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 61 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 62 |[39m     [32m"設定情報の読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:59:11)
+      at Object.<anonymous> (tests/Api.test.ts:67:46)
+
+  console.error
+    [getConfig] SHEET_ERROR: missing headers: Key, Value
+
+    [0m [90m 74 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 75 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 76 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 77 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 78 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 79 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:76:11)
+      at Object.<anonymous> (tests/Api.test.ts:81:54)
+
+  console.error
+    [getConfig] SHEET_ERROR: missing headers: Key, Value
+
+    [0m [90m 74 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 75 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 76 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 77 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 78 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 79 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:76:11)
+      at getConfigAction (src/Api.ts:98:14)
+      at Object.<anonymous> (tests/Api.test.ts:105:37)
+
+PASS tests/Api.test.ts
+  parseApiRequest
+    √ parses a well-formed request (12 ms)
+    √ rejects an empty or missing body (1 ms)
+    √ rejects malformed JSON
+    √ rejects a body missing a non-empty action field (1 ms)
+  response builders
+    √ buildSuccessResponse wraps data in the ok envelope (1 ms)
+    √ buildErrorResponse wraps a code/message in the error envelope
+  mapConfigErrorToResponse
+    √ maps to a stable CONFIG_INVALID error without leaking the raw issues (95 ms)
+  mapMissingHeadersErrorToResponse
+    √ maps to a stable SHEET_ERROR without leaking the missing header names (7 ms)
+  getConfigAction
+    √ maps a MissingHeadersError thrown by ConfigStore.getConfig to SHEET_ERROR (5 ms)
+  handleApiRequest dispatch
+    √ returns VALIDATION_ERROR for malformed request bodies (1 ms)
+    √ returns VALIDATION_ERROR for an unsupported action name
+
+PASS tests/RowMapper.test.ts
+  buildHeaderMap
+    √ maps header names to their column index (7 ms)
+    √ trims whitespace and ignores empty header cells
+  assertRequiredHeaders
+    √ does not throw when every required header is present
+    √ throws MissingHeadersError listing every missing header (11 ms)
+  rowsToObjects
+    √ maps data rows to objects using only the requested columns (1 ms)
+    √ defaults a missing cell value to an empty string, never undefined (1 ms)
+    √ throws MissingHeadersError when a required column is absent
+  objectToRow
+    √ serializes in deterministic column order (1 ms)
+    √ converts undefined and null to empty string
+    √ throws instead of silently producing [object Object] (1 ms)
+
+PASS tests/SheetSchemas.test.ts
+  SheetSchemas
+    √ defines exactly the nine sheets from phase0-specification.md §C (7 ms)
+    √ has a REQUIRED_HEADERS entry for every sheet name (2 ms)
+    √ CONFIG has Key/Value/Description columns
+    √ HOLIDAYS has Date/Label columns
+    √ RESERVATIONS includes the reservation ID and status columns (1 ms)
+
+PASS tests/PublicConfig.test.ts
+  buildPublicConfig
+    √ keeps every public field (7 ms)
+    √ never includes calendarId or the owner-facing email settings (2 ms)
+
+Test Suites: 19 passed, 19 total
+Tests:       166 passed, 166 total
+Snapshots:   0 total
+Time:        4.427 s, estimated 5 s
+Ran all test suites.

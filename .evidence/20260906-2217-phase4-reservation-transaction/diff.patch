@@ -1,0 +1,1252 @@
+diff --git a/apps/salon-portfolio/gas/src/Api.ts b/apps/salon-portfolio/gas/src/Api.ts
+index 6f48192..5a29294 100644
+--- a/apps/salon-portfolio/gas/src/Api.ts
++++ b/apps/salon-portfolio/gas/src/Api.ts
+@@ -2,8 +2,47 @@ import { ApiRequest, ApiResponse } from "./models/Api";
+ import { ERROR_CODES, ErrorCode } from "./models/ErrorCodes";
+ import { ConfigError, getConfig } from "./ConfigStore";
+ import { buildPublicConfig } from "./PublicConfig";
+-import { PublicConfig } from "./models/Config";
++import { AppConfig, PublicConfig } from "./models/Config";
+ import { MissingHeadersError } from "./RowMapper";
++import { NormalizedReservation, StaffSelectionResolution } from "./models/ReservationDomain";
++import { ReservationRequest } from "./models/ReservationRequest";
++import { StaffRow } from "./SheetSchemas";
++import { SlotCandidate } from "./SlotEngine";
++import { AvailabilityResult, AvailabilityStrategy, BusyInterval } from "./availability/AvailabilityStrategy";
++import {
++  resolveCalendarIdForStaff,
++  resolveCalendarIdsForSelection,
++  buildAvailabilityStrategyFromBusyByCalendarId,
++} from "./availability/ReservationAvailabilityFactory";
++import { evaluateReservationRequest } from "./ReservationRules";
++import { getServiceRows, getStaffRows } from "./Catalog";
++import { mapReservationIssueToErrorResponse } from "./ReservationErrorMapping";
++import {
++  appendReservationRow,
++  buildPendingReservationRow,
++  findReservationBySubmissionId,
++  markReservationConfirmed,
++  markReservationNeedsConfirmation,
++  updateReservationEmailStatus,
++} from "./ReservationRepository";
++import { generateCancellationToken } from "./ids/CancellationToken";
++import {
++  getCachedReservationResult,
++  setCachedReservationResult,
++  mapReservationRowToResult,
++  IdempotencyResult,
++} from "./Idempotency";
++import { getBusyEvents, createReservationEvent } from "./Calendar";
++import { sendEmail } from "./Mail";
++import { getSiteBaseUrl } from "./RuntimeProperties";
++import { logError, logEmail } from "./Logging";
++import {
++  buildCustomerConfirmationEmail,
++  buildOwnerConfirmedNotificationEmail,
++  buildOwnerNeedsAttentionEmail,
++  ReservationEmailContext,
++} from "./ReservationEmailTemplates";
++import { tokyoCalendarDayRange, toTokyoLocalDateTimeString } from "./Utils";
+ 
+ /** Parses and shape-checks the raw POST body. Pure — never touches GAS
+  *  globals — so the dispatch logic is Jest-testable independent of
+@@ -118,6 +157,8 @@ export function handleApiRequest(rawBody: string | undefined): ApiResponse {
+   switch (parsed.request.action) {
+     case "getConfig":
+       return getConfigAction();
++    case "createReservation":
++      return createReservationAction(parsed.request.payload);
+     default:
+       return buildErrorResponse(
+         ERROR_CODES.VALIDATION_ERROR,
+@@ -125,3 +166,389 @@ export function handleApiRequest(rawBody: string | undefined): ApiResponse {
+       );
+   }
+ }
++
++const CRITICAL_SECTION_LOCK_TIMEOUT_MS = 10_000;
++const IDEMPOTENCY_CLAIM_LOCK_TIMEOUT_MS = 5_000;
++
++export class SystemBusyError extends Error {
++  constructor() {
++    super("Lock acquisition timed out.");
++    this.name = "SystemBusyError";
++  }
++}
++
++function buildAvailabilityFor(fallbackCalendarId: string) {
++  return (candidate: SlotCandidate, staffSelection: StaffSelectionResolution): AvailabilityStrategy => {
++    const calendarIds = [...new Set(resolveCalendarIdsForSelection(staffSelection, fallbackCalendarId))];
++    const { start, end } = tokyoCalendarDayRange(candidate.date);
++    const busyByCalendarId: Record<string, BusyInterval[]> = {};
++    for (const calendarId of calendarIds) {
++      busyByCalendarId[calendarId] = getBusyEvents(calendarId, start, end);
++    }
++    return buildAvailabilityStrategyFromBusyByCalendarId(staffSelection, fallbackCalendarId, busyByCalendarId);
++  };
++}
++
++export type CriticalSectionResult =
++  | { kind: "confirmed"; calendarEventId: string }
++  | { kind: "needsConfirmationLostRace" }
++  | { kind: "needsConfirmationCalendarFailure"; reason: string }
++  | { kind: "sheetUpdateFailedAfterCalendar"; calendarEventId: string; cause: unknown }
++  | { kind: "unexpectedError"; cause: unknown };
++
++/** Everything inside the main lock (Phase 0 §U steps 5-7): re-check
++ *  availability -> create Calendar event -> update the Sheet row to its
++ *  final state. Narrows the re-check to the single staff already
++ *  advisory-picked by the pre-lock `evaluateReservationRequest` call
++ *  (`reservation.assignedStaffId`) rather than re-running the full
++ *  ANY_STAFF "first free" search a second time here — re-implementing
++ *  that search outside `ReservationRules.ts` would duplicate Phase 3C
++ *  logic. Trade-off: if that one advisory-picked staff became busy in the
++ *  brief pre-lock-to-lock gap while a *different* eligible staff is still
++ *  free, this rejects as SLOT_UNAVAILABLE rather than reassigning —
++ *  documented in docs/reservation-transaction-architecture.md's Known
++ *  Limitations. */
++export function runReservationCriticalSection(
++  reservation: NormalizedReservation,
++  config: AppConfig,
++  staff: StaffRow[],
++): CriticalSectionResult {
++  const assignedStaff = reservation.assignedStaffId
++    ? staff.find((member) => member.StaffID === reservation.assignedStaffId)
++    : undefined;
++  if (reservation.assignedStaffId && !assignedStaff) {
++    return {
++      kind: "unexpectedError",
++      cause: new Error(`Assigned staff "${reservation.assignedStaffId}" vanished from the catalog before the lock re-check.`),
++    };
++  }
++  const staffSelection: StaffSelectionResolution = assignedStaff ? { kind: "specific", staff: assignedStaff } : { kind: "none" };
++
++  let recheck: AvailabilityResult;
++  try {
++    const strategy = buildAvailabilityFor(config.calendarId)(
++      { date: reservation.date, startTime: reservation.startTime, endTime: reservation.endTime },
++      staffSelection,
++    );
++    recheck = strategy.isAvailable({
++      candidateStart: toTokyoLocalDateTimeString(reservation.date, reservation.startTime),
++      candidateEnd: toTokyoLocalDateTimeString(reservation.date, reservation.endTime),
++    });
++  } catch (cause) {
++    return { kind: "unexpectedError", cause };
++  }
++
++  if (!recheck.available) {
++    try {
++      markReservationNeedsConfirmation(reservation.reservationId, new Date());
++    } catch (cause) {
++      return { kind: "unexpectedError", cause };
++    }
++    return { kind: "needsConfirmationLostRace" };
++  }
++
++  const calendarId = assignedStaff
++    ? resolveCalendarIdForStaff(assignedStaff, config.calendarId)
++    : config.calendarId;
++
++  let calendarEventId: string;
++  try {
++    calendarEventId = createReservationEvent({
++      calendarId,
++      title: `${reservation.serviceName} - ${reservation.customerName}`,
++      description: `予約番号: ${reservation.reservationId}`,
++      date: reservation.date,
++      startTime: reservation.startTime,
++      endTime: reservation.endTime,
++    });
++  } catch (cause) {
++    try {
++      markReservationNeedsConfirmation(reservation.reservationId, new Date());
++    } catch (markCause) {
++      return { kind: "unexpectedError", cause: markCause };
++    }
++    return { kind: "needsConfirmationCalendarFailure", reason: cause instanceof Error ? cause.message : String(cause) };
++  }
++
++  try {
++    markReservationConfirmed(reservation.reservationId, calendarEventId, new Date());
++  } catch (cause) {
++    return { kind: "sheetUpdateFailedAfterCalendar", calendarEventId, cause };
++  }
++
++  return { kind: "confirmed", calendarEventId };
++}
++
++export function resolveCreateReservationResponse(
++  result: CriticalSectionResult,
++  reservation: NormalizedReservation,
++): ApiResponse<{ reservationId: string; needsConfirmation?: boolean }> {
++  switch (result.kind) {
++    case "confirmed":
++      return buildSuccessResponse({ reservationId: reservation.reservationId });
++    case "needsConfirmationCalendarFailure":
++      logError({
++        action: "createReservation",
++        message: "Calendar event creation failed",
++        context: { reservationId: reservation.reservationId },
++        severity: "error",
++      });
++      return buildSuccessResponse({ reservationId: reservation.reservationId, needsConfirmation: true });
++    case "needsConfirmationLostRace":
++      logError({
++        action: "createReservation",
++        message: "Lost race: slot no longer available at lock time",
++        context: { reservationId: reservation.reservationId },
++        severity: "warning",
++      });
++      return buildErrorResponse(
++        ERROR_CODES.SLOT_UNAVAILABLE,
++        "選択された時間帯は直前に埋まってしまいました。お手数ですが、別の時間帯をお選びください。",
++      );
++    case "sheetUpdateFailedAfterCalendar":
++      logError({
++        action: "createReservation",
++        message: "Sheet update failed after Calendar event creation",
++        context: { reservationId: reservation.reservationId, calendarEventId: result.calendarEventId },
++        severity: "critical",
++      });
++      return buildErrorResponse(ERROR_CODES.SHEET_ERROR, "予約の確定処理に失敗しました。管理者にお問い合わせください。");
++    case "unexpectedError":
++      console.error("[createReservation] unexpected error in critical section:", reservation.reservationId, result.cause);
++      logError({
++        action: "createReservation",
++        message: "Unexpected error in createReservation critical section",
++        context: { reservationId: reservation.reservationId },
++        severity: "critical",
++      });
++      return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "サーバーエラーが発生しました。");
++  }
++}
++
++function buildCancellationUrl(reservation: NormalizedReservation, token: string): string {
++  const base = getSiteBaseUrl();
++  const query = [
++    `reservationId=${encodeURIComponent(reservation.reservationId)}`,
++    `token=${encodeURIComponent(token)}`,
++    `date=${encodeURIComponent(reservation.date)}`,
++    `time=${encodeURIComponent(reservation.startTime)}`,
++    `service=${encodeURIComponent(reservation.serviceName)}`,
++  ].join("&");
++  return `${base}/reservation/cancel?${query}`;
++}
++
++function trySendAndLog(
++  recipientType: "customer" | "owner",
++  recipientEmail: string,
++  content: { subject: string; body: string },
++  reservationId: string,
++): boolean {
++  try {
++    sendEmail(recipientEmail, content.subject, content.body);
++    logEmail({ relatedType: "Reservation", relatedId: reservationId, recipientType, recipientEmail, subject: content.subject, status: "sent" });
++    return true;
++  } catch (error) {
++    const message = error instanceof Error ? error.message : String(error);
++    console.error("[createReservation] email send failed:", reservationId, recipientType, message);
++    logEmail({ relatedType: "Reservation", relatedId: reservationId, recipientType, recipientEmail, subject: content.subject, status: "failed", errorMessage: message });
++    logError({ action: "createReservation", message: "Email send failed", context: { reservationId, recipientType }, severity: "warning" });
++    return false;
++  }
++}
++
++/** Step 9 (Phase 0 §U/§M): strictly outside the lock. Never runs at all
++ *  for `sheetUpdateFailedAfterCalendar`/`unexpectedError` — the row's
++ *  final state is not reliably known in those cases (master §12: never a
++ *  false confirmation), and the owner already has a CRITICAL ERROR_LOG
++ *  entry, the correct channel for that case. */
++function sendReservationEmailsForOutcome(
++  result: CriticalSectionResult,
++  reservation: NormalizedReservation,
++  config: AppConfig,
++  cancellationToken: string,
++): void {
++  if (result.kind !== "confirmed" && result.kind !== "needsConfirmationCalendarFailure" && result.kind !== "needsConfirmationLostRace") {
++    return;
++  }
++
++  const ctx: ReservationEmailContext = {
++    reservationId: reservation.reservationId,
++    reservation,
++    cancellationUrl: buildCancellationUrl(reservation, cancellationToken),
++    businessName: config.business.name,
++  };
++
++  let allSucceeded: boolean;
++  if (result.kind === "confirmed") {
++    const customerOk = trySendAndLog("customer", reservation.email, buildCustomerConfirmationEmail(ctx), reservation.reservationId);
++    const ownerOk = trySendAndLog("owner", config.emailOwnerNotifyAddress, buildOwnerConfirmedNotificationEmail(ctx), reservation.reservationId);
++    allSucceeded = customerOk && ownerOk;
++  } else {
++    const reason =
++      result.kind === "needsConfirmationCalendarFailure"
++        ? result.reason
++        : "予約枠の重複が検知されました（直前に埋まった可能性があります）。";
++    allSucceeded = trySendAndLog("owner", config.emailOwnerNotifyAddress, buildOwnerNeedsAttentionEmail(ctx, reason), reservation.reservationId);
++  }
++
++  try {
++    updateReservationEmailStatus(reservation.reservationId, allSucceeded ? "sent" : "failed", new Date());
++  } catch (error) {
++    console.error("[createReservation] failed to persist EmailStatus:", reservation.reservationId, error);
++  }
++}
++
++/** Closes the race two truly-simultaneous requests carrying the same
++ *  `submissionId` would otherwise have. A short, separate lock
++ *  acquisition from the main critical-section lock below. */
++function claimSubmissionOrGetExisting(
++  submissionId: string,
++  appendPendingRow: () => void,
++): { kind: "existing"; result: IdempotencyResult } | { kind: "claimed" } {
++  const cached = getCachedReservationResult(submissionId);
++  if (cached) {
++    return { kind: "existing", result: cached };
++  }
++
++  const lock = LockService.getScriptLock();
++  let acquired = false;
++  try {
++    acquired = lock.tryLock(IDEMPOTENCY_CLAIM_LOCK_TIMEOUT_MS);
++  } catch {
++    acquired = false;
++  }
++  if (!acquired) {
++    throw new SystemBusyError();
++  }
++  try {
++    const existingRow = findReservationBySubmissionId(submissionId);
++    if (existingRow) {
++      const result = mapReservationRowToResult(existingRow);
++      setCachedReservationResult(submissionId, result);
++      return { kind: "existing", result };
++    }
++    appendPendingRow();
++    return { kind: "claimed" };
++  } finally {
++    lock.releaseLock();
++  }
++}
++
++function createReservationActionInner(
++  rawPayload: unknown,
++): ApiResponse<{ reservationId: string; needsConfirmation?: boolean }> {
++  const config = getConfig();
++  if (!config.features.reservation) {
++    return buildErrorResponse(ERROR_CODES.FEATURE_DISABLED, "現在ご予約の受付を停止しています。");
++  }
++  if (!rawPayload || typeof rawPayload !== "object") {
++    return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, "リクエストの形式が正しくありません。");
++  }
++
++  const now = new Date();
++  const services = getServiceRows();
++  const staff = config.features.staffSelection ? getStaffRows() : [];
++
++  const evaluation = evaluateReservationRequest({
++    request: rawPayload as ReservationRequest,
++    services,
++    staff,
++    config,
++    now,
++    availabilityFor: buildAvailabilityFor(config.calendarId),
++  });
++  if (!evaluation.ok) {
++    const { code, message } = mapReservationIssueToErrorResponse(evaluation.issues[0]);
++    return buildErrorResponse(code, message);
++  }
++
++  const reservation = evaluation.reservation;
++  const cancellationToken = generateCancellationToken();
++
++  let claim: { kind: "existing"; result: IdempotencyResult } | { kind: "claimed" };
++  try {
++    claim = claimSubmissionOrGetExisting(reservation.submissionId, () =>
++      appendReservationRow(buildPendingReservationRow(reservation, now, cancellationToken)),
++    );
++  } catch (error) {
++    if (error instanceof SystemBusyError) {
++      return buildErrorResponse(ERROR_CODES.SYSTEM_BUSY, "只今混み合っております。少々時間をおいて再度お試しください。");
++    }
++    logError({ action: "createReservation", message: "Failed while claiming submissionId", context: { submissionId: reservation.submissionId }, severity: "error" }, now);
++    return buildErrorResponse(ERROR_CODES.SHEET_ERROR, "予約の受付処理に失敗しました。時間をおいて再度お試しください。");
++  }
++
++  if (claim.kind === "existing") {
++    return buildSuccessResponse(claim.result);
++  }
++
++  const lock = LockService.getScriptLock();
++  let lockAcquired = false;
++  try {
++    lockAcquired = lock.tryLock(CRITICAL_SECTION_LOCK_TIMEOUT_MS);
++  } catch {
++    lockAcquired = false;
++  }
++  if (!lockAcquired) {
++    logError({ action: "createReservation", message: "Lock acquisition timed out", context: { reservationId: reservation.reservationId }, severity: "warning" }, now);
++    return buildErrorResponse(ERROR_CODES.SYSTEM_BUSY, "只今混み合っております。少々時間をおいて再度お試しください。");
++  }
++
++  let result: CriticalSectionResult;
++  try {
++    result = runReservationCriticalSection(reservation, config, staff);
++  } finally {
++    lock.releaseLock();
++  }
++
++  const response = resolveCreateReservationResponse(result, reservation);
++  if (response.ok) {
++    setCachedReservationResult(reservation.submissionId, response.data);
++  }
++  // `response` is fully decided by this point (and, on success, the
++  // reservation is already persisted — Sheet row + Calendar event both
++  // real). Sending emails must never be allowed to override it: an
++  // unguarded throw here (e.g. getSiteBaseUrl() if SITE_BASE_URL isn't
++  // set) would otherwise propagate up to createReservationAction's
++  // top-level catch and turn an already-successful reservation into a
++  // false INTERNAL_ERROR told to the customer, with no emails sent at
++  // all — the exact false-negative-after-real-success failure mode this
++  // whole design exists to avoid in the other direction (no false
++  // confirmations). trySendAndLog already isolates a single send
++  // failure; this outer try/catch isolates failures in the surrounding
++  // email-context construction (e.g. buildCancellationUrl) the same way.
++  try {
++    sendReservationEmailsForOutcome(result, reservation, config, cancellationToken);
++  } catch (error) {
++    console.error("[createReservation] sendReservationEmailsForOutcome threw:", reservation.reservationId, error);
++    logError({
++      action: "createReservation",
++      message: "Unexpected error while sending post-reservation emails",
++      context: { reservationId: reservation.reservationId },
++      severity: "critical",
++    });
++  }
++  return response;
++}
++
++/** `createReservation` action handler (master spec §U). Thin outer
++ *  wrapper: maps `ConfigStore`/`RowMapper` infrastructure errors the same
++ *  way `getConfigAction` does, so a CONFIG/catalog sheet problem never
++ *  crashes past `Api.ts`'s boundary. */
++export function createReservationAction(
++  rawPayload: unknown,
++): ApiResponse<{ reservationId: string; needsConfirmation?: boolean }> {
++  try {
++    return createReservationActionInner(rawPayload);
++  } catch (error) {
++    if (error instanceof ConfigError) {
++      return mapConfigErrorToResponse(error);
++    }
++    if (error instanceof MissingHeadersError) {
++      return mapMissingHeadersErrorToResponse(error);
++    }
++    console.error("[createReservation] unexpected top-level error:", error);
++    logError({ action: "createReservation", message: "Unexpected top-level error", severity: "critical" });
++    return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "サーバーエラーが発生しました。");
++  }
++}
+diff --git a/apps/salon-portfolio/gas/src/RowMapper.ts b/apps/salon-portfolio/gas/src/RowMapper.ts
+index 58a458c..a2ae81d 100644
+--- a/apps/salon-portfolio/gas/src/RowMapper.ts
++++ b/apps/salon-portfolio/gas/src/RowMapper.ts
+@@ -78,3 +78,22 @@ export function objectToRow(
+     return value;
+   });
+ }
++
++/** Returns the 0-based index into `dataRows` of the first row whose
++ *  `columnName` cell equals `value` (both sides compared as strings), or
++ *  `null` if the column is absent from `headerMap` or no row matches.
++ *  Pure — the shared seam behind both the idempotency Sheet backstop and
++ *  locating a reservation row to update in place (Phase 4 Task 2). */
++export function findRowIndexByColumnValue(
++  headerMap: Record<string, number>,
++  dataRows: unknown[][],
++  columnName: string,
++  value: string,
++): number | null {
++  const columnIndex = headerMap[columnName];
++  if (columnIndex === undefined) {
++    return null;
++  }
++  const index = dataRows.findIndex((row) => String(row[columnIndex] ?? "") === value);
++  return index === -1 ? null : index;
++}
+diff --git a/apps/salon-portfolio/gas/src/Utils.ts b/apps/salon-portfolio/gas/src/Utils.ts
+index 2dd1e0b..42c1a46 100644
+--- a/apps/salon-portfolio/gas/src/Utils.ts
++++ b/apps/salon-portfolio/gas/src/Utils.ts
+@@ -135,3 +135,28 @@ export function isValidCalendarDateString(dateStr: string): boolean {
+ export function toTokyoLocalDateTimeString(dateStr: string, timeStr: string): string {
+   return `${dateStr}T${timeStr}`;
+ }
++
++/** Inverse direction of `tokyoDateTimeToInstant`: formats a real instant
++ *  (e.g. a Calendar event's `getStartTime()`) as the Asia/Tokyo-local
++ *  `YYYY-MM-DDTHH:mm` string the `BusyInterval`/`SlotCandidate` overlap
++ *  comparisons rely on (Phase 4 Task 1). */
++export function formatInstantAsTokyoLocalDateTimeString(date: Date): string {
++  const tokyoTime = new Date(date.getTime() + TOKYO_OFFSET_MS);
++  const year = tokyoTime.getUTCFullYear();
++  const month = String(tokyoTime.getUTCMonth() + 1).padStart(2, "0");
++  const day = String(tokyoTime.getUTCDate()).padStart(2, "0");
++  const hours = String(tokyoTime.getUTCHours()).padStart(2, "0");
++  const minutes = String(tokyoTime.getUTCMinutes()).padStart(2, "0");
++  return `${year}-${month}-${day}T${hours}:${minutes}`;
++}
++
++/** The `[00:00, 24:00)` Asia/Tokyo-local instant range for one calendar
++ *  date — the query window `Calendar.ts::getBusyEvents` (Phase 4 Task 9)
++ *  uses, matching `docs/phase0-specification.md` §J Stage 2's "[date
++ *  00:00, date 24:00)" wording exactly. */
++export function tokyoCalendarDayRange(dateStr: string): { start: Date; end: Date } {
++  return {
++    start: new Date(tokyoDateTimeToInstant(dateStr, "00:00")),
++    end: new Date(tokyoDateTimeToInstant(addDaysToTokyoDateString(dateStr, 1), "00:00")),
++  };
++}
+diff --git a/apps/salon-portfolio/gas/tests/Api.test.ts b/apps/salon-portfolio/gas/tests/Api.test.ts
+index 154c5a5..10fd6df 100644
+--- a/apps/salon-portfolio/gas/tests/Api.test.ts
++++ b/apps/salon-portfolio/gas/tests/Api.test.ts
+@@ -2,10 +2,34 @@ jest.mock("../src/ConfigStore", () => {
+   const actual = jest.requireActual("../src/ConfigStore");
+   return { ...actual, getConfig: jest.fn() };
+ });
++jest.mock("../src/Catalog");
++jest.mock("../src/ReservationRepository", () => ({
++  // buildPendingReservationRow is pure — kept real so its output flows
++  // through unchanged; only the Sheets-touching functions are mocked.
++  ...jest.requireActual("../src/ReservationRepository"),
++  appendReservationRow: jest.fn(),
++  findReservationBySubmissionId: jest.fn(),
++  findReservationByReservationId: jest.fn(),
++  markReservationConfirmed: jest.fn(),
++  markReservationNeedsConfirmation: jest.fn(),
++  updateReservationEmailStatus: jest.fn(),
++}));
++jest.mock("../src/Idempotency", () => ({
++  // buildIdempotencyCacheKey/mapReservationRowToResult are pure — kept
++  // real; only the CacheService-touching functions are mocked.
++  ...jest.requireActual("../src/Idempotency"),
++  getCachedReservationResult: jest.fn(),
++  setCachedReservationResult: jest.fn(),
++}));
++jest.mock("../src/Calendar");
++jest.mock("../src/Mail");
++jest.mock("../src/Logging");
++jest.mock("../src/RuntimeProperties", () => ({ getSiteBaseUrl: jest.fn() }));
+ 
+ import {
+   buildErrorResponse,
+   buildSuccessResponse,
++  createReservationAction,
+   getConfigAction,
+   handleApiRequest,
+   mapConfigErrorToResponse,
+@@ -15,6 +39,16 @@ import {
+ import { ConfigError, getConfig } from "../src/ConfigStore";
+ import { MissingHeadersError } from "../src/RowMapper";
+ import { ERROR_CODES } from "../src/models/ErrorCodes";
++import * as Catalog from "../src/Catalog";
++import * as ReservationRepository from "../src/ReservationRepository";
++import * as Idempotency from "../src/Idempotency";
++import * as Calendar from "../src/Calendar";
++import * as Mail from "../src/Mail";
++import * as Logging from "../src/Logging";
++import * as RuntimeProperties from "../src/RuntimeProperties";
++import { ServiceRow, StaffRow } from "../src/SheetSchemas";
++import { AppConfig } from "../src/models/Config";
++import { ReservationRequest } from "../src/models/ReservationRequest";
+ 
+ describe("parseApiRequest", () => {
+   it("parses a well-formed request", () => {
+@@ -137,4 +171,290 @@ describe("handleApiRequest dispatch", () => {
+       expect(response.error.message).toContain("deleteEverything");
+     }
+   });
++
++  it("routes createReservation to createReservationAction instead of rejecting it as unsupported", () => {
++    // With ConfigStore mocked, getConfig() returns undefined by default
++    // here (no mockReturnValue set in this describe block), so
++    // createReservationActionInner throws reading `config.features` —
++    // createReservationAction's own top-level catch turns that into
++    // INTERNAL_ERROR rather than letting it escape handleApiRequest. This
++    // test only asserts that dispatch actually reached
++    // createReservationAction (i.e. it is NOT the "Unsupported action"
++    // VALIDATION_ERROR the default switch case would produce) — the
++    // createReservationAction describe block below covers its real
++    // behavior in full.
++    const response = handleApiRequest('{"action":"createReservation","payload":{}}');
++    expect(response).toEqual({
++      ok: false,
++      error: { code: "INTERNAL_ERROR", message: expect.any(String) },
++    });
++  });
++});
++
++describe("createReservationAction", () => {
++  const service: ServiceRow = {
++    ServiceID: "SV001",
++    Name: "ジェルネイル",
++    DurationMinutes: 60,
++    Price: 6000,
++    Active: true,
++    StaffRequired: false,
++    DisplayOrder: 1,
++  };
++  const staffA: StaffRow = { StaffID: "ST001", Name: "田中", Active: true, CalendarID: "cal-a", DisplayOrder: 1 };
++  const staffB: StaffRow = { StaffID: "ST002", Name: "鈴木", Active: true, CalendarID: "cal-b", DisplayOrder: 2 };
++
++  function buildConfig(overrides: Partial<AppConfig> = {}): AppConfig {
++    return {
++      business: { name: "サロン花", phone: "0300000000", email: "info@example.com", address: "東京都" },
++      hours: {
++        monday: "09:00-18:00",
++        tuesday: "09:00-18:00",
++        wednesday: "09:00-18:00",
++        thursday: "09:00-18:00",
++        friday: "09:00-18:00",
++        saturday: "09:00-18:00",
++        sunday: "closed",
++      },
++      holidays: [],
++      features: { contactForm: true, reservation: true, staffSelection: false, calendar: true, emailNotification: true },
++      staffAnyAvailableOption: true,
++      reservation: { timezone: "Asia/Tokyo", slotMinutes: 30, minLeadHours: 1, maxBookingDays: 60 },
++      calendarId: "shared-cal",
++      emailOwnerNotifyAddress: "owner@example.com",
++      emailFromName: "サロン花",
++      ...overrides,
++    };
++  }
++
++  function buildRequest(overrides: Partial<ReservationRequest> = {}): ReservationRequest {
++    return {
++      submissionId: "sub-1",
++      serviceId: "SV001",
++      date: "2026-09-10",
++      time: "10:00",
++      name: "山田太郎",
++      email: "yamada@example.com",
++      ...overrides,
++    };
++  }
++
++  let lockState: { tryLockResults: boolean[]; releaseCount: number };
++
++  beforeEach(() => {
++    // resetAllMocks (not clearAllMocks) is required here: clearAllMocks
++    // only clears call history, it leaves a custom mockImplementation set
++    // by a previous test's mock in place, which previously leaked a
++    // markReservationConfirmed throw from one test into the next.
++    jest.resetAllMocks();
++    lockState = { tryLockResults: [true, true], releaseCount: 0 };
++    (globalThis as unknown as { LockService: unknown }).LockService = {
++      getScriptLock: () => ({
++        tryLock: () => lockState.tryLockResults.shift() ?? false,
++        releaseLock: () => {
++          lockState.releaseCount += 1;
++        },
++      }),
++    };
++    (Catalog.getServiceRows as jest.Mock).mockReturnValue([service]);
++    (Catalog.getStaffRows as jest.Mock).mockReturnValue([staffA, staffB]);
++    (Idempotency.getCachedReservationResult as jest.Mock).mockReturnValue(null);
++    (ReservationRepository.findReservationBySubmissionId as jest.Mock).mockReturnValue(null);
++    (Calendar.getBusyEvents as jest.Mock).mockReturnValue([]);
++    (Calendar.createReservationEvent as jest.Mock).mockReturnValue("event-1");
++    (getConfig as jest.Mock).mockReturnValue(buildConfig());
++    (RuntimeProperties.getSiteBaseUrl as jest.Mock).mockReturnValue("https://example.com");
++  });
++
++  it("returns FEATURE_DISABLED when the reservation feature is off", () => {
++    (getConfig as jest.Mock).mockReturnValue(buildConfig({ features: { ...buildConfig().features, reservation: false } }));
++    const response = createReservationAction(buildRequest());
++    expect(response).toEqual({ ok: false, error: { code: "FEATURE_DISABLED", message: expect.any(String) } });
++  });
++
++  it("returns the cached result without touching the repository or Calendar (idempotency fast path)", () => {
++    (Idempotency.getCachedReservationResult as jest.Mock).mockReturnValue({ reservationId: "RES-CACHED" });
++    const response = createReservationAction(buildRequest());
++    expect(response).toEqual({ ok: true, data: { reservationId: "RES-CACHED" } });
++    expect(ReservationRepository.appendReservationRow).not.toHaveBeenCalled();
++    expect(Calendar.createReservationEvent).not.toHaveBeenCalled();
++  });
++
++  it("returns the Sheet-backstop result and re-populates the cache (idempotency retry after cache expiry)", () => {
++    (ReservationRepository.findReservationBySubmissionId as jest.Mock).mockReturnValue({
++      ReservationID: "RES-EXISTING",
++      Status: "受付済",
++    });
++    const response = createReservationAction(buildRequest());
++    expect(response).toEqual({ ok: true, data: { reservationId: "RES-EXISTING", needsConfirmation: undefined } });
++    expect(Idempotency.setCachedReservationResult).toHaveBeenCalledWith("sub-1", { reservationId: "RES-EXISTING", needsConfirmation: undefined });
++    expect(ReservationRepository.appendReservationRow).not.toHaveBeenCalled();
++  });
++
++  it("returns SYSTEM_BUSY when the idempotency-claim lock cannot be acquired", () => {
++    lockState.tryLockResults = [false];
++    const response = createReservationAction(buildRequest());
++    expect(response).toEqual({ ok: false, error: { code: "SYSTEM_BUSY", message: expect.any(String) } });
++    expect(ReservationRepository.appendReservationRow).not.toHaveBeenCalled();
++  });
++
++  it("returns SYSTEM_BUSY when the critical-section lock cannot be acquired, leaving the pending row untouched", () => {
++    lockState.tryLockResults = [true, false];
++    const response = createReservationAction(buildRequest());
++    expect(response).toEqual({ ok: false, error: { code: "SYSTEM_BUSY", message: expect.any(String) } });
++    expect(ReservationRepository.appendReservationRow).toHaveBeenCalledTimes(1);
++    expect(ReservationRepository.markReservationNeedsConfirmation).not.toHaveBeenCalled();
++    expect(ReservationRepository.markReservationConfirmed).not.toHaveBeenCalled();
++  });
++
++  it("normal successful booking: confirms the row, creates the Calendar event, sends both emails", () => {
++    const response = createReservationAction(buildRequest());
++    expect(response.ok).toBe(true);
++    if (response.ok) {
++      expect(response.data.reservationId).toMatch(/^RES-\d{8}-[A-Z0-9]{6}$/);
++      expect(response.data.needsConfirmation).toBeUndefined();
++    }
++    expect(ReservationRepository.markReservationConfirmed).toHaveBeenCalledWith(
++      expect.any(String),
++      "event-1",
++      expect.any(Date),
++    );
++    expect(Mail.sendEmail).toHaveBeenCalledTimes(2);
++    expect(ReservationRepository.updateReservationEmailStatus).toHaveBeenCalledWith(expect.any(String), "sent", expect.any(Date));
++    expect(lockState.releaseCount).toBe(2);
++  });
++
++  it("slot becomes unavailable during the lock-protected re-check: SLOT_UNAVAILABLE error, row marked 要確認, no customer email", () => {
++    (Calendar.getBusyEvents as jest.Mock)
++      .mockReturnValueOnce([]) // pre-lock advisory check
++      .mockReturnValueOnce([{ start: "2026-09-10T10:00", end: "2026-09-10T11:00" }]); // lock-protected re-check
++    const response = createReservationAction(buildRequest());
++    expect(response).toEqual({ ok: false, error: { code: "SLOT_UNAVAILABLE", message: expect.any(String) } });
++    expect(ReservationRepository.markReservationNeedsConfirmation).toHaveBeenCalled();
++    expect(Calendar.createReservationEvent).not.toHaveBeenCalled();
++    expect(Mail.sendEmail).toHaveBeenCalledTimes(1); // owner needs-attention only
++  });
++
++  it("Calendar event creation fails: still ok:true with needsConfirmation, row marked 要確認, owner-only email", () => {
++    (Calendar.createReservationEvent as jest.Mock).mockImplementation(() => {
++      throw new Error("Calendar API quota exceeded");
++    });
++    const response = createReservationAction(buildRequest());
++    expect(response.ok).toBe(true);
++    if (response.ok) {
++      expect(response.data.needsConfirmation).toBe(true);
++    }
++    expect(ReservationRepository.markReservationNeedsConfirmation).toHaveBeenCalled();
++    expect(ReservationRepository.markReservationConfirmed).not.toHaveBeenCalled();
++    expect(Mail.sendEmail).toHaveBeenCalledTimes(1);
++    expect(Logging.logError).toHaveBeenCalled();
++  });
++
++  it("Sheet update fails after Calendar succeeds: SHEET_ERROR, CalendarEventID preserved in the ERROR_LOG context, no emails sent", () => {
++    (ReservationRepository.markReservationConfirmed as jest.Mock).mockImplementation(() => {
++      throw new Error("Sheets API rate limit");
++    });
++    const response = createReservationAction(buildRequest());
++    expect(response).toEqual({ ok: false, error: { code: "SHEET_ERROR", message: expect.any(String) } });
++    expect(Logging.logError).toHaveBeenCalledWith(
++      expect.objectContaining({ severity: "critical", context: expect.objectContaining({ calendarEventId: "event-1" }) }),
++    );
++    expect(Mail.sendEmail).not.toHaveBeenCalled();
++  });
++
++  it("email send failure after a successful reservation does not change the success response or roll back the reservation", () => {
++    (Mail.sendEmail as jest.Mock).mockImplementation(() => {
++      throw new Error("Gmail quota exceeded");
++    });
++    const response = createReservationAction(buildRequest());
++    expect(response.ok).toBe(true);
++    expect(ReservationRepository.updateReservationEmailStatus).toHaveBeenCalledWith(expect.any(String), "failed", expect.any(Date));
++    expect(Logging.logEmail).toHaveBeenCalledWith(expect.objectContaining({ status: "failed" }));
++  });
++
++  it("a throw while building the email context (e.g. SITE_BASE_URL unset) after a successful reservation still returns the real success response, not a false failure", () => {
++    // Regression test: sendReservationEmailsForOutcome's own email-context
++    // construction (buildCancellationUrl -> getSiteBaseUrl) used to be
++    // unguarded — a throw here after the reservation was already
++    // confirmed would previously propagate past createReservationAction's
++    // top-level catch and turn an already-successful, already-persisted
++    // reservation into a false ok:false INTERNAL_ERROR told to the
++    // customer, with no emails ever attempted.
++    (RuntimeProperties.getSiteBaseUrl as jest.Mock).mockImplementation(() => {
++      throw new Error('Script Property "SITE_BASE_URL" is not set.');
++    });
++    const response = createReservationAction(buildRequest());
++    expect(response.ok).toBe(true);
++    if (response.ok) {
++      expect(response.data.reservationId).toMatch(/^RES-\d{8}-[A-Z0-9]{6}$/);
++    }
++    expect(ReservationRepository.markReservationConfirmed).toHaveBeenCalled();
++    expect(Mail.sendEmail).not.toHaveBeenCalled();
++    expect(Logging.logError).toHaveBeenCalledWith(
++      expect.objectContaining({ severity: "critical", message: expect.stringContaining("post-reservation emails") }),
++    );
++  });
++
++  it("specific staff selection: assigns the requested staff and creates the event on that staff's calendar", () => {
++    (getConfig as jest.Mock).mockReturnValue(buildConfig({ features: { ...buildConfig().features, staffSelection: true } }));
++    createReservationAction(buildRequest({ staffId: "ST002" }));
++    expect(Calendar.createReservationEvent).toHaveBeenCalledWith(expect.objectContaining({ calendarId: "cal-b" }));
++  });
++
++  it("ANY_STAFF selection: assigns the first free staff in DisplayOrder", () => {
++    (getConfig as jest.Mock).mockReturnValue(buildConfig({ features: { ...buildConfig().features, staffSelection: true } }));
++    (Calendar.getBusyEvents as jest.Mock).mockImplementation((calendarId: string) =>
++      calendarId === "cal-a" ? [{ start: "2026-09-10T10:00", end: "2026-09-10T11:00" }] : [],
++    );
++    createReservationAction(buildRequest({ staffId: "ANY" }));
++    expect(Calendar.createReservationEvent).toHaveBeenCalledWith(expect.objectContaining({ calendarId: "cal-b" }));
++  });
++
++  it("unavailable specific staff: SLOT_UNAVAILABLE before any row is written", () => {
++    (getConfig as jest.Mock).mockReturnValue(buildConfig({ features: { ...buildConfig().features, staffSelection: true } }));
++    (Calendar.getBusyEvents as jest.Mock).mockReturnValue([{ start: "2026-09-10T10:00", end: "2026-09-10T11:00" }]);
++    const response = createReservationAction(buildRequest({ staffId: "ST001" }));
++    expect(response).toEqual({ ok: false, error: { code: "SLOT_UNAVAILABLE", message: expect.any(String) } });
++    expect(ReservationRepository.appendReservationRow).not.toHaveBeenCalled();
++  });
++
++  it("unauthorized/unknown staff id is rejected as VALIDATION_ERROR before any row is written", () => {
++    (getConfig as jest.Mock).mockReturnValue(buildConfig({ features: { ...buildConfig().features, staffSelection: true } }));
++    const response = createReservationAction(buildRequest({ staffId: "ST999" }));
++    expect(response).toEqual({ ok: false, error: { code: "VALIDATION_ERROR", message: expect.any(String) } });
++    expect(ReservationRepository.appendReservationRow).not.toHaveBeenCalled();
++  });
++
++  it("ignores a client-supplied price/duration and uses the server-resolved service data for the created row", () => {
++    createReservationAction({ ...buildRequest(), price: 1, durationMinutes: 1 } as unknown as ReservationRequest);
++    const [[pendingRow]] = (ReservationRepository.appendReservationRow as jest.Mock).mock.calls;
++    // appendReservationRow itself takes the already-built ReservationRow —
++    // buildPendingReservationRow only ever reads price/duration from the
++    // server-resolved NormalizedReservation, which has no pass-through
++    // field for a client-supplied price/duration at all.
++    expect(pendingRow.ServiceID).toBe("SV001");
++  });
++
++  it("sanitizes a ConfigError from getConfig into CONFIG_INVALID without leaking issues", () => {
++    const { ConfigError: ActualConfigError } = jest.requireActual("../src/ConfigStore");
++    (getConfig as jest.Mock).mockImplementation(() => {
++      throw new ActualConfigError([{ field: "calendar.id", reason: "missing" }]);
++    });
++    const response = createReservationAction(buildRequest());
++    expect(response.ok).toBe(false);
++    if (!response.ok) {
++      expect(response.error.code).toBe("CONFIG_INVALID");
++      expect(JSON.stringify(response)).not.toContain("calendar.id");
++    }
++  });
++
++  it("never includes GAS_WEBAPP_URL or a raw exception message in any response", () => {
++    (Calendar.createReservationEvent as jest.Mock).mockImplementation(() => {
++      throw new Error("https://script.google.com/macros/s/SUPER-SECRET-DEPLOYMENT-ID/exec failed");
++    });
++    const response = createReservationAction(buildRequest());
++    const serialized = JSON.stringify(response);
++    expect(serialized).not.toContain("script.google.com");
++    expect(serialized).not.toContain("SUPER-SECRET-DEPLOYMENT-ID");
++  });
+ });
+diff --git a/apps/salon-portfolio/gas/tests/RowMapper.test.ts b/apps/salon-portfolio/gas/tests/RowMapper.test.ts
+index 47532d2..379694f 100644
+--- a/apps/salon-portfolio/gas/tests/RowMapper.test.ts
++++ b/apps/salon-portfolio/gas/tests/RowMapper.test.ts
+@@ -1,6 +1,7 @@
+ import {
+   assertRequiredHeaders,
+   buildHeaderMap,
++  findRowIndexByColumnValue,
+   MissingHeadersError,
+   objectToRow,
+   rowsToObjects,
+@@ -98,3 +99,28 @@ describe("objectToRow", () => {
+     ).toThrow(TypeError);
+   });
+ });
++
++describe("findRowIndexByColumnValue", () => {
++  const headerMap = { ReservationID: 0, SubmissionID: 1, Status: 2 };
++  const dataRows = [
++    ["RES-A", "sub-1", "処理中"],
++    ["RES-B", "sub-2", "受付済"],
++  ];
++
++  it("returns the 0-based index of the first matching row", () => {
++    expect(findRowIndexByColumnValue(headerMap, dataRows, "SubmissionID", "sub-2")).toBe(1);
++  });
++
++  it("returns null when no row matches", () => {
++    expect(findRowIndexByColumnValue(headerMap, dataRows, "SubmissionID", "sub-missing")).toBeNull();
++  });
++
++  it("returns null when the column itself does not exist in the header map", () => {
++    expect(findRowIndexByColumnValue(headerMap, dataRows, "NotAColumn", "sub-1")).toBeNull();
++  });
++
++  it("coerces both sides through String() before comparing", () => {
++    const numericHeaderMap = { Code: 0 };
++    expect(findRowIndexByColumnValue(numericHeaderMap, [[42]], "Code", "42")).toBe(0);
++  });
++});
+diff --git a/apps/salon-portfolio/gas/tests/Utils.test.ts b/apps/salon-portfolio/gas/tests/Utils.test.ts
+index 8bb91f5..86574d5 100644
+--- a/apps/salon-portfolio/gas/tests/Utils.test.ts
++++ b/apps/salon-portfolio/gas/tests/Utils.test.ts
+@@ -58,6 +58,8 @@ import {
+   addDaysToTokyoDateString,
+   isValidCalendarDateString,
+   toTokyoLocalDateTimeString,
++  formatInstantAsTokyoLocalDateTimeString,
++  tokyoCalendarDayRange,
+ } from "../src/Utils";
+ 
+ describe("getWeekdayForDateString", () => {
+@@ -116,3 +118,32 @@ describe("toTokyoLocalDateTimeString", () => {
+     );
+   });
+ });
++
++describe("formatInstantAsTokyoLocalDateTimeString", () => {
++  it("formats a UTC instant as its Asia/Tokyo local YYYY-MM-DDTHH:mm", () => {
++    // 2026-09-10T01:30:00Z = 2026-09-10T10:30 in Tokyo (UTC+9)
++    expect(formatInstantAsTokyoLocalDateTimeString(new Date("2026-09-10T01:30:00.000Z"))).toBe(
++      "2026-09-10T10:30",
++    );
++  });
++
++  it("rolls the calendar date over across midnight Tokyo time", () => {
++    // 2026-09-09T15:05:00Z = 2026-09-10T00:05 in Tokyo
++    expect(formatInstantAsTokyoLocalDateTimeString(new Date("2026-09-09T15:05:00.000Z"))).toBe(
++      "2026-09-10T00:05",
++    );
++  });
++
++  it("is the exact inverse of tokyoDateTimeToInstant for a same-day case", () => {
++    const instant = tokyoDateTimeToInstant("2026-09-10", "10:30");
++    expect(formatInstantAsTokyoLocalDateTimeString(new Date(instant))).toBe("2026-09-10T10:30");
++  });
++});
++
++describe("tokyoCalendarDayRange", () => {
++  it("returns the [00:00, 24:00) Tokyo-local instant range for a date", () => {
++    const { start, end } = tokyoCalendarDayRange("2026-09-10");
++    expect(formatInstantAsTokyoLocalDateTimeString(start)).toBe("2026-09-10T00:00");
++    expect(formatInstantAsTokyoLocalDateTimeString(end)).toBe("2026-09-11T00:00");
++  });
++});
+diff --git a/docs/api-documentation.md b/docs/api-documentation.md
+index 69fbd88..b121569 100644
+--- a/docs/api-documentation.md
++++ b/docs/api-documentation.md
+@@ -1,8 +1,13 @@
+ # API Documentation
+ 
+-Status as of Phase 3A: one action (`getConfig`) is implemented. The full
+-action list, covered in [`phase0-specification.md`](phase0-specification.md)
+-§G/§H, is implemented incrementally in later phases.
++Status as of Phase 4: two actions are implemented — `getConfig` (Phase 3A)
++and `createReservation` (Phase 4, see
++[`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
++for its full transaction design). The remaining action list, covered in
++[`phase0-specification.md`](phase0-specification.md) §G/§H, is implemented
++incrementally in later phases — `getServices`/`getStaff` are deliberately
++not built as public actions yet (no picker UI to consume them; Phase 4
++reads SERVICES/STAFF internally instead, see `roadmap.md`).
+ 
+ ## Endpoints
+ 
+@@ -22,9 +27,9 @@ action list, covered in [`phase0-specification.md`](phase0-specification.md)
+ { "ok": false, "error": { "code": "CONFIG_INVALID", "message": "設定情報の読み込みに失敗しました。管理者にお問い合わせください。" } }
+ ```
+ 
+-## Actions implemented in Phase 3A
++## Actions implemented
+ 
+-### `getConfig`
++### `getConfig` (Phase 3A)
+ 
+ Always available (no feature flag). Reads CONFIG + HOLIDAYS, parses and
+ validates them, and returns the public projection of `AppConfig`
+@@ -49,12 +54,60 @@ included — Phase 3A §20).
+ { "ok": false, "error": { "code": "CONFIG_INVALID", "message": "設定情報の読み込みに失敗しました。管理者にお問い合わせください。" } }
+ ```
+ 
++### `createReservation` (Phase 4)
++
++Requires `features.reservation`. Full transaction flow — see
++[`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
++for the sequence, lock scope, idempotency, and failure-mode details this
++section only summarizes.
++
++```json
++// request payload — ReservationRequest (Phase 0 §E)
++{
++  "action": "createReservation",
++  "payload": {
++    "submissionId": "a client-generated UUID, reused across retries of the same submission",
++    "serviceId": "SV001",
++    "staffId": "ST001 or \"ANY\" — omitted entirely when features.staffSelection is false",
++    "date": "2026-09-10",
++    "time": "10:00",
++    "name": "山田太郎",
++    "email": "yamada@example.com",
++    "phone": "09012345678",
++    "notes": "optional"
++  }
++}
++
++// success response data — confirmed
++{ "reservationId": "RES-20260910-X8K2MP" }
++
++// success response data — needs manual confirmation (Calendar event
++// creation failed; the reservation itself is still real — see
++// reservation-transaction-architecture.md's "要確認 has two distinct
++// outcomes")
++{ "reservationId": "RES-20260910-X8K2MP", "needsConfirmation": true }
++
++// a retried request with the same submissionId returns the identical
++// result above again — never a new reservation, never DUPLICATE_SUBMISSION
++// surfaced as an error
++
++// failure — the requested slot is genuinely unavailable (either resolved
++// at the pre-lock check, or lost the availability race under the lock)
++{ "ok": false, "error": { "code": "SLOT_UNAVAILABLE", "message": "選択された時間帯は直前に埋まってしまいました。お手数ですが、別の時間帯をお選びください。" } }
++
++// failure — could not acquire the lock in time
++{ "ok": false, "error": { "code": "SYSTEM_BUSY", "message": "只今混み合っております。少々時間をおいて再度お試しください。" } }
++
++// failure — feature disabled
++{ "ok": false, "error": { "code": "FEATURE_DISABLED", "message": "現在ご予約の受付を停止しています。" } }
++```
++
+ ## Any other action name
+ 
+ Returns a `VALIDATION_ERROR` — no other action is implemented yet
+ (`getServices`, `getStaff`, `getAvailableSlots`, `checkAvailability`,
+-`createReservation`, `createInquiry`, `requestCancellation`, `healthCheck`
+-as an *action* — all Phase 3B+, per `phase0-specification.md` §G).
++`createInquiry`, `requestCancellation`, `healthCheck` as an *action* — see
++`roadmap.md` for what's next, per `phase0-specification.md` §G).
+ 
+ ```json
+ { "ok": false, "error": { "code": "VALIDATION_ERROR", "message": "Unsupported action: \"getServices\"." } }
+@@ -65,18 +118,30 @@ as an *action* — all Phase 3B+, per `phase0-specification.md` §G).
+ The full Phase 0 §H list, plus one Phase 3A addition:
+ 
+ ```text
+-VALIDATION_ERROR            (Layer A — used today for a malformed/unsupported request)
+-DUPLICATE_SUBMISSION        (Layer A — not yet triggered by any implemented action)
+-SLOT_UNAVAILABLE            (Layer B — not yet triggered)
+-FEATURE_DISABLED            (Layer B — not yet triggered)
+-INVALID_CANCELLATION_TOKEN  (Layer B — not yet triggered)
+-SYSTEM_BUSY                 (Layer C — not yet triggered)
+-CALENDAR_ERROR              (Layer C — not yet triggered)
+-SHEET_ERROR                 (Layer C — triggered by a missing/renamed required sheet column)
+-MAIL_ERROR                  (Layer C — not yet triggered)
+-INTERNAL_ERROR              (Layer C — unclassified `getConfig` failure)
++VALIDATION_ERROR            (Layer A — malformed/unsupported request, or createReservation
++                              shape/business-rule validation failure)
++DUPLICATE_SUBMISSION        (Layer A — never surfaced as an error by design: a retried
++                              submissionId replays the original success response instead,
++                              per Phase 0 §P — see reservation-transaction-architecture.md)
++SLOT_UNAVAILABLE            (Layer B — createReservation: unavailable at the pre-lock check,
++                              or lost the availability race under the lock)
++FEATURE_DISABLED            (Layer B — createReservation with features.reservation off)
++INVALID_CANCELLATION_TOKEN  (Layer B — not yet triggered; requestCancellation is Phase 5)
++SYSTEM_BUSY                 (Layer C — createReservation: LockService acquisition timed out)
++CALENDAR_ERROR              (Layer C — reserved; a Calendar event-creation failure in
++                              createReservation is not surfaced as this code — see
++                              reservation-transaction-architecture.md's "要確認 has two
++                              distinct outcomes")
++SHEET_ERROR                 (Layer C — triggered by a missing/renamed required sheet column,
++                              or a Sheet write failure in createReservation)
++MAIL_ERROR                  (Layer C — reserved; an email-send failure in createReservation
++                              is logged to EMAIL_LOG/ERROR_LOG but never surfaced as an API
++                              error, since it always happens after the response is already
++                              decided — see reservation-transaction-architecture.md)
++INTERNAL_ERROR              (Layer C — unclassified failure)
+ CONFIG_INVALID              (Phase 3A addition — CONFIG/HOLIDAYS failed parsing or validation)
+ ```
+ 
+-Neither `getConfig` nor `doGet` touches Calendar, Gmail, or writes to any
+-Sheet.
++`getConfig`/`doGet` touch neither Calendar, Gmail, nor any Sheet write.
++`createReservation` (Phase 4) is the first action that does all three —
++see [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md).
+diff --git a/docs/architecture-overview.md b/docs/architecture-overview.md
+index 1ba3261..2a782ad 100644
+--- a/docs/architecture-overview.md
++++ b/docs/architecture-overview.md
+@@ -102,6 +102,53 @@ AvailabilityStrategy→NormalizedReservation flow, the availability
+ architecture, concurrency caveats, the future orchestration contract, and
+ documented current limitations.
+ 
++## What Phase 4 added
++
++Wires Phase 3C's pure domain layer to real Google services and adds the
++`createReservation` action — `Code.ts` is unchanged; `Api.ts` gains its
++first non-`getConfig` route:
++
++- **`Calendar.ts`** — thin adapter (`getBusyEvents`, `createReservationEvent`),
++  the only file that calls `CalendarApp`, plus the pure `toBusyInterval`
++  mapping.
++- **`Mail.ts`** — thin adapter (`sendEmail`), the only file that calls
++  `GmailApp`.
++- **`ReservationEmailTemplates.ts`** — pure Japanese email copy, kept
++  separate from `Mail.ts` so the adapter stays vertical-agnostic.
++- **`Catalog.ts`/`CatalogParser.ts`** — internal (non-public-action)
++  SERVICES/STAFF reads, thin Sheets adapter + pure row coercion.
++- **`ReservationRepository.ts`** — RESERVATIONS row builder (pure) +
++  append/find/update-by-status Sheets operations (thin).
++- **`Idempotency.ts`** — `CacheService`-backed fast path + the pure
++  result-mapping used by the Sheet backstop.
++- **`Logging.ts`** — ERROR_LOG/EMAIL_LOG row builders (pure) + writers
++  (thin) — the first code path in this project that actually writes to
++  either sheet.
++- **`ReservationErrorMapping.ts`** — pure mapping from Phase 3C's
++  fine-grained `ReservationIssueCode` onto the public `ErrorCode` union.
++- **`availability/ReservationAvailabilityFactory.ts`** — pure wiring
++  between a resolved `StaffSelectionResolution` and the existing
++  `SharedAvailabilityStrategy`/`StaffAvailabilityStrategy` constructors.
++- **`ids/CancellationToken.ts`** — pure cancellation-token generator.
++- **`RuntimeProperties.ts`** — thin Script Properties reader for
++  `SITE_BASE_URL` (deployment-environment value, not a CONFIG business
++  rule).
++- **`Api.ts`** — `createReservationAction` + `handleApiRequest`'s
++  `"createReservation"` case: owns the `LockService` lifecycle (two
++  short, sequential acquisitions — see below) and orchestrates every
++  module above; contains no direct Sheets/Calendar/Gmail calls itself.
++- **`apps/salon-portfolio/web`** — `lib/api/reservationClient.ts` +
++  `types/reservation.ts`: a typed, tested client wrapper reaching
++  `createReservation` through the existing `/api/gas` proxy. No
++  reservation-page UI/UX work — `app/reservation/page.tsx` is still the
++  Phase 3C placeholder (deliberately out of this phase's scope).
++
++See [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
++for the full transaction sequence, lock scope, idempotency design,
++Calendar interaction, the documented ANY_STAFF re-check trade-off, the one
++Sheets+Calendar atomicity gap this system cannot fully close
++automatically, and the security boundaries enforced end-to-end.
++
+ ## Why no shared `packages/` yet
+ 
+ Per Phase 0 §B, `packages/` is intentionally deferred until the reusable
+@@ -117,5 +164,7 @@ Phase 3A populated `Code.ts` (entrypoints + dispatch wiring only), `Api.ts`
+ (routing/orchestration for `getConfig` only), and `Sheets.ts` (thin data
+ adapter). Phase 3C populated `Validation.ts` and `SlotEngine.ts` plus the
+ `availability/` strategies — as pure logic only, never wired into `Api.ts`'s
+-dispatcher (see "What Phase 3C added" above). `Calendar.ts` and `Mail.ts`
+-remain unpopulated; later phases implement the behavior they own.
++dispatcher (see "What Phase 3C added" above). Phase 4 populated `Calendar.ts`
++and `Mail.ts` and wired everything into `Api.ts`'s `createReservation`
++action (see "What Phase 4 added" above) — `Api.ts` now also owns the
++`LockService` lifecycle for that action's critical sections.
+diff --git a/docs/reservation-domain-architecture.md b/docs/reservation-domain-architecture.md
+index e253de6..d4a5e30 100644
+--- a/docs/reservation-domain-architecture.md
++++ b/docs/reservation-domain-architecture.md
+@@ -1,5 +1,14 @@
+ # Reservation Domain Architecture (Phase 3C)
+ 
++> **Update (Phase 4):** the orchestration this document's §4 described as a
++> "future submission workflow" is now implemented — see
++> [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
++> for the transaction sequence, lock scope, idempotency, and Calendar/email
++> integration that consume `evaluateReservationRequest` exactly as designed
++> below. Nothing in this document's domain layer (`Validation.ts`,
++> `ReservationRules.ts`, `SlotEngine.ts`, `ReservationMapper.ts`,
++> `availability/*.ts`) changed — Phase 4 only added callers around it.
++
+ Phase 3C builds the pure decision core that will eventually sit behind the
+ `createReservation` action: given a request and server-side catalog/config
+ data, decide whether the request is structurally valid, resolvable against
+@@ -158,6 +167,13 @@ same "any available" staff member to the same person, and only the
+ orchestration phase's lock-protected re-check (§U step 5) is authoritative
+ about who actually gets the slot.
+ 
++**Resolved in Phase 4:** `Api.ts::runReservationCriticalSection` performs
++exactly this lock-protected re-check. It narrows the re-check to the single
++staff already advisory-picked here rather than re-running this file's own
++"any available" resolution a second time under the lock — see
++[`reservation-transaction-architecture.md`](reservation-transaction-architecture.md#calendar-interaction)'s
++"Known limitation" for the documented trade-off this implies.
++
+ ## 4. Future orchestration contract
+ 
+ Phase 3C does not implement `createReservation` — no action is registered,
+diff --git a/docs/roadmap.md b/docs/roadmap.md
+index 141f657..10b551f 100644
+--- a/docs/roadmap.md
++++ b/docs/roadmap.md
+@@ -59,24 +59,53 @@ fixed template.
+       yet to reconcile). Inserted ahead of the original Phase 4/5 split
+       because this pure-domain layer has no dependency on the
+       Sheets/Calendar adapters Phase 4 will add.
+-- [ ] **Phase 4 — Sheets/Calendar/Gmail adapters.** `Sheets.ts`,
++- [x] **Phase 4 — Reservation API & Transaction Workflow.** Implements the
++      full `createReservation` transaction in one phase, superseding the
++      narrower Phase 4/5 split drafted above (kept struck through, not
++      deleted, for history): `Calendar.ts`/`Mail.ts` thin adapters, an
++      internal (non-public-action) SERVICES/STAFF catalog repository
++      (`Catalog.ts`), Sheet-backed idempotency (`Idempotency.ts` +
++      `ReservationRepository.ts`'s `SubmissionID` backstop),
++      `LockService`-protected availability re-check
++      (`ReservationAvailabilityFactory.ts`), Calendar event creation,
++      RESERVATIONS state transitions (処理中 → 受付済/要確認), and
++      post-lock email notifications (`ReservationEmailTemplates.ts`). See
++      [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
++      for the full design, including the documented ANY_STAFF re-check
++      trade-off and the one Sheets+Calendar atomicity gap this system
++      cannot fully close automatically.
++
++      ~~Phase 4 — Sheets/Calendar/Gmail adapters. `Sheets.ts`,
+       `Calendar.ts`, `Mail.ts` as thin wrappers (Phase 0 §T), plus the
+-      SERVICES/STAFF catalog actions.
+-- [ ] **Phase 5 — Reservation submission workflow.** Wires Phase 3C's
++      SERVICES/STAFF catalog actions.~~
++
++      ~~Phase 5 — Reservation submission workflow. Wires Phase 3C's
+       `evaluateReservationRequest` to real data: `getServices`/`getStaff`
+       actions (Phase 4), a real `Calendar.ts`-backed `BusyInterval[]`
+       supply for `availabilityFor`, the `createReservation` transaction
+       flow (`phase0-specification.md` §U: `処理中` row -> `LockService` ->
+       re-check availability -> Calendar event -> `受付済`/`要確認`),
+-      idempotency (§P).
+-- [ ] **Phase 6 — Contact & cancellation workflows.** `createInquiry`,
++      idempotency (§P).~~
++
++      Note: `getServices`/`getStaff` as standalone public API actions
++      remain unbuilt — deliberately out of scope, since there is no picker
++      UI yet to consume them. `Api.ts`'s `createReservation` orchestration
++      reads SERVICES/STAFF internally through `Catalog.ts` instead. These
++      two actions are deferred to whichever future phase builds the
++      reservation form UI.
++- [ ] **Phase 5 — Contact & cancellation workflows.** `createInquiry`,
+       `requestCancellation` (Phase 0 §L), email workflow (§M).
++- [ ] **Phase 6 — Reservation form UI.** The actual browser-facing
++      reservation wizard (service -> staff -> date/time -> customer info ->
++      confirmation) wired to `web/lib/api/reservationClient.ts` (Phase 4)
++      and, if a slot/service/staff picker is needed, the `getServices`/
++      `getStaff` public actions deferred above.
+ - [ ] **Phase 7 — Reusable core extraction.** Move the generic parts
+       (Phase 0's "Explicit Classification", extended by Phase 2A §18/§23)
+       into `packages/`, once a second vertical makes the boundary concrete
+       instead of speculative. Japanese operations guide (Phase 0 §S) also
+       ships around this point.
+ 
+-Phase 3C (reservation domain, validation & availability foundation) is the
+-newest code in the repo; Phase 4 (Sheets/Calendar/Gmail adapters +
+-SERVICES/STAFF catalog actions) is next and has not been started.
++Phase 4 (the full `createReservation` transaction workflow) is the newest
++code in the repo; Phase 5 (contact & cancellation workflows) is next and has
++not been started.
