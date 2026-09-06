@@ -135,3 +135,28 @@ export function isValidCalendarDateString(dateStr: string): boolean {
 export function toTokyoLocalDateTimeString(dateStr: string, timeStr: string): string {
   return `${dateStr}T${timeStr}`;
 }
+
+/** Inverse direction of `tokyoDateTimeToInstant`: formats a real instant
+ *  (e.g. a Calendar event's `getStartTime()`) as the Asia/Tokyo-local
+ *  `YYYY-MM-DDTHH:mm` string the `BusyInterval`/`SlotCandidate` overlap
+ *  comparisons rely on (Phase 4 Task 1). */
+export function formatInstantAsTokyoLocalDateTimeString(date: Date): string {
+  const tokyoTime = new Date(date.getTime() + TOKYO_OFFSET_MS);
+  const year = tokyoTime.getUTCFullYear();
+  const month = String(tokyoTime.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(tokyoTime.getUTCDate()).padStart(2, "0");
+  const hours = String(tokyoTime.getUTCHours()).padStart(2, "0");
+  const minutes = String(tokyoTime.getUTCMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/** The `[00:00, 24:00)` Asia/Tokyo-local instant range for one calendar
+ *  date — the query window `Calendar.ts::getBusyEvents` (Phase 4 Task 9)
+ *  uses, matching `docs/phase0-specification.md` §J Stage 2's "[date
+ *  00:00, date 24:00)" wording exactly. */
+export function tokyoCalendarDayRange(dateStr: string): { start: Date; end: Date } {
+  return {
+    start: new Date(tokyoDateTimeToInstant(dateStr, "00:00")),
+    end: new Date(tokyoDateTimeToInstant(addDaysToTokyoDateString(dateStr, 1), "00:00")),
+  };
+}

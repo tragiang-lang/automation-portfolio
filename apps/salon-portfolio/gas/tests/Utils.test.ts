@@ -58,6 +58,8 @@ import {
   addDaysToTokyoDateString,
   isValidCalendarDateString,
   toTokyoLocalDateTimeString,
+  formatInstantAsTokyoLocalDateTimeString,
+  tokyoCalendarDayRange,
 } from "../src/Utils";
 
 describe("getWeekdayForDateString", () => {
@@ -114,5 +116,34 @@ describe("toTokyoLocalDateTimeString", () => {
     expect(toTokyoLocalDateTimeString("2026-09-10", "10:00")).toBe(
       "2026-09-10T10:00",
     );
+  });
+});
+
+describe("formatInstantAsTokyoLocalDateTimeString", () => {
+  it("formats a UTC instant as its Asia/Tokyo local YYYY-MM-DDTHH:mm", () => {
+    // 2026-09-10T01:30:00Z = 2026-09-10T10:30 in Tokyo (UTC+9)
+    expect(formatInstantAsTokyoLocalDateTimeString(new Date("2026-09-10T01:30:00.000Z"))).toBe(
+      "2026-09-10T10:30",
+    );
+  });
+
+  it("rolls the calendar date over across midnight Tokyo time", () => {
+    // 2026-09-09T15:05:00Z = 2026-09-10T00:05 in Tokyo
+    expect(formatInstantAsTokyoLocalDateTimeString(new Date("2026-09-09T15:05:00.000Z"))).toBe(
+      "2026-09-10T00:05",
+    );
+  });
+
+  it("is the exact inverse of tokyoDateTimeToInstant for a same-day case", () => {
+    const instant = tokyoDateTimeToInstant("2026-09-10", "10:30");
+    expect(formatInstantAsTokyoLocalDateTimeString(new Date(instant))).toBe("2026-09-10T10:30");
+  });
+});
+
+describe("tokyoCalendarDayRange", () => {
+  it("returns the [00:00, 24:00) Tokyo-local instant range for a date", () => {
+    const { start, end } = tokyoCalendarDayRange("2026-09-10");
+    expect(formatInstantAsTokyoLocalDateTimeString(start)).toBe("2026-09-10T00:00");
+    expect(formatInstantAsTokyoLocalDateTimeString(end)).toBe("2026-09-11T00:00");
   });
 });
