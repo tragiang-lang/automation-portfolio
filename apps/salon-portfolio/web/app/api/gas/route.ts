@@ -44,6 +44,30 @@ export async function POST(request: Request) {
 
   try {
     const result = await callGasAction(action, payload ?? {});
+
+    // Sanitize error messages from gasClient-local codes: NETWORK_ERROR,
+    // HTTP_ERROR, INVALID_RESPONSE. These may contain technical diagnostics
+    // or URLs. GAS-originated codes (CONFIG_INVALID, VALIDATION_ERROR,
+    // SHEET_ERROR, INTERNAL_ERROR from Api.ts) already have safe Japanese
+    // messages and are forwarded unchanged.
+    if (
+      result.ok === false &&
+      ["NETWORK_ERROR", "HTTP_ERROR", "INVALID_RESPONSE"].includes(result.error.code)
+    ) {
+      console.error(
+        "[/api/gas] callGasAction returned a local failure:",
+        result.error.code,
+        result.error.message,
+      );
+      return NextResponse.json({
+        ok: false,
+        error: {
+          code: result.error.code,
+          message: "サーバーエラーが発生しました。",
+        },
+      });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown error";
