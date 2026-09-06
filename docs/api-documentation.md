@@ -1,8 +1,13 @@
 # API Documentation
 
-Status as of Phase 3A: one action (`getConfig`) is implemented. The full
-action list, covered in [`phase0-specification.md`](phase0-specification.md)
-§G/§H, is implemented incrementally in later phases.
+Status as of Phase 4: two actions are implemented — `getConfig` (Phase 3A)
+and `createReservation` (Phase 4, see
+[`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
+for its full transaction design). The remaining action list, covered in
+[`phase0-specification.md`](phase0-specification.md) §G/§H, is implemented
+incrementally in later phases — `getServices`/`getStaff` are deliberately
+not built as public actions yet (no picker UI to consume them; Phase 4
+reads SERVICES/STAFF internally instead, see `roadmap.md`).
 
 ## Endpoints
 
@@ -22,9 +27,9 @@ action list, covered in [`phase0-specification.md`](phase0-specification.md)
 { "ok": false, "error": { "code": "CONFIG_INVALID", "message": "設定情報の読み込みに失敗しました。管理者にお問い合わせください。" } }
 ```
 
-## Actions implemented in Phase 3A
+## Actions implemented
 
-### `getConfig`
+### `getConfig` (Phase 3A)
 
 Always available (no feature flag). Reads CONFIG + HOLIDAYS, parses and
 validates them, and returns the public projection of `AppConfig`
@@ -49,12 +54,60 @@ included — Phase 3A §20).
 { "ok": false, "error": { "code": "CONFIG_INVALID", "message": "設定情報の読み込みに失敗しました。管理者にお問い合わせください。" } }
 ```
 
+### `createReservation` (Phase 4)
+
+Requires `features.reservation`. Full transaction flow — see
+[`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
+for the sequence, lock scope, idempotency, and failure-mode details this
+section only summarizes.
+
+```json
+// request payload — ReservationRequest (Phase 0 §E)
+{
+  "action": "createReservation",
+  "payload": {
+    "submissionId": "a client-generated UUID, reused across retries of the same submission",
+    "serviceId": "SV001",
+    "staffId": "ST001 or \"ANY\" — omitted entirely when features.staffSelection is false",
+    "date": "2026-09-10",
+    "time": "10:00",
+    "name": "山田太郎",
+    "email": "yamada@example.com",
+    "phone": "09012345678",
+    "notes": "optional"
+  }
+}
+
+// success response data — confirmed
+{ "reservationId": "RES-20260910-X8K2MP" }
+
+// success response data — needs manual confirmation (Calendar event
+// creation failed; the reservation itself is still real — see
+// reservation-transaction-architecture.md's "要確認 has two distinct
+// outcomes")
+{ "reservationId": "RES-20260910-X8K2MP", "needsConfirmation": true }
+
+// a retried request with the same submissionId returns the identical
+// result above again — never a new reservation, never DUPLICATE_SUBMISSION
+// surfaced as an error
+
+// failure — the requested slot is genuinely unavailable (either resolved
+// at the pre-lock check, or lost the availability race under the lock)
+{ "ok": false, "error": { "code": "SLOT_UNAVAILABLE", "message": "選択された時間帯は直前に埋まってしまいました。お手数ですが、別の時間帯をお選びください。" } }
+
+// failure — could not acquire the lock in time
+{ "ok": false, "error": { "code": "SYSTEM_BUSY", "message": "只今混み合っております。少々時間をおいて再度お試しください。" } }
+
+// failure — feature disabled
+{ "ok": false, "error": { "code": "FEATURE_DISABLED", "message": "現在ご予約の受付を停止しています。" } }
+```
+
 ## Any other action name
 
 Returns a `VALIDATION_ERROR` — no other action is implemented yet
 (`getServices`, `getStaff`, `getAvailableSlots`, `checkAvailability`,
-`createReservation`, `createInquiry`, `requestCancellation`, `healthCheck`
-as an *action* — all Phase 3B+, per `phase0-specification.md` §G).
+`createInquiry`, `requestCancellation`, `healthCheck` as an *action* — see
+`roadmap.md` for what's next, per `phase0-specification.md` §G).
 
 ```json
 { "ok": false, "error": { "code": "VALIDATION_ERROR", "message": "Unsupported action: \"getServices\"." } }
@@ -65,18 +118,30 @@ as an *action* — all Phase 3B+, per `phase0-specification.md` §G).
 The full Phase 0 §H list, plus one Phase 3A addition:
 
 ```text
-VALIDATION_ERROR            (Layer A — used today for a malformed/unsupported request)
-DUPLICATE_SUBMISSION        (Layer A — not yet triggered by any implemented action)
-SLOT_UNAVAILABLE            (Layer B — not yet triggered)
-FEATURE_DISABLED            (Layer B — not yet triggered)
-INVALID_CANCELLATION_TOKEN  (Layer B — not yet triggered)
-SYSTEM_BUSY                 (Layer C — not yet triggered)
-CALENDAR_ERROR              (Layer C — not yet triggered)
-SHEET_ERROR                 (Layer C — triggered by a missing/renamed required sheet column)
-MAIL_ERROR                  (Layer C — not yet triggered)
-INTERNAL_ERROR              (Layer C — unclassified `getConfig` failure)
+VALIDATION_ERROR            (Layer A — malformed/unsupported request, or createReservation
+                              shape/business-rule validation failure)
+DUPLICATE_SUBMISSION        (Layer A — never surfaced as an error by design: a retried
+                              submissionId replays the original success response instead,
+                              per Phase 0 §P — see reservation-transaction-architecture.md)
+SLOT_UNAVAILABLE            (Layer B — createReservation: unavailable at the pre-lock check,
+                              or lost the availability race under the lock)
+FEATURE_DISABLED            (Layer B — createReservation with features.reservation off)
+INVALID_CANCELLATION_TOKEN  (Layer B — not yet triggered; requestCancellation is Phase 5)
+SYSTEM_BUSY                 (Layer C — createReservation: LockService acquisition timed out)
+CALENDAR_ERROR              (Layer C — reserved; a Calendar event-creation failure in
+                              createReservation is not surfaced as this code — see
+                              reservation-transaction-architecture.md's "要確認 has two
+                              distinct outcomes")
+SHEET_ERROR                 (Layer C — triggered by a missing/renamed required sheet column,
+                              or a Sheet write failure in createReservation)
+MAIL_ERROR                  (Layer C — reserved; an email-send failure in createReservation
+                              is logged to EMAIL_LOG/ERROR_LOG but never surfaced as an API
+                              error, since it always happens after the response is already
+                              decided — see reservation-transaction-architecture.md)
+INTERNAL_ERROR              (Layer C — unclassified failure)
 CONFIG_INVALID              (Phase 3A addition — CONFIG/HOLIDAYS failed parsing or validation)
 ```
 
-Neither `getConfig` nor `doGet` touches Calendar, Gmail, or writes to any
-Sheet.
+`getConfig`/`doGet` touch neither Calendar, Gmail, nor any Sheet write.
+`createReservation` (Phase 4) is the first action that does all three —
+see [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md).

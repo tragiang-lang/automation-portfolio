@@ -59,24 +59,53 @@ fixed template.
       yet to reconcile). Inserted ahead of the original Phase 4/5 split
       because this pure-domain layer has no dependency on the
       Sheets/Calendar adapters Phase 4 will add.
-- [ ] **Phase 4 — Sheets/Calendar/Gmail adapters.** `Sheets.ts`,
+- [x] **Phase 4 — Reservation API & Transaction Workflow.** Implements the
+      full `createReservation` transaction in one phase, superseding the
+      narrower Phase 4/5 split drafted above (kept struck through, not
+      deleted, for history): `Calendar.ts`/`Mail.ts` thin adapters, an
+      internal (non-public-action) SERVICES/STAFF catalog repository
+      (`Catalog.ts`), Sheet-backed idempotency (`Idempotency.ts` +
+      `ReservationRepository.ts`'s `SubmissionID` backstop),
+      `LockService`-protected availability re-check
+      (`ReservationAvailabilityFactory.ts`), Calendar event creation,
+      RESERVATIONS state transitions (処理中 → 受付済/要確認), and
+      post-lock email notifications (`ReservationEmailTemplates.ts`). See
+      [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
+      for the full design, including the documented ANY_STAFF re-check
+      trade-off and the one Sheets+Calendar atomicity gap this system
+      cannot fully close automatically.
+
+      ~~Phase 4 — Sheets/Calendar/Gmail adapters. `Sheets.ts`,
       `Calendar.ts`, `Mail.ts` as thin wrappers (Phase 0 §T), plus the
-      SERVICES/STAFF catalog actions.
-- [ ] **Phase 5 — Reservation submission workflow.** Wires Phase 3C's
+      SERVICES/STAFF catalog actions.~~
+
+      ~~Phase 5 — Reservation submission workflow. Wires Phase 3C's
       `evaluateReservationRequest` to real data: `getServices`/`getStaff`
       actions (Phase 4), a real `Calendar.ts`-backed `BusyInterval[]`
       supply for `availabilityFor`, the `createReservation` transaction
       flow (`phase0-specification.md` §U: `処理中` row -> `LockService` ->
       re-check availability -> Calendar event -> `受付済`/`要確認`),
-      idempotency (§P).
-- [ ] **Phase 6 — Contact & cancellation workflows.** `createInquiry`,
+      idempotency (§P).~~
+
+      Note: `getServices`/`getStaff` as standalone public API actions
+      remain unbuilt — deliberately out of scope, since there is no picker
+      UI yet to consume them. `Api.ts`'s `createReservation` orchestration
+      reads SERVICES/STAFF internally through `Catalog.ts` instead. These
+      two actions are deferred to whichever future phase builds the
+      reservation form UI.
+- [ ] **Phase 5 — Contact & cancellation workflows.** `createInquiry`,
       `requestCancellation` (Phase 0 §L), email workflow (§M).
+- [ ] **Phase 6 — Reservation form UI.** The actual browser-facing
+      reservation wizard (service -> staff -> date/time -> customer info ->
+      confirmation) wired to `web/lib/api/reservationClient.ts` (Phase 4)
+      and, if a slot/service/staff picker is needed, the `getServices`/
+      `getStaff` public actions deferred above.
 - [ ] **Phase 7 — Reusable core extraction.** Move the generic parts
       (Phase 0's "Explicit Classification", extended by Phase 2A §18/§23)
       into `packages/`, once a second vertical makes the boundary concrete
       instead of speculative. Japanese operations guide (Phase 0 §S) also
       ships around this point.
 
-Phase 3C (reservation domain, validation & availability foundation) is the
-newest code in the repo; Phase 4 (Sheets/Calendar/Gmail adapters +
-SERVICES/STAFF catalog actions) is next and has not been started.
+Phase 4 (the full `createReservation` transaction workflow) is the newest
+code in the repo; Phase 5 (contact & cancellation workflows) is next and has
+not been started.

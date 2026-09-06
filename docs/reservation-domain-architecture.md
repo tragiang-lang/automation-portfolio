@@ -1,5 +1,14 @@
 # Reservation Domain Architecture (Phase 3C)
 
+> **Update (Phase 4):** the orchestration this document's §4 described as a
+> "future submission workflow" is now implemented — see
+> [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
+> for the transaction sequence, lock scope, idempotency, and Calendar/email
+> integration that consume `evaluateReservationRequest` exactly as designed
+> below. Nothing in this document's domain layer (`Validation.ts`,
+> `ReservationRules.ts`, `SlotEngine.ts`, `ReservationMapper.ts`,
+> `availability/*.ts`) changed — Phase 4 only added callers around it.
+
 Phase 3C builds the pure decision core that will eventually sit behind the
 `createReservation` action: given a request and server-side catalog/config
 data, decide whether the request is structurally valid, resolvable against
@@ -157,6 +166,13 @@ concurrent evaluations against the same stale snapshot can both resolve the
 same "any available" staff member to the same person, and only the
 orchestration phase's lock-protected re-check (§U step 5) is authoritative
 about who actually gets the slot.
+
+**Resolved in Phase 4:** `Api.ts::runReservationCriticalSection` performs
+exactly this lock-protected re-check. It narrows the re-check to the single
+staff already advisory-picked here rather than re-running this file's own
+"any available" resolution a second time under the lock — see
+[`reservation-transaction-architecture.md`](reservation-transaction-architecture.md#calendar-interaction)'s
+"Known limitation" for the documented trade-off this implies.
 
 ## 4. Future orchestration contract
 

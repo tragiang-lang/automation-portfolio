@@ -102,6 +102,53 @@ AvailabilityStrategy→NormalizedReservation flow, the availability
 architecture, concurrency caveats, the future orchestration contract, and
 documented current limitations.
 
+## What Phase 4 added
+
+Wires Phase 3C's pure domain layer to real Google services and adds the
+`createReservation` action — `Code.ts` is unchanged; `Api.ts` gains its
+first non-`getConfig` route:
+
+- **`Calendar.ts`** — thin adapter (`getBusyEvents`, `createReservationEvent`),
+  the only file that calls `CalendarApp`, plus the pure `toBusyInterval`
+  mapping.
+- **`Mail.ts`** — thin adapter (`sendEmail`), the only file that calls
+  `GmailApp`.
+- **`ReservationEmailTemplates.ts`** — pure Japanese email copy, kept
+  separate from `Mail.ts` so the adapter stays vertical-agnostic.
+- **`Catalog.ts`/`CatalogParser.ts`** — internal (non-public-action)
+  SERVICES/STAFF reads, thin Sheets adapter + pure row coercion.
+- **`ReservationRepository.ts`** — RESERVATIONS row builder (pure) +
+  append/find/update-by-status Sheets operations (thin).
+- **`Idempotency.ts`** — `CacheService`-backed fast path + the pure
+  result-mapping used by the Sheet backstop.
+- **`Logging.ts`** — ERROR_LOG/EMAIL_LOG row builders (pure) + writers
+  (thin) — the first code path in this project that actually writes to
+  either sheet.
+- **`ReservationErrorMapping.ts`** — pure mapping from Phase 3C's
+  fine-grained `ReservationIssueCode` onto the public `ErrorCode` union.
+- **`availability/ReservationAvailabilityFactory.ts`** — pure wiring
+  between a resolved `StaffSelectionResolution` and the existing
+  `SharedAvailabilityStrategy`/`StaffAvailabilityStrategy` constructors.
+- **`ids/CancellationToken.ts`** — pure cancellation-token generator.
+- **`RuntimeProperties.ts`** — thin Script Properties reader for
+  `SITE_BASE_URL` (deployment-environment value, not a CONFIG business
+  rule).
+- **`Api.ts`** — `createReservationAction` + `handleApiRequest`'s
+  `"createReservation"` case: owns the `LockService` lifecycle (two
+  short, sequential acquisitions — see below) and orchestrates every
+  module above; contains no direct Sheets/Calendar/Gmail calls itself.
+- **`apps/salon-portfolio/web`** — `lib/api/reservationClient.ts` +
+  `types/reservation.ts`: a typed, tested client wrapper reaching
+  `createReservation` through the existing `/api/gas` proxy. No
+  reservation-page UI/UX work — `app/reservation/page.tsx` is still the
+  Phase 3C placeholder (deliberately out of this phase's scope).
+
+See [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
+for the full transaction sequence, lock scope, idempotency design,
+Calendar interaction, the documented ANY_STAFF re-check trade-off, the one
+Sheets+Calendar atomicity gap this system cannot fully close
+automatically, and the security boundaries enforced end-to-end.
+
 ## Why no shared `packages/` yet
 
 Per Phase 0 §B, `packages/` is intentionally deferred until the reusable
@@ -117,5 +164,7 @@ Phase 3A populated `Code.ts` (entrypoints + dispatch wiring only), `Api.ts`
 (routing/orchestration for `getConfig` only), and `Sheets.ts` (thin data
 adapter). Phase 3C populated `Validation.ts` and `SlotEngine.ts` plus the
 `availability/` strategies — as pure logic only, never wired into `Api.ts`'s
-dispatcher (see "What Phase 3C added" above). `Calendar.ts` and `Mail.ts`
-remain unpopulated; later phases implement the behavior they own.
+dispatcher (see "What Phase 3C added" above). Phase 4 populated `Calendar.ts`
+and `Mail.ts` and wired everything into `Api.ts`'s `createReservation`
+action (see "What Phase 4 added" above) — `Api.ts` now also owns the
+`LockService` lifecycle for that action's critical sections.
