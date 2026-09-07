@@ -31,6 +31,8 @@ import {
   buildSuccessResponse,
   createReservationAction,
   getConfigAction,
+  getServicesAction,
+  getStaffAction,
   handleApiRequest,
   mapConfigErrorToResponse,
   mapMissingHeadersErrorToResponse,
@@ -188,6 +190,128 @@ describe("handleApiRequest dispatch", () => {
       ok: false,
       error: { code: "INTERNAL_ERROR", message: expect.any(String) },
     });
+  });
+});
+
+describe("getServicesAction", () => {
+  afterEach(() => {
+    (getConfig as jest.Mock).mockReset();
+    (Catalog.getServiceRows as jest.Mock).mockReset();
+  });
+
+  it("returns the public projection of active services, sorted", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      features: { reservation: true, staffSelection: true, contactForm: true, calendar: true, emailNotification: true },
+    } as AppConfig);
+    (Catalog.getServiceRows as jest.Mock).mockReturnValue([
+      { ServiceID: "SV002", Name: "ジェルネイル", DurationMinutes: 90, Price: 8800, Active: true, StaffRequired: false, DisplayOrder: 2 },
+      { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+    ] as ServiceRow[]);
+
+    const response = getServicesAction();
+
+    expect(response).toEqual({
+      ok: true,
+      data: [
+        { serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 },
+        { serviceId: "SV002", name: "ジェルネイル", durationMinutes: 90, price: 8800, displayOrder: 2 },
+      ],
+    });
+  });
+
+  it("returns FEATURE_DISABLED when features.reservation is off", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      features: { reservation: false, staffSelection: true, contactForm: true, calendar: true, emailNotification: true },
+    } as AppConfig);
+
+    const response = getServicesAction();
+
+    expect(response).toEqual({
+      ok: false,
+      error: { code: "FEATURE_DISABLED", message: "現在ご予約の受付を停止しています。" },
+    });
+    expect(Catalog.getServiceRows).not.toHaveBeenCalled();
+  });
+
+  it("maps a MissingHeadersError from getServiceRows to SHEET_ERROR", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      features: { reservation: true, staffSelection: true, contactForm: true, calendar: true, emailNotification: true },
+    } as AppConfig);
+    (Catalog.getServiceRows as jest.Mock).mockImplementation(() => {
+      throw new MissingHeadersError(["ServiceID"]);
+    });
+
+    const response = getServicesAction();
+
+    expect(response).toEqual({
+      ok: false,
+      error: { code: "SHEET_ERROR", message: "スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。" },
+    });
+  });
+});
+
+describe("getStaffAction", () => {
+  afterEach(() => {
+    (getConfig as jest.Mock).mockReset();
+    (Catalog.getStaffRows as jest.Mock).mockReset();
+  });
+
+  it("returns the public projection of active staff, sorted", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      features: { reservation: true, staffSelection: true, contactForm: true, calendar: true, emailNotification: true },
+    } as AppConfig);
+    (Catalog.getStaffRows as jest.Mock).mockReturnValue([
+      { StaffID: "ST001", Name: "鈴木", Active: true, DisplayOrder: 1 },
+    ] as StaffRow[]);
+
+    const response = getStaffAction();
+
+    expect(response).toEqual({ ok: true, data: [{ staffId: "ST001", name: "鈴木", displayOrder: 1 }] });
+  });
+
+  it("returns an empty list without reading the STAFF sheet when staffSelection is off", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      features: { reservation: true, staffSelection: false, contactForm: true, calendar: true, emailNotification: true },
+    } as AppConfig);
+
+    const response = getStaffAction();
+
+    expect(response).toEqual({ ok: true, data: [] });
+    expect(Catalog.getStaffRows).not.toHaveBeenCalled();
+  });
+
+  it("returns FEATURE_DISABLED when features.reservation is off", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      features: { reservation: false, staffSelection: true, contactForm: true, calendar: true, emailNotification: true },
+    } as AppConfig);
+
+    const response = getStaffAction();
+
+    expect(response.ok).toBe(false);
+    if (!response.ok) expect(response.error.code).toBe("FEATURE_DISABLED");
+  });
+});
+
+describe("handleApiRequest routing for getServices/getStaff", () => {
+  afterEach(() => {
+    (getConfig as jest.Mock).mockReset();
+  });
+
+  it("routes getServices to getServicesAction", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      features: { reservation: true, staffSelection: true, contactForm: true, calendar: true, emailNotification: true },
+    } as AppConfig);
+    (Catalog.getServiceRows as jest.Mock).mockReturnValue([]);
+    const response = handleApiRequest('{"action":"getServices"}');
+    expect(response).toEqual({ ok: true, data: [] });
+  });
+
+  it("routes getStaff to getStaffAction", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      features: { reservation: true, staffSelection: false, contactForm: true, calendar: true, emailNotification: true },
+    } as AppConfig);
+    const response = handleApiRequest('{"action":"getStaff"}');
+    expect(response).toEqual({ ok: true, data: [] });
   });
 });
 

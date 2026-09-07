@@ -17,6 +17,8 @@ import {
 import { evaluateReservationRequest } from "./ReservationRules";
 import { getServiceRows, getStaffRows } from "./Catalog";
 import { mapReservationIssueToErrorResponse } from "./ReservationErrorMapping";
+import { PublicService, PublicStaff } from "./models/Catalog";
+import { buildPublicServices, buildPublicStaff } from "./PublicCatalog";
 import {
   appendReservationRow,
   buildPendingReservationRow,
@@ -144,6 +146,54 @@ export function getConfigAction(): ApiResponse<PublicConfig> {
   }
 }
 
+function getServicesActionInner(): ApiResponse<PublicService[]> {
+  const config = getConfig();
+  if (!config.features.reservation) {
+    return buildErrorResponse(ERROR_CODES.FEATURE_DISABLED, "現在ご予約の受付を停止しています。");
+  }
+  return buildSuccessResponse(buildPublicServices(getServiceRows()));
+}
+
+/** `getServices` action handler (Phase 5). Thin, same
+ *  ConfigError/MissingHeadersError mapping as `getConfigAction` —
+ *  read-only, never writes anything. */
+export function getServicesAction(): ApiResponse<PublicService[]> {
+  try {
+    return getServicesActionInner();
+  } catch (error) {
+    if (error instanceof ConfigError) return mapConfigErrorToResponse(error);
+    if (error instanceof MissingHeadersError) return mapMissingHeadersErrorToResponse(error);
+    console.error("[getServices] unexpected error:", error);
+    return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "サーバーエラーが発生しました。");
+  }
+}
+
+function getStaffActionInner(): ApiResponse<PublicStaff[]> {
+  const config = getConfig();
+  if (!config.features.reservation) {
+    return buildErrorResponse(ERROR_CODES.FEATURE_DISABLED, "現在ご予約の受付を停止しています。");
+  }
+  // Phase 0 §K: no staff dimension at all when the feature is off — an
+  // empty list, not an error, matches ReservationRules.resolveStaffSelection's
+  // own "none" (not-an-error) treatment of this same flag.
+  if (!config.features.staffSelection) {
+    return buildSuccessResponse([]);
+  }
+  return buildSuccessResponse(buildPublicStaff(getStaffRows()));
+}
+
+/** `getStaff` action handler (Phase 5). See `getServicesAction` above. */
+export function getStaffAction(): ApiResponse<PublicStaff[]> {
+  try {
+    return getStaffActionInner();
+  } catch (error) {
+    if (error instanceof ConfigError) return mapConfigErrorToResponse(error);
+    if (error instanceof MissingHeadersError) return mapMissingHeadersErrorToResponse(error);
+    console.error("[getStaff] unexpected error:", error);
+    return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "サーバーエラーが発生しました。");
+  }
+}
+
 /** Single POST entrypoint's dispatch logic (Phase 0 §G: "all actions
  *  share one endpoint, routed by an `action` field"). Only `getConfig`
  *  is implemented in Phase 3A (§2 scope rule) — every other action name
@@ -157,6 +207,10 @@ export function handleApiRequest(rawBody: string | undefined): ApiResponse {
   switch (parsed.request.action) {
     case "getConfig":
       return getConfigAction();
+    case "getServices":
+      return getServicesAction();
+    case "getStaff":
+      return getStaffAction();
     case "createReservation":
       return createReservationAction(parsed.request.payload);
     default:
