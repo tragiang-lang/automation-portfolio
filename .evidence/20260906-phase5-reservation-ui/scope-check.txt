@@ -1,0 +1,77 @@
+Phase 5/6 reservation UI — final scope-check (Task 19 Step 2)
+Run 2026-09-07, continuing the 2026-09-06 implementation session.
+
+1. GAS_WEBAPP_URL never reaches a Client Component
+   $ grep -rn "GAS_WEBAPP_URL" apps/salon-portfolio/web/components apps/salon-portfolio/web/app
+   -> Only match: app/api/gas/route.test.ts (a string literal inside a
+      pre-existing test asserting the error message is NOT leaked to the
+      client). No match in lib/api/reservationClient.ts, any
+      components/reservation/* file, or app/reservation/page.tsx.
+      PASS.
+
+2. No client component reads process.env directly
+   $ grep -rn "process.env" apps/salon-portfolio/web/components/reservation
+   -> No matches. PASS.
+
+3. createReservation payload never includes a client-supplied
+   price/duration/reservationId
+   -> apps/salon-portfolio/web/types/reservation.ts::ReservationSubmission
+      fields: submissionId, serviceId, staffId?, date, time, name, email,
+      phone?, notes?. No price/duration/reservationId field exists on the
+      type at all, so useReservationWizard.submit cannot pass one.
+      PASS.
+
+4. No new jest.mock in gas/tests/Api.test.ts touches LockService or the
+   createReservation critical-section suite
+   $ grep -n "^describe" apps/salon-portfolio/gas/tests/Api.test.ts
+   -> New Phase 5 describe blocks: getServicesAction, getStaffAction,
+      "handleApiRequest routing for getServices/getStaff",
+      getAvailabilityAction — all appear BEFORE createReservationAction
+      (line 397) and none reference LockService.
+   $ grep -n "LockService" apps/salon-portfolio/gas/tests/Api.test.ts
+   -> Single match at line 454, inside the pre-existing
+      createReservationAction describe block. Untouched. PASS.
+
+5. docs/roadmap.md's already-shipped phase checkboxes (0-5) are unedited
+   $ git diff docs/roadmap.md | grep -E "^[-+]" | grep -E "\[x\]|\[ \]"
+   -> Only one line changed: Phase 6 "[ ]" -> "[x]". No other phase
+      checkbox touched. PASS.
+
+6. Full verification suite (final run, this session)
+   - gas-test-final.log:      256 tests passed, 29 suites (see file)
+   - typecheck-gas-final.log: tsc --noEmit clean
+   - web-test-final.log:      128 tests passed, 30 suites (see file)
+   - typecheck-web-final.log: tsc --noEmit clean
+   - lint-final.log:          0 errors, 0 warnings (see file — one
+                               react-hooks/set-state-in-effect violation
+                               found and fixed during this task, see
+                               "Findings fixed" below)
+   - build-final.log:         next build succeeded; /reservation listed
+                               as a static route
+
+7. Baseline comparison (from the planning session, same directory)
+   - gas-test-baseline.log:  pre-implementation GAS suite count (before
+     any Phase 5 task started)
+   - web-test-baseline.log:  pre-implementation web suite count
+   - test-count-baseline.md: baseline counts recorded in prose
+
+Findings fixed during this task (not part of any prior commit):
+- apps/salon-portfolio/web/components/reservation/useReservationWizard.ts
+  had two react-hooks/set-state-in-effect lint ERRORS (calling setState
+  synchronously as the first statement of an Effect body, before any
+  await) — fixed by wrapping the four affected setState calls in
+  `startTransition(...)`, React's own documented escape hatch for this
+  exact pattern. Re-ran lint/typecheck/full web test suite/build after
+  the fix — all clean, zero regressions (128/128 tests still pass).
+- Two component tests (CustomerInfoForm.test.tsx, using getByRole("alert")
+  against a FormField that always renders an empty <p role="alert"> per
+  field) and one integration test (ReservationWizard.test.tsx, using
+  jest.restoreAllMocks() which does not clear jest.mock() auto-mock call
+  counts, and jest.mock("@/...") which SWC's path-alias rewriting does
+  not reach since it's a plain string argument, not a static import) had
+  latent bugs in the plan's own authored test code, not in the
+  implementation under test. Fixed to getByText / jest.clearAllMocks() /
+  a relative jest.mock path respectively, matching this repo's existing
+  ContactForm.test.tsx precedent for the first fix.
+
+No Critical/Important finding remained unfixed at the end of this task.

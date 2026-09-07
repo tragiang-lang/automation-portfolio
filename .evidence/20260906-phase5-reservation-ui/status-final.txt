@@ -1,0 +1,55 @@
+ M apps/salon-portfolio/gas/src/Api.ts
+ M apps/salon-portfolio/gas/src/ReservationRules.ts
+ M apps/salon-portfolio/gas/tests/Api.test.ts
+ M apps/salon-portfolio/gas/tests/ReservationRules.test.ts
+ M apps/salon-portfolio/web/app/reservation/page.tsx
+ M apps/salon-portfolio/web/lib/api/reservationClient.test.ts
+ M apps/salon-portfolio/web/lib/api/reservationClient.ts
+ M apps/salon-portfolio/web/types/reservation.ts
+ M docs/api-documentation.md
+ M docs/architecture-overview.md
+ M docs/roadmap.md
+?? .evidence/20260906-phase5-reservation-ui/
+?? apps/salon-portfolio/gas/src/PublicCatalog.ts
+?? apps/salon-portfolio/gas/src/models/Catalog.ts
+?? apps/salon-portfolio/gas/tests/PublicCatalog.test.ts
+?? apps/salon-portfolio/web/components/reservation/CustomerInfoForm.test.tsx
+?? apps/salon-portfolio/web/components/reservation/CustomerInfoForm.tsx
+?? apps/salon-portfolio/web/components/reservation/DateSelection.test.tsx
+?? apps/salon-portfolio/web/components/reservation/DateSelection.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationDisabledNotice.test.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationDisabledNotice.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationErrorNotice.test.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationErrorNotice.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationProgress.test.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationProgress.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationSuccess.test.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationSuccess.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationSummary.test.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationSummary.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationWizard.test.tsx
+?? apps/salon-portfolio/web/components/reservation/ReservationWizard.tsx
+?? apps/salon-portfolio/web/components/reservation/ServiceSelection.test.tsx
+?? apps/salon-portfolio/web/components/reservation/ServiceSelection.tsx
+?? apps/salon-portfolio/web/components/reservation/StaffSelection.test.tsx
+?? apps/salon-portfolio/web/components/reservation/StaffSelection.tsx
+?? apps/salon-portfolio/web/components/reservation/TimeSlotSelection.test.tsx
+?? apps/salon-portfolio/web/components/reservation/TimeSlotSelection.tsx
+?? apps/salon-portfolio/web/components/reservation/useReservationWizard.test.ts
+?? apps/salon-portfolio/web/components/reservation/useReservationWizard.ts
+?? apps/salon-portfolio/web/lib/utils/id.test.ts
+?? apps/salon-portfolio/web/lib/utils/id.ts
+?? docs/reservation-frontend-architecture.md
+?? docs/superpowers/plans/2026-09-06-phase5-reservation-ui.md
+ apps/salon-portfolio/gas/src/Api.ts                | 138 +++++++++++++-
+ apps/salon-portfolio/gas/src/ReservationRules.ts   |  74 ++++++++
+ apps/salon-portfolio/gas/tests/Api.test.ts         | 203 +++++++++++++++++++++
+ .../gas/tests/ReservationRules.test.ts             | 167 ++++++++++++++++-
+ apps/salon-portfolio/web/app/reservation/page.tsx  |  59 +++++-
+ .../web/lib/api/reservationClient.test.ts          |  75 +++++++-
+ .../web/lib/api/reservationClient.ts               |  68 +++++--
+ apps/salon-portfolio/web/types/reservation.ts      |  44 +++++
+ docs/api-documentation.md                          |  84 ++++++++-
+ docs/architecture-overview.md                      |  42 ++++-
+ docs/roadmap.md                                    |  40 ++--
+ 11 files changed, 945 insertions(+), 49 deletions(-)
