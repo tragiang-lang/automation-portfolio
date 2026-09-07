@@ -88,24 +88,40 @@ fixed template.
       idempotency (§P).~~
 
       Note: `getServices`/`getStaff` as standalone public API actions
-      remain unbuilt — deliberately out of scope, since there is no picker
-      UI yet to consume them. `Api.ts`'s `createReservation` orchestration
-      reads SERVICES/STAFF internally through `Catalog.ts` instead. These
-      two actions are deferred to whichever future phase builds the
-      reservation form UI.
+      remain unbuilt at this point — deliberately out of scope, since
+      there is no picker UI yet to consume them. `Api.ts`'s
+      `createReservation` orchestration reads SERVICES/STAFF internally
+      through `Catalog.ts` instead. These two actions are deferred to
+      whichever future phase builds the reservation form UI (built in
+      Phase 6, below).
 - [ ] **Phase 5 — Contact & cancellation workflows.** `createInquiry`,
       `requestCancellation` (Phase 0 §L), email workflow (§M).
-- [ ] **Phase 6 — Reservation form UI.** The actual browser-facing
+- [x] **Phase 6 — Reservation form UI.** The actual browser-facing
       reservation wizard (service -> staff -> date/time -> customer info ->
-      confirmation) wired to `web/lib/api/reservationClient.ts` (Phase 4)
-      and, if a slot/service/staff picker is needed, the `getServices`/
-      `getStaff` public actions deferred above.
+      confirmation) wired to `web/lib/api/reservationClient.ts` (Phase 4).
+      Shipped: two new thin GAS public actions reusing existing Phase
+      3C/4 building blocks with zero changes to `createReservation`
+      (`getServices`/`getStaff` — deferred projections of `Catalog.ts`,
+      finally built as standalone actions — and `getAvailability`, a new
+      read-only/advisory composed availability query,
+      `ReservationRules.ts::evaluateAvailableSlots`); a five-step
+      `ReservationWizard` client component tree under
+      `apps/salon-portfolio/web/components/reservation/` driven by one
+      `useReservationWizard` state hook; `app/reservation/page.tsx`
+      replacing its Phase 3C placeholder. No contact/cancellation work —
+      that remains Phase 5 above, still not started. See
+      [`reservation-frontend-architecture.md`](reservation-frontend-architecture.md).
+
+      Note on numbering: the task brief that produced this phase's plan
+      called it "Phase 5", since contact/cancellation work hadn't been
+      assigned a number in that conversation yet — this project's own
+      roadmap numbering (established above, before that plan was written)
+      keeps it as Phase 6. No other phase is renumbered.
 - [ ] **Phase 7 — Reusable core extraction.** Move the generic parts
       (Phase 0's "Explicit Classification", extended by Phase 2A §18/§23)
       into `packages/`, once a second vertical makes the boundary concrete
       instead of speculative. Japanese operations guide (Phase 0 §S) also
       ships around this point.
 
-Phase 4 (the full `createReservation` transaction workflow) is the newest
-code in the repo; Phase 5 (contact & cancellation workflows) is next and has
-not been started.
+Phase 6 (the reservation form UI) is the newest code in the repo; Phase 5
+(contact & cancellation workflows) is next and has not been started.

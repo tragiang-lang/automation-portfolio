@@ -1,13 +1,15 @@
 # API Documentation
 
-Status as of Phase 4: two actions are implemented — `getConfig` (Phase 3A)
-and `createReservation` (Phase 4, see
+Status as of Phase 5: five actions are implemented — `getConfig` (Phase
+3A), `createReservation` (Phase 4, see
 [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
-for its full transaction design). The remaining action list, covered in
+for its full transaction design), and `getServices`/`getStaff`/
+`getAvailability` (Phase 5, added for the reservation wizard's menu/staff
+pickers and advisory availability check — see
+[`reservation-frontend-architecture.md`](reservation-frontend-architecture.md)).
+The remaining action list, covered in
 [`phase0-specification.md`](phase0-specification.md) §G/§H, is implemented
-incrementally in later phases — `getServices`/`getStaff` are deliberately
-not built as public actions yet (no picker UI to consume them; Phase 4
-reads SERVICES/STAFF internally instead, see `roadmap.md`).
+incrementally in later phases.
 
 ## Endpoints
 
@@ -52,6 +54,68 @@ included — Phase 3A §20).
 
 // failure response (malformed/invalid CONFIG sheet data)
 { "ok": false, "error": { "code": "CONFIG_INVALID", "message": "設定情報の読み込みに失敗しました。管理者にお問い合わせください。" } }
+```
+
+### `getServices` (Phase 5)
+
+Requires `features.reservation`. Read-only — returns the public projection
+of active `SERVICES` rows (`buildPublicServices`,
+`gas/src/PublicCatalog.ts`), sorted by `DisplayOrder`. Never includes
+`Active`/`StaffRequired` (internal-only columns).
+
+```json
+// request
+{ "action": "getServices" }
+
+// success response data
+[
+  { "serviceId": "SV001", "name": "まつげパーマ", "durationMinutes": 60, "price": 6600, "displayOrder": 1 },
+  { "serviceId": "SV002", "name": "ジェルネイル", "durationMinutes": 90, "price": 8800, "displayOrder": 2 }
+]
+
+// failure — feature disabled
+{ "ok": false, "error": { "code": "FEATURE_DISABLED", "message": "現在ご予約の受付を停止しています。" } }
+```
+
+### `getStaff` (Phase 5)
+
+Requires `features.reservation`. Read-only — returns the public projection
+of active `STAFF` rows (`buildPublicStaff`), sorted by `DisplayOrder`.
+Never includes `CalendarID`/`Active`. Returns `{ "ok": true, "data": [] }`
+(not an error) without reading the `STAFF` sheet at all when
+`features.staffSelection` is off.
+
+```json
+// request
+{ "action": "getStaff" }
+
+// success response data
+[{ "staffId": "ST001", "name": "鈴木", "displayOrder": 1 }]
+```
+
+### `getAvailability` (Phase 5)
+
+Requires `features.reservation`. Read-only, advisory only — reuses
+`evaluateAvailableSlots` (`ReservationRules.ts`) and the same
+`availability/` strategy factory `createReservation` uses, fetching
+Calendar busy events once per distinct calendar id needed (not once per
+candidate slot). A closed business day/holiday returns an empty slot list,
+not an error. Never a reservation guarantee — `createReservation`'s own
+re-check under the lock remains authoritative; a slot listed here can
+still be lost to a race.
+
+```json
+// request payload
+{
+  "action": "getAvailability",
+  "payload": { "serviceId": "SV001", "staffId": "ST001 or \"ANY\" — optional", "date": "2026-09-10" }
+}
+
+// success response data
+{ "date": "2026-09-10", "slots": [{ "time": "10:00" }, { "time": "10:30" }] }
+
+// failure — unknown service/staff (validation, same codes as createReservation)
+{ "ok": false, "error": { "code": "VALIDATION_ERROR", "message": "選択されたメニューが見つかりません。" } }
 ```
 
 ### `createReservation` (Phase 4)
@@ -105,12 +169,12 @@ section only summarizes.
 ## Any other action name
 
 Returns a `VALIDATION_ERROR` — no other action is implemented yet
-(`getServices`, `getStaff`, `getAvailableSlots`, `checkAvailability`,
-`createInquiry`, `requestCancellation`, `healthCheck` as an *action* — see
-`roadmap.md` for what's next, per `phase0-specification.md` §G).
+(`createInquiry`, `requestCancellation`, `checkAvailability`, `healthCheck`
+as an *action* — see `roadmap.md` for what's next, per
+`phase0-specification.md` §G).
 
 ```json
-{ "ok": false, "error": { "code": "VALIDATION_ERROR", "message": "Unsupported action: \"getServices\"." } }
+{ "ok": false, "error": { "code": "VALIDATION_ERROR", "message": "Unsupported action: \"checkAvailability\"." } }
 ```
 
 ## Error codes

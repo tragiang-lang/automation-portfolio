@@ -140,14 +140,47 @@ first non-`getConfig` route:
 - **`apps/salon-portfolio/web`** — `lib/api/reservationClient.ts` +
   `types/reservation.ts`: a typed, tested client wrapper reaching
   `createReservation` through the existing `/api/gas` proxy. No
-  reservation-page UI/UX work — `app/reservation/page.tsx` is still the
-  Phase 3C placeholder (deliberately out of this phase's scope).
+  reservation-page UI/UX work yet — `app/reservation/page.tsx` was still
+  the Phase 3C placeholder at the end of this phase (the actual wizard UI
+  shipped in Phase 6, below).
 
 See [`reservation-transaction-architecture.md`](reservation-transaction-architecture.md)
 for the full transaction sequence, lock scope, idempotency design,
 Calendar interaction, the documented ANY_STAFF re-check trade-off, the one
 Sheets+Calendar atomicity gap this system cannot fully close
 automatically, and the security boundaries enforced end-to-end.
+
+## What Phase 6 added
+
+Builds the browser-facing reservation wizard on top of Phase 4's
+`createReservation` transaction, without touching its critical section —
+`ReservationRules.ts`/`Api.ts` gain three thin, side-effect-free
+read-only actions and `apps/salon-portfolio/web` gains a full step-by-step
+UI:
+
+- **`models/Catalog.ts`/`PublicCatalog.ts`** — `PublicService`/
+  `PublicStaff` public-safe projections (mirrors the `PublicConfig`
+  pattern), stripping `Active`/`CalendarID`/`StaffRequired`.
+- **`Api.ts`** — `getServicesAction`/`getStaffAction`/
+  `getAvailabilityAction`, following the exact `getConfigAction` thin
+  action/inner function/`ConfigError`/`MissingHeadersError` mapping
+  pattern; `getAvailability` fetches Calendar busy events once per
+  distinct calendar id per request (not once per candidate slot).
+- **`ReservationRules.ts`** — `evaluateAvailableSlots`, the read-only
+  counterpart to `evaluateReservationRequest`: same service/staff/
+  business-hours/date-window resolution, returning every open+available
+  candidate slot for one date instead of validating one specific request.
+- **`apps/salon-portfolio/web/components/reservation/`** — a five-step
+  `ReservationWizard` (service → staff → date/time → customer info →
+  review) composed from independently-testable step components, all
+  driven by one `useReservationWizard` state hook; extends the existing
+  `lib/api/reservationClient.ts` with `getServices`/`getStaff`/
+  `getAvailability` (no second API client). `app/reservation/page.tsx`
+  becomes a Server Component gating on `features.reservation`.
+
+See [`reservation-frontend-architecture.md`](reservation-frontend-architecture.md)
+for the full frontend/backend boundary, catalog/availability data flow,
+and error-handling design.
 
 ## Why no shared `packages/` yet
 
@@ -167,4 +200,7 @@ adapter). Phase 3C populated `Validation.ts` and `SlotEngine.ts` plus the
 dispatcher (see "What Phase 3C added" above). Phase 4 populated `Calendar.ts`
 and `Mail.ts` and wired everything into `Api.ts`'s `createReservation`
 action (see "What Phase 4 added" above) — `Api.ts` now also owns the
-`LockService` lifecycle for that action's critical sections.
+`LockService` lifecycle for that action's critical sections. Phase 6 added
+three more `Api.ts` routes (`getServices`/`getStaff`/`getAvailability`,
+see "What Phase 6 added" above) — all read-only, none touching
+`LockService`.
