@@ -271,3 +271,77 @@ export function evaluateReservationRequest(
 
   return { ok: true, reservation };
 }
+
+export interface EvaluateAvailabilityInput {
+  serviceId: string;
+  staffId?: string | typeof ANY_STAFF;
+  date: string;
+  services: ServiceRow[];
+  staff: StaffRow[];
+  config: AppConfig;
+  now: Date;
+  /** Builds one `AvailabilityStrategy` for the whole requested date, given
+   *  the already-resolved staff selection — called once per
+   *  `evaluateAvailableSlots` call, not once per candidate slot (Phase 5:
+   *  a day's busy-interval snapshot is fetched once and reused for every
+   *  candidate's `.isAvailable()` check). */
+  buildStrategy: (staffSelection: StaffSelectionResolution) => AvailabilityStrategy;
+}
+
+export type EvaluateAvailabilityResult =
+  | { ok: true; slots: { time: string }[] }
+  | { ok: false; issue: ValidationIssue };
+
+/** Phase 5's read-only counterpart to `evaluateReservationRequest`: for a
+ *  given service/staff/date, returns every candidate start time that is
+ *  currently open + within the booking window + available — never a
+ *  reservation guarantee (same advisory caveat as
+ *  `evaluateReservationRequest`; `createReservation`'s own re-check under
+ *  the lock remains authoritative). A closed business day/holiday is
+ *  `{ ok: true, slots: [] }`, not an error — it is a normal "nothing to
+ *  offer that day" outcome, distinct from a genuine client-input error
+ *  (unknown service/staff). */
+export function evaluateAvailableSlots(
+  input: EvaluateAvailabilityInput,
+): EvaluateAvailabilityResult {
+  const serviceResult = resolveService(input.services, input.serviceId);
+  if (!serviceResult.ok) {
+    return { ok: false, issue: serviceResult.issue };
+  }
+
+  const staffResult = resolveStaffSelection(input.staff, input.staffId, input.config);
+  if (!staffResult.ok) {
+    return { ok: false, issue: staffResult.issue };
+  }
+
+  const businessDay = evaluateBusinessDay(input.date, input.config);
+  if (!businessDay.open) {
+    return { ok: true, slots: [] };
+  }
+
+  const candidates = generateCandidateSlots({
+    date: input.date,
+    businessHours: businessDay.interval,
+    durationMinutes: serviceResult.service.DurationMinutes,
+    slotIntervalMinutes: input.config.reservation.slotMinutes,
+    isHoliday: false,
+  });
+
+  const strategy = input.buildStrategy(staffResult.selection);
+  const slots: { time: string }[] = [];
+  for (const candidate of candidates) {
+    const dateWindowIssue = checkDateWindow(candidate.date, candidate.startTime, input.config.reservation, input.now);
+    if (dateWindowIssue) {
+      continue;
+    }
+    const availability = strategy.isAvailable({
+      candidateStart: toTokyoLocalDateTimeString(candidate.date, candidate.startTime),
+      candidateEnd: toTokyoLocalDateTimeString(candidate.date, candidate.endTime),
+    });
+    if (availability.available) {
+      slots.push({ time: candidate.startTime });
+    }
+  }
+
+  return { ok: true, slots };
+}

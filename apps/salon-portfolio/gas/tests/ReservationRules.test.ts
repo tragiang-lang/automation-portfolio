@@ -1,7 +1,8 @@
-import { resolveService, resolveStaffSelection } from "../src/ReservationRules";
+import { evaluateAvailableSlots, resolveService, resolveStaffSelection } from "../src/ReservationRules";
 import { ServiceRow, StaffRow } from "../src/SheetSchemas";
 import { ANY_STAFF } from "../src/models/ReservationRequest";
 import { AppConfig } from "../src/models/Config";
+import { AvailabilityStrategy } from "../src/availability/AvailabilityStrategy";
 
 const activeService: ServiceRow = {
   ServiceID: "SV001",
@@ -329,5 +330,169 @@ describe("evaluateReservationRequest", () => {
     });
     expect(result.ok).toBe(false);
     expect(!result.ok && result.issues.some((issue) => issue.code === "NO_STAFF_AVAILABLE")).toBe(true);
+  });
+});
+
+function fakeStrategy(unavailableTimes: string[] = []): AvailabilityStrategy {
+  return {
+    isAvailable(input) {
+      const time = input.candidateStart.slice(11, 16);
+      return unavailableTimes.includes(time)
+        ? { available: false, reason: "CALENDAR_CONFLICT" }
+        : { available: true };
+    },
+  };
+}
+
+describe("evaluateAvailableSlots", () => {
+  const baseConfig: AppConfig = {
+    business: { name: "Demo", phone: "", email: "", address: "" },
+    hours: {
+      monday: "10:00-19:00",
+      tuesday: "10:00-19:00",
+      wednesday: "closed",
+      thursday: "10:00-19:00",
+      friday: "10:00-19:00",
+      saturday: "10:00-19:00",
+      sunday: "closed",
+    },
+    holidays: ["2026-09-15"],
+    features: { contactForm: true, reservation: true, staffSelection: false, calendar: true, emailNotification: true },
+    staffAnyAvailableOption: true,
+    reservation: { timezone: "Asia/Tokyo", slotMinutes: 30, minLeadHours: 1, maxBookingDays: 60 },
+    calendarId: "shared@example.com",
+    emailOwnerNotifyAddress: "owner@example.com",
+    emailFromName: "Demo",
+  };
+  const services: ServiceRow[] = [
+    { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+  ];
+  const staff: StaffRow[] = [{ StaffID: "ST001", Name: "鈴木", Active: true, DisplayOrder: 1 }];
+  const staffEnabledConfig: AppConfig = { ...baseConfig, features: { ...baseConfig.features, staffSelection: true } };
+  const now = new Date("2026-09-01T00:00:00+09:00");
+
+  it("returns every open, available slot for a bookable weekday", () => {
+    const result = evaluateAvailableSlots({
+      serviceId: "SV001",
+      staffId: undefined,
+      date: "2026-09-10", // Thursday
+      services,
+      staff,
+      config: baseConfig,
+      now,
+      buildStrategy: () => fakeStrategy(),
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.slots.length).toBeGreaterThan(0);
+      expect(result.slots[0]).toEqual({ time: "10:00" });
+    }
+  });
+
+  it("excludes slots the strategy reports as unavailable", () => {
+    const result = evaluateAvailableSlots({
+      serviceId: "SV001",
+      staffId: undefined,
+      date: "2026-09-10",
+      services,
+      staff,
+      config: baseConfig,
+      now,
+      buildStrategy: () => fakeStrategy(["10:00", "10:30"]),
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.slots.map((s) => s.time)).not.toContain("10:00");
+      expect(result.slots.map((s) => s.time)).not.toContain("10:30");
+    }
+  });
+
+  it("returns an empty slot list (not an error) for a holiday", () => {
+    const result = evaluateAvailableSlots({
+      serviceId: "SV001",
+      staffId: undefined,
+      date: "2026-09-15",
+      services,
+      staff,
+      config: baseConfig,
+      now,
+      buildStrategy: () => fakeStrategy(),
+    });
+    expect(result).toEqual({ ok: true, slots: [] });
+  });
+
+  it("returns an empty slot list (not an error) for a day the salon is closed", () => {
+    const result = evaluateAvailableSlots({
+      serviceId: "SV001",
+      staffId: undefined,
+      date: "2026-09-09", // Wednesday
+      services,
+      staff,
+      config: baseConfig,
+      now,
+      buildStrategy: () => fakeStrategy(),
+    });
+    expect(result).toEqual({ ok: true, slots: [] });
+  });
+
+  it("returns MENU_NOT_FOUND when the service does not exist", () => {
+    const result = evaluateAvailableSlots({
+      serviceId: "SV999",
+      staffId: undefined,
+      date: "2026-09-10",
+      services,
+      staff,
+      config: baseConfig,
+      now,
+      buildStrategy: () => fakeStrategy(),
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issue.code).toBe("MENU_NOT_FOUND");
+  });
+
+  it("returns STAFF_NOT_FOUND for an unknown staffId", () => {
+    const result = evaluateAvailableSlots({
+      serviceId: "SV001",
+      staffId: "ST999",
+      date: "2026-09-10",
+      services,
+      staff,
+      config: staffEnabledConfig,
+      now,
+      buildStrategy: () => fakeStrategy(),
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issue.code).toBe("STAFF_NOT_FOUND");
+  });
+
+  it("excludes slots inside the minimum lead time", () => {
+    const result = evaluateAvailableSlots({
+      serviceId: "SV001",
+      staffId: undefined,
+      date: "2026-09-01", // same day as `now`, Tuesday
+      services,
+      staff,
+      config: baseConfig,
+      now: new Date("2026-09-01T18:45:00+09:00"),
+      buildStrategy: () => fakeStrategy(),
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.slots).toEqual([]); // 19:00 close, 1h lead time from 18:45 -> nothing left
+  });
+
+  it("passes the resolved staff selection to buildStrategy", () => {
+    const buildStrategy = jest.fn().mockReturnValue(fakeStrategy());
+    evaluateAvailableSlots({
+      serviceId: "SV001",
+      staffId: "ST001",
+      date: "2026-09-10",
+      services,
+      staff,
+      config: staffEnabledConfig,
+      now,
+      buildStrategy,
+    });
+    expect(buildStrategy).toHaveBeenCalledTimes(1);
+    expect(buildStrategy).toHaveBeenCalledWith({ kind: "specific", staff: staff[0] });
   });
 });
