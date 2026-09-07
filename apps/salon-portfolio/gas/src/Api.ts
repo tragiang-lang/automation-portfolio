@@ -5,7 +5,7 @@ import { buildPublicConfig } from "./PublicConfig";
 import { AppConfig, PublicConfig } from "./models/Config";
 import { MissingHeadersError } from "./RowMapper";
 import { NormalizedReservation, StaffSelectionResolution } from "./models/ReservationDomain";
-import { ReservationRequest } from "./models/ReservationRequest";
+import { ANY_STAFF, ReservationRequest } from "./models/ReservationRequest";
 import { StaffRow } from "./SheetSchemas";
 import { SlotCandidate } from "./SlotEngine";
 import { AvailabilityResult, AvailabilityStrategy, BusyInterval } from "./availability/AvailabilityStrategy";
@@ -14,7 +14,7 @@ import {
   resolveCalendarIdsForSelection,
   buildAvailabilityStrategyFromBusyByCalendarId,
 } from "./availability/ReservationAvailabilityFactory";
-import { evaluateReservationRequest } from "./ReservationRules";
+import { evaluateAvailableSlots, evaluateReservationRequest } from "./ReservationRules";
 import { getServiceRows, getStaffRows } from "./Catalog";
 import { mapReservationIssueToErrorResponse } from "./ReservationErrorMapping";
 import { PublicService, PublicStaff } from "./models/Catalog";
@@ -213,6 +213,8 @@ export function handleApiRequest(rawBody: string | undefined): ApiResponse {
       return getStaffAction();
     case "createReservation":
       return createReservationAction(parsed.request.payload);
+    case "getAvailability":
+      return getAvailabilityAction(parsed.request.payload);
     default:
       return buildErrorResponse(
         ERROR_CODES.VALIDATION_ERROR,
@@ -241,6 +243,84 @@ function buildAvailabilityFor(fallbackCalendarId: string) {
     }
     return buildAvailabilityStrategyFromBusyByCalendarId(staffSelection, fallbackCalendarId, busyByCalendarId);
   };
+}
+
+/** Phase 5's `getAvailability` counterpart to `buildAvailabilityFor` above
+ *  — keyed by date only (no per-candidate call), so it fetches busy events
+ *  exactly once per request (one `getBusyEvents` call per distinct
+ *  calendar id the resolved staff selection needs) instead of once per
+ *  candidate slot in the day. Left as a separate function rather than
+ *  reusing `buildAvailabilityFor` because the two have different call
+ *  shapes: `createReservation`'s call sites always check one specific
+ *  candidate, `getAvailability` checks every candidate in a day. */
+function buildAvailabilityForDate(fallbackCalendarId: string, date: string) {
+  return (staffSelection: StaffSelectionResolution): AvailabilityStrategy => {
+    const calendarIds = [...new Set(resolveCalendarIdsForSelection(staffSelection, fallbackCalendarId))];
+    const { start, end } = tokyoCalendarDayRange(date);
+    const busyByCalendarId: Record<string, BusyInterval[]> = {};
+    for (const calendarId of calendarIds) {
+      busyByCalendarId[calendarId] = getBusyEvents(calendarId, start, end);
+    }
+    return buildAvailabilityStrategyFromBusyByCalendarId(staffSelection, fallbackCalendarId, busyByCalendarId);
+  };
+}
+
+export interface GetAvailabilityResponseData {
+  date: string;
+  slots: { time: string }[];
+}
+
+function getAvailabilityActionInner(rawPayload: unknown): ApiResponse<GetAvailabilityResponseData> {
+  const config = getConfig();
+  if (!config.features.reservation) {
+    return buildErrorResponse(ERROR_CODES.FEATURE_DISABLED, "現在ご予約の受付を停止しています。");
+  }
+  if (!rawPayload || typeof rawPayload !== "object") {
+    return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, "リクエストの形式が正しくありません。");
+  }
+  const payload = rawPayload as { serviceId?: unknown; staffId?: unknown; date?: unknown };
+  if (typeof payload.serviceId !== "string" || typeof payload.date !== "string") {
+    return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, "リクエストの形式が正しくありません。");
+  }
+  const staffId = typeof payload.staffId === "string" ? (payload.staffId as string | typeof ANY_STAFF) : undefined;
+
+  const services = getServiceRows();
+  const staff = config.features.staffSelection ? getStaffRows() : [];
+
+  const evaluation = evaluateAvailableSlots({
+    serviceId: payload.serviceId,
+    staffId,
+    date: payload.date,
+    services,
+    staff,
+    config,
+    now: new Date(),
+    buildStrategy: buildAvailabilityForDate(config.calendarId, payload.date),
+  });
+  if (!evaluation.ok) {
+    const { code, message } = mapReservationIssueToErrorResponse(evaluation.issue);
+    return buildErrorResponse(code, message);
+  }
+
+  return buildSuccessResponse({ date: payload.date, slots: evaluation.slots });
+}
+
+/** `getAvailability` action handler (Phase 5) — read-only, advisory (spec
+ *  Principle 2: never a reservation guarantee). Reuses
+ *  `evaluateAvailableSlots` (ReservationRules.ts) and the same
+ *  `availability/` factory `createReservation` uses; touches Calendar
+ *  exactly once per request (one `getBusyEvents` call per distinct
+ *  calendar id needed for the resolved staff selection), not once per
+ *  candidate slot. */
+export function getAvailabilityAction(rawPayload: unknown): ApiResponse<GetAvailabilityResponseData> {
+  try {
+    return getAvailabilityActionInner(rawPayload);
+  } catch (error) {
+    if (error instanceof ConfigError) return mapConfigErrorToResponse(error);
+    if (error instanceof MissingHeadersError) return mapMissingHeadersErrorToResponse(error);
+    console.error("[getAvailability] unexpected error:", error);
+    return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "サーバーエラーが発生しました。");
+  }
 }
 
 export type CriticalSectionResult =

@@ -30,6 +30,7 @@ import {
   buildErrorResponse,
   buildSuccessResponse,
   createReservationAction,
+  getAvailabilityAction,
   getConfigAction,
   getServicesAction,
   getStaffAction,
@@ -312,6 +313,84 @@ describe("handleApiRequest routing for getServices/getStaff", () => {
     } as AppConfig);
     const response = handleApiRequest('{"action":"getStaff"}');
     expect(response).toEqual({ ok: true, data: [] });
+  });
+});
+
+describe("getAvailabilityAction", () => {
+  afterEach(() => {
+    (getConfig as jest.Mock).mockReset();
+    (Catalog.getServiceRows as jest.Mock).mockReset();
+    (Calendar.getBusyEvents as jest.Mock).mockReset();
+  });
+
+  const availabilityConfig: AppConfig = {
+    business: { name: "Demo", phone: "", email: "", address: "" },
+    hours: {
+      monday: "10:00-19:00",
+      tuesday: "10:00-19:00",
+      wednesday: "10:00-19:00",
+      thursday: "10:00-19:00",
+      friday: "10:00-19:00",
+      saturday: "10:00-19:00",
+      sunday: "closed",
+    },
+    holidays: [],
+    features: { contactForm: true, reservation: true, staffSelection: false, calendar: true, emailNotification: true },
+    staffAnyAvailableOption: false,
+    reservation: { timezone: "Asia/Tokyo", slotMinutes: 30, minLeadHours: 1, maxBookingDays: 60 },
+    calendarId: "shared@example.com",
+    emailOwnerNotifyAddress: "owner@example.com",
+    emailFromName: "Demo",
+  };
+  const availabilityServices: ServiceRow[] = [
+    { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+  ];
+
+  it("returns available slots for a valid request, fetching busy events once", () => {
+    (getConfig as jest.Mock).mockReturnValue(availabilityConfig);
+    (Catalog.getServiceRows as jest.Mock).mockReturnValue(availabilityServices);
+    (Calendar.getBusyEvents as jest.Mock).mockReturnValue([]);
+
+    const response = getAvailabilityAction({ serviceId: "SV001", date: "2026-09-10" });
+
+    expect(response.ok).toBe(true);
+    if (response.ok) {
+      expect(response.data.date).toBe("2026-09-10");
+      expect(response.data.slots.length).toBeGreaterThan(0);
+    }
+    expect(Calendar.getBusyEvents).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns FEATURE_DISABLED when reservation is off", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      ...availabilityConfig,
+      features: { ...availabilityConfig.features, reservation: false },
+    });
+
+    const response = getAvailabilityAction({ serviceId: "SV001", date: "2026-09-10" });
+
+    expect(response).toEqual({
+      ok: false,
+      error: { code: "FEATURE_DISABLED", message: "現在ご予約の受付を停止しています。" },
+    });
+  });
+
+  it("returns VALIDATION_ERROR for a malformed payload", () => {
+    (getConfig as jest.Mock).mockReturnValue(availabilityConfig);
+
+    expect(getAvailabilityAction(null).ok).toBe(false);
+    expect(getAvailabilityAction({ serviceId: 123, date: "2026-09-10" }).ok).toBe(false);
+    expect(getAvailabilityAction({ serviceId: "SV001" }).ok).toBe(false);
+  });
+
+  it("maps an unknown serviceId to a VALIDATION_ERROR-coded response", () => {
+    (getConfig as jest.Mock).mockReturnValue(availabilityConfig);
+    (Catalog.getServiceRows as jest.Mock).mockReturnValue(availabilityServices);
+
+    const response = getAvailabilityAction({ serviceId: "SV999", date: "2026-09-10" });
+
+    expect(response.ok).toBe(false);
+    if (!response.ok) expect(response.error.code).toBe("VALIDATION_ERROR");
   });
 });
 
