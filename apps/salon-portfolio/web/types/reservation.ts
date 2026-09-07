@@ -34,3 +34,47 @@ export interface ReservationSubmissionFailure {
 export type ReservationSubmissionResult =
   | { ok: true; data: ReservationSubmissionSuccess }
   | { ok: false; error: ReservationSubmissionFailure };
+
+/**
+ * Phase 5 additions — public catalog/availability projections, mirroring
+ * `gas/src/models/Catalog.ts` (`PublicService`/`PublicStaff`) and the
+ * `GetAvailabilityResponseData` shape `Api.ts::getAvailabilityAction`
+ * returns. Same "separate frontend mirror" convention as
+ * `ReservationSubmission` above.
+ */
+
+export interface ApiFailure {
+  code: string;
+  message: string;
+}
+
+export type ApiActionResult<T> = { ok: true; data: T } | { ok: false; error: ApiFailure };
+
+export interface PublicService {
+  serviceId: string;
+  name: string;
+  durationMinutes: number;
+  price: number;
+  displayOrder: number;
+}
+
+export interface PublicStaff {
+  staffId: string;
+  name: string;
+  displayOrder: number;
+}
+
+export interface AvailableTimeSlot {
+  time: string;
+}
+
+export interface GetAvailabilityResult {
+  date: string;
+  slots: AvailableTimeSlot[];
+}
+
+export interface AvailabilityRequest {
+  serviceId: string;
+  staffId?: string | typeof ANY_STAFF;
+  date: string;
+}
