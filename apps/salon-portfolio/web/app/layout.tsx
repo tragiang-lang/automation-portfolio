@@ -10,6 +10,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { RuntimeConfigNotice } from "@/components/layout/RuntimeConfigNotice";
 import { NAV_ITEMS } from "@/config/demo-content";
 import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
+import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
 import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
 import "./globals.css";
 
@@ -61,8 +62,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { status, config } = await getRuntimeConfig();
+  const [{ status, config }, { status: catalogStatus }] = await Promise.all([
+    getRuntimeConfig(),
+    getRuntimeCatalog(),
+  ]);
   const siteConfig = resolveSiteConfig(config);
+  // A configured-but-failing GAS backend must never be silently
+  // indistinguishable from demo mode — this now covers both the
+  // business-config call and the Menu/Staff catalog call (Phase 5.1),
+  // reusing the same notice rather than inventing a second one.
+  const showRuntimeNotice = status === "runtime-error" || catalogStatus === "runtime-error";
 
   return (
     <html
@@ -70,7 +79,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${shipporiMincho.variable} ${cormorantGaramond.variable} ${notoSansJP.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-text">
-        <RuntimeConfigNotice show={status === "runtime-error"} />
+        <RuntimeConfigNotice show={showRuntimeNotice} />
         <SiteHeader
           business={siteConfig.business}
           navItems={NAV_ITEMS}
