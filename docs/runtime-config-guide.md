@@ -55,10 +55,10 @@ core both paths use.
 
 **Frontend owns** (stays in `config/demo-content.ts`, never sent by GAS):
 `business.nameLatin`, `business.tagline`, `business.postalCode`,
-`socialLinks`, all of `SERVICES`, `STAFF`, `GALLERY_IMAGES`,
-`SALON_FEATURES`, `CUSTOMER_FLOW_STEPS`, `FAQ_ITEMS`, `ACCESS_INFO`
-(transit directions), and every visual/typography/spacing/layout
-decision.
+`socialLinks`, `GALLERY_IMAGES`, `SALON_FEATURES`, `CUSTOMER_FLOW_STEPS`,
+`FAQ_ITEMS`, `ACCESS_INFO` (transit directions), and every
+visual/typography/spacing/layout decision. `config/demo-content.ts`'s
+`SERVICES`/`STAFF` remain the demo-fallback catalog only (see below).
 
 `holidays` is fetched and validated but has no UI consumer yet — no
 existing section displays it (Phase 2A never specified one, and adding
@@ -66,10 +66,18 @@ one would be a new visual section, out of Phase 3B's scope). A future
 phase can surface it in `AccessSection` once that's an approved design
 change.
 
-`SERVICES`/`STAFF` are not part of the Phase 3A `PublicConfig` contract
-at all (verified in `gas/src/models/Config.ts`) — per `docs/roadmap.md`,
-`getServices`/`getStaff` are Phase 4 work. Phase 3B does not invent a
-second API to fetch them early.
+`SERVICES`/`STAFF` moved onto `getServices`/`getStaff` in Phase 5.1
+(`lib/config/runtimeCatalog.ts`), following the exact same
+fetch/validate/fallback shape as `getConfig` above. The one difference:
+`Service`/`StaffMember`'s presentation-only fields
+(`description`/`category`/`role`/`introduction`/`photoSrc`/`photoAlt`)
+have no equivalent column in the `SERVICES`/`STAFF` sheets
+(`gas/src/SheetSchemas.ts`), so a runtime-sourced Menu/Staff entry never
+carries them — `lib/config/resolveCatalog.ts`'s mappers leave them
+`undefined`, and `MenuRow`/`StaffCard` render them conditionally. The
+demo-fallback branch is unaffected: it still reuses `SERVICES`/`STAFF`
+from `config/demo-content.ts` directly, with all presentation fields
+intact.
 
 ## Fallback / error behavior
 
@@ -78,6 +86,10 @@ second API to fetch them early.
 | unset | (not attempted) | `demo-fallback` | Demo business values (`config/demo-content.ts`-derived) — normal local/portfolio-demo mode, no notice shown. |
 | set | success, valid shape | `runtime` | Real business values from GAS. |
 | set | `ok:false`, network error, or malformed shape | `runtime-error` | Same demo-derived values as a safe placeholder, **plus** a calm Japanese notice banner (`components/layout/RuntimeConfigNotice.tsx`) above the header, so a real backend failure is never silently indistinguishable from demo mode. The specific error is logged server-side via `console.error` only — never sent to the browser. |
+
+`lib/config/runtimeCatalog.ts` (Menu/Staff) follows this exact same table —
+same three statuses, same all-or-nothing fallback (a `getServices` failure
+falls back Menu *and* Staff together, never a mix of real and demo data).
 
 This distinguishes "no backend configured yet" (expected during
 development and for the current portfolio deployment, since Phase 3B
