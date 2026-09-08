@@ -19,6 +19,7 @@ import {
 import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
 import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
 import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
+import { getDesignConfig } from "@/lib/config/designConfig";
 
 // Page order matches Phase 2A §6 exactly: Header (layout) → Hero →
 // Concept → Menu → Staff → Gallery → Reservation CTA → Salon Features →
@@ -31,12 +32,24 @@ import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
 // `PublicConfig`) and stay frontend-owned on `config/demo-content.ts`.
 // SERVICES/STAFF moved onto `getServices`/`getStaff` in Phase 5.1
 // (lib/config/runtimeCatalog.ts) — see docs/runtime-config-guide.md.
+//
+// V1.1 Task 1 (Presentation Configuration Layer — see
+// docs/presentation-config-architecture.md) adds `sectionVisibility`
+// gating for every section below that doesn't already have a business
+// feature flag. It intentionally does NOT yet drive section *order* —
+// this stays a literal JSX sequence until a later V1.1 task, so this file
+// is still not a generic section-rendering engine. For staff/reservation/
+// contact, design visibility is combined with (never overrides) the
+// existing business feature flag — `feature && sectionVisibility.x` — so
+// a design preset can only ever hide a section a feature flag already
+// allows, never show one the business disabled.
 export default async function Home() {
   const [{ config }, { services, staff }] = await Promise.all([
     getRuntimeConfig(),
     getRuntimeCatalog(),
   ]);
   const siteConfig = resolveSiteConfig(config);
+  const { sectionVisibility } = getDesignConfig();
 
   return (
     <main className="flex flex-1 flex-col">
@@ -45,50 +58,54 @@ export default async function Home() {
         subheadline="銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。"
       />
 
-      <ConceptSection
-        eyebrow="Concept"
-        title="静けさの中で、指先を整える時間を"
-        paragraphs={[
-          "流行を追いかけるより、長く付き合える美しさを。当店では、派手さよりも一つひとつの仕上がりの丁寧さを大切にしています。",
-          "落ち着いた空間で過ごすひとときそのものも、施術と同じくらい価値のあるものだと考えています。",
-        ]}
-      />
+      {sectionVisibility.concept ? (
+        <ConceptSection
+          eyebrow="Concept"
+          title="静けさの中で、指先を整える時間を"
+          paragraphs={[
+            "流行を追いかけるより、長く付き合える美しさを。当店では、派手さよりも一つひとつの仕上がりの丁寧さを大切にしています。",
+            "落ち着いた空間で過ごすひとときそのものも、施術と同じくらい価値のあるものだと考えています。",
+          ]}
+        />
+      ) : null}
 
       <MenuSection services={services} />
 
       <StaffSection
-        enabled={siteConfig.features.staffSelection}
+        enabled={siteConfig.features.staffSelection && sectionVisibility.staff}
         staff={staff}
         anyAvailableOption={siteConfig.staffAnyAvailableOption}
         businessNameInitial={siteConfig.business.name}
       />
 
-      <GallerySection images={GALLERY_IMAGES} />
+      {sectionVisibility.gallery ? <GallerySection images={GALLERY_IMAGES} /> : null}
 
-      {siteConfig.features.reservation ? (
+      {siteConfig.features.reservation && sectionVisibility.reservation ? (
         <ReservationCtaBand
           heading="仕上がりを見て、気持ちが決まったら"
           message="ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。"
         />
       ) : null}
 
-      <SalonFeaturesSection features={SALON_FEATURES} />
+      {sectionVisibility["salon-features"] ? (
+        <SalonFeaturesSection features={SALON_FEATURES} />
+      ) : null}
 
-      <CustomerFlowSection steps={CUSTOMER_FLOW_STEPS} />
+      {sectionVisibility["customer-flow"] ? (
+        <CustomerFlowSection steps={CUSTOMER_FLOW_STEPS} />
+      ) : null}
 
-      <FaqSection items={FAQ_ITEMS} />
+      {sectionVisibility.faq ? <FaqSection items={FAQ_ITEMS} /> : null}
 
-      <AccessSection
-        business={siteConfig.business}
-        hours={siteConfig.hours}
-        access={ACCESS_INFO}
-      />
+      {sectionVisibility.access ? (
+        <AccessSection business={siteConfig.business} hours={siteConfig.hours} access={ACCESS_INFO} />
+      ) : null}
 
-      {siteConfig.features.contactForm ? (
+      {siteConfig.features.contactForm && sectionVisibility.contact ? (
         <ContactSection business={siteConfig.business} />
       ) : null}
 
-      {siteConfig.features.reservation ? (
+      {siteConfig.features.reservation && sectionVisibility.reservation ? (
         <ReservationCtaBand
           heading="最後まで読んでくださり、ありがとうございます"
           message="少しでも気になることがあれば、まずはご予約からお気軽にどうぞ。"
