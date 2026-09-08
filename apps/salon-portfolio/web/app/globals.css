@@ -59,19 +59,24 @@
 }
 
 /*
- * Theme presets (V1.1 Theme Presets task) — one block per non-kinari
- * `ThemeId`, selected by `html[data-design-preset]` (set from the resolved
- * `DesignConfig.preset` in app/layout.tsx; see
- * docs/presentation-config-architecture.md). Kinari has no block here on
- * purpose: it stays defined only at `:root` above, so the current default
- * look cannot diverge from what already ships. Every value below is
- * transcribed verbatim from `config/theme-tokens.ts`'s `THEMES` registry —
- * `app/globals.css.theme-sync.test.ts` cross-checks the two stay identical,
- * so edit the registry (which also carries the contrast tests) and copy the
- * values here, not the other way around. No component ever branches on
- * which preset is active — every component still only reads the same
- * `--color-*` custom properties / `bg-background`, `text-primary`, etc.
- * Tailwind utilities; only the values behind them change.
+ * Theme + typography presets (V1.1 Theme Presets / Typography Presets
+ * tasks) — one block per non-kinari `ThemeId`, selected by
+ * `html[data-design-preset]` (set from the resolved `DesignConfig.preset`
+ * in app/layout.tsx; see docs/presentation-config-architecture.md). Kinari
+ * has no block here on purpose: it stays defined only at `:root`/
+ * `@theme inline` above, so the current default look cannot diverge from
+ * what already ships. Every `--color-*` value is transcribed verbatim from
+ * `config/theme-tokens.ts`'s `THEMES` registry
+ * (`app/globals.css.theme-sync.test.ts` cross-checks this). Every
+ * `--font-heading-*` value (present only on `noir`/`editorial`/`modern` —
+ * `femme`/`natural` deliberately have none, since they reuse kinari's exact
+ * heading pairing and simply inherit the base `@theme inline` mapping) is
+ * transcribed verbatim from `config/typography-tokens.ts`'s `TYPOGRAPHY`
+ * registry (`app/globals.css.typography-sync.test.ts` cross-checks this).
+ * No component ever branches on which preset is active — every component
+ * still only reads the same `--color-*`/`--font-heading-*`/`--font-body-*`
+ * custom properties / `bg-background`, `text-primary`, etc. Tailwind
+ * utilities; only the values behind them change.
  */
 html[data-design-preset="femme"] {
   --color-background: #fdf5f3;
@@ -105,6 +110,7 @@ html[data-design-preset="noir"] {
   --color-border: #3a3229;
   --color-success: #6fa98a;
   --color-error: #e0776e;
+  --font-heading-en: var(--font-playfair-display);
 }
 
 html[data-design-preset="editorial"] {
@@ -122,6 +128,8 @@ html[data-design-preset="editorial"] {
   --color-border: #dcdcda;
   --color-success: #3f7a55;
   --color-error: #b3261e;
+  --font-heading-ja: var(--font-zen-kaku-gothic-new);
+  --font-heading-en: var(--font-playfair-display);
 }
 
 html[data-design-preset="natural"] {
@@ -156,6 +164,8 @@ html[data-design-preset="modern"] {
   --color-border: #e1e0dc;
   --color-success: #3f7a55;
   --color-error: #b3261e;
+  --font-heading-ja: var(--font-zen-kaku-gothic-new);
+  --font-heading-en: var(--font-inter);
 }
 
 /* This design deliberately does not ship a dark theme *toggle* (Phase 2A

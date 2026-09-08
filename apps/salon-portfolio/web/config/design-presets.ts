@@ -30,14 +30,18 @@ export const DEFAULT_DESIGN_CONFIG: DesignConfig = {
   sectionOrder: [...DEFAULT_SECTION_ORDER],
 };
 
-// `ThemeId` shares its six string values with `DesignPreset` 1:1 (see
-// types/design-config.ts) — every preset uses the identically-named theme
-// from `config/theme-tokens.ts`'s `THEMES` registry (Theme Presets task).
+// `ThemeId` and `TypographyId` each share their six string values with
+// `DesignPreset` 1:1 (see types/design-config.ts) — every preset uses the
+// identically-named theme from `config/theme-tokens.ts`'s `THEMES`
+// registry (Theme Presets task) and the identically-named typography
+// pairing from `config/typography-tokens.ts`'s `TYPOGRAPHY` registry
+// (Typography Presets task).
 function withPreset(preset: DesignPreset): DesignConfig {
   return {
     ...DEFAULT_DESIGN_CONFIG,
     preset,
     theme: preset,
+    typography: preset,
     sectionVisibility: { ...DEFAULT_SECTION_VISIBILITY },
     sectionOrder: [...DEFAULT_SECTION_ORDER],
   };

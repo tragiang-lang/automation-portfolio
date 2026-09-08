@@ -47,7 +47,7 @@ layout variant, or a section's visibility.
 |---|---|---|
 | `preset` | `DesignPreset` (6 values) | All 6 registered; only `kinari` differs from the others (identically for now) |
 | `theme` | `ThemeId` | Only `"kinari"` exists — a later task adds curated palettes |
-| `typography` | `TypographyId` | Only `"kinari"` exists — a later task adds curated pairings |
+| `typography` | `TypographyId` (6 values) | All 6 registered with curated heading-font pairings (Typography Presets task); body typography is shared across all 6 |
 | `heroVariant` | `HeroVariant` (3 values) | Only `"fullscreen"` has a real component |
 | `menuVariant` | `MenuVariant` (3 values) | Only `"editorial-list"` has a real component |
 | `staffVariant` | `StaffVariant` (2 values) | Only `"portrait-grid"` has a real component |
@@ -211,10 +211,140 @@ the new id to `ThemeId` in `types/design-config.ts` plus a `DesignPreset`
 registry entry in `config/design-presets.ts` if it should also be
 selectable as its own preset. No component file needs to change.
 
+## Typography tokens (V1.1 Typography Presets task)
+
+Theme Presets gave every preset its own colors; this task gives every
+preset its own heading-font personality, through the same mechanism —
+`TypographyId`, widened from the Task-1 placeholder (`"kinari"` only) to
+all six `DesignPreset` values, and a `TYPOGRAPHY` registry mirrored into
+`app/globals.css`.
+
+```text
+DesignConfig.typography (TypographyId)
+        |
+        v
+config/typography-tokens.ts — TYPOGRAPHY: Record<TypographyId, TypographyTokens>
+        |                        (typed source of truth, 4 keys)
+        v
+app/globals.css — html[data-design-preset="x"] { --font-heading-*: ...; }
+        |                        (hand-mirrored, cross-checked by a test)
+        v
+h1,h2,h3 { font-family: var(--font-heading-ja), var(--font-heading-en), ... }
+body     { font-family: var(--font-body-ja), var(--font-body-en), ... }
+        |                        (pre-existing global CSS, unchanged in shape)
+        v
+existing components (no component reads a font token directly)
+```
+
+**`TypographyTokens` model** (`types/design-config.ts`): 4 keys —
+`headingJa`, `headingEn`, `bodyJa`, `bodyEn` — reusing the exact
+`--font-heading-ja`/`--font-heading-en`/`--font-body-ja`/`--font-body-en`
+CSS variable names that already existed before V1.1 (only their per-preset
+override capability is new). No new semantic role (e.g. a separate
+"display" token) was added, because no component or existing CSS rule
+consumes anything beyond these 4 roles today — the task's own guidance
+("only add tokens that are actually needed") ruled that out. Each token's
+value is a ready-to-use `var(--font-xxx)` string pointing at a
+`next/font/google` loader variable declared in `app/layout.tsx`, exactly
+mirroring how `ThemeTokens` stores ready-to-use hex strings.
+
+**Six typography pairings** (`config/typography-tokens.ts`'s `TYPOGRAPHY`
+registry):
+
+| Typography | Heading (JA / EN) | Rationale |
+|---|---|---|
+| `kinari` | Shippori Mincho / Cormorant Garamond | Unchanged shipped default |
+| `femme` | Shippori Mincho / Cormorant Garamond | Deliberately identical to Kinari — the "elegant feminine serif" direction is already close to Kinari's own quiet-luxury mincho; personality comes from `femme`'s theme colors instead of a second near-identical serif |
+| `natural` | Shippori Mincho / Cormorant Garamond | Deliberately identical to Kinari, same rationale — "warm organic mincho" is Kinari's pairing already |
+| `noir` | Shippori Mincho / Playfair Display | Kinari's restrained mincho stays for Japanese; Latin headings switch to a sophisticated editorial display serif |
+| `editorial` | Zen Kaku Gothic New / Playfair Display | The most distinctive pairing: a bold clean Japanese sans against a high-contrast Latin display serif — a fashion-magazine contrast no other preset uses |
+| `modern` | Zen Kaku Gothic New / Inter | Sans-only in both scripts — the strongest possible contrast against Kinari's serif/mincho baseline |
+
+Body typography (`bodyJa`/`bodyEn`) is Noto Sans JP + Inter for **every**
+preset, never varied — see the rationale comment at the top of
+`config/typography-tokens.ts`.
+
+**Font loading strategy and its tradeoff:** all 6 curated font families (4
+pre-existing — Shippori Mincho, Cormorant Garamond, Noto Sans JP, Inter —
+plus 2 new: Playfair Display, Zen Kaku Gothic New, each loaded at exactly
+one weight) are declared as `next/font/google` loaders in `app/layout.tsx`
+and self-hosted in **every** production build, regardless of which single
+preset that build's `SALON_DESIGN_PRESET` selects — the same "load
+everything, switch by CSS attribute" strategy the Theme Presets task
+already uses for colors. Verified directly (`npm run build`'s output marks
+`/` as `○ (Static)`): the homepage is prerendered **at build time**, so
+`SALON_DESIGN_PRESET` is genuinely build-time configuration here, not a
+value `next start` can pick up from a changed env var without a rebuild —
+each buyer's deployment runs its own `next build` with its own env var
+already set, consistent with `.env.example`'s existing framing of this
+variable. Even so, this task deliberately did **not** try to make
+`next/font/google` load only the active preset's families conditionally
+per build: its loader calls must be static, module-scope calls for the
+compiler's static analysis to pick them up, so branching on
+`process.env.SALON_DESIGN_PRESET` around a loader call would need to
+survive dead-code elimination reliably to actually skip fetching/bundling
+the unused family's files — not guaranteed, and risky to depend on without
+per-buyer custom build tooling, which is out of scope. The practical cost
+of loading all 6 unconditionally is small and asymmetric: unused
+`@font-face` declarations add a few extra font files to the build's static
+output, but browsers only *fetch* a `@font-face` resource when rendered
+text actually resolves to that font-family — since only one preset's
+`data-design-preset` value is ever baked into a given deployment's `<html>`
+element, a visitor only ever downloads the ~4 font files their site's
+preset actually renders with, not all ~7 loader instances. This is the
+same tradeoff already accepted for theme colors (near-zero marginal byte
+cost there); for fonts the marginal cost is a handful of extra static files
+in the build artifact, judged acceptable against the alternative (a
+second, more complex conditional build-time font-selection system) per the
+task's explicit "do not over-engineer this" guidance.
+
+**Why `femme`/`natural` have no CSS override block:** `app/globals.css`
+already has one `html[data-design-preset="x"]` block per non-kinari theme
+(for colors); this task adds `--font-heading-ja`/`--font-heading-en` lines
+only to the three blocks whose typography actually differs from Kinari's
+(`noir`, `editorial`, `modern`). `femme`'s and `natural`'s blocks
+deliberately get no font lines at all — the same "no override needed
+because the value already matches the inherited default" pattern Kinari
+itself uses for having no block whatsoever. `app/globals.css.typography-sync.test.ts`
+asserts both things: the three differing presets' overrides match
+`TYPOGRAPHY`, and `femme`/`natural`'s blocks contain no `--font-heading-*`
+line at all.
+
+**Why components never consume a font token directly:** confirmed by
+grepping `components/` before this task — no component sets `font-family`,
+imports a font loader, or references `Shippori`/`Cormorant`/`Noto`/`Inter`
+by name. Every heading and every body text already renders through exactly
+two pre-existing global CSS rules (`h1,h2,h3` and `body` in
+`app/globals.css`), both unchanged in shape by this task — only the
+variable values behind `--font-heading-ja`/`--font-heading-en` gained a
+per-preset override. Zero component files were modified by this task.
+
+**Explicitly not implemented — per-preset line-height/letter-spacing:** the
+Natural typography direction's brief called for "relaxed line-height," but
+this was deliberately **not** implemented. Every section's line-height is
+already set as a per-component Tailwind arbitrary-value utility (e.g.
+`leading-[1.7]` on a paragraph), not a global token — a blanket
+`body { line-height: ... }` override would be outranked by every one of
+those more-specific class selectors and produce no visible effect. Faking
+this with a rule that doesn't actually change rendered output would be
+worse than not shipping it; a real per-component/per-preset line-height
+system is a larger, separate change and is called out here as deferred,
+not silently dropped.
+
+**Adding a 7th typography pairing later:** add a `TYPOGRAPHY` entry to
+`config/typography-tokens.ts` (validated automatically by the existing
+`typography-tokens.test.ts`), add `--font-heading-*` line(s) to a matching
+`html[data-design-preset="..."]` block in `app/globals.css` **only if** the
+new pairing differs from Kinari's (`app/globals.css.typography-sync.test.ts`
+will fail until the two match), and add the new id to `TypographyId` in
+`types/design-config.ts` plus a `DesignPreset` registry entry in
+`config/design-presets.ts` if it should also be selectable as its own
+preset. If the new pairing needs a font family not already loaded, add one
+`next/font/google` loader call in `app/layout.tsx` at the single weight
+actually needed — do not add a family "just in case."
+
 ## Not yet implemented (tracked for later V1.1 work)
 
-- Typography presets — actual font-loader + CSS mapping sets per
-  `TypographyId`.
 - Hero/Menu/Staff/Gallery variant components — real alternate layouts for
   `HeroVariant`/`MenuVariant`/`StaffVariant`/`GalleryVariant` values other
   than today's default.
