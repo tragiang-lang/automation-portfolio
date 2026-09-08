@@ -67,10 +67,14 @@ export interface Service {
 export interface StaffMember {
   staffId: string;
   name: string;
-  role: string;
-  introduction: string;
-  photoSrc: string;
-  photoAlt: string;
+  /** Frontend-presentation-only fields — no equivalent column in the
+   *  STAFF sheet (apps/salon-portfolio/gas/src/SheetSchemas.ts), so a
+   *  runtime-sourced staff member (lib/config/runtimeCatalog.ts) never
+   *  has these. `config/demo-content.ts`'s STAFF still sets all four. */
+  role?: string;
+  introduction?: string;
+  photoSrc?: string;
+  photoAlt?: string;
 }
 
 export interface GalleryImageItem {
