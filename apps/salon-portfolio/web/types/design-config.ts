@@ -27,10 +27,14 @@ export type DesignPreset = "kinari" | "femme" | "noir" | "editorial" | "natural"
  *  preset could reuse another preset's theme. */
 export type ThemeId = "kinari" | "femme" | "noir" | "editorial" | "natural" | "modern";
 
-/** Font-pairing id. Only "kinari" (the current Shippori Mincho / Cormorant
- *  Garamond / Noto Sans JP / Inter pairing) is implemented as of Task 1 —
- *  a later task adds the remaining curated pairings and extends this union. */
-export type TypographyId = "kinari";
+/** Font-pairing id — one entry per curated typography pairing in
+ *  `config/typography-tokens.ts`'s `TYPOGRAPHY` registry. Shares its six
+ *  string values with `DesignPreset` 1:1 (see `ThemeId` above) — every
+ *  preset uses the identically-named typography pairing. `femme` and
+ *  `natural` deliberately reuse `kinari`'s exact font pairing (see
+ *  `config/typography-tokens.ts` for the rationale); `noir`, `editorial`,
+ *  and `modern` each get a distinct heading treatment. */
+export type TypographyId = "kinari" | "femme" | "noir" | "editorial" | "natural" | "modern";
 
 /** Hero layout variants (a later task implements the alternates; only
  *  "fullscreen" — today's only layout — is wired to a real component). */
@@ -146,6 +150,42 @@ export const THEME_TOKEN_KEYS: readonly (keyof ThemeTokens)[] = [
   "border",
   "success",
   "error",
+];
+
+/**
+ * The semantic font-family token model every pairing in
+ * `config/typography-tokens.ts` must fully implement, and the exact set
+ * `app/globals.css` already declares as `--font-heading-ja`/
+ * `--font-heading-en`/`--font-body-ja`/`--font-body-en` custom properties
+ * (those names predate V1.1 — only their per-preset override capability is
+ * new). Each value is a ready-to-use CSS `var(--font-xxx)` reference to one
+ * of the `next/font/google` loader variables declared in `app/layout.tsx`,
+ * never a raw font-family string — this keeps `app/globals.css` and this
+ * registry trivially diffable against each other (see
+ * `app/globals.css.typography-sync.test.ts`).
+ *
+ * Kept to 4 keys because that is the complete set of type roles the
+ * existing global CSS already reads (`h1,h2,h3 { font-family: var(--font-heading-ja), ... }`,
+ * `body { font-family: var(--font-body-ja), ... }`) — no component consumes
+ * a font token directly, so no additional role (e.g. a separate "display"
+ * token) is introduced without an existing consumer.
+ */
+export interface TypographyTokens {
+  headingJa: string;
+  headingEn: string;
+  bodyJa: string;
+  bodyEn: string;
+}
+
+/** Every `TypographyTokens` key, for structural validation
+ *  (`config/typography-tokens.test.ts`) and for parsing `app/globals.css`'s
+ *  per-preset `--font-heading-*` overrides back into a `TypographyTokens`
+ *  shape. */
+export const TYPOGRAPHY_TOKEN_KEYS: readonly (keyof TypographyTokens)[] = [
+  "headingJa",
+  "headingEn",
+  "bodyJa",
+  "bodyEn",
 ];
 
 export interface DesignConfig {

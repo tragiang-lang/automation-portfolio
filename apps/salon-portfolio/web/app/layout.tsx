@@ -4,6 +4,8 @@ import {
   Cormorant_Garamond,
   Noto_Sans_JP,
   Inter,
+  Playfair_Display,
+  Zen_Kaku_Gothic_New,
 } from "next/font/google";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -48,6 +50,26 @@ const inter = Inter({
   display: "swap",
 });
 
+// Noir/Editorial heading display serif (V1.1 Typography Presets) — a
+// single bold weight only; this family is used exclusively as a heading
+// font (never body), so no lighter weight is ever requested.
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair-display",
+  subsets: ["latin"],
+  weight: "700",
+  display: "swap",
+});
+
+// Editorial/Modern Japanese heading (V1.1 Typography Presets) — bold clean
+// geometric sans, deliberately distinct from the body's Noto Sans JP so a
+// heading using it doesn't just look like enlarged body text.
+const zenKakuGothicNew = Zen_Kaku_Gothic_New({
+  variable: "--font-zen-kaku-gothic-new",
+  subsets: ["latin"],
+  weight: "700",
+  display: "swap",
+});
+
 // Dynamic per Phase 3B: title/description now reflect the runtime
 // business name/tagline, so this can no longer be a static `metadata`
 // export (Next.js requires `generateMetadata` for that). `getRuntimeConfig`
@@ -79,7 +101,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="ja"
       data-design-preset={designConfig.preset}
-      className={`${shipporiMincho.variable} ${cormorantGaramond.variable} ${notoSansJP.variable} ${inter.variable} h-full antialiased`}
+      className={`${shipporiMincho.variable} ${cormorantGaramond.variable} ${notoSansJP.variable} ${inter.variable} ${playfairDisplay.variable} ${zenKakuGothicNew.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-text">
         <RuntimeConfigNotice show={showRuntimeNotice} />

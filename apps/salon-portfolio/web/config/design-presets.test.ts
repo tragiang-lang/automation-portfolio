@@ -39,6 +39,12 @@ describe("DESIGN_PRESETS", () => {
     }
   });
 
+  it("uses the identically-named typography for every preset (Typography Presets task)", () => {
+    for (const id of ALL_PRESET_IDS) {
+      expect(DESIGN_PRESETS[id].typography).toBe(id);
+    }
+  });
+
   it("gives every preset its own sectionVisibility/sectionOrder — no shared references", () => {
     DESIGN_PRESETS.femme.sectionVisibility.concept = false;
     expect(DESIGN_PRESETS.noir.sectionVisibility.concept).toBe(true);
