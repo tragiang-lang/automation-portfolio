@@ -35,4 +35,15 @@ describe("StaffSection", () => {
     );
     expect(screen.queryByText("指名なし（お任せ）")).not.toBeInTheDocument();
   });
+
+  it("renders a runtime-sourced staff member with no role/introduction/photo without crashing", () => {
+    const runtimeStaff: StaffMember[] = [{ staffId: "ST002", name: "鈴木 さくら" }];
+    render(
+      <StaffSection enabled staff={runtimeStaff} anyAvailableOption={false} businessNameInitial="凛" />,
+    );
+    expect(screen.getByText("鈴木 さくら")).toBeInTheDocument();
+    // Falls back to an initial-letter tile (same convention as
+    // AnyAvailableStaffCard) instead of rendering a broken <img>.
+    expect(screen.getByText("鈴")).toBeInTheDocument();
+  });
 });
