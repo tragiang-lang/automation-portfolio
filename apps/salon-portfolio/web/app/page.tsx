@@ -15,10 +15,9 @@ import {
   FAQ_ITEMS,
   GALLERY_IMAGES,
   SALON_FEATURES,
-  SERVICES,
-  STAFF,
 } from "@/config/demo-content";
 import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
+import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
 import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
 
 // Page order matches Phase 2A §6 exactly: Header (layout) → Hero →
@@ -27,13 +26,16 @@ import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
 // sections are gated here by the resolved runtime config's `features`,
 // not by editing the section components themselves.
 //
-// SERVICES/STAFF/GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/
-// FAQ_ITEMS/ACCESS_INFO are not part of the Phase 3A `getConfig` contract
-// (no `services`/`staff` fields in `PublicConfig`) and stay on
-// `config/demo-content.ts` — see docs/runtime-config-guide.md for the
-// Phase 4 plan to move SERVICES/STAFF onto `getServices`/`getStaff`.
+// GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/FAQ_ITEMS/ACCESS_INFO
+// are not part of the `getConfig` contract (no such fields in
+// `PublicConfig`) and stay frontend-owned on `config/demo-content.ts`.
+// SERVICES/STAFF moved onto `getServices`/`getStaff` in Phase 5.1
+// (lib/config/runtimeCatalog.ts) — see docs/runtime-config-guide.md.
 export default async function Home() {
-  const { config } = await getRuntimeConfig();
+  const [{ config }, { services, staff }] = await Promise.all([
+    getRuntimeConfig(),
+    getRuntimeCatalog(),
+  ]);
   const siteConfig = resolveSiteConfig(config);
 
   return (
@@ -52,11 +54,11 @@ export default async function Home() {
         ]}
       />
 
-      <MenuSection services={SERVICES} />
+      <MenuSection services={services} />
 
       <StaffSection
         enabled={siteConfig.features.staffSelection}
-        staff={STAFF}
+        staff={staff}
         anyAvailableOption={siteConfig.staffAnyAvailableOption}
         businessNameInitial={siteConfig.business.name}
       />
