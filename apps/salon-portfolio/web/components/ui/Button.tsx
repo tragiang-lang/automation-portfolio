@@ -9,7 +9,7 @@ const base =
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-accent text-on-accent hover:bg-[#833d33] disabled:hover:bg-accent",
+    "bg-accent text-on-accent hover:bg-accent-hover disabled:hover:bg-accent",
   secondary:
     "border border-secondary text-primary bg-transparent hover:bg-surface-sunken",
   // No color here on purpose — callers set the text color via `className`

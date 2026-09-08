@@ -49,6 +49,18 @@ describe("Home", () => {
     expect(screen.getAllByText("ご予約はこちら").length).toBeGreaterThanOrEqual(2);
   });
 
+  it("renders every section under a non-default theme preset (Theme Presets task — theme selection is CSS-only, never gates rendering)", async () => {
+    mockedGetDesignConfig.mockReturnValue({ ...DEFAULT_DESIGN_CONFIG, preset: "noir", theme: "noir" });
+
+    render(await Home());
+
+    expect(screen.getByRole("heading", { name: "静けさの中で、指先を整える時間を" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "スタッフ紹介" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "ギャラリー" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "お問い合わせ" })).toBeInTheDocument();
+  });
+
   it("hides an optional section when its sectionVisibility flag is false, without touching required sections", async () => {
     mockedGetDesignConfig.mockReturnValue({
       ...DEFAULT_DESIGN_CONFIG,

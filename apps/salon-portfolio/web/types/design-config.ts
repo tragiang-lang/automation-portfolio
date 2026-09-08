@@ -20,10 +20,12 @@
  */
 export type DesignPreset = "kinari" | "femme" | "noir" | "editorial" | "natural" | "modern";
 
-/** Color-token theme id. Only "kinari" (the current, single palette) is
- *  implemented as of Task 1 — a later task adds the remaining curated
- *  palettes and extends this union. */
-export type ThemeId = "kinari";
+/** Color-token theme id — one entry per curated palette in
+ *  `config/theme-tokens.ts`'s `THEMES` registry. Shares its six string
+ *  values with `DesignPreset` 1:1 today (each preset uses the
+ *  identically-named theme), but is kept as its own type because a future
+ *  preset could reuse another preset's theme. */
+export type ThemeId = "kinari" | "femme" | "noir" | "editorial" | "natural" | "modern";
 
 /** Font-pairing id. Only "kinari" (the current Shippori Mincho / Cormorant
  *  Garamond / Noto Sans JP / Inter pairing) is implemented as of Task 1 —
@@ -88,6 +90,64 @@ export type SectionVisibility = Record<OptionalHomeSection, boolean>;
  * `lib/config/resolveDesignConfig.ts` from an untrusted preset id, always
  * with a safe value — never partial, never `undefined`.
  */
+/**
+ * The semantic color-token model every theme in `config/theme-tokens.ts`
+ * must fully implement, and the exact set `app/globals.css` mirrors as
+ * `--color-*` custom properties (kebab-cased, e.g. `onPrimary` →
+ * `--color-on-primary`). Kept intentionally small — one role per genuinely
+ * distinct visual need in the existing components, not a full design-system
+ * token set. All values are `#rrggbb` hex strings so
+ * `lib/utils/contrastRatio.ts` can validate them directly.
+ *
+ * Role notes (see docs/presentation-config-architecture.md for the full
+ * writeup): `primary`/`onPrimary` are a matched pair used both as
+ * text-on-light-surface (`text-primary`, e.g. every heading) and as a
+ * dark-band background with light text on top of it (`bg-primary
+ * text-on-primary` — the Footer, and the Hero photo's legibility scrim).
+ * For a light theme `primary` is the dark ink tone; for a dark theme the
+ * roles invert (`primary` becomes the light tone, `onPrimary` the dark one)
+ * so both uses stay internally consistent. `accentHover` exists because
+ * `components/ui/Button.tsx`'s primary hover state needs a theme-aware
+ * shade — it cannot be computed from `accent` with plain CSS custom
+ * properties, so each theme states it explicitly.
+ */
+export interface ThemeTokens {
+  background: string;
+  surface: string;
+  surfaceSunken: string;
+  primary: string;
+  onPrimary: string;
+  secondary: string;
+  accent: string;
+  onAccent: string;
+  accentHover: string;
+  text: string;
+  muted: string;
+  border: string;
+  success: string;
+  error: string;
+}
+
+/** Every `ThemeTokens` key, for structural validation
+ *  (`config/theme-tokens.test.ts`) and for parsing `app/globals.css`'s
+ *  mirrored `--color-*` custom properties back into a `ThemeTokens` shape. */
+export const THEME_TOKEN_KEYS: readonly (keyof ThemeTokens)[] = [
+  "background",
+  "surface",
+  "surfaceSunken",
+  "primary",
+  "onPrimary",
+  "secondary",
+  "accent",
+  "onAccent",
+  "accentHover",
+  "text",
+  "muted",
+  "border",
+  "success",
+  "error",
+];
+
 export interface DesignConfig {
   preset: DesignPreset;
   theme: ThemeId;
