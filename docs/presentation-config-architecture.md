@@ -127,10 +127,92 @@ never requires a change to `lib/api/reservationClient.ts`, the GAS
 `Api.ts` dispatcher, `Calendar.ts`, `LockService`, or `/api/gas`'s
 security boundary.
 
+## Theme tokens (V1.1 Theme Presets task)
+
+Task 1 left every `ThemeId` resolving to the same Kinari colors. This task
+gives all six presets (`kinari`, `femme`, `noir`, `editorial`, `natural`,
+`modern`) their own curated palette, entirely through CSS custom properties
+— no component was given preset-aware logic.
+
+```text
+DesignConfig.theme (ThemeId)
+        |
+        v
+config/theme-tokens.ts — THEMES: Record<ThemeId, ThemeTokens>
+        |                        (typed, contrast-tested source of truth)
+        v
+app/globals.css — html[data-design-preset="x"] { --color-*: ...; }
+        |                        (hand-mirrored, cross-checked by a test)
+        v
+existing components — bg-background, text-primary, bg-accent, ... (unchanged)
+```
+
+**`ThemeTokens` model** (`types/design-config.ts`): 14 semantic roles —
+`background`, `surface`, `surfaceSunken`, `primary`, `onPrimary`,
+`secondary`, `accent`, `onAccent`, `accentHover`, `text`, `muted`, `border`,
+`success`, `error`. This is the same set already centralized in
+`app/globals.css` before this task, plus one new token: `accentHover`,
+because `components/ui/Button.tsx`'s primary-button hover state needed a
+theme-aware shade that plain CSS custom properties can't derive from
+`accent` alone (it was a hard-coded `#833d33` before this task). `primary`/
+`onPrimary` are a matched pair used both as text-on-light-surface
+(`text-primary` — every heading, the secondary-button label) and as a
+dark-band background with light text on it (`bg-primary text-on-primary` —
+the Footer, and the Hero photo's legibility scrim); for a light theme
+`primary` is the dark ink tone, for a dark theme (`noir`) the roles invert
+so both uses stay internally consistent — see the full role note on
+`ThemeTokens` in `types/design-config.ts`.
+
+**Six themes** (`config/theme-tokens.ts`'s `THEMES` registry):
+
+| Theme | Direction |
+|---|---|
+| `kinari` | Unchanged shipped default — washi off-white, sumi ink, muted enji-iro (terracotta) accent |
+| `femme` | Blush-cream background, muted dusty-rose accent — elegant, not neon or "cute app" |
+| `noir` | Warm charcoal (never pure black), ivory ink, muted copper accent — a deliberate dark-first preset, not a light/dark toggle |
+| `editorial` | Crisp white/near-black monochrome, higher contrast than Kinari, one restrained mustard-gold accent |
+| `natural` | Warm sand background, deep earth-brown ink, muted sage-green accent |
+| `modern` | Cooler crisp-neutral background, stronger near-black ink, a single deep-teal accent |
+
+Every theme's text/button/link/focus-ring/semantic-color token pairs are
+verified against WCAG AA thresholds (4.5:1 body text, 3:1 focus-ring/
+non-text UI) in `config/theme-tokens.test.ts`, using
+`lib/utils/contrastRatio.ts` — a plain WCAG relative-luminance calculator,
+no DOM dependency. `accent` and `error` are asserted to always differ per
+theme, so a themed CTA can never be mistaken for an error state.
+
+**How the selection reaches CSS:** unchanged from Task 1 —
+`app/layout.tsx` already sets `data-design-preset={designConfig.preset}` on
+`<html>` from the resolved `DesignConfig`, server-rendered on first paint
+(no `useEffect`, no client-side hydration step). `app/globals.css` selects
+the matching `html[data-design-preset="x"] { --color-*: ...; }` block; the
+`kinari` preset intentionally has **no** override block — it stays defined
+only at `:root`, so the current default look cannot diverge from what
+already ships. `app/globals.css.theme-sync.test.ts` parses `globals.css`
+and cross-checks every block against `THEMES` (including that `:root`
+matches `THEMES.kinari` exactly), since the CSS file and the TS registry
+are necessarily two files that could otherwise drift silently.
+
+**Why components never branch on preset:** every section/UI component
+already consumed only semantic Tailwind utilities backed by these
+`--color-*` custom properties (confirmed by grepping the whole `components/`
+tree before this task — the only literal hex color anywhere outside
+`globals.css` was `Button.tsx`'s now-removed `#833d33`). Swapping a theme is
+therefore purely a CSS-variable value change; no component file changed
+except `Button.tsx`'s one-line rename from a hard-coded hex to the
+`accent-hover` token class.
+
+**Adding a 7th theme later:** add one `ThemeTokens` entry to `THEMES` in
+`config/theme-tokens.ts` (contrast-checked automatically by the existing
+`theme-tokens.test.ts` `describe.each`), copy its values into a matching
+`html[data-design-preset="..."]` block in `app/globals.css`
+(`globals.css.theme-sync.test.ts` will fail until the two match), and add
+the new id to `ThemeId` in `types/design-config.ts` plus a `DesignPreset`
+registry entry in `config/design-presets.ts` if it should also be
+selectable as its own preset. No component file needs to change.
+
 ## Not yet implemented (tracked for later V1.1 work)
 
-- Theme presets — actual CSS variable sets per `ThemeId`, keyed off
-  `app/layout.tsx`'s new `data-design-preset` attribute on `<html>`.
 - Typography presets — actual font-loader + CSS mapping sets per
   `TypographyId`.
 - Hero/Menu/Staff/Gallery variant components — real alternate layouts for

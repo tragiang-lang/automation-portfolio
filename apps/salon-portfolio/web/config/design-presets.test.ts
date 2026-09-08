@@ -33,6 +33,12 @@ describe("DESIGN_PRESETS", () => {
     }
   });
 
+  it("uses the identically-named theme for every preset (Theme Presets task)", () => {
+    for (const id of ALL_PRESET_IDS) {
+      expect(DESIGN_PRESETS[id].theme).toBe(id);
+    }
+  });
+
   it("gives every preset its own sectionVisibility/sectionOrder — no shared references", () => {
     DESIGN_PRESETS.femme.sectionVisibility.concept = false;
     expect(DESIGN_PRESETS.noir.sectionVisibility.concept).toBe(true);
