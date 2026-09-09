@@ -1,8 +1,14 @@
 import { HOURS_DAY_ORDER } from "@/lib/constants/hours";
-import type { PublicRuntimeBusinessHours, PublicRuntimeConfig } from "@/types/runtime-config";
+import type { PublicRuntimeBusinessHours, PublicRuntimeConfig, SocialLink } from "@/types/runtime-config";
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+/** Accepts an absent field or a non-empty string — never a wrong-typed
+ *  present value. Used for optional presentation fields (V1.1 Task 4). */
+function isOptionalNonEmptyString(value: unknown): value is string | undefined {
+  return value === undefined || isNonEmptyString(value);
 }
 
 function isBoolean(value: unknown): value is boolean {
@@ -25,6 +31,22 @@ function parseBusinessHours(value: unknown): PublicRuntimeBusinessHours | null {
   return hours;
 }
 
+/** `undefined` -> valid/absent (V1.1 Task 4: a pre-migration CONFIG sheet
+ *  has no social.* keys at all); anything else must be an array of
+ *  `{ label, href }` non-empty-string pairs. */
+function parseOptionalSocialLinks(value: unknown): SocialLink[] | null | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) return null;
+  const links: SocialLink[] = [];
+  for (const item of value) {
+    if (typeof item !== "object" || item === null) return null;
+    const record = item as Record<string, unknown>;
+    if (!isNonEmptyString(record.label) || !isNonEmptyString(record.href)) return null;
+    links.push({ label: record.label, href: record.href });
+  }
+  return links;
+}
+
 /**
  * Structural validation only — checks that a `getConfig` response has the
  * shape the frontend depends on. Business-rule validation (e.g. "is this
@@ -45,7 +67,10 @@ export function parsePublicRuntimeConfig(value: unknown): PublicRuntimeConfig | 
     !isNonEmptyString((business as Record<string, unknown>).name) ||
     !isNonEmptyString((business as Record<string, unknown>).phone) ||
     !isNonEmptyString((business as Record<string, unknown>).email) ||
-    !isNonEmptyString((business as Record<string, unknown>).address)
+    !isNonEmptyString((business as Record<string, unknown>).address) ||
+    !isOptionalNonEmptyString((business as Record<string, unknown>).nameLatin) ||
+    !isOptionalNonEmptyString((business as Record<string, unknown>).tagline) ||
+    !isOptionalNonEmptyString((business as Record<string, unknown>).postalCode)
   ) {
     return null;
   }
@@ -84,6 +109,9 @@ export function parsePublicRuntimeConfig(value: unknown): PublicRuntimeConfig | 
     return null;
   }
 
+  const socialLinks = parseOptionalSocialLinks(root.socialLinks);
+  if (socialLinks === null) return null;
+
   return {
     business: business as PublicRuntimeConfig["business"],
     hours,
@@ -91,5 +119,6 @@ export function parsePublicRuntimeConfig(value: unknown): PublicRuntimeConfig | 
     features: features as PublicRuntimeConfig["features"],
     staffAnyAvailableOption: root.staffAnyAvailableOption,
     reservation: reservation as PublicRuntimeConfig["reservation"],
+    socialLinks,
   };
 }

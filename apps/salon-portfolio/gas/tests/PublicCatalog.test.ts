@@ -50,3 +50,50 @@ describe("buildPublicStaff", () => {
     }
   });
 });
+
+const servicesWithPresentation: ServiceRow[] = [
+  {
+    ServiceID: "SV001",
+    Name: "ジェルネイル",
+    DurationMinutes: 60,
+    Price: 6000,
+    Active: true,
+    StaffRequired: false,
+    DisplayOrder: 1,
+    Description: "説明文",
+    Category: "ネイル",
+  },
+  { ServiceID: "SV002", Name: "オフのみ", DurationMinutes: 30, Price: 3000, Active: true, StaffRequired: false, DisplayOrder: 2 },
+];
+
+const staffWithPresentation: StaffRow[] = [
+  { StaffID: "ST001", Name: "田中", Active: true, DisplayOrder: 1, Role: "店長", Bio: "紹介文", ImagePath: "/images/staff/st001.jpg" },
+  { StaffID: "ST002", Name: "鈴木", Active: true, DisplayOrder: 2 },
+];
+
+describe("buildPublicServices optional presentation fields (V1.1 Task 4)", () => {
+  it("carries description/category through when present", () => {
+    const result = buildPublicServices(servicesWithPresentation);
+    expect(result[0]).toMatchObject({ description: "説明文", category: "ネイル" });
+  });
+
+  it("leaves description/category undefined when the row has none", () => {
+    const result = buildPublicServices(servicesWithPresentation);
+    expect(result[1].description).toBeUndefined();
+    expect(result[1].category).toBeUndefined();
+  });
+});
+
+describe("buildPublicStaff optional presentation fields (V1.1 Task 4)", () => {
+  it("carries role/introduction/photoSrc through when present (ImagePath -> photoSrc)", () => {
+    const result = buildPublicStaff(staffWithPresentation);
+    expect(result[0]).toMatchObject({ role: "店長", introduction: "紹介文", photoSrc: "/images/staff/st001.jpg" });
+  });
+
+  it("leaves role/introduction/photoSrc undefined when the row has none", () => {
+    const result = buildPublicStaff(staffWithPresentation);
+    expect(result[1].role).toBeUndefined();
+    expect(result[1].introduction).toBeUndefined();
+    expect(result[1].photoSrc).toBeUndefined();
+  });
+});

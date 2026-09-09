@@ -39,16 +39,27 @@ export function assertRequiredHeaders(
 /** Converts data rows (no header row) into plain objects keyed by header
  *  name, using only the columns named in `columns` — deterministic
  *  order, extra sheet columns are ignored. Throws MissingHeadersError if
- *  any required column is absent from the sheet's actual header row. */
+ *  any required column is absent from the sheet's actual header row.
+ *  `optionalColumns` (V1.1 Task 4) are included in the mapped object when
+ *  the sheet's header row happens to have them, but are never passed to
+ *  `assertRequiredHeaders` — a sheet from before an optional column
+ *  existed never throws for its absence, which is what keeps adding a new
+ *  presentation column backward compatible. */
 export function rowsToObjects<T extends Record<string, unknown>>(
   headerMap: Record<string, number>,
   dataRows: unknown[][],
   columns: readonly string[],
+  optionalColumns: readonly string[] = [],
 ): T[] {
   assertRequiredHeaders(headerMap, columns);
+  const presentOptionalColumns = optionalColumns.filter((column) => column in headerMap);
   return dataRows.map((row) => {
     const obj = {} as Record<string, unknown>;
     for (const column of columns) {
+      const index = headerMap[column];
+      obj[column] = row[index] ?? "";
+    }
+    for (const column of presentOptionalColumns) {
       const index = headerMap[column];
       obj[column] = row[index] ?? "";
     }

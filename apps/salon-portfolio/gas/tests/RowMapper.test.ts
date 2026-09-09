@@ -75,6 +75,30 @@ describe("rowsToObjects", () => {
       rowsToObjects(headerMap, [["Alice"]], ["Name", "CalendarID"]),
     ).toThrow(MissingHeadersError);
   });
+
+  it("includes an optional column's value when the sheet has that header", () => {
+    const withRole = buildHeaderMap(["Name", "Active", "DisplayOrder", "Role"]);
+    const result = rowsToObjects(
+      withRole,
+      [["Alice", true, 1, "Manager"]],
+      ["Name", "Active", "DisplayOrder"],
+      ["Role"],
+    );
+    expect(result).toEqual([{ Name: "Alice", Active: true, DisplayOrder: 1, Role: "Manager" }]);
+  });
+
+  it("never throws when an optional column's header is entirely absent from the sheet", () => {
+    expect(() =>
+      rowsToObjects(headerMap, [["Alice", true, 1]], ["Name", "Active", "DisplayOrder"], ["Role"]),
+    ).not.toThrow();
+    const result = rowsToObjects(
+      headerMap,
+      [["Alice", true, 1]],
+      ["Name", "Active", "DisplayOrder"],
+      ["Role"],
+    );
+    expect(result[0]).not.toHaveProperty("Role");
+  });
 });
 
 describe("objectToRow", () => {

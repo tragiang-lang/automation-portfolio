@@ -14,6 +14,14 @@ export interface PublicRuntimeBusinessInfo {
   phone: string;
   email: string;
   address: string;
+  /** Optional presentation fields (V1.1 Task 4) — undefined when the
+   *  buyer's CONFIG sheet has no business.nameLatin/tagline/postalCode
+   *  key yet. `resolveSiteConfig.ts` falls back to the frontend-owned
+   *  demo value per-field when undefined, so an un-migrated CONFIG sheet
+   *  renders exactly as it did before this task. */
+  nameLatin?: string;
+  tagline?: string;
+  postalCode?: string;
 }
 
 export interface PublicRuntimeBusinessHours {
@@ -41,6 +49,14 @@ export interface PublicRuntimeReservationSettings {
   maxBookingDays: number;
 }
 
+/** Mirrors GAS's `SocialLink` (`gas/src/models/Config.ts`) — same
+ *  "separate frontend mirror" convention this file already uses for
+ *  `PublicRuntimeBusinessHours`. */
+export interface SocialLink {
+  label: string;
+  href: string;
+}
+
 export interface PublicRuntimeConfig {
   business: PublicRuntimeBusinessInfo;
   hours: PublicRuntimeBusinessHours;
@@ -48,6 +64,10 @@ export interface PublicRuntimeConfig {
   features: PublicRuntimeFeatureFlags;
   staffAnyAvailableOption: boolean;
   reservation: PublicRuntimeReservationSettings;
+  /** Optional (V1.1 Task 4) — undefined when none of the CONFIG sheet's
+   *  social.* keys are set yet. `resolveSiteConfig.ts` falls back to the
+   *  frontend-owned demo array when undefined. */
+  socialLinks?: SocialLink[];
 }
 
 /** Where a rendered page's runtime config actually came from — kept

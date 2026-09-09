@@ -1,5 +1,11 @@
-import { SHEET_NAMES } from "../src/SheetNames";
-import { REQUIRED_HEADERS } from "../src/SheetSchemas";
+import { SHEET_NAMES, SheetName } from "../src/SheetNames";
+import {
+  REQUIRED_HEADERS,
+  SERVICES_HEADERS,
+  SERVICES_OPTIONAL_HEADERS,
+  STAFF_HEADERS,
+  STAFF_OPTIONAL_HEADERS,
+} from "../src/SheetSchemas";
 import { DEMO_SHEETS } from "../src/DemoSeed";
 import { buildAppConfigFromRawRows } from "../src/ConfigStore";
 import { ConfigRow } from "../src/SheetSchemas";
@@ -10,10 +16,18 @@ describe("DEMO_SHEETS", () => {
     expect(names).toEqual(Object.values(SHEET_NAMES).sort());
   });
 
-  it("each seed's headers match that sheet's REQUIRED_HEADERS", () => {
-    DEMO_SHEETS.forEach((seed) => {
+  it("each non-catalog seed's headers match that sheet's REQUIRED_HEADERS exactly", () => {
+    const catalogSheets: SheetName[] = [SHEET_NAMES.SERVICES, SHEET_NAMES.STAFF];
+    DEMO_SHEETS.filter((seed) => !catalogSheets.includes(seed.name)).forEach((seed) => {
       expect(seed.headers).toEqual(REQUIRED_HEADERS[seed.name]);
     });
+  });
+
+  it("SERVICES/STAFF seed headers extend REQUIRED_HEADERS with their optional presentation columns (V1.1 Task 4)", () => {
+    const servicesSeed = DEMO_SHEETS.find((s) => s.name === SHEET_NAMES.SERVICES)!;
+    const staffSeed = DEMO_SHEETS.find((s) => s.name === SHEET_NAMES.STAFF)!;
+    expect(servicesSeed.headers).toEqual([...SERVICES_HEADERS, ...SERVICES_OPTIONAL_HEADERS]);
+    expect(staffSeed.headers).toEqual([...STAFF_HEADERS, ...STAFF_OPTIONAL_HEADERS]);
   });
 
   it("every demo row has exactly as many cells as there are headers", () => {

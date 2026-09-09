@@ -59,3 +59,23 @@ describe("buildPublicConfig", () => {
     expect(result).not.toHaveProperty("emailFromName");
   });
 });
+
+describe("buildPublicConfig optional presentation fields (V1.1 Task 4)", () => {
+  it("carries nameLatin/tagline/postalCode/socialLinks through", () => {
+    const config = fullConfig();
+    config.business.nameLatin = "Demo Salon Latin";
+    config.business.tagline = "デモのタグライン";
+    config.business.postalCode = "〒100-0001";
+    config.socialLinks = [{ label: "Instagram", href: "https://instagram.com/example" }];
+    const result = buildPublicConfig(config);
+    expect(result.business.nameLatin).toBe("Demo Salon Latin");
+    expect(result.business.tagline).toBe("デモのタグライン");
+    expect(result.business.postalCode).toBe("〒100-0001");
+    expect(result.socialLinks).toEqual([{ label: "Instagram", href: "https://instagram.com/example" }]);
+  });
+
+  it("leaves socialLinks undefined when the source config has none", () => {
+    const result = buildPublicConfig(fullConfig());
+    expect(result.socialLinks).toBeUndefined();
+  });
+});

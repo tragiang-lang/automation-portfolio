@@ -40,18 +40,36 @@ export interface ReservationSettings {
   maxBookingDays: number;
 }
 
+/** A single social-media/messaging link (V1.1 Task 4) — built from
+ *  whichever `social.*` CONFIG keys are present (ConfigParser.ts's
+ *  `SOCIAL_LINK_DEFINITIONS`). Never secret; safe to send via getConfig. */
+export interface SocialLink {
+  label: string;
+  href: string;
+}
+
 export interface AppConfig {
   business: {
     name: string;
     phone: string;
     email: string;
     address: string;
+    /** Optional presentation fields (V1.1 Task 4) — undefined when the
+     *  CONFIG sheet has no business.nameLatin/tagline/postalCode key yet.
+     *  `PublicConfig` carries these through unchanged (no field to strip
+     *  — they were never secret). */
+    nameLatin?: string;
+    tagline?: string;
+    postalCode?: string;
   };
   hours: BusinessHours;
   holidays: string[];
   features: FeatureFlags;
   staffAnyAvailableOption: boolean;
   reservation: ReservationSettings;
+  /** Optional (V1.1 Task 4) — built from whichever `social.*` CONFIG keys
+   *  are present; undefined when none are set. */
+  socialLinks?: SocialLink[];
   /** Fallback/shared Calendar ID — internal only, never exposed via
    *  getConfig (Phase 3A §20). */
   calendarId: string;

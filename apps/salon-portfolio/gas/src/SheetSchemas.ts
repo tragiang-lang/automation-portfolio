@@ -25,6 +25,13 @@ export const SERVICES_HEADERS = [
   "StaffRequired",
   "DisplayOrder",
 ] as const;
+/** Optional presentation columns (V1.1 Task 4) — a SERVICES sheet from
+ *  before this task has neither column. `Catalog.ts` passes these as
+ *  `rowsToObjects`'s optional-columns argument, so their absence is never
+ *  a MissingHeadersError; a present-but-blank cell parses to `undefined`
+ *  the same way a wholly-missing column does. Never read by reservation
+ *  eligibility/pricing logic (`ReservationRules.ts`). */
+export const SERVICES_OPTIONAL_HEADERS = ["Description", "Category"] as const;
 export interface ServiceRow {
   ServiceID: string;
   Name: string;
@@ -33,6 +40,8 @@ export interface ServiceRow {
   Active: boolean;
   StaffRequired: boolean;
   DisplayOrder: number;
+  Description?: string;
+  Category?: string;
 }
 
 /** STAFF: salon stylist catalog (Phase 0 §C). */
@@ -43,12 +52,23 @@ export const STAFF_HEADERS = [
   "CalendarID",
   "DisplayOrder",
 ] as const;
+/** Optional presentation columns (V1.1 Task 4) — same backward-compatible
+ *  contract as SERVICES_OPTIONAL_HEADERS above. `ImagePath` is a path
+ *  under the buyer's own `public/images/staff/` (e.g.
+ *  `/images/staff/staff-05.jpg`), never an arbitrary external URL —
+ *  `next.config.ts` configures no remote image domains, and this keeps
+ *  staff photos on the same "replace a file in your own project" flow
+ *  `05_CUSTOMIZATION/IMAGE_CUSTOMIZATION_JA.md` already documents. */
+export const STAFF_OPTIONAL_HEADERS = ["Role", "Bio", "ImagePath"] as const;
 export interface StaffRow {
   StaffID: string;
   Name: string;
   Active: boolean;
   CalendarID?: string;
   DisplayOrder: number;
+  Role?: string;
+  Bio?: string;
+  ImagePath?: string;
 }
 
 /** RESERVATIONS: persisted reservation records (Phase 0 §C/§E). Schema
