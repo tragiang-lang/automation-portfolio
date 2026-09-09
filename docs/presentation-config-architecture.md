@@ -48,8 +48,8 @@ layout variant, or a section's visibility.
 | `preset` | `DesignPreset` (6 values) | All 6 registered; only `kinari` differs from the others (identically for now) |
 | `theme` | `ThemeId` | Only `"kinari"` exists — a later task adds curated palettes |
 | `typography` | `TypographyId` (6 values) | All 6 registered with curated heading-font pairings (Typography Presets task); body typography is shared across all 6 |
-| `heroVariant` | `HeroVariant` (3 values) | Only `"fullscreen"` has a real component |
-| `menuVariant` | `MenuVariant` (3 values) | Only `"editorial-list"` has a real component |
+| `heroVariant` | `HeroVariant` (3 values) | All 3 registered — `fullscreen`/`split`/`editorial` (Hero Layout Variants task) |
+| `menuVariant` | `MenuVariant` (3 values) | All 3 registered — `editorial-list`/`card-grid`/`minimal-price-list` (Menu Layout Variants task) |
 | `staffVariant` | `StaffVariant` (2 values) | Only `"portrait-grid"` has a real component |
 | `galleryVariant` | `GalleryVariant` (3 values) | Only `"masonry"` has a real component |
 | `sectionVisibility` | `Record<OptionalHomeSection, boolean>` | Fully wired into `app/page.tsx`; every default is `true` |
@@ -422,11 +422,99 @@ other section already uses, so all six `ThemeId`s and all six
 `TypographyId`s render correctly under every Hero variant with zero
 variant-specific styling logic.
 
+## Menu layout variants (V1.1 Task 6)
+
+Task 1 left `MenuVariant` a 3-value union with only `"editorial-list"` wired
+to a real component. This task builds the other two and turns `MenuSection`
+into a router — the same shape as Hero's (§ above), with one structural
+difference explained below:
+
+```text
+DesignConfig.menuVariant (MenuVariant)
+        |
+        v
+lib/validation/designConfigValidator.ts — isMenuVariant()
+        |            (invalid/missing → DEFAULT_MENU_VARIANT "editorial-list")
+        v
+components/sections/MenuSection.tsx
+        — owns the #menu anchor, "メニュー" heading, and reservation CTA
+        — MENU_VARIANT_COMPONENTS: Record<MenuVariant, ComponentType<...>>
+        |
+        +-- "editorial-list"    -> MenuEditorialList   (today's pre-Task-6 look, unchanged)
+        +-- "card-grid"         -> MenuCardGrid         (bordered card grid)
+        +-- "minimal-price-list" -> MenuMinimalPriceList (compact, undecorated list)
+```
+
+**What each variant is for:**
+
+- `editorial-list` — the shipped default: services grouped by category
+  (once `groupServices` decides there's more than one implicit category,
+  Phase 2A §9, unchanged), hairline dividers between rows, name/price
+  carrying the visual weight, description as quiet supporting copy.
+- `card-grid` — each service is its own bordered card (`bg-background` +
+  `border-border`, no shadow) in a responsive grid (`grid-cols-1
+  sm:grid-cols-2`); category becomes a small per-card label instead of a
+  section heading, and every card's price/duration row is pinned to the
+  bottom (`mt-auto`) so cards stay visually balanced whether or not a
+  description is present.
+- `minimal-price-list` — no category grouping, no per-row dividers, no
+  description: tightly packed (`py-2`) name/price rows closed by a single
+  hairline rule under the whole list. Deliberately not editorial-list with
+  description/borders stripped — the composition (no grouping, no per-row
+  separators) differs, not just the decoration.
+
+**One Menu data model:** all three variants take the same
+`MenuContentProps` (`components/sections/MenuContent.tsx`) — `services:
+Service[]` — sourced in `app/page.tsx` entirely from the existing
+`getRuntimeCatalog()` → `getServices` → `Service[]` flow (Phase 5.1/Task 4).
+No variant introduces its own service model, and none can become a source
+of truth for reservation price/duration — the Reservation Wizard still
+resolves those server-side, independently of anything under
+`components/sections/Menu*.tsx` (see "Why reservation/GAS code stays
+design-agnostic" above). `formatMenuPrice`/`formatMenuDuration`/
+`groupServices`/`MENU_CTA` also live in `MenuContent.tsx`, shared by all
+three variants so formatting/grouping/the reservation CTA can never drift
+between them.
+
+**Section chrome lives once, not three times:** unlike Hero (where each
+variant owns its whole `<section>`, because the three layouts' backgrounds/
+padding genuinely differ), Menu's `#menu` anchor id — linked to by
+`HeroContent.tsx`'s `HERO_CTA_SECONDARY` and the site nav
+(`config/demo-content.ts`) — plus its "メニュー" heading and reservation CTA
+are identical across all three variants, so `MenuSection.tsx` renders them
+once and only swaps the inner service-list component. This still satisfies
+the "genuinely different compositions" requirement: the differentiation
+that matters is the service list body, not whether a page heading is
+duplicated three times.
+
+**Selecting a variant:** `DesignConfig.menuVariant`, same as every other
+design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
+it straight to `MenuSection`. This task does **not** set any
+`DESIGN_PRESETS` entry to `card-grid`/`minimal-price-list` — every preset
+still resolves `menuVariant: "editorial-list"` (§J's "don't ship curated
+multi-field presets yet"); the other two are reachable today only by
+constructing a `DesignConfig` directly (as the tests do).
+
+**Backward compatibility:** `isMenuVariant` (mirrors `isHeroVariant`) makes
+`MenuSection` normalize whatever `menuVariant` it receives — missing or
+invalid falls back to `DEFAULT_MENU_VARIANT` (`"editorial-list"`,
+`lib/constants/menu-variants.ts`), so an existing deployment's Menu can
+never silently change appearance. `editorial-list` is the pre-Task-6 Menu
+body, moved unchanged into `MenuEditorialList.tsx`.
+
+**Presentation-only, still:** no variant reads or writes reservation state,
+invents a price/duration/description, or touches `app/globals.css`'s theme/
+typography tokens directly — every color/font comes from the same semantic
+Tailwind utilities every other section already uses, so all six `ThemeId`s
+and all six `TypographyId`s render correctly under every Menu variant
+(visually spot-checked under `kinari`/`noir`) with zero variant-specific
+styling logic.
+
 ## Not yet implemented (tracked for later V1.1 work)
 
-- Menu/Staff/Gallery variant components — real alternate layouts for
-  `MenuVariant`/`StaffVariant`/`GalleryVariant` values other than today's
-  default (Hero's are now implemented — see above).
+- Staff/Gallery variant components — real alternate layouts for
+  `StaffVariant`/`GalleryVariant` values other than today's default
+  (Hero's and Menu's are now implemented — see above).
 - Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
   instead of its literal JSX sequence.
 - Curated multi-field presets — the five non-`kinari` registry entries

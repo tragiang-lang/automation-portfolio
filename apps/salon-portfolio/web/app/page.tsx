@@ -49,13 +49,20 @@ import { getDesignConfig } from "@/lib/config/designConfig";
 // `HeroSection`, which owns the fullscreen/split/editorial component
 // selection itself — this file only supplies the (variant-independent)
 // runtime content, same as it already did for every other section.
+//
+// V1.1 Task 6 (Menu Layout Variants) adds `menuVariant` the same way —
+// passed straight through to `MenuSection`, which owns the editorial-
+// list/card-grid/minimal-price-list component selection itself. This
+// file still only supplies `services` (the existing runtime
+// `getRuntimeCatalog` → `getServices` → `Service[]` flow), never a
+// variant-specific content shape.
 export default async function Home() {
   const [{ config }, { services, staff }] = await Promise.all([
     getRuntimeConfig(),
     getRuntimeCatalog(),
   ]);
   const siteConfig = resolveSiteConfig(config);
-  const { sectionVisibility, heroVariant } = getDesignConfig();
+  const { sectionVisibility, heroVariant, menuVariant } = getDesignConfig();
 
   return (
     <main className="flex flex-1 flex-col">
@@ -78,7 +85,7 @@ export default async function Home() {
         />
       ) : null}
 
-      <MenuSection services={services} />
+      <MenuSection services={services} menuVariant={menuVariant} />
 
       <StaffSection
         enabled={siteConfig.features.staffSelection && sectionVisibility.staff}
