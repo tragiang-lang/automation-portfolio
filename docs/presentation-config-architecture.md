@@ -53,7 +53,7 @@ layout variant, or a section's visibility.
 | `staffVariant` | `StaffVariant` (2 values) | All 2 registered — `portrait-grid`/`horizontal-profile` (Staff Layout Variants task) |
 | `galleryVariant` | `GalleryVariant` (3 values) | All 3 registered — `grid`/`masonry`/`feature-editorial` (Gallery Layout Variants task) |
 | `sectionVisibility` | `Record<OptionalHomeSection, boolean>` | Fully wired into `app/page.tsx`; every default is `true` |
-| `sectionOrder` | `HomeSection[]` | Typed, defaulted, and validated (`isValidSectionOrder`); **not yet** read by `app/page.tsx` |
+| `sectionOrder` | `HomeSection[]` | Fully wired into `app/page.tsx` (Section Ordering task); typed, defaulted, and validated (`isValidSectionOrder`) both in the resolver and again at the composition-root boundary |
 
 ## Section allow-list, not a page builder
 
@@ -77,13 +77,40 @@ what keeps the design layer free of business logic: it never decides
 whether reservation/staff-selection/contact-form *should* be available,
 only whether an already-available section is visually shown.
 
-There is intentionally no `sections: {id, component}[]` registry driving a
-generic render loop — `app/page.tsx` still lists each section as its own
-JSX element with its own real props. `sectionOrder` exists as validated,
-typed data today so a future task has a safe foundation, but wiring it
-into render order is deferred; building a generic section-rendering
-engine now, before a second real order exists to justify it, would be
-over-engineering.
+## Section Ordering (V1.1 Task 9)
+
+`app/page.tsx` builds `SECTIONS`, a `Record<HomeSection, ReactNode>` —
+still each section as its own JSX element with its own real props, same
+as before this task — then renders `sectionOrder.map(id => SECTIONS[id])`.
+This is deliberately **not** a generic page-builder: `SECTIONS`'s type
+makes it a compile error to omit or mis-key any of the 11 `HomeSection`s,
+and `sectionOrder` can only ever select a *permutation of these known
+keys* — never a component name, a prop value, or arbitrary content.
+Nothing about content, styling, or component selection is configurable
+through this mechanism, only which already-rendered section comes before
+which other one.
+
+`isValidSectionOrder` (`lib/validation/designConfigValidator.ts`)
+re-validates `sectionOrder` again at this composition-root boundary —
+the same defense-in-depth every other design-config value already gets
+at its point of use (e.g. `HeroSection`'s `isHeroVariant` guard) — and
+falls back to `DEFAULT_SECTION_ORDER` for a malformed value rather than
+crashing or dropping a section.
+
+The homepage has two `ReservationCtaBand` instances (§A of
+`docs/design-customization-audit.md`): a mid-page one and a closing
+"thank you for reading" one right before the footer. Only the mid-page
+instance is part of `sectionOrder` (the `reservation` key); the closing
+band is treated like header/footer — an always-last structural element,
+never reorderable or duplicated — so `DEFAULT_SECTION_ORDER` renders the
+same page as the pre-Task-9 literal JSX sequence, and both bands still
+share the same `siteConfig.features.reservation && sectionVisibility.reservation`
+gate (hiding "reservation" hides both).
+
+Curating specific alternate orders (e.g. an "editorial" or "menu-first"
+preset) is out of scope for this task and belongs to the later Design
+Presets task — this task only wires the mechanism and proves it with
+representative test orders.
 
 ## Preset registry
 

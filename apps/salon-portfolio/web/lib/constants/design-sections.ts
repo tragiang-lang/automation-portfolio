@@ -42,7 +42,14 @@ export const DEFAULT_SECTION_VISIBILITY: SectionVisibility = {
   contact: true,
 };
 
-/** The only section order that exists today — a later task introduces
- *  additional vetted orders; `app/page.tsx` does not yet read this (its
- *  JSX order is still literal), see docs/presentation-config-architecture.md. */
+/**
+ * The default section order — identical to `ALL_HOME_SECTIONS`, so
+ * selecting it renders byte-for-byte the same page as the pre-V1.1-Task-9
+ * literal JSX sequence. `app/page.tsx` reads `DesignConfig.sectionOrder`
+ * (falling back to this via `isValidSectionOrder` for a malformed value)
+ * to choose the render order of its `SECTIONS` registry — see
+ * docs/presentation-config-architecture.md. A later task (curated Design
+ * Presets) picks specific alternate orders; this task only wires the
+ * mechanism, it does not curate new orders itself.
+ */
 export const DEFAULT_SECTION_ORDER: readonly HomeSection[] = ALL_HOME_SECTIONS;

@@ -1,3 +1,4 @@
+import { Fragment, type ReactNode } from "react";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { ConceptSection } from "@/components/sections/ConceptSection";
 import { MenuSection } from "@/components/sections/MenuSection";
@@ -20,12 +21,16 @@ import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
 import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
 import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
 import { getDesignConfig } from "@/lib/config/designConfig";
+import { DEFAULT_SECTION_ORDER } from "@/lib/constants/design-sections";
+import { isValidSectionOrder } from "@/lib/validation/designConfigValidator";
+import type { HomeSection } from "@/types/design-config";
 
 // Page order matches Phase 2A §6 exactly: Header (layout) → Hero →
 // Concept → Menu → Staff → Gallery → Reservation CTA → Salon Features →
-// Customer Flow → FAQ → Access → Contact → Footer (layout). Configurable
-// sections are gated here by the resolved runtime config's `features`,
-// not by editing the section components themselves.
+// Customer Flow → FAQ → Access → Contact → [closing Reservation CTA] →
+// Footer (layout). Configurable sections are gated here by the resolved
+// runtime config's `features`, not by editing the section components
+// themselves.
 //
 // GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/FAQ_ITEMS/ACCESS_INFO
 // are not part of the `getConfig` contract (no such fields in
@@ -36,50 +41,60 @@ import { getDesignConfig } from "@/lib/config/designConfig";
 // V1.1 Task 1 (Presentation Configuration Layer — see
 // docs/presentation-config-architecture.md) adds `sectionVisibility`
 // gating for every section below that doesn't already have a business
-// feature flag. It intentionally does NOT yet drive section *order* —
-// this stays a literal JSX sequence until a later V1.1 task, so this file
-// is still not a generic section-rendering engine. For staff/reservation/
-// contact, design visibility is combined with (never overrides) the
-// existing business feature flag — `feature && sectionVisibility.x` — so
-// a design preset can only ever hide a section a feature flag already
-// allows, never show one the business disabled.
+// feature flag. For staff/reservation/contact, design visibility is
+// combined with (never overrides) the existing business feature flag —
+// `feature && sectionVisibility.x` — so a design preset can only ever
+// hide a section a feature flag already allows, never show one the
+// business disabled.
 //
-// V1.1 Task 5 (Hero Layout Variants) adds `heroVariant`, read from the
-// same `getDesignConfig()` call and passed straight through to
-// `HeroSection`, which owns the fullscreen/split/editorial component
-// selection itself — this file only supplies the (variant-independent)
-// runtime content, same as it already did for every other section.
+// V1.1 Tasks 5-8 (Hero/Menu/Staff/Gallery Layout Variants) add
+// `heroVariant`/`menuVariant`/`staffVariant`/`galleryVariant`, each read
+// from the same `getDesignConfig()` call and passed straight through to
+// its section, which owns its own layout-component selection — this file
+// only ever supplies the (variant-independent) runtime content, same as
+// it already did before any variant existed.
 //
-// V1.1 Task 6 (Menu Layout Variants) adds `menuVariant` the same way —
-// passed straight through to `MenuSection`, which owns the editorial-
-// list/card-grid/minimal-price-list component selection itself. This
-// file still only supplies `services` (the existing runtime
-// `getRuntimeCatalog` → `getServices` → `Service[]` flow), never a
-// variant-specific content shape.
+// V1.1 Task 9 (Section Ordering — see
+// docs/presentation-config-architecture.md) reads `sectionOrder` and
+// renders the 11 allow-listed `HomeSection`s (`SECTIONS` below) in that
+// order instead of the previous literal JSX sequence. This is
+// deliberately still not a page builder: `SECTIONS` is a fixed,
+// exhaustively-typed `Record<HomeSection, ReactNode>` built from the same
+// real components/props as before — `sectionOrder` only ever selects a
+// permutation of *known* keys, never a component name, prop, or arbitrary
+// content. `isValidSectionOrder` re-validates the value at this
+// composition-root boundary (the same defense-in-depth every other
+// design-config value already gets at its point of use, e.g.
+// `HeroSection`'s `isHeroVariant` guard) and falls back to
+// `DEFAULT_SECTION_ORDER` rather than crashing or dropping a section.
 //
-// V1.1 Task 7 (Staff Layout Variants) adds `staffVariant` the same way —
-// passed straight through to `StaffSection`, which owns the portrait-grid/
-// horizontal-profile component selection itself. This file still only
-// supplies `staff` (the existing runtime `getRuntimeCatalog` → `getStaff`
-// → `StaffMember[]` flow), never a variant-specific content shape.
-//
-// V1.1 Task 8 (Gallery Layout Variants) adds `galleryVariant` the same
-// way — passed straight through to `GallerySection`, which owns the grid/
-// masonry/feature-editorial component selection itself. This file still
-// only supplies `images` (the existing static `GALLERY_IMAGES`,
-// `config/demo-content.ts` — Gallery has no runtime/GAS content path,
-// unlike Menu/Staff, and this task does not add one), and the
-// `sectionVisibility.gallery` gate is unchanged.
+// The homepage has two `ReservationCtaBand` instances — one mid-page, one
+// as a closing "thank you for reading" band right before the footer. Only
+// the mid-page instance is part of `sectionOrder` (`reservation`); the
+// closing band is treated the same as header/footer — an always-last
+// structural element, not a reorderable section — so the default order
+// (`DEFAULT_SECTION_ORDER`) renders byte-for-byte the same page as before
+// this task, and no `sectionOrder` value can ever move or duplicate the
+// closing band. Both bands still share the same
+// `siteConfig.features.reservation && sectionVisibility.reservation` gate,
+// so hiding "reservation" hides both.
 export default async function Home() {
   const [{ config }, { services, staff }] = await Promise.all([
     getRuntimeConfig(),
     getRuntimeCatalog(),
   ]);
   const siteConfig = resolveSiteConfig(config);
-  const { sectionVisibility, heroVariant, menuVariant, staffVariant, galleryVariant } = getDesignConfig();
+  const { sectionVisibility, sectionOrder, heroVariant, menuVariant, staffVariant, galleryVariant } =
+    getDesignConfig();
+  const resolvedSectionOrder = isValidSectionOrder(sectionOrder) ? sectionOrder : DEFAULT_SECTION_ORDER;
 
-  return (
-    <main className="flex flex-1 flex-col">
+  const reservationEnabled = siteConfig.features.reservation && sectionVisibility.reservation;
+
+  // Exhaustive `Record<HomeSection, ...>` — adding a 12th `HomeSection`
+  // without a matching entry here is a compile error, not a silent
+  // runtime gap (same discipline as `HERO_VARIANT_COMPONENTS` etc.).
+  const SECTIONS: Record<HomeSection, ReactNode> = {
+    hero: (
       <HeroSection
         headline={siteConfig.business.tagline}
         subheadline="銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。"
@@ -87,20 +102,19 @@ export default async function Home() {
         nameLatin={siteConfig.business.nameLatin}
         heroVariant={heroVariant}
       />
-
-      {sectionVisibility.concept ? (
-        <ConceptSection
-          eyebrow="Concept"
-          title="静けさの中で、指先を整える時間を"
-          paragraphs={[
-            "流行を追いかけるより、長く付き合える美しさを。当店では、派手さよりも一つひとつの仕上がりの丁寧さを大切にしています。",
-            "落ち着いた空間で過ごすひとときそのものも、施術と同じくらい価値のあるものだと考えています。",
-          ]}
-        />
-      ) : null}
-
-      <MenuSection services={services} menuVariant={menuVariant} />
-
+    ),
+    concept: sectionVisibility.concept ? (
+      <ConceptSection
+        eyebrow="Concept"
+        title="静けさの中で、指先を整える時間を"
+        paragraphs={[
+          "流行を追いかけるより、長く付き合える美しさを。当店では、派手さよりも一つひとつの仕上がりの丁寧さを大切にしています。",
+          "落ち着いた空間で過ごすひとときそのものも、施術と同じくらい価値のあるものだと考えています。",
+        ]}
+      />
+    ) : null,
+    menu: <MenuSection services={services} menuVariant={menuVariant} />,
+    staff: (
       <StaffSection
         enabled={siteConfig.features.staffSelection && sectionVisibility.staff}
         staff={staff}
@@ -108,37 +122,39 @@ export default async function Home() {
         businessNameInitial={siteConfig.business.name}
         staffVariant={staffVariant}
       />
-
-      {sectionVisibility.gallery ? (
-        <GallerySection images={GALLERY_IMAGES} galleryVariant={galleryVariant} />
-      ) : null}
-
-      {siteConfig.features.reservation && sectionVisibility.reservation ? (
-        <ReservationCtaBand
-          heading="仕上がりを見て、気持ちが決まったら"
-          message="ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。"
-        />
-      ) : null}
-
-      {sectionVisibility["salon-features"] ? (
-        <SalonFeaturesSection features={SALON_FEATURES} />
-      ) : null}
-
-      {sectionVisibility["customer-flow"] ? (
-        <CustomerFlowSection steps={CUSTOMER_FLOW_STEPS} />
-      ) : null}
-
-      {sectionVisibility.faq ? <FaqSection items={FAQ_ITEMS} /> : null}
-
-      {sectionVisibility.access ? (
-        <AccessSection business={siteConfig.business} hours={siteConfig.hours} access={ACCESS_INFO} />
-      ) : null}
-
-      {siteConfig.features.contactForm && sectionVisibility.contact ? (
+    ),
+    gallery: sectionVisibility.gallery ? (
+      <GallerySection images={GALLERY_IMAGES} galleryVariant={galleryVariant} />
+    ) : null,
+    reservation: reservationEnabled ? (
+      <ReservationCtaBand
+        heading="仕上がりを見て、気持ちが決まったら"
+        message="ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。"
+      />
+    ) : null,
+    "salon-features": sectionVisibility["salon-features"] ? (
+      <SalonFeaturesSection features={SALON_FEATURES} />
+    ) : null,
+    "customer-flow": sectionVisibility["customer-flow"] ? (
+      <CustomerFlowSection steps={CUSTOMER_FLOW_STEPS} />
+    ) : null,
+    faq: sectionVisibility.faq ? <FaqSection items={FAQ_ITEMS} /> : null,
+    access: sectionVisibility.access ? (
+      <AccessSection business={siteConfig.business} hours={siteConfig.hours} access={ACCESS_INFO} />
+    ) : null,
+    contact:
+      siteConfig.features.contactForm && sectionVisibility.contact ? (
         <ContactSection business={siteConfig.business} />
-      ) : null}
+      ) : null,
+  };
 
-      {siteConfig.features.reservation && sectionVisibility.reservation ? (
+  return (
+    <main className="flex flex-1 flex-col">
+      {resolvedSectionOrder.map((section) => (
+        <Fragment key={section}>{SECTIONS[section]}</Fragment>
+      ))}
+
+      {reservationEnabled ? (
         <ReservationCtaBand
           heading="最後まで読んでくださり、ありがとうございます"
           message="少しでも気になることがあれば、まずはご予約からお気軽にどうぞ。"
