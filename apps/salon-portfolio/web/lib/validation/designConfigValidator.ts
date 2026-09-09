@@ -2,7 +2,8 @@ import { DESIGN_PRESETS } from "@/config/design-presets";
 import { ALL_HOME_SECTIONS, REQUIRED_HOME_SECTIONS } from "@/lib/constants/design-sections";
 import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
 import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
-import type { DesignPreset, HeroVariant, HomeSection, MenuVariant } from "@/types/design-config";
+import { STAFF_VARIANTS } from "@/lib/constants/staff-variants";
+import type { DesignPreset, HeroVariant, HomeSection, MenuVariant, StaffVariant } from "@/types/design-config";
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -49,6 +50,18 @@ export function isHeroVariant(value: unknown): value is HeroVariant {
  */
 export function isMenuVariant(value: unknown): value is MenuVariant {
   return typeof value === "string" && (MENU_VARIANTS as readonly string[]).includes(value);
+}
+
+/**
+ * True only for one of the 2 registered `StaffVariant` ids (V1.1 Task 7).
+ * `components/sections/StaffSection.tsx` uses this to normalize whatever
+ * `staffVariant` it receives — an invalid or missing value falls back to
+ * `DEFAULT_STAFF_VARIANT` ("portrait-grid") rather than crashing or
+ * rendering nothing, the same parse-or-fallback discipline `isHeroVariant`/
+ * `isMenuVariant` above already follow.
+ */
+export function isStaffVariant(value: unknown): value is StaffVariant {
+  return typeof value === "string" && (STAFF_VARIANTS as readonly string[]).includes(value);
 }
 
 /**

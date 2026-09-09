@@ -56,13 +56,19 @@ import { getDesignConfig } from "@/lib/config/designConfig";
 // file still only supplies `services` (the existing runtime
 // `getRuntimeCatalog` → `getServices` → `Service[]` flow), never a
 // variant-specific content shape.
+//
+// V1.1 Task 7 (Staff Layout Variants) adds `staffVariant` the same way —
+// passed straight through to `StaffSection`, which owns the portrait-grid/
+// horizontal-profile component selection itself. This file still only
+// supplies `staff` (the existing runtime `getRuntimeCatalog` → `getStaff`
+// → `StaffMember[]` flow), never a variant-specific content shape.
 export default async function Home() {
   const [{ config }, { services, staff }] = await Promise.all([
     getRuntimeConfig(),
     getRuntimeCatalog(),
   ]);
   const siteConfig = resolveSiteConfig(config);
-  const { sectionVisibility, heroVariant, menuVariant } = getDesignConfig();
+  const { sectionVisibility, heroVariant, menuVariant, staffVariant } = getDesignConfig();
 
   return (
     <main className="flex flex-1 flex-col">
@@ -92,6 +98,7 @@ export default async function Home() {
         staff={staff}
         anyAvailableOption={siteConfig.staffAnyAvailableOption}
         businessNameInitial={siteConfig.business.name}
+        staffVariant={staffVariant}
       />
 
       {sectionVisibility.gallery ? <GallerySection images={GALLERY_IMAGES} /> : null}

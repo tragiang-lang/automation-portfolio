@@ -50,7 +50,7 @@ layout variant, or a section's visibility.
 | `typography` | `TypographyId` (6 values) | All 6 registered with curated heading-font pairings (Typography Presets task); body typography is shared across all 6 |
 | `heroVariant` | `HeroVariant` (3 values) | All 3 registered — `fullscreen`/`split`/`editorial` (Hero Layout Variants task) |
 | `menuVariant` | `MenuVariant` (3 values) | All 3 registered — `editorial-list`/`card-grid`/`minimal-price-list` (Menu Layout Variants task) |
-| `staffVariant` | `StaffVariant` (2 values) | Only `"portrait-grid"` has a real component |
+| `staffVariant` | `StaffVariant` (2 values) | All 2 registered — `portrait-grid`/`horizontal-profile` (Staff Layout Variants task) |
 | `galleryVariant` | `GalleryVariant` (3 values) | Only `"masonry"` has a real component |
 | `sectionVisibility` | `Record<OptionalHomeSection, boolean>` | Fully wired into `app/page.tsx`; every default is `true` |
 | `sectionOrder` | `HomeSection[]` | Typed, defaulted, and validated (`isValidSectionOrder`); **not yet** read by `app/page.tsx` |
@@ -510,11 +510,93 @@ and all six `TypographyId`s render correctly under every Menu variant
 (visually spot-checked under `kinari`/`noir`) with zero variant-specific
 styling logic.
 
+## Staff layout variants (V1.1 Task 7)
+
+Task 1 left `StaffVariant` a 2-value union with only `"portrait-grid"` wired
+to a real component. This task builds the alternate and turns `StaffSection`
+into a router — the same shape as Menu's (§ above):
+
+```text
+DesignConfig.staffVariant (StaffVariant)
+        |
+        v
+lib/validation/designConfigValidator.ts — isStaffVariant()
+        |            (invalid/missing → DEFAULT_STAFF_VARIANT "portrait-grid")
+        v
+components/sections/StaffSection.tsx
+        — owns the #staff id, "スタッフ紹介" heading, and the enabled gate
+        — STAFF_VARIANT_COMPONENTS: Record<StaffVariant, ComponentType<...>>
+        |
+        +-- "portrait-grid"      -> StaffPortraitGrid      (today's pre-Task-7 look, unchanged)
+        +-- "horizontal-profile" -> StaffHorizontalProfile (editorial profile rows)
+```
+
+**What each variant is for:**
+
+- `portrait-grid` — the shipped default: portrait-oriented (4:5) staff
+  photos in a responsive grid (`grid-cols-2 lg:grid-cols-4`), name carrying
+  the visual weight, role secondary, bio (`introduction`) as supporting
+  copy when present. Byte-identical to the pre-Task-7 `StaffSection` body,
+  moved unchanged into `StaffPortraitGrid.tsx`.
+- `horizontal-profile` — a single-column list of profile rows: a square
+  (1:1) photo region alongside a separate text region carrying a clear
+  name → role → bio hierarchy, divided by hairline rules. Genuinely
+  different composition from `portrait-grid` (square crop vs. portrait
+  crop, one column of rows vs. a multi-column grid), not a `flex-row`
+  recolor of the same cards.
+
+**One Staff data model:** both variants take the same `StaffContentProps`
+(`components/sections/StaffContent.tsx`) — `staff: StaffMember[]`,
+`anyAvailableOption: boolean`, `businessNameInitial: string` — sourced in
+`app/page.tsx` entirely from the existing `getRuntimeCatalog()` →
+`getStaff` → `StaffMember[]` flow (Phase 5.1/Task 4). No variant introduces
+its own staff model. `STAFF_ANY_AVAILABLE` (the "指名なし（お任せ）" copy),
+`staffPhotoAlt`, and the `StaffPhotoFallback` initial-letter tile also live
+in `StaffContent.tsx`, shared by `StaffCard`/`AnyAvailableStaffCard`
+(portrait-grid) and `StaffHorizontalProfile` so the fallback/alt-text
+behavior can never drift between them.
+
+**Filtering/ordering stays server-side:** `Active` filtering and
+`DisplayOrder` sorting both already happen in
+`apps/salon-portfolio/gas/src/PublicCatalog.ts`'s `buildPublicStaff` before
+`staff` ever reaches the frontend — neither variant re-filters or re-sorts
+it, and `CalendarID`/`displayOrder` are never carried into the frontend
+`StaffMember` view type (`types/content.ts`) in the first place, so no
+backend-only identifier reaches the UI.
+
+**Section chrome lives once, not twice:** like Menu (and unlike Hero,
+where each variant owns its whole `<section>`), the `#staff` id, the
+"スタッフ紹介" heading, and the `enabled` gate (`CONFIG.features.staffSelection
+&& sectionVisibility.staff` — Phase 0 §K: renders nothing at all, not just
+visually hidden, when off) are identical across both variants, so
+`StaffSection.tsx` renders them once and only swaps the inner staff-list
+component.
+
+**Selecting a variant:** `DesignConfig.staffVariant`, same as every other
+design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
+it straight to `StaffSection`. This task does **not** set any
+`DESIGN_PRESETS` entry to `horizontal-profile` — every preset still
+resolves `staffVariant: "portrait-grid"`; the alternate is reachable today
+only by constructing a `DesignConfig` directly (as the tests do).
+
+**Backward compatibility:** `isStaffVariant` (mirrors `isHeroVariant`/
+`isMenuVariant`) makes `StaffSection` normalize whatever `staffVariant` it
+receives — missing or invalid falls back to `DEFAULT_STAFF_VARIANT`
+(`"portrait-grid"`, `lib/constants/staff-variants.ts`), so an existing
+deployment's Staff section can never silently change appearance.
+
+**Presentation-only, still:** no variant reads or writes reservation state,
+staff eligibility, or `CalendarID`, and no color/font is hard-coded — every
+value comes from the same semantic Tailwind utilities every other section
+already uses, so all six `ThemeId`s and all six `TypographyId`s render
+correctly under every Staff variant (visually spot-checked under
+`kinari`/`noir`) with zero variant-specific styling logic.
+
 ## Not yet implemented (tracked for later V1.1 work)
 
-- Staff/Gallery variant components — real alternate layouts for
-  `StaffVariant`/`GalleryVariant` values other than today's default
-  (Hero's and Menu's are now implemented — see above).
+- Gallery variant components — real alternate layouts for `GalleryVariant`
+  values other than today's default (Hero's, Menu's, and Staff's are now
+  implemented — see above).
 - Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
   instead of its literal JSX sequence.
 - Curated multi-field presets — the five non-`kinari` registry entries

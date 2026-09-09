@@ -2,12 +2,14 @@ import {
   isHeroVariant,
   isHomeSection,
   isMenuVariant,
+  isStaffVariant,
   isValidSectionOrder,
   parseDesignPresetId,
 } from "./designConfigValidator";
 import { ALL_HOME_SECTIONS } from "@/lib/constants/design-sections";
 import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
 import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
+import { STAFF_VARIANTS } from "@/lib/constants/staff-variants";
 
 describe("parseDesignPresetId", () => {
   it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])(
@@ -58,6 +60,19 @@ describe("isMenuVariant", () => {
     "rejects %p",
     (value) => {
       expect(isMenuVariant(value)).toBe(false);
+    },
+  );
+});
+
+describe("isStaffVariant", () => {
+  it.each(STAFF_VARIANTS)("accepts the registered staff variant %s", (variant) => {
+    expect(isStaffVariant(variant)).toBe(true);
+  });
+
+  it.each([undefined, null, "", "   ", "not-a-variant", "portrait-grid ", 42, {}])(
+    "rejects %p",
+    (value) => {
+      expect(isStaffVariant(value)).toBe(false);
     },
   );
 });

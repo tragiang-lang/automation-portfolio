@@ -1,0 +1,9 @@
+
+> salon-portfolio-web@0.1.0 test
+> jest --silent
+
+
+Test Suites: 47 passed, 47 total
+Tests:       380 passed, 380 total
+Snapshots:   0 total
+Time:        7.763 s
