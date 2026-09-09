@@ -102,3 +102,38 @@ describe("parsePublicRuntimeConfig", () => {
     ).toBeNull();
   });
 });
+
+describe("parsePublicRuntimeConfig optional presentation fields (V1.1 Task 4)", () => {
+  it("accepts a config with nameLatin/tagline/postalCode/socialLinks present", () => {
+    const config = {
+      ...validConfig(),
+      business: { ...validConfig().business, nameLatin: "Demo Salon Latin", tagline: "タグライン", postalCode: "〒100-0001" },
+      socialLinks: [{ label: "Instagram", href: "https://instagram.com/example" }],
+    };
+    const result = parsePublicRuntimeConfig(config);
+    expect(result).not.toBeNull();
+    expect(result?.business.nameLatin).toBe("Demo Salon Latin");
+    expect(result?.business.tagline).toBe("タグライン");
+    expect(result?.business.postalCode).toBe("〒100-0001");
+    expect(result?.socialLinks).toEqual([{ label: "Instagram", href: "https://instagram.com/example" }]);
+  });
+
+  it("accepts a config with none of the optional fields (backward compatible)", () => {
+    expect(parsePublicRuntimeConfig(validConfig())).toEqual(validConfig());
+  });
+
+  it("rejects a present nameLatin/tagline/postalCode with the wrong type", () => {
+    const config = { ...validConfig(), business: { ...validConfig().business, tagline: 123 } };
+    expect(parsePublicRuntimeConfig(config)).toBeNull();
+  });
+
+  it("rejects a present socialLinks entry missing label/href", () => {
+    const config = { ...validConfig(), socialLinks: [{ label: "Instagram" }] };
+    expect(parsePublicRuntimeConfig(config)).toBeNull();
+  });
+
+  it("rejects socialLinks that isn't an array", () => {
+    const config = { ...validConfig(), socialLinks: "not-an-array" };
+    expect(parsePublicRuntimeConfig(config)).toBeNull();
+  });
+});

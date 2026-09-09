@@ -36,6 +36,32 @@ supported:
 Only `true`/`false` (exact spelling) are accepted for yes/no values — a
 checkbox cell typed as TRUE/FALSE in Sheets works automatically.
 
+### 任意項目（V1.1 Task 4 — トップページの表示を豊かにする項目）
+
+以下は**すべて任意**です。空欄のまま（またはキー自体を追加しない
+まま）でも一切エラーになりません — 追加した分だけ、トップページの
+表示（ヒーローの見出し・フッターのSNSリンクなど）が今までの
+デモ内容の代わりにご自身の内容になります。
+
+| Key | 説明 | 値の例 |
+|---|---|---|
+| `business.nameLatin` | 店舗名（ローマ字表記、任意） | `Rin Nail & Eyelash` |
+| `business.tagline` | キャッチコピー（任意・ヒーロー見出し） | `静けさの中で、指先とまなざしを整える。` |
+| `business.postalCode` | 郵便番号（任意） | `〒104-0061` |
+| `social.instagram` | InstagramのURL（任意・空欄可） | `https://instagram.com/example` |
+| `social.line` | LINEのURL（任意・空欄可） | `https://line.me/example` |
+| `social.x` | X（旧Twitter）のURL（任意・空欄可） | `https://x.com/example` |
+| `social.facebook` | FacebookのURL（任意・空欄可） | `https://facebook.com/example` |
+
+未設定の場合、これまでどおりデモの内容（`config/demo-content.ts`）が
+表示されます — 既存のスプレッドシートをお使いの場合、この項目を
+追加しなくても動作は変わりません。
+
+`SERVICES`/`STAFF`シートにも同様の任意項目（メニューの説明文・
+カテゴリ、スタッフの役職・紹介文・写真パス）が追加されています。詳細は
+`product/coconala-salon-template/05_CUSTOMIZATION/MENU_CUSTOMIZATION_JA.md`
+/ `STAFF_CUSTOMIZATION_JA.md` を参照してください。
+
 `HOLIDAYS` is a separate sheet: one row per closed date, `Date`
 (`YYYY-MM-DD`) + `Label` (free text, e.g. `年末年始`).
 

@@ -56,6 +56,13 @@ included — Phase 3A §20).
 { "ok": false, "error": { "code": "CONFIG_INVALID", "message": "設定情報の読み込みに失敗しました。管理者にお問い合わせください。" } }
 ```
 
+`business.nameLatin`/`tagline`/`postalCode` and a top-level `socialLinks`
+array (V1.1 Task 4) are included when the CONFIG sheet defines the
+corresponding optional key(s) (`business.nameLatin`/`tagline`/
+`postalCode`, `social.instagram`/`social.line`/`social.x`/
+`social.facebook`) — omitted from the response entirely when absent, not
+sent as `null`.
+
 ### `getServices` (Phase 5)
 
 Requires `features.reservation`. Read-only — returns the public projection
@@ -70,12 +77,18 @@ of active `SERVICES` rows (`buildPublicServices`,
 // success response data
 [
   { "serviceId": "SV001", "name": "まつげパーマ", "durationMinutes": 60, "price": 6600, "displayOrder": 1 },
-  { "serviceId": "SV002", "name": "ジェルネイル", "durationMinutes": 90, "price": 8800, "displayOrder": 2 }
+  { "serviceId": "SV002", "name": "ジェルネイル", "durationMinutes": 90, "price": 8800, "displayOrder": 2, "description": "指先に一色をまとわせる、定番の仕上がり。", "category": "ジェルネイル" }
 ]
 
 // failure — feature disabled
 { "ok": false, "error": { "code": "FEATURE_DISABLED", "message": "現在ご予約の受付を停止しています。" } }
 ```
+
+`description`/`category` (V1.1 Task 4) are included per-service only when
+the `SERVICES` sheet has the corresponding `Description`/`Category`
+column and a non-blank cell for that row — omitted entirely otherwise.
+Never used for pricing/duration/eligibility, which always come from
+`durationMinutes`/`price` above regardless of these two fields.
 
 ### `getStaff` (Phase 5)
 
@@ -90,8 +103,17 @@ Never includes `CalendarID`/`Active`. Returns `{ "ok": true, "data": [] }`
 { "action": "getStaff" }
 
 // success response data
-[{ "staffId": "ST001", "name": "鈴木", "displayOrder": 1 }]
+[
+  { "staffId": "ST001", "name": "鈴木", "displayOrder": 1 },
+  { "staffId": "ST002", "name": "田中", "displayOrder": 2, "role": "店長", "introduction": "丁寧なカウンセリングを心がけています。", "photoSrc": "/images/staff/st002.jpg" }
+]
 ```
+
+`role`/`introduction`/`photoSrc` (V1.1 Task 4) are included per-staff-member
+only when the `STAFF` sheet has the corresponding `Role`/`Bio`/`ImagePath`
+column and a non-blank cell for that row — omitted entirely otherwise.
+`photoSrc` is a path the buyer's own Next.js project serves from
+`public/` (e.g. `/images/staff/st002.jpg`) — never an external URL.
 
 ### `getAvailability` (Phase 5)
 

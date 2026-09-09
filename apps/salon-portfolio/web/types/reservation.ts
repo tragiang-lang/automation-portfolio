@@ -56,12 +56,23 @@ export interface PublicService {
   durationMinutes: number;
   price: number;
   displayOrder: number;
+  /** Presentation-only (V1.1 Task 4) — undefined when the SERVICES sheet
+   *  has no Description/Category column yet, or GAS hasn't been upgraded.
+   *  Never used for pricing/duration/eligibility. */
+  description?: string;
+  category?: string;
 }
 
 export interface PublicStaff {
   staffId: string;
   name: string;
   displayOrder: number;
+  /** Presentation-only (V1.1 Task 4) — undefined when the STAFF sheet has
+   *  no Role/Bio/ImagePath column yet, or GAS hasn't been upgraded. Never
+   *  used for staff-eligibility logic. */
+  role?: string;
+  introduction?: string;
+  photoSrc?: string;
 }
 
 export interface AvailableTimeSlot {

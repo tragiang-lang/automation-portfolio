@@ -53,12 +53,28 @@ core both paths use.
 `features.staffSelection`, `features.calendar`, `features.emailNotification`,
 `staffAnyAvailableOption`, `reservation.timezone/slotMinutes/minLeadHours/maxBookingDays`.
 
+**GAS/CONFIG owns, optionally (V1.1 Task 4):** `business.nameLatin`,
+`business.tagline`, `business.postalCode`, and a top-level `socialLinks`
+array, all `undefined` on the wire when the CONFIG sheet doesn't define
+them. `socialLinks` is built from whichever of the CONFIG keys
+`social.instagram`/`social.line`/`social.x`/`social.facebook`
+(`gas/src/ConfigParser.ts`'s `SOCIAL_LINK_DEFINITIONS`) are actually
+present — a flat key per platform, matching this sheet's existing
+"discrete keys, no JSON cell values" convention. `lib/config/
+resolveSiteConfig.ts` falls back to the frontend-owned demo value
+per-field only when the runtime config omits it, so a CONFIG sheet from
+before this task renders exactly as it always did — this is the fix for
+the design-customization audit's finding that these four fields were
+*never* sourced from the real CONFIG sheet even in full production mode.
+
 **Frontend owns** (stays in `config/demo-content.ts`, never sent by GAS):
-`business.nameLatin`, `business.tagline`, `business.postalCode`,
-`socialLinks`, `GALLERY_IMAGES`, `SALON_FEATURES`, `CUSTOMER_FLOW_STEPS`,
-`FAQ_ITEMS`, `ACCESS_INFO` (transit directions), and every
-visual/typography/spacing/layout decision. `config/demo-content.ts`'s
-`SERVICES`/`STAFF` remain the demo-fallback catalog only (see below).
+`GALLERY_IMAGES`, `SALON_FEATURES`, `CUSTOMER_FLOW_STEPS`, `FAQ_ITEMS`,
+`ACCESS_INFO` (transit directions), and every visual/typography/spacing/
+layout decision. `config/demo-content.ts`'s `SERVICES`/`STAFF` remain the
+demo-fallback catalog only (see below), and its `SITE_CONFIG.business`
+fields remain the *fallback* values `resolveSiteConfig.ts` uses when the
+optional CONFIG keys above are absent — no longer the only source, as of
+V1.1 Task 4.
 
 `holidays` is fetched and validated but has no UI consumer yet — no
 existing section displays it (Phase 2A never specified one, and adding
@@ -68,13 +84,22 @@ change.
 
 `SERVICES`/`STAFF` moved onto `getServices`/`getStaff` in Phase 5.1
 (`lib/config/runtimeCatalog.ts`), following the exact same
-fetch/validate/fallback shape as `getConfig` above. The one difference:
-`Service`/`StaffMember`'s presentation-only fields
-(`description`/`category`/`role`/`introduction`/`photoSrc`/`photoAlt`)
-have no equivalent column in the `SERVICES`/`STAFF` sheets
-(`gas/src/SheetSchemas.ts`), so a runtime-sourced Menu/Staff entry never
-carries them — `lib/config/resolveCatalog.ts`'s mappers leave them
-`undefined`, and `MenuRow`/`StaffCard` render them conditionally. The
+fetch/validate/fallback shape as `getConfig` above. `Service`/
+`StaffMember`'s presentation-only fields (`description`/`category` on
+Service; `role`/`introduction`/`photoSrc` on StaffMember) have an
+*optional* equivalent column as of V1.1 Task 4 — `Description`/`Category`
+on the `SERVICES` sheet, `Role`/`Bio`/`ImagePath` on the `STAFF` sheet
+(`gas/src/SheetSchemas.ts`'s `SERVICES_OPTIONAL_HEADERS`/
+`STAFF_OPTIONAL_HEADERS`). A runtime-sourced Menu/Staff entry carries them
+when the sheet has the column and a non-blank cell, and is `undefined`
+otherwise — `lib/config/resolveCatalog.ts`'s mappers pass them through
+unchanged either way, and `MenuRow`/`StaffCard` render them
+conditionally, unchanged since Phase 5.1. `photoAlt` still has no
+sheet-backed source; `StaffCard.tsx` falls back to the staff member's
+name as alt text when it's absent. `ImagePath`/`photoSrc` is a path the
+buyer's own Next.js project serves from `public/` (e.g.
+`/images/staff/st001.jpg`) — never an external URL; `next.config.ts`
+configures no remote image domains, and none are needed for this. The
 demo-fallback branch is unaffected: it still reuses `SERVICES`/`STAFF`
 from `config/demo-content.ts` directly, with all presentation fields
 intact.

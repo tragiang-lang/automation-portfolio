@@ -186,3 +186,58 @@ describe("parseAppConfig", () => {
     }
   });
 });
+
+describe("parseAppConfig optional presentation fields (V1.1 Task 4)", () => {
+  it("leaves nameLatin/tagline/postalCode/socialLinks undefined when absent, with no issues", () => {
+    const result = parseAppConfig(validRawConfig(), []);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.config.business.nameLatin).toBeUndefined();
+      expect(result.config.business.tagline).toBeUndefined();
+      expect(result.config.business.postalCode).toBeUndefined();
+      expect(result.config.socialLinks).toBeUndefined();
+    }
+  });
+
+  it("parses nameLatin/tagline/postalCode when present, trimmed", () => {
+    const raw = validRawConfig();
+    raw["business.nameLatin"] = "  Rin Nail & Eyelash  ";
+    raw["business.tagline"] = " 静けさの中で。 ";
+    raw["business.postalCode"] = " 〒104-0061 ";
+    const result = parseAppConfig(raw, []);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.config.business.nameLatin).toBe("Rin Nail & Eyelash");
+      expect(result.config.business.tagline).toBe("静けさの中で。");
+      expect(result.config.business.postalCode).toBe("〒104-0061");
+    }
+  });
+
+  it("builds socialLinks only from the social.* keys that are actually present", () => {
+    const raw = validRawConfig();
+    raw["social.instagram"] = "https://instagram.com/example";
+    const result = parseAppConfig(raw, []);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.config.socialLinks).toEqual([
+        { label: "Instagram", href: "https://instagram.com/example" },
+      ]);
+    }
+  });
+
+  it("orders socialLinks by SOCIAL_LINK_DEFINITIONS order, not CONFIG row order", () => {
+    const raw = validRawConfig();
+    raw["social.line"] = "https://line.me/example";
+    raw["social.instagram"] = "https://instagram.com/example";
+    const result = parseAppConfig(raw, []);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.config.socialLinks?.map((link) => link.label)).toEqual(["Instagram", "LINE"]);
+    }
+  });
+
+  it("does not report an issue when business.nameLatin/tagline/postalCode/social.* keys are missing (required-key test stays unaffected)", () => {
+    const result = parseAppConfig(validRawConfig(), []);
+    expect(result.ok).toBe(true);
+  });
+});

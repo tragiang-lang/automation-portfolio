@@ -1,4 +1,4 @@
-import { AppConfig, BUSINESS_HOURS_DAYS, RawConfigMap } from "./models/Config";
+import { AppConfig, BUSINESS_HOURS_DAYS, RawConfigMap, SocialLink } from "./models/Config";
 
 /** One field-level parsing failure — used to build a single, stable
  *  CONFIG_INVALID error without ever repeating the raw sheet value back
@@ -94,6 +94,37 @@ export function parseJsonSafely<T>(raw: unknown): T | undefined {
   }
 }
 
+/** Fixed, curated set of CONFIG keys that can build a SocialLink (V1.1
+ *  Task 4) — a flat key per platform, matching this sheet's existing
+ *  "discrete keys, no JSON cell values" convention (see
+ *  parseJsonSafely's own comment: "Project 1's CONFIG has no JSON fields
+ *  today"). List order is the resulting display order, independent of
+ *  CONFIG row order. Add a platform later by adding one entry here plus a
+ *  matching row in the CSV template / config-and-sheets-guide.md — no
+ *  other code change needed. */
+export const SOCIAL_LINK_DEFINITIONS: ReadonlyArray<{ configKey: string; label: string }> = [
+  { configKey: "social.instagram", label: "Instagram" },
+  { configKey: "social.line", label: "LINE" },
+  { configKey: "social.x", label: "X" },
+  { configKey: "social.facebook", label: "Facebook" },
+];
+
+/** Builds the socialLinks array from whichever SOCIAL_LINK_DEFINITIONS
+ *  keys are actually present (non-empty) in the raw CONFIG map — returns
+ *  `undefined`, never `[]`, when none are set, so a pre-V1.1-Task-4
+ *  CONFIG sheet produces exactly the "no socialLinks field" shape it
+ *  always has. */
+function parseSocialLinks(rawConfig: RawConfigMap): SocialLink[] | undefined {
+  const links: SocialLink[] = [];
+  for (const { configKey, label } of SOCIAL_LINK_DEFINITIONS) {
+    const href = parseNonEmptyString(rawConfig[configKey]);
+    if (href !== undefined) {
+      links.push({ label, href });
+    }
+  }
+  return links.length > 0 ? links : undefined;
+}
+
 /** Pure CONFIG parser: raw Key/Value map + HOLIDAYS date strings -> typed
  *  AppConfig, or a list of field-level issues. Never throws — malformed
  *  input always produces `{ ok: false }`, never a partially-built,
@@ -133,11 +164,17 @@ export function parseAppConfig(
     return value;
   };
 
-  const business = {
+  const business: AppConfig["business"] = {
     name: requireString("business.name"),
     phone: requireString("business.phone"),
     email: requireString("business.email"),
     address: requireString("business.address"),
+    // Optional presentation fields (V1.1 Task 4) — parseNonEmptyString
+    // returns undefined (never pushes an `issues` entry) when the key is
+    // absent or blank, unlike requireString above.
+    nameLatin: parseNonEmptyString(rawConfig["business.nameLatin"]),
+    tagline: parseNonEmptyString(rawConfig["business.tagline"]),
+    postalCode: parseNonEmptyString(rawConfig["business.postalCode"]),
   };
 
   const hours = {} as AppConfig["hours"];
@@ -175,6 +212,7 @@ export function parseAppConfig(
   const calendarId = requireString("calendar.id");
   const emailOwnerNotifyAddress = requireString("email.ownerNotifyAddress");
   const emailFromName = requireString("email.fromName");
+  const socialLinks = parseSocialLinks(rawConfig);
 
   if (issues.length > 0) {
     return { ok: false, issues };
@@ -189,6 +227,7 @@ export function parseAppConfig(
       features,
       staffAnyAvailableOption,
       reservation,
+      socialLinks,
       calendarId,
       emailOwnerNotifyAddress,
       emailFromName,

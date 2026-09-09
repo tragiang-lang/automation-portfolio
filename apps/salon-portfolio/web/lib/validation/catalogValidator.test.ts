@@ -45,3 +45,46 @@ describe("parsePublicStaff", () => {
     expect(parsePublicStaff([])).toEqual([]);
   });
 });
+
+describe("parsePublicServices optional presentation fields (V1.1 Task 4)", () => {
+  it("passes through description/category when present", () => {
+    const input = [
+      { serviceId: "SV001", name: "x", durationMinutes: 60, price: 6000, displayOrder: 1, description: "説明", category: "ネイル" },
+    ];
+    expect(parsePublicServices(input)).toEqual(input);
+  });
+
+  it("leaves description/category undefined when absent", () => {
+    const input = [{ serviceId: "SV001", name: "x", durationMinutes: 60, price: 6000, displayOrder: 1 }];
+    const result = parsePublicServices(input);
+    expect(result?.[0].description).toBeUndefined();
+    expect(result?.[0].category).toBeUndefined();
+  });
+
+  it("rejects a present description/category with the wrong type", () => {
+    const input = [{ serviceId: "SV001", name: "x", durationMinutes: 60, price: 6000, displayOrder: 1, description: 123 }];
+    expect(parsePublicServices(input)).toBeNull();
+  });
+});
+
+describe("parsePublicStaff optional presentation fields (V1.1 Task 4)", () => {
+  it("passes through role/introduction/photoSrc when present", () => {
+    const input = [
+      { staffId: "ST001", name: "田中", displayOrder: 1, role: "店長", introduction: "紹介文", photoSrc: "/images/staff/st001.jpg" },
+    ];
+    expect(parsePublicStaff(input)).toEqual(input);
+  });
+
+  it("leaves role/introduction/photoSrc undefined when absent", () => {
+    const input = [{ staffId: "ST001", name: "田中", displayOrder: 1 }];
+    const result = parsePublicStaff(input);
+    expect(result?.[0].role).toBeUndefined();
+    expect(result?.[0].introduction).toBeUndefined();
+    expect(result?.[0].photoSrc).toBeUndefined();
+  });
+
+  it("rejects a present role/introduction/photoSrc with the wrong type", () => {
+    const input = [{ staffId: "ST001", name: "田中", displayOrder: 1, photoSrc: 42 }];
+    expect(parsePublicStaff(input)).toBeNull();
+  });
+});

@@ -40,12 +40,25 @@ describe("resolveSiteConfig", () => {
     expect(siteConfig.hours).toEqual(runtime.hours);
   });
 
-  it("keeps nameLatin/tagline/postalCode/socialLinks from the frontend-owned demo config", () => {
+  it("falls back to nameLatin/tagline/postalCode/socialLinks from the frontend-owned demo config when the runtime config omits them (backward compatible)", () => {
     const siteConfig = resolveSiteConfig(runtime);
     expect(siteConfig.business.nameLatin).toBe(SITE_CONFIG.business.nameLatin);
     expect(siteConfig.business.tagline).toBe(SITE_CONFIG.business.tagline);
     expect(siteConfig.business.postalCode).toBe(SITE_CONFIG.business.postalCode);
     expect(siteConfig.socialLinks).toEqual(SITE_CONFIG.socialLinks);
+  });
+
+  it("prefers nameLatin/tagline/postalCode/socialLinks from the runtime config when present (V1.1 Task 4)", () => {
+    const runtimeWithPresentation: PublicRuntimeConfig = {
+      ...runtime,
+      business: { ...runtime.business, nameLatin: "Real Salon Latin", tagline: "本物のタグライン", postalCode: "〒999-9999" },
+      socialLinks: [{ label: "Instagram", href: "https://instagram.com/real-salon" }],
+    };
+    const siteConfig = resolveSiteConfig(runtimeWithPresentation);
+    expect(siteConfig.business.nameLatin).toBe("Real Salon Latin");
+    expect(siteConfig.business.tagline).toBe("本物のタグライン");
+    expect(siteConfig.business.postalCode).toBe("〒999-9999");
+    expect(siteConfig.socialLinks).toEqual([{ label: "Instagram", href: "https://instagram.com/real-salon" }]);
   });
 
   it("maps the three UI-relevant feature flags and drops the backend-only ones", () => {
