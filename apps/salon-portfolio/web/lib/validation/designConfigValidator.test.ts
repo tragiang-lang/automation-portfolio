@@ -1,6 +1,13 @@
-import { isHeroVariant, isHomeSection, isValidSectionOrder, parseDesignPresetId } from "./designConfigValidator";
+import {
+  isHeroVariant,
+  isHomeSection,
+  isMenuVariant,
+  isValidSectionOrder,
+  parseDesignPresetId,
+} from "./designConfigValidator";
 import { ALL_HOME_SECTIONS } from "@/lib/constants/design-sections";
 import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
+import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
 
 describe("parseDesignPresetId", () => {
   it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])(
@@ -38,6 +45,19 @@ describe("isHeroVariant", () => {
     "rejects %p",
     (value) => {
       expect(isHeroVariant(value)).toBe(false);
+    },
+  );
+});
+
+describe("isMenuVariant", () => {
+  it.each(MENU_VARIANTS)("accepts the registered menu variant %s", (variant) => {
+    expect(isMenuVariant(variant)).toBe(true);
+  });
+
+  it.each([undefined, null, "", "   ", "not-a-variant", "editorial-list ", 42, {}])(
+    "rejects %p",
+    (value) => {
+      expect(isMenuVariant(value)).toBe(false);
     },
   );
 });

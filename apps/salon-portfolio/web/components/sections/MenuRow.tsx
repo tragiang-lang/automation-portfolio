@@ -1,13 +1,13 @@
+import { formatMenuDuration, formatMenuPrice } from "@/components/sections/MenuContent";
 import type { Service } from "@/types/content";
-
-function formatPrice(price: number): string {
-  return `¥${price.toLocaleString("ja-JP")}`;
-}
 
 /**
  * One menu line (Phase 2A §9) — not an independently clickable "card",
  * just a row in a printed-menu-style list. Price wraps under the name on
- * mobile, sits right-aligned on desktop.
+ * mobile, sits right-aligned on desktop. `editorial-list`'s own row
+ * component (V1.1 Task 6); `MenuCardGrid`/`MenuMinimalPriceList` render
+ * their own markup, but all three share `formatMenuPrice`/
+ * `formatMenuDuration` from `MenuContent.tsx`.
  */
 export function MenuRow({ service }: { service: Service }) {
   return (
@@ -21,8 +21,8 @@ export function MenuRow({ service }: { service: Service }) {
         ) : null}
       </div>
       <div className="flex items-baseline justify-between gap-4 text-[16px] text-secondary sm:flex-col sm:items-end sm:text-right">
-        <span>{service.durationMinutes}分</span>
-        <span className="text-[20px] font-medium text-primary">{formatPrice(service.price)}</span>
+        <span>{formatMenuDuration(service.durationMinutes)}</span>
+        <span className="text-[20px] font-medium text-primary">{formatMenuPrice(service.price)}</span>
       </div>
     </li>
   );
