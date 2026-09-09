@@ -83,3 +83,21 @@ describe("SiteHeader reservation flag", () => {
     expect(within(dialog).queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
   });
 });
+
+describe("SiteHeader overDarkHeroImage (V1.1 Task 5 — Hero Layout Variants)", () => {
+  it("renders transparent/text-on-primary over the homepage by default (HeroFullscreen's dark photo)", () => {
+    render(<SiteHeader business={business} navItems={navItems} />);
+
+    expect(screen.getByRole("banner")).toHaveClass("bg-transparent");
+    expect(screen.getByRole("navigation", { name: "メインナビゲーション" })).toHaveClass("text-on-primary");
+  });
+
+  it("renders a solid, text-primary header on the homepage when overDarkHeroImage is false (HeroSplit/HeroEditorial's light top section)", () => {
+    render(<SiteHeader business={business} navItems={navItems} overDarkHeroImage={false} />);
+
+    const header = screen.getByRole("banner");
+    expect(header).not.toHaveClass("bg-transparent");
+    expect(header).toHaveClass("bg-background/95");
+    expect(screen.getByRole("navigation", { name: "メインナビゲーション" })).toHaveClass("text-primary");
+  });
+});

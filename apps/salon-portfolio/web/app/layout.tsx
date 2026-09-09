@@ -109,6 +109,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           business={siteConfig.business}
           navItems={NAV_ITEMS}
           reservationEnabled={siteConfig.features.reservation}
+          overDarkHeroImage={designConfig.heroVariant === "fullscreen"}
         />
         <div className="flex flex-1 flex-col">{children}</div>
         <SiteFooter config={siteConfig} navItems={NAV_ITEMS} />

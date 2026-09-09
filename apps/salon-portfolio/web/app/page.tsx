@@ -43,19 +43,28 @@ import { getDesignConfig } from "@/lib/config/designConfig";
 // existing business feature flag — `feature && sectionVisibility.x` — so
 // a design preset can only ever hide a section a feature flag already
 // allows, never show one the business disabled.
+//
+// V1.1 Task 5 (Hero Layout Variants) adds `heroVariant`, read from the
+// same `getDesignConfig()` call and passed straight through to
+// `HeroSection`, which owns the fullscreen/split/editorial component
+// selection itself — this file only supplies the (variant-independent)
+// runtime content, same as it already did for every other section.
 export default async function Home() {
   const [{ config }, { services, staff }] = await Promise.all([
     getRuntimeConfig(),
     getRuntimeCatalog(),
   ]);
   const siteConfig = resolveSiteConfig(config);
-  const { sectionVisibility } = getDesignConfig();
+  const { sectionVisibility, heroVariant } = getDesignConfig();
 
   return (
     <main className="flex flex-1 flex-col">
       <HeroSection
         headline={siteConfig.business.tagline}
         subheadline="銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。"
+        name={siteConfig.business.name}
+        nameLatin={siteConfig.business.nameLatin}
+        heroVariant={heroVariant}
       />
 
       {sectionVisibility.concept ? (

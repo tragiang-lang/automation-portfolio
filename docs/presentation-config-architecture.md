@@ -343,11 +343,90 @@ preset. If the new pairing needs a font family not already loaded, add one
 `next/font/google` loader call in `app/layout.tsx` at the single weight
 actually needed — do not add a family "just in case."
 
+## Hero layout variants (V1.1 Task 5)
+
+Task 1 left `HeroVariant` a 3-value union with only `"fullscreen"` wired to
+a real component. This task builds the other two and turns `HeroSection`
+into a router:
+
+```text
+DesignConfig.heroVariant (HeroVariant)
+        |
+        v
+lib/validation/designConfigValidator.ts — isHeroVariant()
+        |            (invalid/missing → DEFAULT_HERO_VARIANT "fullscreen")
+        v
+components/sections/HeroSection.tsx
+        — HERO_VARIANT_COMPONENTS: Record<HeroVariant, ComponentType<...>>
+        |
+        +-- "fullscreen" -> HeroFullscreen  (today's pre-Task-5 look, unchanged)
+        +-- "split"      -> HeroSplit       (text column + image column)
+        +-- "editorial"  -> HeroEditorial   (centered opening, asymmetric photo/copy)
+```
+
+**What each variant is for:**
+
+- `fullscreen` — the shipped default: a full-bleed photo with a legibility
+  scrim, headline/CTA in the lower-left third. Every preset's current
+  `heroVariant` (§10 below), and the only variant that shows a dark photo
+  behind the header.
+- `split` — text and photo in separate columns (not a CSS reorder of
+  `fullscreen`): salon name/nameLatin/tagline/CTA on one side, the photo on
+  the other. Collapses to a single stacked column on mobile.
+- `editorial` — a centered name/tagline opening, a large photo offset to
+  one side, and supporting copy/CTA offset to the other — a Japanese
+  editorial composition carried by whitespace and type scale, not new
+  decoration.
+
+**One Hero data model:** all three variants take the same
+`HeroContentProps` (`components/sections/HeroContent.tsx`) —
+`headline`/`subheadline`/`name`/`nameLatin` — sourced in `app/page.tsx`
+entirely from the existing `siteConfig.business` fields (already
+runtime-resolved since Task 4). No variant introduces its own content
+shape, a second data model, or a new GAS action. The Hero photo path and
+both CTA (`href`/label`) pairs also live in `HeroContent.tsx`, shared by
+all three variants so they can never drift from each other.
+
+**Selecting a variant:** `DesignConfig.heroVariant`, same as every other
+design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
+it straight to `HeroSection`. This task does **not** set any
+`DESIGN_PRESETS` entry to `split`/`editorial` — every preset still resolves
+`heroVariant: "fullscreen"` (§J's "don't ship curated multi-field presets
+yet"); `split`/`editorial` are reachable today only by constructing a
+`DesignConfig` directly (as the tests do), which is enough to prove the
+architecture without jumping ahead to the curated-preset task.
+
+**Backward compatibility:** `isHeroVariant` (mirrors `isHomeSection`) makes
+`HeroSection` normalize whatever `heroVariant` it receives — missing or
+invalid falls back to `DEFAULT_HERO_VARIANT` (`"fullscreen"`,
+`lib/constants/hero-variants.ts`), so an existing deployment's Hero can
+never silently change appearance.
+
+**Header contrast fix required by this task:** `SiteHeader`'s transparent,
+white-text "floating over the hero" state (Phase 2A §7-8) was written
+assuming the homepage always opens on `HeroFullscreen`'s dark photo. Once
+`split`/`editorial` (ordinary light section backgrounds) became reachable,
+that assumption broke — white nav text over a light background is
+unreadable. Fixed with one new `SiteHeader` prop, `overDarkHeroImage`
+(default `true`, so every non-homepage route and every existing test call
+site keep today's behavior), which `app/layout.tsx` sets to
+`designConfig.heroVariant === "fullscreen"`. This is not a new header
+*style* — the header still has exactly one visual design — only a
+correction to when its existing transparent state applies.
+
+**Presentation-only, still:** no variant reads or writes reservation state,
+calls `getServices`/`getStaff`, or touches `app/globals.css`'s theme/
+typography tokens directly — every color/font comes from the same semantic
+Tailwind utilities (`bg-surface`, `text-primary`, `text-accent`, …) every
+other section already uses, so all six `ThemeId`s and all six
+`TypographyId`s render correctly under every Hero variant with zero
+variant-specific styling logic.
+
 ## Not yet implemented (tracked for later V1.1 work)
 
-- Hero/Menu/Staff/Gallery variant components — real alternate layouts for
-  `HeroVariant`/`MenuVariant`/`StaffVariant`/`GalleryVariant` values other
-  than today's default.
+- Menu/Staff/Gallery variant components — real alternate layouts for
+  `MenuVariant`/`StaffVariant`/`GalleryVariant` values other than today's
+  default (Hero's are now implemented — see above).
 - Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
   instead of its literal JSX sequence.
 - Curated multi-field presets — the five non-`kinari` registry entries

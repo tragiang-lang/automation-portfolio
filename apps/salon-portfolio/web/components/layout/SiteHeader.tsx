@@ -22,10 +22,23 @@ export function SiteHeader({
   business,
   navItems,
   reservationEnabled = true,
+  overDarkHeroImage = true,
 }: {
   business: BusinessInfo;
   navItems: NavItem[];
   reservationEnabled?: boolean;
+  /**
+   * True only when the homepage's top is `HeroFullscreen` — the one Hero
+   * variant (V1.1 Task 5) that is a full-bleed dark photo with a legibility
+   * scrim, which this transparent/`text-on-primary` header state was built
+   * to float over (§8). `HeroSplit`/`HeroEditorial` start with an ordinary
+   * light section background, so floating white nav text over it would be
+   * unreadable — `app/layout.tsx` passes
+   * `designConfig.heroVariant === "fullscreen"` here. Defaults to `true` so
+   * every non-homepage route (where `isHome` already makes this a no-op)
+   * and every existing test call site keep today's behavior unchanged.
+   */
+  overDarkHeroImage?: boolean;
 }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -42,7 +55,7 @@ export function SiteHeader({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const transparent = isHome && !scrolled && !mobileOpen;
+  const transparent = isHome && overDarkHeroImage && !scrolled && !mobileOpen;
 
   return (
     <>
