@@ -1,6 +1,7 @@
 import { DESIGN_PRESETS } from "@/config/design-presets";
 import { ALL_HOME_SECTIONS, REQUIRED_HOME_SECTIONS } from "@/lib/constants/design-sections";
-import type { DesignPreset, HomeSection } from "@/types/design-config";
+import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
+import type { DesignPreset, HeroVariant, HomeSection } from "@/types/design-config";
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -23,6 +24,18 @@ export function parseDesignPresetId(value: unknown): DesignPreset | null {
  *  an arbitrary string reaching `sectionOrder`/`sectionVisibility`. */
 export function isHomeSection(value: unknown): value is HomeSection {
   return typeof value === "string" && (ALL_HOME_SECTIONS as readonly string[]).includes(value);
+}
+
+/**
+ * True only for one of the 3 registered `HeroVariant` ids (V1.1 Task 5).
+ * `components/sections/HeroSection.tsx` uses this to normalize whatever
+ * `heroVariant` it receives — an invalid or missing value falls back to
+ * `DEFAULT_HERO_VARIANT` ("fullscreen") rather than crashing or rendering
+ * nothing, the same parse-or-fallback discipline every other design-config
+ * guard in this file already follows.
+ */
+export function isHeroVariant(value: unknown): value is HeroVariant {
+  return typeof value === "string" && (HERO_VARIANTS as readonly string[]).includes(value);
 }
 
 /**
