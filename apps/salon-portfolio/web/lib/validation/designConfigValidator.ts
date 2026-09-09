@@ -3,7 +3,15 @@ import { ALL_HOME_SECTIONS, REQUIRED_HOME_SECTIONS } from "@/lib/constants/desig
 import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
 import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
 import { STAFF_VARIANTS } from "@/lib/constants/staff-variants";
-import type { DesignPreset, HeroVariant, HomeSection, MenuVariant, StaffVariant } from "@/types/design-config";
+import { GALLERY_VARIANTS } from "@/lib/constants/gallery-variants";
+import type {
+  DesignPreset,
+  GalleryVariant,
+  HeroVariant,
+  HomeSection,
+  MenuVariant,
+  StaffVariant,
+} from "@/types/design-config";
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -62,6 +70,18 @@ export function isMenuVariant(value: unknown): value is MenuVariant {
  */
 export function isStaffVariant(value: unknown): value is StaffVariant {
   return typeof value === "string" && (STAFF_VARIANTS as readonly string[]).includes(value);
+}
+
+/**
+ * True only for one of the 3 registered `GalleryVariant` ids (V1.1 Task 8).
+ * `components/sections/GallerySection.tsx` uses this to normalize whatever
+ * `galleryVariant` it receives — an invalid or missing value falls back to
+ * `DEFAULT_GALLERY_VARIANT` ("grid") rather than crashing or rendering
+ * nothing, the same parse-or-fallback discipline `isHeroVariant`/
+ * `isMenuVariant`/`isStaffVariant` above already follow.
+ */
+export function isGalleryVariant(value: unknown): value is GalleryVariant {
+  return typeof value === "string" && (GALLERY_VARIANTS as readonly string[]).includes(value);
 }
 
 /**

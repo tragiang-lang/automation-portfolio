@@ -20,7 +20,7 @@ export const DEFAULT_DESIGN_CONFIG: DesignConfig = {
   heroVariant: "fullscreen",
   menuVariant: "editorial-list",
   staffVariant: "portrait-grid",
-  galleryVariant: "masonry",
+  galleryVariant: "grid",
   // Cloned, not a direct reference to `DEFAULT_SECTION_VISIBILITY`/
   // `DEFAULT_SECTION_ORDER` — every `DesignConfig` (including this one)
   // must own its own sectionVisibility/sectionOrder object so no two

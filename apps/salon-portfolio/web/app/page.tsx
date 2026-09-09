@@ -62,13 +62,21 @@ import { getDesignConfig } from "@/lib/config/designConfig";
 // horizontal-profile component selection itself. This file still only
 // supplies `staff` (the existing runtime `getRuntimeCatalog` → `getStaff`
 // → `StaffMember[]` flow), never a variant-specific content shape.
+//
+// V1.1 Task 8 (Gallery Layout Variants) adds `galleryVariant` the same
+// way — passed straight through to `GallerySection`, which owns the grid/
+// masonry/feature-editorial component selection itself. This file still
+// only supplies `images` (the existing static `GALLERY_IMAGES`,
+// `config/demo-content.ts` — Gallery has no runtime/GAS content path,
+// unlike Menu/Staff, and this task does not add one), and the
+// `sectionVisibility.gallery` gate is unchanged.
 export default async function Home() {
   const [{ config }, { services, staff }] = await Promise.all([
     getRuntimeConfig(),
     getRuntimeCatalog(),
   ]);
   const siteConfig = resolveSiteConfig(config);
-  const { sectionVisibility, heroVariant, menuVariant, staffVariant } = getDesignConfig();
+  const { sectionVisibility, heroVariant, menuVariant, staffVariant, galleryVariant } = getDesignConfig();
 
   return (
     <main className="flex flex-1 flex-col">
@@ -101,7 +109,9 @@ export default async function Home() {
         staffVariant={staffVariant}
       />
 
-      {sectionVisibility.gallery ? <GallerySection images={GALLERY_IMAGES} /> : null}
+      {sectionVisibility.gallery ? (
+        <GallerySection images={GALLERY_IMAGES} galleryVariant={galleryVariant} />
+      ) : null}
 
       {siteConfig.features.reservation && sectionVisibility.reservation ? (
         <ReservationCtaBand
