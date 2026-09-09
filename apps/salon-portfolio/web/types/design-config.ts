@@ -48,9 +48,11 @@ export type MenuVariant = "editorial-list" | "card-grid" | "minimal-price-list";
  *  "portrait-grid" — today's only layout — is wired to a real component). */
 export type StaffVariant = "portrait-grid" | "horizontal-profile";
 
-/** Gallery layout variants (a later task implements the alternates; only
- *  "masonry" — today's only layout — is wired to a real component). */
-export type GalleryVariant = "grid" | "masonry" | "large-feature";
+/** Gallery layout variants (V1.1 Task 8 wires all three to real
+ *  components). "grid" is today's pre-Task-8 CSS-columns composition and
+ *  the default/fallback (`DEFAULT_GALLERY_VARIANT`,
+ *  `lib/constants/gallery-variants.ts`). */
+export type GalleryVariant = "grid" | "masonry" | "feature-editorial";
 
 /**
  * Allow-listed homepage sections. Header/footer are always rendered by

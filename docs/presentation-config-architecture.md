@@ -51,7 +51,7 @@ layout variant, or a section's visibility.
 | `heroVariant` | `HeroVariant` (3 values) | All 3 registered — `fullscreen`/`split`/`editorial` (Hero Layout Variants task) |
 | `menuVariant` | `MenuVariant` (3 values) | All 3 registered — `editorial-list`/`card-grid`/`minimal-price-list` (Menu Layout Variants task) |
 | `staffVariant` | `StaffVariant` (2 values) | All 2 registered — `portrait-grid`/`horizontal-profile` (Staff Layout Variants task) |
-| `galleryVariant` | `GalleryVariant` (3 values) | Only `"masonry"` has a real component |
+| `galleryVariant` | `GalleryVariant` (3 values) | All 3 registered — `grid`/`masonry`/`feature-editorial` (Gallery Layout Variants task) |
 | `sectionVisibility` | `Record<OptionalHomeSection, boolean>` | Fully wired into `app/page.tsx`; every default is `true` |
 | `sectionOrder` | `HomeSection[]` | Typed, defaulted, and validated (`isValidSectionOrder`); **not yet** read by `app/page.tsx` |
 
@@ -592,11 +592,109 @@ already uses, so all six `ThemeId`s and all six `TypographyId`s render
 correctly under every Staff variant (visually spot-checked under
 `kinari`/`noir`) with zero variant-specific styling logic.
 
+## Gallery layout variants (V1.1 Task 8)
+
+Task 1 left `GalleryVariant` a 3-value union (`"grid" | "masonry" |
+"large-feature"`) with none of them wired to a real component —
+`GallerySection.tsx` never actually branched on `galleryVariant`; it always
+rendered one CSS-`columns` body regardless. This task renames the third
+value to `"feature-editorial"`, builds all three as real components, and
+turns `GallerySection` into a router — the same shape as Menu's/Staff's:
+
+```text
+DesignConfig.galleryVariant (GalleryVariant)
+        |
+        v
+lib/validation/designConfigValidator.ts — isGalleryVariant()
+        |            (invalid/missing → DEFAULT_GALLERY_VARIANT "grid")
+        v
+components/sections/GallerySection.tsx
+        — owns the #gallery id and "ギャラリー" heading
+        — GALLERY_VARIANT_COMPONENTS: Record<GalleryVariant, ComponentType<...>>
+        |
+        +-- "grid"             -> GalleryGrid             (today's pre-Task-8 look, unchanged)
+        +-- "masonry"          -> GalleryMasonry           (bento-style CSS Grid, deterministic pattern)
+        +-- "feature-editorial" -> GalleryFeatureEditorial (one dominant image + supporting tiles)
+```
+
+**Naming reconciliation:** `DEFAULT_DESIGN_CONFIG.galleryVariant` (and thus
+every preset's resolved value) changes from `"masonry"` to `"grid"` in this
+task. This is not a behavior change — since `GallerySection` never actually
+read `galleryVariant` before this task, the string `"masonry"` was already
+an inert label for the shipped CSS-columns look. Renaming the *label* that
+now maps to that unchanged look (`"grid"`) is what keeps the **rendered
+pixels** backward compatible; keeping the label `"masonry"` as the default
+would have wired a real, differently-composed `masonry` component under a
+name every existing deployment already resolves to, which would have been
+the actual regression.
+
+**What each variant is for:**
+
+- `grid` — the shipped default: CSS `columns` (masonry-via-columns) on
+  tablet/desktop, single column on mobile, each tile keeping its own
+  source aspect ratio via `PlaceholderImage`. Byte-identical to the
+  pre-Task-8 `GallerySection`/`GalleryImage` body, moved unchanged into
+  `GalleryGrid.tsx`.
+- `masonry` — a true CSS Grid (row-first, not `columns`' column-first
+  reading order) with a repeating bento-style pattern of tile row-spans
+  cycled by position (`GalleryMasonry.tsx`'s `MASONRY_PATTERN`), not each
+  tile's own aspect ratio — the demo photography's ratios are all fairly
+  similar landscape crops, so a ratio-driven height would barely read as
+  "masonry" at a glance; a positional pattern guarantees visible variety
+  regardless of which photos a deployment swaps in, while staying fully
+  deterministic (no JS measuring a rendered image).
+- `feature-editorial` — the first image renders as one dominant tile
+  (`col-span-2 lg:row-span-2`); the rest auto-place as smaller supporting
+  tiles via CSS Grid's normal (non-dense) auto-placement, no manual
+  row/column math. Asymmetric by design — substantially different from
+  both `grid` and `masonry`.
+
+Both `masonry` and `feature-editorial` build their tiles directly on
+`next/image` rather than reusing `PlaceholderImage`: `PlaceholderImage`
+forces its wrapper's CSS `aspect-ratio` to the image's own `width`/`height`,
+which fights a CSS Grid item's row/column-track sizing (the browser sizes
+the box from the aspect ratio instead of stretching it to fill the grid
+area the track defines). Both variants instead let the grid track size the
+box and crop with `object-cover` — never stretching, the same tradeoff
+`StaffHorizontalProfile`'s square crop already makes.
+
+**One Gallery data model, no runtime path today:** all three variants take
+the same `GalleryContentProps` (`components/sections/GalleryContent.tsx`)
+— `images: GalleryImageItem[]` — sourced in `app/page.tsx` entirely from
+the existing static `GALLERY_IMAGES` (`config/demo-content.ts`). Unlike
+Menu/Staff, Gallery has no `getRuntimeCatalog`/GAS content path today, and
+this task does not add one — no variant introduces its own image model.
+
+**Section chrome lives once, not three times:** like Menu/Staff, the
+`#gallery` id and "ギャラリー" heading are identical across all three
+variants, so `GallerySection.tsx` renders them once and only swaps the
+inner composition. Visibility (`sectionVisibility.gallery`) is still gated
+by `app/page.tsx` at the call site, unchanged from before this task —
+Gallery has no business feature flag of its own to combine with.
+
+**Selecting a variant:** `DesignConfig.galleryVariant`, same as every other
+design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
+it straight to `GallerySection`. This task does **not** set any
+`DESIGN_PRESETS` entry to `masonry`/`feature-editorial` — every preset
+still resolves `galleryVariant: "grid"`; the other two are reachable today
+only by constructing a `DesignConfig` directly (as the tests do).
+
+**Backward compatibility:** `isGalleryVariant` (mirrors `isHeroVariant`/
+`isMenuVariant`/`isStaffVariant`) makes `GallerySection` normalize whatever
+`galleryVariant` it receives — missing or invalid falls back to
+`DEFAULT_GALLERY_VARIANT` (`"grid"`, `lib/constants/gallery-variants.ts`),
+so an existing deployment's Gallery can never silently change appearance.
+
+**Presentation-only, still:** no variant reads or writes reservation state
+or invents image alt text (alt text always comes from the existing
+`GalleryImageItem.alt`, never generated), and no color is hard-coded —
+every value comes from the same semantic Tailwind utilities every other
+section already uses, so all six `ThemeId`s render correctly under every
+Gallery variant (visually spot-checked under `kinari`/`noir`) with zero
+variant-specific styling logic.
+
 ## Not yet implemented (tracked for later V1.1 work)
 
-- Gallery variant components — real alternate layouts for `GalleryVariant`
-  values other than today's default (Hero's, Menu's, and Staff's are now
-  implemented — see above).
 - Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
   instead of its literal JSX sequence.
 - Curated multi-field presets — the five non-`kinari` registry entries

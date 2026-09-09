@@ -1,4 +1,5 @@
 import {
+  isGalleryVariant,
   isHeroVariant,
   isHomeSection,
   isMenuVariant,
@@ -10,6 +11,7 @@ import { ALL_HOME_SECTIONS } from "@/lib/constants/design-sections";
 import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
 import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
 import { STAFF_VARIANTS } from "@/lib/constants/staff-variants";
+import { GALLERY_VARIANTS } from "@/lib/constants/gallery-variants";
 
 describe("parseDesignPresetId", () => {
   it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])(
@@ -73,6 +75,19 @@ describe("isStaffVariant", () => {
     "rejects %p",
     (value) => {
       expect(isStaffVariant(value)).toBe(false);
+    },
+  );
+});
+
+describe("isGalleryVariant", () => {
+  it.each(GALLERY_VARIANTS)("accepts the registered gallery variant %s", (variant) => {
+    expect(isGalleryVariant(variant)).toBe(true);
+  });
+
+  it.each([undefined, null, "", "   ", "not-a-variant", "large-feature", "grid ", 42, {}])(
+    "rejects %p",
+    (value) => {
+      expect(isGalleryVariant(value)).toBe(false);
     },
   );
 });

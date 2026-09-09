@@ -13,7 +13,7 @@ describe("DEFAULT_DESIGN_CONFIG", () => {
       heroVariant: "fullscreen",
       menuVariant: "editorial-list",
       staffVariant: "portrait-grid",
-      galleryVariant: "masonry",
+      galleryVariant: "grid",
     });
   });
 
