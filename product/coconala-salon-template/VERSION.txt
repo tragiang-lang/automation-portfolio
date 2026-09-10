@@ -1,0 +1,29 @@
+Product: 美容サロン向け ホームページ＋オンライン予約システム テンプレート
+Package version: v1.1.0
+Package date: 2026-09-10
+Compatible project baseline: salon-portfolio, V1.1 Design Customization
+  complete (Phase 1-6 + Presentation Configuration Layer / Theme &
+  Typography Presets / Hero, Menu, Staff, Gallery Layout Variants /
+  Section Ordering / Design Presets)
+
+Included major features:
+  - Next.js 16 + React 19 + TypeScript salon website (responsive)
+  - Reservation wizard UI (/reservation)
+  - Google Apps Script backend: getConfig, getServices, getStaff,
+    getAvailability, createReservation
+  - Google Sheets data layer (CONFIG/HOLIDAYS/SERVICES/STAFF/
+    RESERVATIONS/CANCELLATION_REQUESTS/INQUIRIES/EMAIL_LOG/ERROR_LOG)
+  - Google Calendar availability + event creation
+  - Gmail reservation notification
+  - Idempotent, locked reservation transaction with availability re-check
+  - V1.1: 6 curated design presets (kinari/femme/noir/editorial/natural/
+    modern) — each a coherent theme + typography + Hero/Menu/Staff/
+    Gallery layout + section order composition, selected at build time
+    via SALON_DESIGN_PRESET (see 05_CUSTOMIZATION/DESIGN_CUSTOMIZATION_JA.md)
+  - V1.1: 3 Hero layout variants (fullscreen/split/editorial), 3 Menu
+    layout variants (editorial-list/card-grid/minimal-price-list), 2
+    Staff layout variants (portrait-grid/horizontal-profile), 3 Gallery
+    layout variants (grid/masonry/feature-editorial)
+  - V1.1: per-section visibility control and reorderable section order
+    for the 11 homepage sections (fixed closing Reservation CTA and
+    Header/Footer remain outside sectionOrder)
