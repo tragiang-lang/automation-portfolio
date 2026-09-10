@@ -45,7 +45,7 @@ layout variant, or a section's visibility.
 
 | Field | Type | Status as of this task |
 |---|---|---|
-| `preset` | `DesignPreset` (6 values) | All 6 registered; only `kinari` differs from the others (identically for now) |
+| `preset` | `DesignPreset` (6 values) | All 6 registered, each a distinct curated composition (Design Presets task) |
 | `theme` | `ThemeId` | Only `"kinari"` exists — a later task adds curated palettes |
 | `typography` | `TypographyId` (6 values) | All 6 registered with curated heading-font pairings (Typography Presets task); body typography is shared across all 6 |
 | `heroVariant` | `HeroVariant` (3 values) | All 3 registered — `fullscreen`/`split`/`editorial` (Hero Layout Variants task) |
@@ -115,13 +115,14 @@ representative test orders.
 ## Preset registry
 
 `config/design-presets.ts` exports `DEFAULT_DESIGN_CONFIG` (today's
-Kinari look) and `DESIGN_PRESETS: Record<DesignPreset, DesignConfig>`. As
-of this task, all six registry entries are identical except `preset`
-itself — selecting `femme`/`noir`/`editorial`/`natural`/`modern` today is
-a safe no-op. Each future task (theme, typography, hero/menu/staff/
-gallery variants, section order/visibility, curated multi-field presets)
-edits one field on one or more preset entries; none of them need to touch
-the registry's shape, the validator, or the resolver.
+Kinari look) and `DESIGN_PRESETS: Record<DesignPreset, DesignConfig>`.
+Task 1 shipped this registry with all six entries identical except
+`preset` itself; each subsequent task (theme, typography, hero/menu/staff/
+gallery variants, section order/visibility) edited one field at a time,
+and V1.1 Task 10 ("Design presets" below) is what finally curates all of
+those fields together into six distinct, coherent compositions — see that
+section for the full target matrix. None of this required changing the
+registry's shape, the validator, or the resolver's fallback contract.
 
 ## Safe fallback
 
@@ -416,12 +417,13 @@ all three variants so they can never drift from each other.
 
 **Selecting a variant:** `DesignConfig.heroVariant`, same as every other
 design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
-it straight to `HeroSection`. This task does **not** set any
-`DESIGN_PRESETS` entry to `split`/`editorial` — every preset still resolves
-`heroVariant: "fullscreen"` (§J's "don't ship curated multi-field presets
-yet"); `split`/`editorial` are reachable today only by constructing a
-`DesignConfig` directly (as the tests do), which is enough to prove the
-architecture without jumping ahead to the curated-preset task.
+it straight to `HeroSection`. This task did **not** set any
+`DESIGN_PRESETS` entry to `split`/`editorial` — every preset still resolved
+`heroVariant: "fullscreen"` at the time (§J's "don't ship curated
+multi-field presets yet"); `split`/`editorial` were reachable only by
+constructing a `DesignConfig` directly (as the tests do). The Design
+Presets task (below) is what later gave `femme`/`natural`/`modern` their
+own `split` and `editorial` its own `editorial` heroVariant.
 
 **Backward compatibility:** `isHeroVariant` (mirrors `isHomeSection`) makes
 `HeroSection` normalize whatever `heroVariant` it receives — missing or
@@ -516,11 +518,13 @@ duplicated three times.
 
 **Selecting a variant:** `DesignConfig.menuVariant`, same as every other
 design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
-it straight to `MenuSection`. This task does **not** set any
+it straight to `MenuSection`. This task did **not** set any
 `DESIGN_PRESETS` entry to `card-grid`/`minimal-price-list` — every preset
-still resolves `menuVariant: "editorial-list"` (§J's "don't ship curated
-multi-field presets yet"); the other two are reachable today only by
-constructing a `DesignConfig` directly (as the tests do).
+still resolved `menuVariant: "editorial-list"` at the time (§J's "don't
+ship curated multi-field presets yet"); the other two were reachable only
+by constructing a `DesignConfig` directly (as the tests do). The Design
+Presets task (below) later gave `femme`/`modern` `card-grid` and
+`noir`/`natural` `minimal-price-list`.
 
 **Backward compatibility:** `isMenuVariant` (mirrors `isHeroVariant`) makes
 `MenuSection` normalize whatever `menuVariant` it receives — missing or
@@ -601,10 +605,12 @@ component.
 
 **Selecting a variant:** `DesignConfig.staffVariant`, same as every other
 design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
-it straight to `StaffSection`. This task does **not** set any
+it straight to `StaffSection`. This task did **not** set any
 `DESIGN_PRESETS` entry to `horizontal-profile` — every preset still
-resolves `staffVariant: "portrait-grid"`; the alternate is reachable today
-only by constructing a `DesignConfig` directly (as the tests do).
+resolved `staffVariant: "portrait-grid"` at the time; the alternate was
+reachable only by constructing a `DesignConfig` directly (as the tests
+do). The Design Presets task (below) later gave `noir`/`editorial`/
+`modern` `horizontal-profile`.
 
 **Backward compatibility:** `isStaffVariant` (mirrors `isHeroVariant`/
 `isMenuVariant`) makes `StaffSection` normalize whatever `staffVariant` it
@@ -701,10 +707,12 @@ Gallery has no business feature flag of its own to combine with.
 
 **Selecting a variant:** `DesignConfig.galleryVariant`, same as every other
 design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
-it straight to `GallerySection`. This task does **not** set any
+it straight to `GallerySection`. This task did **not** set any
 `DESIGN_PRESETS` entry to `masonry`/`feature-editorial` — every preset
-still resolves `galleryVariant: "grid"`; the other two are reachable today
-only by constructing a `DesignConfig` directly (as the tests do).
+still resolved `galleryVariant: "grid"` at the time; the other two were
+reachable only by constructing a `DesignConfig` directly (as the tests
+do). The Design Presets task (below) later gave `femme`/`natural`
+`masonry` and `noir`/`editorial` `feature-editorial`.
 
 **Backward compatibility:** `isGalleryVariant` (mirrors `isHeroVariant`/
 `isMenuVariant`/`isStaffVariant`) makes `GallerySection` normalize whatever
@@ -720,14 +728,111 @@ section already uses, so all six `ThemeId`s render correctly under every
 Gallery variant (visually spot-checked under `kinari`/`noir`) with zero
 variant-specific styling logic.
 
+## Design presets (V1.1 Task 10)
+
+Every earlier V1.1 task built one *mechanism* (a theme axis, a typography
+axis, three independent layout-variant axes, a section-order axis) while
+leaving `DESIGN_PRESETS`' five non-`kinari` entries identical to Kinari
+except their own `theme`/`typography` id — selecting `femme`/`noir`/
+`editorial`/`natural`/`modern` was a safe no-op for every layout field.
+This task is the composition layer on top: it curates each of those
+mechanisms together into six coherent, complete visual identities, so a
+preset is genuinely "a different salon website," not just "a different
+color."
+
+**What a preset is:** a fixed bundle of `theme` + `typography` +
+`heroVariant` + `menuVariant` + `staffVariant` + `galleryVariant` +
+`sectionOrder` + `sectionVisibility` — every field `DesignConfig` has
+except `preset` itself. `config/design-presets.ts`'s `PRESET_COMPOSITIONS`
+is the single source of truth for the five curated compositions;
+`DESIGN_PRESETS` (unchanged shape, still `Record<DesignPreset,
+DesignConfig>`) builds each preset's full `DesignConfig` from it.
+`sectionVisibility` stays `DEFAULT_SECTION_VISIBILITY` (every optional
+section visible) for all six — no preset hides a section merely to look
+different (spec §13); every difference lives in *how* a section renders
+and *where* it sits, not whether it renders at all.
+
+**The six presets:**
+
+| Preset | Direction | Theme | Typography | Hero | Menu | Staff | Gallery | Section order vs. Kinari |
+|---|---|---|---|---|---|---|---|---|
+| `kinari` | Japanese natural — quiet, warm, unchanged baseline | `kinari` | `kinari` | `fullscreen` | `editorial-list` | `portrait-grid` | `grid` | default |
+| `femme` | Soft feminine beauty salon | `femme` | `femme` | `split` | `card-grid` | `portrait-grid` | `masonry` | Gallery moved right after Concept, ahead of Menu/Staff |
+| `noir` | Dark premium / luxury | `noir` | `noir` | `fullscreen` | `minimal-price-list` | `horizontal-profile` | `feature-editorial` | same reordering as Femme (Gallery early) |
+| `editorial` | Magazine / high-end | `editorial` | `editorial` | `editorial` | `editorial-list` | `horizontal-profile` | `feature-editorial` | Gallery immediately after Hero — a deliberate strong opening |
+| `natural` | Organic / botanical | `natural` | `natural` | `split` | `minimal-price-list` | `portrait-grid` | `masonry` | default (spec §5.5: don't reorder just to look different) |
+| `modern` | Contemporary / minimal | `modern` | `modern` | `split` | `card-grid` | `horizontal-profile` | `grid` | Gallery promoted ahead of Staff |
+
+Kinari's own `DEFAULT_DESIGN_CONFIG` fields are byte-for-byte unchanged by
+this task — the stable, backward-compatible baseline every other preset
+(and the resolver's fallback) still points at.
+
+**Preset selection resolves to a base, not a permanent lock (spec §7/§8):**
+`resolveDesignConfig` (`lib/config/resolveDesignConfig.ts`) now accepts two
+input shapes:
+
+```text
+resolveDesignConfig("noir")                            // unchanged Task-1 contract
+   -> DESIGN_PRESETS.noir                                  (a raw preset id)
+
+resolveDesignConfig({ preset: "noir" })                 // new, Task 10
+   -> DESIGN_PRESETS.noir                                  (same object, no overrides)
+
+resolveDesignConfig({ preset: "noir", heroVariant: "split" })
+   -> { ...DESIGN_PRESETS.noir, heroVariant: "split" }      (only heroVariant changes)
+```
+
+The object form resolves `preset` to its base `DesignConfig` exactly like
+the raw-id form (same fallback-to-`DEFAULT_DESIGN_CONFIG` behavior for a
+missing/invalid preset id), then layers any remaining, individually-valid
+override keys on top — `theme`, `typography`, `heroVariant`, `menuVariant`,
+`staffVariant`, `galleryVariant`, `sectionOrder`. Each candidate value is
+re-validated with the exact same guard already used everywhere else in the
+codebase (`isHeroVariant`, `isMenuVariant`, `isStaffVariant`,
+`isGalleryVariant`, `isValidSectionOrder`, `parseDesignPresetId` for
+`theme`/`typography` — no second allow-list was added); an invalid override
+is silently ignored and the base field wins, so a malformed override value
+can never crash or blank the page, matching every other design-config
+guard's fallback discipline. When no override actually changes a field
+(including `{}`, or an object whose only overrides are all invalid), the
+resolver returns the exact base object by reference rather than allocating
+a new one — `resolveDesignConfig({ preset: "noir" })` and
+`resolveDesignConfig("noir")` both return the identical `DESIGN_PRESETS.noir`
+object.
+
+**No new customer-facing input channel yet:** this task extends the
+*resolver's* contract, not `getDesignConfig()`'s env-var surface —
+`SALON_DESIGN_PRESET` remains the only design input a deployment sets
+today (`.env.example`). Per-field override wiring (e.g. a dedicated env var
+per field, or a future CONFIG-sheet key) is deliberately left for a later
+task if a real customer need for it emerges, rather than adding an input
+surface no current caller uses — see "Not yet implemented" below.
+
+**Presets remain presentation-only:** no preset field ever contains a
+business name, staff name, price, service name, photo path, address, or
+social URL — every preset is exclusively `theme`/`typography`/layout-
+variant/`sectionOrder`/`sectionVisibility` values, the same closed set of
+types every earlier task already established. Reservation/GAS/business
+logic (`Calendar.ts`, `LockService`, availability, price/duration
+resolution, staff eligibility, Sheets transaction semantics) is untouched
+by this task — no file under `apps/salon-portfolio/gas` was modified.
+
+**`sectionOrder` stays a closed, typed registry:** every preset's
+`sectionOrder` is still exactly a permutation of the same 11
+`ALL_HOME_SECTIONS` values (`lib/constants/design-sections.ts`) — no new
+section id was introduced, no preset's order can omit `hero`/`menu`, and
+the fixed closing `ReservationCtaBand` right before the footer is still
+entirely outside `sectionOrder` for every preset, unchanged from Task 9.
+
 ## Not yet implemented (tracked for later V1.1 work)
 
-- Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
-  instead of its literal JSX sequence.
-- Curated multi-field presets — the five non-`kinari` registry entries
-  differentiated from the default.
 - Customer-facing documentation — a buyer-facing guide for choosing a
-  preset, separate from this architecture note.
+  preset, separate from this architecture note (V1.1 Task 12 in
+  `PLAN_PHASE5_1_V1_1_LP_DESIGN_CUSTOMIZATION.md`).
+- Per-field override input channel — `resolveDesignConfig` supports
+  layering individual overrides on top of a preset (Task 10 above), but no
+  env var or CONFIG-sheet key exposes that to a deployment yet; only the
+  whole-preset `SALON_DESIGN_PRESET` selection is wired end-to-end today.
 
 See `PLAN_PHASE5_1_V1_1_LP_DESIGN_CUSTOMIZATION.md` for the full task
 breakdown and ordering of this remaining work.
