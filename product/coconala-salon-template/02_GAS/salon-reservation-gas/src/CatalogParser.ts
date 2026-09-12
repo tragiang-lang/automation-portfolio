@@ -31,6 +31,15 @@ function toTrimmedString(value: unknown): string {
   return String(value ?? "").trim();
 }
 
+/** Same trim behavior as toTrimmedString, but a blank result becomes
+ *  `undefined` instead of `""` — for optional presentation columns (V1.1
+ *  Task 4) where "blank cell" and "column doesn't exist" must be
+ *  indistinguishable to every downstream consumer. */
+function toOptionalTrimmedString(value: unknown): string | undefined {
+  const trimmed = toTrimmedString(value);
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 export function parseServiceRow(raw: Record<string, unknown>): ServiceRow {
   return {
     ServiceID: toTrimmedString(raw.ServiceID),
@@ -40,6 +49,8 @@ export function parseServiceRow(raw: Record<string, unknown>): ServiceRow {
     Active: toBoolean(raw.Active),
     StaffRequired: toBoolean(raw.StaffRequired),
     DisplayOrder: toNumber(raw.DisplayOrder),
+    Description: toOptionalTrimmedString(raw.Description),
+    Category: toOptionalTrimmedString(raw.Category),
   };
 }
 
@@ -50,5 +61,8 @@ export function parseStaffRow(raw: Record<string, unknown>): StaffRow {
     Active: toBoolean(raw.Active),
     CalendarID: toTrimmedString(raw.CalendarID) || undefined,
     DisplayOrder: toNumber(raw.DisplayOrder),
+    Role: toOptionalTrimmedString(raw.Role),
+    Bio: toOptionalTrimmedString(raw.Bio),
+    ImagePath: toOptionalTrimmedString(raw.ImagePath),
   };
 }

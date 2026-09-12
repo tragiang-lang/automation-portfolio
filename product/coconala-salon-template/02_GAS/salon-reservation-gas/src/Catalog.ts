@@ -1,5 +1,12 @@
 import { SHEET_NAMES } from "./SheetNames";
-import { SERVICES_HEADERS, STAFF_HEADERS, ServiceRow, StaffRow } from "./SheetSchemas";
+import {
+  SERVICES_HEADERS,
+  SERVICES_OPTIONAL_HEADERS,
+  STAFF_HEADERS,
+  STAFF_OPTIONAL_HEADERS,
+  ServiceRow,
+  StaffRow,
+} from "./SheetSchemas";
 import { getHeaderMap, getSheet, readRawRows } from "./Sheets";
 import { rowsToObjects } from "./RowMapper";
 import { parseServiceRow, parseStaffRow } from "./CatalogParser";
@@ -21,6 +28,7 @@ export function getServiceRows(): ServiceRow[] {
     headerMap,
     readRawRows(sheet),
     SERVICES_HEADERS,
+    SERVICES_OPTIONAL_HEADERS,
   );
   return rawRows.map(parseServiceRow);
 }
@@ -32,6 +40,7 @@ export function getStaffRows(): StaffRow[] {
     headerMap,
     readRawRows(sheet),
     STAFF_HEADERS,
+    STAFF_OPTIONAL_HEADERS,
   );
   return rawRows.map(parseStaffRow);
 }

@@ -17,8 +17,12 @@ Package version: **v1.1.0**（バージョン詳細は `VERSION.txt` を参照�
    MENU / STAFF / IMAGE / DESIGN）
 6. `06_TROUBLESHOOTING/` — トラブルシューティングガイド
 7. `07_LICENSE/` — 利用ライセンス
-8. `README_JA.md` — 本製品の概要
-9. `VERSION.txt` — バージョン情報
+8. `08_DEMO/` — デモパック（6デザインプリセットの実画面スクリーンショット、
+   プリセット詳細、クイックスタート/カスタマイズの流れ/FAQガイド）
+9. `README_JA.md` — 本製品の概要
+10. `WHAT_YOU_GET_JA.md` — 含まれるもの一覧
+11. `DESIGN_CUSTOMIZATION_MAP_JA.md` — デザインカスタマイズ早見表
+12. `VERSION.txt` — バージョン情報
 
 ## 実装されている主な機能
 

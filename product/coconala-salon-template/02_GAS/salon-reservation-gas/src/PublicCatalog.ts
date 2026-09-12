@@ -17,6 +17,8 @@ export function buildPublicServices(services: ServiceRow[]): PublicService[] {
       durationMinutes: service.DurationMinutes,
       price: service.Price,
       displayOrder: service.DisplayOrder,
+      description: service.Description,
+      category: service.Category,
     }));
 }
 
@@ -29,5 +31,8 @@ export function buildPublicStaff(staff: StaffRow[]): PublicStaff[] {
       staffId: member.StaffID,
       name: member.Name,
       displayOrder: member.DisplayOrder,
+      role: member.Role,
+      introduction: member.Bio,
+      photoSrc: member.ImagePath,
     }));
 }
