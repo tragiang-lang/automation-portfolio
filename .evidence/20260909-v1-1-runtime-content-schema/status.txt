@@ -1,0 +1,77 @@
+ M apps/salon-portfolio/gas/src/Catalog.ts
+ M apps/salon-portfolio/gas/src/CatalogParser.ts
+ M apps/salon-portfolio/gas/src/ConfigParser.ts
+ M apps/salon-portfolio/gas/src/DemoSeed.ts
+ M apps/salon-portfolio/gas/src/PublicCatalog.ts
+ M apps/salon-portfolio/gas/src/PublicConfig.ts
+ M apps/salon-portfolio/gas/src/RowMapper.ts
+ M apps/salon-portfolio/gas/src/SheetSchemas.ts
+ M apps/salon-portfolio/gas/src/models/Catalog.ts
+ M apps/salon-portfolio/gas/src/models/Config.ts
+ M apps/salon-portfolio/gas/tests/CatalogParser.test.ts
+ M apps/salon-portfolio/gas/tests/ConfigParser.test.ts
+ M apps/salon-portfolio/gas/tests/DemoSeed.test.ts
+ M apps/salon-portfolio/gas/tests/PublicCatalog.test.ts
+ M apps/salon-portfolio/gas/tests/PublicConfig.test.ts
+ M apps/salon-portfolio/gas/tests/RowMapper.test.ts
+ M apps/salon-portfolio/gas/tests/SheetSchemas.test.ts
+ M apps/salon-portfolio/web/lib/config/resolveCatalog.test.ts
+ M apps/salon-portfolio/web/lib/config/resolveCatalog.ts
+ M apps/salon-portfolio/web/lib/config/resolveSiteConfig.test.ts
+ M apps/salon-portfolio/web/lib/config/resolveSiteConfig.ts
+ M apps/salon-portfolio/web/lib/validation/catalogValidator.test.ts
+ M apps/salon-portfolio/web/lib/validation/catalogValidator.ts
+ M apps/salon-portfolio/web/lib/validation/runtimeConfigValidator.test.ts
+ M apps/salon-portfolio/web/lib/validation/runtimeConfigValidator.ts
+ M apps/salon-portfolio/web/types/reservation.ts
+ M apps/salon-portfolio/web/types/runtime-config.ts
+ M docs/api-documentation.md
+ M docs/config-and-sheets-guide.md
+ M docs/runtime-config-guide.md
+?? .evidence/20260907-2322-productization-coconala-2500/
+?? .evidence/20260908-phase5-1-homepage-runtime-data/
+?? .evidence/20260908-phase5-1-scope-review/
+?? .evidence/20260908-theme-presets/
+?? .evidence/20260908-v1-1-presentation-config-layer/
+?? .evidence/20260909-v1-1-runtime-content-schema/
+?? PLAN_PHASE5_1_V1_1_LP_DESIGN_CUSTOMIZATION.md
+?? docs/design-customization-audit.md
+?? docs/superpowers/plans/2026-09-07-coconala-productization.md
+?? docs/superpowers/plans/2026-09-08-phase5-1-homepage-runtime-data.md
+?? docs/superpowers/plans/2026-09-08-v1-1-presentation-config-layer.md
+?? docs/superpowers/plans/2026-09-09-v1-1-runtime-content-schema.md
+?? product/
+?? .evidence/20260907-2322-productization-coconala-2500/
+?? .evidence/20260908-phase5-1-homepage-runtime-data/
+?? .evidence/20260908-phase5-1-scope-review/
+?? .evidence/20260908-theme-presets/
+?? .evidence/20260908-v1-1-presentation-config-layer/
+?? .evidence/20260909-v1-1-runtime-content-schema/
+?? PLAN_PHASE5_1_V1_1_LP_DESIGN_CUSTOMIZATION.md
+?? docs/design-customization-audit.md
+?? docs/superpowers/plans/2026-09-07-coconala-productization.md
+?? docs/superpowers/plans/2026-09-08-phase5-1-homepage-runtime-data.md
+?? docs/superpowers/plans/2026-09-08-v1-1-presentation-config-layer.md
+?? product/coconala-listing-draft-ja.md
+?? product/coconala-salon-template/01_WEB_TEMPLATE/
+?? product/coconala-salon-template/02_GAS/
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/CANCELLATION_REQUESTS.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/EMAIL_LOG.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/ERROR_LOG.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/HOLIDAYS.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/INQUIRIES.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/RESERVATIONS.csv
+?? product/coconala-salon-template/04_SETUP_GUIDE/CALENDAR_SETUP_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/GAS_SETUP_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/SHEETS_SETUP_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/START_HERE_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/VERCEL_DEPLOY_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/WEB_SETUP_JA.md
+?? product/coconala-salon-template/05_CUSTOMIZATION/CONTENT_CUSTOMIZATION_JA.md
+?? product/coconala-salon-template/05_CUSTOMIZATION/DESIGN_CUSTOMIZATION_JA.md
+?? product/coconala-salon-template/06_TROUBLESHOOTING/
+?? product/coconala-salon-template/07_LICENSE/
+?? product/coconala-salon-template/MANIFEST.md
+?? product/coconala-salon-template/README_JA.md
+?? product/coconala-salon-template/VERSION.txt
+?? product/releases/

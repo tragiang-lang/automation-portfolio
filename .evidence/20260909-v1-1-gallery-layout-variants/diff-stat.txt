@@ -1,0 +1,10 @@
+ apps/salon-portfolio/web/app/page.tsx              |  14 ++-
+ .../web/components/sections/GalleryImage.tsx       |  18 ----
+ .../web/components/sections/GallerySection.tsx     |  65 ++++++++++---
+ .../web/config/design-presets.test.ts              |   2 +-
+ apps/salon-portfolio/web/config/design-presets.ts  |   2 +-
+ .../lib/validation/designConfigValidator.test.ts   |  15 +++
+ .../web/lib/validation/designConfigValidator.ts    |  22 ++++-
+ apps/salon-portfolio/web/types/design-config.ts    |   8 +-
+ docs/presentation-config-architecture.md           | 106 ++++++++++++++++++++-
+ 9 files changed, 208 insertions(+), 44 deletions(-)

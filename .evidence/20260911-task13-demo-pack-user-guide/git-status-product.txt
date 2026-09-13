@@ -1,0 +1,8 @@
+ M product/coconala-salon-template/MANIFEST.md
+ M product/coconala-salon-template/README_JA.md
+ M product/releases/coconala-salon-template-v1.1.0.zip
+?? product/coconala-listing-draft-ja.md
+?? product/coconala-salon-template/08_DEMO/
+?? product/coconala-salon-template/DESIGN_CUSTOMIZATION_MAP_JA.md
+?? product/coconala-salon-template/WHAT_YOU_GET_JA.md
+?? product/releases/coconala-salon-template-v1.0.0.zip

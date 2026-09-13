@@ -1,0 +1,15 @@
+
+> salon-portfolio-web@0.1.0 dev
+> next dev -p 3412
+
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3412
+- Network:       http://192.168.100.31:3412
+✓ Ready in 599ms
+✓ Running next.config.ts took 44ms
+
+ GET / 200 in 633ms (next.js: 229ms, application-code: 404ms)
+ GET / 200 in 130ms (next.js: 5ms, application-code: 125ms)
+ GET /db/cn2tw_1.json 404 in 152ms (next.js: 29ms, application-code: 122ms)
+ GET /db/tw2cn_1.json 404 in 149ms (next.js: 36ms, application-code: 113ms)
+[browser] Image with src "/images/hero/hero-nail-treatment.jpg" has "fill" prop and "sizes" prop of "100vw", but image is not rendered at full viewport width. Please adjust "sizes" to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes

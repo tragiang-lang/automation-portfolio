@@ -1,0 +1,57 @@
+ M apps/salon-portfolio/web/app/page.tsx
+ D apps/salon-portfolio/web/components/sections/GalleryImage.tsx
+ M apps/salon-portfolio/web/components/sections/GallerySection.tsx
+ M apps/salon-portfolio/web/config/design-presets.test.ts
+ M apps/salon-portfolio/web/config/design-presets.ts
+ M apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+ M apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+ M apps/salon-portfolio/web/types/design-config.ts
+ M docs/presentation-config-architecture.md
+?? .evidence/20260907-2322-productization-coconala-2500/
+?? .evidence/20260908-phase5-1-homepage-runtime-data/
+?? .evidence/20260908-phase5-1-scope-review/
+?? .evidence/20260908-theme-presets/
+?? .evidence/20260908-v1-1-presentation-config-layer/
+?? .evidence/20260909-v1-1-gallery-layout-variants/
+?? .evidence/20260909-v1-1-hero-layout-variants/
+?? .evidence/20260909-v1-1-menu-layout-variants/
+?? .evidence/20260909-v1-1-runtime-content-schema/
+?? PLAN_PHASE5_1_V1_1_LP_DESIGN_CUSTOMIZATION.md
+?? apps/salon-portfolio/web/components/sections/GalleryContent.test.tsx
+?? apps/salon-portfolio/web/components/sections/GalleryContent.tsx
+?? apps/salon-portfolio/web/components/sections/GalleryFeatureEditorial.test.tsx
+?? apps/salon-portfolio/web/components/sections/GalleryFeatureEditorial.tsx
+?? apps/salon-portfolio/web/components/sections/GalleryGrid.tsx
+?? apps/salon-portfolio/web/components/sections/GalleryMasonry.test.tsx
+?? apps/salon-portfolio/web/components/sections/GalleryMasonry.tsx
+?? apps/salon-portfolio/web/components/sections/GallerySection.test.tsx
+?? apps/salon-portfolio/web/lib/constants/gallery-variants.test.ts
+?? apps/salon-portfolio/web/lib/constants/gallery-variants.ts
+?? docs/design-customization-audit.md
+?? docs/superpowers/plans/2026-09-07-coconala-productization.md
+?? docs/superpowers/plans/2026-09-08-phase5-1-homepage-runtime-data.md
+?? docs/superpowers/plans/2026-09-08-v1-1-presentation-config-layer.md
+?? docs/superpowers/plans/2026-09-09-v1-1-gallery-layout-variants.md
+?? product/coconala-listing-draft-ja.md
+?? product/coconala-salon-template/01_WEB_TEMPLATE/
+?? product/coconala-salon-template/02_GAS/
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/CANCELLATION_REQUESTS.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/EMAIL_LOG.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/ERROR_LOG.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/HOLIDAYS.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/INQUIRIES.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/RESERVATIONS.csv
+?? product/coconala-salon-template/04_SETUP_GUIDE/CALENDAR_SETUP_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/GAS_SETUP_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/SHEETS_SETUP_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/START_HERE_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/VERCEL_DEPLOY_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/WEB_SETUP_JA.md
+?? product/coconala-salon-template/05_CUSTOMIZATION/CONTENT_CUSTOMIZATION_JA.md
+?? product/coconala-salon-template/05_CUSTOMIZATION/DESIGN_CUSTOMIZATION_JA.md
+?? product/coconala-salon-template/06_TROUBLESHOOTING/
+?? product/coconala-salon-template/07_LICENSE/
+?? product/coconala-salon-template/MANIFEST.md
+?? product/coconala-salon-template/README_JA.md
+?? product/coconala-salon-template/VERSION.txt
+?? product/releases/

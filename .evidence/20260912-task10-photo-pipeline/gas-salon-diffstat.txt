@@ -1,0 +1,15 @@
+warning: in the working copy of 'apps/site-report/gas/src/Api.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/SheetStore.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/models/Site.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/models/Worker.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/tests/models.test.ts', LF will be replaced by CRLF the next time Git touches it
+ apps/site-report/gas/src/Api.ts              | 270 ++++++++++++++++++++++++++-
+ apps/site-report/gas/src/RowMapper.ts        | 162 ++++++++++++++++
+ apps/site-report/gas/src/SheetStore.ts       |   9 +
+ apps/site-report/gas/src/index.ts            |  28 ++-
+ apps/site-report/gas/src/models/Site.ts      |   8 +
+ apps/site-report/gas/src/models/Worker.ts    |   4 +
+ apps/site-report/gas/tests/RowMapper.test.ts | 195 +++++++++++++++++++
+ apps/site-report/gas/tests/models.test.ts    |  25 ++-
+ 8 files changed, 686 insertions(+), 15 deletions(-)

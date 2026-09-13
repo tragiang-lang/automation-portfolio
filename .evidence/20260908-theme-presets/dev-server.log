@@ -1,0 +1,25 @@
+
+> salon-portfolio-web@0.1.0 dev
+> next dev -p 3411
+
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3411
+- Network:       http://192.168.100.31:3411
+✓ Ready in 559ms
+✓ Running next.config.ts took 45ms
+
+ GET / 200 in 629ms (next.js: 210ms, application-code: 419ms)
+ GET / 200 in 135ms (next.js: 6ms, application-code: 129ms)
+ GET /db/cn2tw_1.json 404 in 159ms (next.js: 31ms, application-code: 128ms)
+ GET /db/tw2cn_1.json 404 in 156ms (next.js: 38ms, application-code: 118ms)
+[browser] Image with src "/images/hero/hero-nail-treatment.jpg" has "fill" prop and "sizes" prop of "100vw", but image is not rendered at full viewport width. Please adjust "sizes" to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+✓ Compiled in 212ms
+ GET / 200 in 159ms (next.js: 18ms, application-code: 141ms)
+ GET /db/tw2cn_1.json 404 in 121ms (next.js: 11ms, application-code: 110ms)
+ GET /db/cn2tw_1.json 404 in 123ms (next.js: 22ms, application-code: 101ms)
+[browser] Image with src "/images/hero/hero-nail-treatment.jpg" has "fill" prop and "sizes" prop of "100vw", but image is not rendered at full viewport width. Please adjust "sizes" to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+ GET / 200 in 141ms (next.js: 4ms, application-code: 137ms)
+ GET /db/cn2tw_1.json 404 in 128ms (next.js: 13ms, application-code: 114ms)
+ GET /db/tw2cn_1.json 404 in 126ms (next.js: 23ms, application-code: 102ms)
+[browser] Image with src "/images/hero/hero-nail-treatment.jpg" has "fill" prop and "sizes" prop of "100vw", but image is not rendered at full viewport width. Please adjust "sizes" to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[?25h

@@ -1,0 +1,4 @@
+Baseline: master (commit dbed655), apps/salon-portfolio/web
+Test Suites: 30 passed, 30 total
+Tests:       128 passed, 128 total
+(measured by temporarily checking out master's version of every file this branch touches, in the same working tree, then restoring — see conversation for exact commands)

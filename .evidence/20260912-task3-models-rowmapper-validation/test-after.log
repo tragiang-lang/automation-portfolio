@@ -1,0 +1,19 @@
+
+> site-report-gas@0.1.0 test
+> jest --ci
+
+PASS tests/ConfigParser.test.ts
+PASS tests/SheetSchemas.test.ts
+PASS tests/Config.test.ts
+PASS tests/models.test.ts
+PASS tests/Validation.test.ts
+PASS tests/Health.test.ts
+PASS tests/ConfigStore.test.ts
+PASS tests/SheetStore.test.ts
+PASS tests/RowMapper.test.ts
+
+Test Suites: 9 passed, 9 total
+Tests:       90 passed, 90 total
+Snapshots:   0 total
+Time:        3.624 s
+Ran all test suites.

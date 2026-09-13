@@ -1,0 +1,60 @@
+diff --git a/product/coconala-salon-template/MANIFEST.md b/product/coconala-salon-template/MANIFEST.md
+index 98c470e..f002927 100644
+--- a/product/coconala-salon-template/MANIFEST.md
++++ b/product/coconala-salon-template/MANIFEST.md
+@@ -17,8 +17,12 @@ Package version: **v1.1.0**（バージョン詳細は `VERSION.txt` を参照
+    MENU / STAFF / IMAGE / DESIGN）
+ 6. `06_TROUBLESHOOTING/` — トラブルシューティングガイド
+ 7. `07_LICENSE/` — 利用ライセンス
+-8. `README_JA.md` — 本製品の概要
+-9. `VERSION.txt` — バージョン情報
++8. `08_DEMO/` — デモパック（6デザインプリセットの実画面スクリーンショット、
++   プリセット詳細、クイックスタート/カスタマイズの流れ/FAQガイド）
++9. `README_JA.md` — 本製品の概要
++10. `WHAT_YOU_GET_JA.md` — 含まれるもの一覧
++11. `DESIGN_CUSTOMIZATION_MAP_JA.md` — デザインカスタマイズ早見表
++12. `VERSION.txt` — バージョン情報
+ 
+ ## 実装されている主な機能
+ 
+diff --git a/product/coconala-salon-template/README_JA.md b/product/coconala-salon-template/README_JA.md
+index dbca43a..b8a0075 100644
+--- a/product/coconala-salon-template/README_JA.md
++++ b/product/coconala-salon-template/README_JA.md
+@@ -43,6 +43,13 @@ Google環境設定
+ されている機能はすべてそのままお使いいただけます。違いは「誰が
+ セットアップ・カスタマイズを行うか」です。
+ 
++## 0. デモを見る
++
++購入前に実際の画面を確認したい場合は
++[`08_DEMO/README_JA.md`](08_DEMO/README_JA.md) をご覧ください。6種類の
++デザインプリセットを、実際にビルドした画面のスクリーンショットで
++比較できます。
++
+ ## 1. この商品は何か
+ 
+ 美容サロン（ネイル・まつげサロンなどを想定）向けの、ホームページと
+@@ -75,6 +82,10 @@ Google環境設定
+ - 日本語のカスタマイズガイド一式（文言/メニュー/スタッフ/画像/デザイン）
+ - トラブルシューティングガイド
+ - 利用ライセンス
++- デモパック（6デザインプリセットの実画面スクリーンショット＋
++  クイックスタート、[`08_DEMO/`](08_DEMO/README_JA.md)）
++
++詳しくは [`WHAT_YOU_GET_JA.md`](WHAT_YOU_GET_JA.md) も参照してください。
+ 
+ ## 4. 何が含まれないか
+ 
+@@ -111,7 +122,10 @@ CONFIG設定 → ローカル動作確認 → Vercelデプロイ → 予約テ
+ ## 7. カスタマイズ方法
+ 
+ [`05_CUSTOMIZATION/`](05_CUSTOMIZATION/) 配下に、文言・メニュー・
+-スタッフ・画像・デザインそれぞれのガイドがあります。
++スタッフ・画像・デザインそれぞれのガイドがあります。「何を変えたいか」
++から変更先を探したい場合は
++[`DESIGN_CUSTOMIZATION_MAP_JA.md`](DESIGN_CUSTOMIZATION_MAP_JA.md) の
++早見表もご利用ください。
+ 
+ ## 8. ライセンス
+ 

@@ -1,0 +1,33 @@
+:root {
+  color-scheme: light dark;
+}
+
+/* Task 12 mobile audit: without this, every 100%-width/flex-stretched
+   card, section, and button in site-report.module.css (.siteItem,
+   .section, .errorBox/.successBox, .button/.buttonSecondary — anything
+   with both padding/border and a width driven by its container) renders
+   *wider* than its container under the browser default `content-box`
+   model (padding/border add on top of the specified width instead of
+   being included in it) — a real horizontal-overflow bug on narrow
+   viewports, not a hypothetical one. `.input`/`.textarea` already worked
+   around this individually; this makes it universal instead of
+   per-element. Purely a box-model correctness fix — changes no visual
+   spacing, since every affected element's rendered content area was
+   already sized by its explicit padding values either way. */
+* ,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Task 12 mobile audit: a long, unbroken token (an English site/company
+     name, a URL-like value) in worker/site name text would otherwise
+     overflow its container horizontally on a narrow screen — Japanese
+     text itself already wraps between any two characters by default, so
+     this only matters for non-CJK runs, but nothing in this app
+     validates its content, so it must hold for any text. */
+  overflow-wrap: break-word;
+}

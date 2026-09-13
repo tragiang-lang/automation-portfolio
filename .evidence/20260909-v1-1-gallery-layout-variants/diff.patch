@@ -1,0 +1,396 @@
+diff --git a/apps/salon-portfolio/web/app/page.tsx b/apps/salon-portfolio/web/app/page.tsx
+index 306c14c..bf3ba0b 100644
+--- a/apps/salon-portfolio/web/app/page.tsx
++++ b/apps/salon-portfolio/web/app/page.tsx
+@@ -62,13 +62,21 @@ import { getDesignConfig } from "@/lib/config/designConfig";
+ // horizontal-profile component selection itself. This file still only
+ // supplies `staff` (the existing runtime `getRuntimeCatalog` → `getStaff`
+ // → `StaffMember[]` flow), never a variant-specific content shape.
++//
++// V1.1 Task 8 (Gallery Layout Variants) adds `galleryVariant` the same
++// way — passed straight through to `GallerySection`, which owns the grid/
++// masonry/feature-editorial component selection itself. This file still
++// only supplies `images` (the existing static `GALLERY_IMAGES`,
++// `config/demo-content.ts` — Gallery has no runtime/GAS content path,
++// unlike Menu/Staff, and this task does not add one), and the
++// `sectionVisibility.gallery` gate is unchanged.
+ export default async function Home() {
+   const [{ config }, { services, staff }] = await Promise.all([
+     getRuntimeConfig(),
+     getRuntimeCatalog(),
+   ]);
+   const siteConfig = resolveSiteConfig(config);
+-  const { sectionVisibility, heroVariant, menuVariant, staffVariant } = getDesignConfig();
++  const { sectionVisibility, heroVariant, menuVariant, staffVariant, galleryVariant } = getDesignConfig();
+ 
+   return (
+     <main className="flex flex-1 flex-col">
+@@ -101,7 +109,9 @@ export default async function Home() {
+         staffVariant={staffVariant}
+       />
+ 
+-      {sectionVisibility.gallery ? <GallerySection images={GALLERY_IMAGES} /> : null}
++      {sectionVisibility.gallery ? (
++        <GallerySection images={GALLERY_IMAGES} galleryVariant={galleryVariant} />
++      ) : null}
+ 
+       {siteConfig.features.reservation && sectionVisibility.reservation ? (
+         <ReservationCtaBand
+diff --git a/apps/salon-portfolio/web/components/sections/GalleryImage.tsx b/apps/salon-portfolio/web/components/sections/GalleryImage.tsx
+deleted file mode 100644
+index 140a1ac..0000000
+--- a/apps/salon-portfolio/web/components/sections/GalleryImage.tsx
++++ /dev/null
+@@ -1,18 +0,0 @@
+-import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
+-import type { GalleryImageItem } from "@/types/content";
+-
+-/** One masonry tile — keeps its source aspect ratio (Phase 2A §11). */
+-export function GalleryImage({ image }: { image: GalleryImageItem }) {
+-  return (
+-    <div className="mb-6 break-inside-avoid">
+-      <PlaceholderImage
+-        src={image.src}
+-        alt={image.alt}
+-        width={image.width}
+-        height={image.height}
+-        sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+-        className="rounded-sm"
+-      />
+-    </div>
+-  );
+-}
+diff --git a/apps/salon-portfolio/web/components/sections/GallerySection.tsx b/apps/salon-portfolio/web/components/sections/GallerySection.tsx
+index dd5ca5b..503f951 100644
+--- a/apps/salon-portfolio/web/components/sections/GallerySection.tsx
++++ b/apps/salon-portfolio/web/components/sections/GallerySection.tsx
+@@ -1,29 +1,66 @@
++import type { ComponentType } from "react";
+ import { Container } from "@/components/ui/Container";
+ import { SectionHeading } from "@/components/ui/SectionHeading";
+ import { Reveal } from "@/components/ui/Reveal";
+-import { GalleryImage } from "@/components/sections/GalleryImage";
+-import type { GalleryImageItem } from "@/types/content";
++import { isGalleryVariant } from "@/lib/validation/designConfigValidator";
++import { DEFAULT_GALLERY_VARIANT } from "@/lib/constants/gallery-variants";
++import type { GalleryVariant } from "@/types/design-config";
++import type { GalleryContentProps } from "@/components/sections/GalleryContent";
++import { GalleryGrid } from "@/components/sections/GalleryGrid";
++import { GalleryMasonry } from "@/components/sections/GalleryMasonry";
++import { GalleryFeatureEditorial } from "@/components/sections/GalleryFeatureEditorial";
+ 
+ /**
+- * Gallery (Phase 2A §11) — masonry via CSS `columns` on tablet/desktop,
+- * a clean single column on mobile (never a horizontal-scroll carousel).
+- * The "end of gallery" CTA moment (Phase 2A §12) is the dedicated
+- * `ReservationCtaBand` rendered immediately after this section in
+- * `app/page.tsx`, not a button appended in here — one CTA per moment.
++ * Gallery (V1.1 Task 8 — Gallery Layout Variants). Thin router, mirroring
++ * `MenuSection.tsx`'s/`StaffSection.tsx`'s pattern: normalizes whatever
++ * `galleryVariant` it receives and delegates the image list to the
++ * matching layout component. `DesignConfig.galleryVariant`
++ * (`types/design-config.ts`) selects the component, nothing else decides.
++ *
++ * Like Menu (and unlike Hero, where each variant owns its whole
++ * `<section>`), the section chrome here — the `#gallery` id, the
++ * "ギャラリー" heading — is identical across all three variants, so it
++ * lives once in this router instead of being duplicated three times. Only
++ * the image composition itself differs per variant. Visibility
++ * (`sectionVisibility.gallery`) is still gated by the caller
++ * (`app/page.tsx`), same as before this task — Gallery has no business
++ * feature flag of its own to combine with, unlike Staff/Reservation/
++ * Contact.
++ *
++ * `GALLERY_VARIANT_COMPONENTS` being a `Record<GalleryVariant, ...>` makes
++ * the mapping exhaustive at the type level: adding a 4th `GalleryVariant`
++ * without a matching entry here is a compile error, not a silent runtime
++ * gap.
+  */
+-export function GallerySection({ images }: { images: GalleryImageItem[] }) {
++const GALLERY_VARIANT_COMPONENTS: Record<GalleryVariant, ComponentType<GalleryContentProps>> = {
++  grid: GalleryGrid,
++  masonry: GalleryMasonry,
++  "feature-editorial": GalleryFeatureEditorial,
++};
++
++export function GallerySection({
++  images,
++  galleryVariant,
++}: GalleryContentProps & {
++  /**
++   * Optional and validated here (not trusted from the caller) so a
++   * missing or invalid value can never crash or blank the Gallery — falls
++   * back to `DEFAULT_GALLERY_VARIANT` ("grid"), preserving every existing
++   * deployment's current appearance (backward-compatibility requirement).
++   */
++  galleryVariant?: GalleryVariant;
++}) {
++  const resolvedVariant = isGalleryVariant(galleryVariant) ? galleryVariant : DEFAULT_GALLERY_VARIANT;
++  const GalleryVariantComponent = GALLERY_VARIANT_COMPONENTS[resolvedVariant];
++
+   return (
+     <section id="gallery" className="bg-surface py-16 lg:py-24">
+       <Container>
+         <Reveal>
+           <SectionHeading eyebrow="Gallery" title="ギャラリー" align="center" />
+         </Reveal>
+-        <div className="mt-12 columns-1 gap-6 sm:columns-2 lg:columns-3">
+-          {images.map((image, index) => (
+-            <Reveal key={image.id} delayMs={index * 60}>
+-              <GalleryImage image={image} />
+-            </Reveal>
+-          ))}
++        <div className="mt-12">
++          <GalleryVariantComponent images={images} />
+         </div>
+       </Container>
+     </section>
+diff --git a/apps/salon-portfolio/web/config/design-presets.test.ts b/apps/salon-portfolio/web/config/design-presets.test.ts
+index 64993d9..26ec317 100644
+--- a/apps/salon-portfolio/web/config/design-presets.test.ts
++++ b/apps/salon-portfolio/web/config/design-presets.test.ts
+@@ -13,7 +13,7 @@ describe("DEFAULT_DESIGN_CONFIG", () => {
+       heroVariant: "fullscreen",
+       menuVariant: "editorial-list",
+       staffVariant: "portrait-grid",
+-      galleryVariant: "masonry",
++      galleryVariant: "grid",
+     });
+   });
+ 
+diff --git a/apps/salon-portfolio/web/config/design-presets.ts b/apps/salon-portfolio/web/config/design-presets.ts
+index a557e9b..f0e9e9b 100644
+--- a/apps/salon-portfolio/web/config/design-presets.ts
++++ b/apps/salon-portfolio/web/config/design-presets.ts
+@@ -20,7 +20,7 @@ export const DEFAULT_DESIGN_CONFIG: DesignConfig = {
+   heroVariant: "fullscreen",
+   menuVariant: "editorial-list",
+   staffVariant: "portrait-grid",
+-  galleryVariant: "masonry",
++  galleryVariant: "grid",
+   // Cloned, not a direct reference to `DEFAULT_SECTION_VISIBILITY`/
+   // `DEFAULT_SECTION_ORDER` — every `DesignConfig` (including this one)
+   // must own its own sectionVisibility/sectionOrder object so no two
+diff --git a/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts b/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+index 5dc218e..d4f210e 100644
+--- a/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
++++ b/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+@@ -1,4 +1,5 @@
+ import {
++  isGalleryVariant,
+   isHeroVariant,
+   isHomeSection,
+   isMenuVariant,
+@@ -10,6 +11,7 @@ import { ALL_HOME_SECTIONS } from "@/lib/constants/design-sections";
+ import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
+ import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
+ import { STAFF_VARIANTS } from "@/lib/constants/staff-variants";
++import { GALLERY_VARIANTS } from "@/lib/constants/gallery-variants";
+ 
+ describe("parseDesignPresetId", () => {
+   it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])(
+@@ -77,6 +79,19 @@ describe("isStaffVariant", () => {
+   );
+ });
+ 
++describe("isGalleryVariant", () => {
++  it.each(GALLERY_VARIANTS)("accepts the registered gallery variant %s", (variant) => {
++    expect(isGalleryVariant(variant)).toBe(true);
++  });
++
++  it.each([undefined, null, "", "   ", "not-a-variant", "large-feature", "grid ", 42, {}])(
++    "rejects %p",
++    (value) => {
++      expect(isGalleryVariant(value)).toBe(false);
++    },
++  );
++});
++
+ describe("isValidSectionOrder", () => {
+   it("accepts a full permutation of ALL_HOME_SECTIONS", () => {
+     const reordered = [...ALL_HOME_SECTIONS].reverse();
+diff --git a/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts b/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+index 24e4d1f..7062886 100644
+--- a/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
++++ b/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+@@ -3,7 +3,15 @@ import { ALL_HOME_SECTIONS, REQUIRED_HOME_SECTIONS } from "@/lib/constants/desig
+ import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
+ import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
+ import { STAFF_VARIANTS } from "@/lib/constants/staff-variants";
+-import type { DesignPreset, HeroVariant, HomeSection, MenuVariant, StaffVariant } from "@/types/design-config";
++import { GALLERY_VARIANTS } from "@/lib/constants/gallery-variants";
++import type {
++  DesignPreset,
++  GalleryVariant,
++  HeroVariant,
++  HomeSection,
++  MenuVariant,
++  StaffVariant,
++} from "@/types/design-config";
+ 
+ function isNonEmptyString(value: unknown): value is string {
+   return typeof value === "string" && value.trim().length > 0;
+@@ -64,6 +72,18 @@ export function isStaffVariant(value: unknown): value is StaffVariant {
+   return typeof value === "string" && (STAFF_VARIANTS as readonly string[]).includes(value);
+ }
+ 
++/**
++ * True only for one of the 3 registered `GalleryVariant` ids (V1.1 Task 8).
++ * `components/sections/GallerySection.tsx` uses this to normalize whatever
++ * `galleryVariant` it receives — an invalid or missing value falls back to
++ * `DEFAULT_GALLERY_VARIANT` ("grid") rather than crashing or rendering
++ * nothing, the same parse-or-fallback discipline `isHeroVariant`/
++ * `isMenuVariant`/`isStaffVariant` above already follow.
++ */
++export function isGalleryVariant(value: unknown): value is GalleryVariant {
++  return typeof value === "string" && (GALLERY_VARIANTS as readonly string[]).includes(value);
++}
++
+ /**
+  * A valid section order is exactly one permutation of `ALL_HOME_SECTIONS`
+  * — every allow-listed section present once, no unknown strings, no
+diff --git a/apps/salon-portfolio/web/types/design-config.ts b/apps/salon-portfolio/web/types/design-config.ts
+index a66dad9..b2cd91d 100644
+--- a/apps/salon-portfolio/web/types/design-config.ts
++++ b/apps/salon-portfolio/web/types/design-config.ts
+@@ -48,9 +48,11 @@ export type MenuVariant = "editorial-list" | "card-grid" | "minimal-price-list";
+  *  "portrait-grid" — today's only layout — is wired to a real component). */
+ export type StaffVariant = "portrait-grid" | "horizontal-profile";
+ 
+-/** Gallery layout variants (a later task implements the alternates; only
+- *  "masonry" — today's only layout — is wired to a real component). */
+-export type GalleryVariant = "grid" | "masonry" | "large-feature";
++/** Gallery layout variants (V1.1 Task 8 wires all three to real
++ *  components). "grid" is today's pre-Task-8 CSS-columns composition and
++ *  the default/fallback (`DEFAULT_GALLERY_VARIANT`,
++ *  `lib/constants/gallery-variants.ts`). */
++export type GalleryVariant = "grid" | "masonry" | "feature-editorial";
+ 
+ /**
+  * Allow-listed homepage sections. Header/footer are always rendered by
+diff --git a/docs/presentation-config-architecture.md b/docs/presentation-config-architecture.md
+index 55e0480..528b60c 100644
+--- a/docs/presentation-config-architecture.md
++++ b/docs/presentation-config-architecture.md
+@@ -51,7 +51,7 @@ layout variant, or a section's visibility.
+ | `heroVariant` | `HeroVariant` (3 values) | All 3 registered — `fullscreen`/`split`/`editorial` (Hero Layout Variants task) |
+ | `menuVariant` | `MenuVariant` (3 values) | All 3 registered — `editorial-list`/`card-grid`/`minimal-price-list` (Menu Layout Variants task) |
+ | `staffVariant` | `StaffVariant` (2 values) | All 2 registered — `portrait-grid`/`horizontal-profile` (Staff Layout Variants task) |
+-| `galleryVariant` | `GalleryVariant` (3 values) | Only `"masonry"` has a real component |
++| `galleryVariant` | `GalleryVariant` (3 values) | All 3 registered — `grid`/`masonry`/`feature-editorial` (Gallery Layout Variants task) |
+ | `sectionVisibility` | `Record<OptionalHomeSection, boolean>` | Fully wired into `app/page.tsx`; every default is `true` |
+ | `sectionOrder` | `HomeSection[]` | Typed, defaulted, and validated (`isValidSectionOrder`); **not yet** read by `app/page.tsx` |
+ 
+@@ -592,11 +592,109 @@ already uses, so all six `ThemeId`s and all six `TypographyId`s render
+ correctly under every Staff variant (visually spot-checked under
+ `kinari`/`noir`) with zero variant-specific styling logic.
+ 
++## Gallery layout variants (V1.1 Task 8)
++
++Task 1 left `GalleryVariant` a 3-value union (`"grid" | "masonry" |
++"large-feature"`) with none of them wired to a real component —
++`GallerySection.tsx` never actually branched on `galleryVariant`; it always
++rendered one CSS-`columns` body regardless. This task renames the third
++value to `"feature-editorial"`, builds all three as real components, and
++turns `GallerySection` into a router — the same shape as Menu's/Staff's:
++
++```text
++DesignConfig.galleryVariant (GalleryVariant)
++        |
++        v
++lib/validation/designConfigValidator.ts — isGalleryVariant()
++        |            (invalid/missing → DEFAULT_GALLERY_VARIANT "grid")
++        v
++components/sections/GallerySection.tsx
++        — owns the #gallery id and "ギャラリー" heading
++        — GALLERY_VARIANT_COMPONENTS: Record<GalleryVariant, ComponentType<...>>
++        |
++        +-- "grid"             -> GalleryGrid             (today's pre-Task-8 look, unchanged)
++        +-- "masonry"          -> GalleryMasonry           (bento-style CSS Grid, deterministic pattern)
++        +-- "feature-editorial" -> GalleryFeatureEditorial (one dominant image + supporting tiles)
++```
++
++**Naming reconciliation:** `DEFAULT_DESIGN_CONFIG.galleryVariant` (and thus
++every preset's resolved value) changes from `"masonry"` to `"grid"` in this
++task. This is not a behavior change — since `GallerySection` never actually
++read `galleryVariant` before this task, the string `"masonry"` was already
++an inert label for the shipped CSS-columns look. Renaming the *label* that
++now maps to that unchanged look (`"grid"`) is what keeps the **rendered
++pixels** backward compatible; keeping the label `"masonry"` as the default
++would have wired a real, differently-composed `masonry` component under a
++name every existing deployment already resolves to, which would have been
++the actual regression.
++
++**What each variant is for:**
++
++- `grid` — the shipped default: CSS `columns` (masonry-via-columns) on
++  tablet/desktop, single column on mobile, each tile keeping its own
++  source aspect ratio via `PlaceholderImage`. Byte-identical to the
++  pre-Task-8 `GallerySection`/`GalleryImage` body, moved unchanged into
++  `GalleryGrid.tsx`.
++- `masonry` — a true CSS Grid (row-first, not `columns`' column-first
++  reading order) with a repeating bento-style pattern of tile row-spans
++  cycled by position (`GalleryMasonry.tsx`'s `MASONRY_PATTERN`), not each
++  tile's own aspect ratio — the demo photography's ratios are all fairly
++  similar landscape crops, so a ratio-driven height would barely read as
++  "masonry" at a glance; a positional pattern guarantees visible variety
++  regardless of which photos a deployment swaps in, while staying fully
++  deterministic (no JS measuring a rendered image).
++- `feature-editorial` — the first image renders as one dominant tile
++  (`col-span-2 lg:row-span-2`); the rest auto-place as smaller supporting
++  tiles via CSS Grid's normal (non-dense) auto-placement, no manual
++  row/column math. Asymmetric by design — substantially different from
++  both `grid` and `masonry`.
++
++Both `masonry` and `feature-editorial` build their tiles directly on
++`next/image` rather than reusing `PlaceholderImage`: `PlaceholderImage`
++forces its wrapper's CSS `aspect-ratio` to the image's own `width`/`height`,
++which fights a CSS Grid item's row/column-track sizing (the browser sizes
++the box from the aspect ratio instead of stretching it to fill the grid
++area the track defines). Both variants instead let the grid track size the
++box and crop with `object-cover` — never stretching, the same tradeoff
++`StaffHorizontalProfile`'s square crop already makes.
++
++**One Gallery data model, no runtime path today:** all three variants take
++the same `GalleryContentProps` (`components/sections/GalleryContent.tsx`)
++— `images: GalleryImageItem[]` — sourced in `app/page.tsx` entirely from
++the existing static `GALLERY_IMAGES` (`config/demo-content.ts`). Unlike
++Menu/Staff, Gallery has no `getRuntimeCatalog`/GAS content path today, and
++this task does not add one — no variant introduces its own image model.
++
++**Section chrome lives once, not three times:** like Menu/Staff, the
++`#gallery` id and "ギャラリー" heading are identical across all three
++variants, so `GallerySection.tsx` renders them once and only swaps the
++inner composition. Visibility (`sectionVisibility.gallery`) is still gated
++by `app/page.tsx` at the call site, unchanged from before this task —
++Gallery has no business feature flag of its own to combine with.
++
++**Selecting a variant:** `DesignConfig.galleryVariant`, same as every other
++design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
++it straight to `GallerySection`. This task does **not** set any
++`DESIGN_PRESETS` entry to `masonry`/`feature-editorial` — every preset
++still resolves `galleryVariant: "grid"`; the other two are reachable today
++only by constructing a `DesignConfig` directly (as the tests do).
++
++**Backward compatibility:** `isGalleryVariant` (mirrors `isHeroVariant`/
++`isMenuVariant`/`isStaffVariant`) makes `GallerySection` normalize whatever
++`galleryVariant` it receives — missing or invalid falls back to
++`DEFAULT_GALLERY_VARIANT` (`"grid"`, `lib/constants/gallery-variants.ts`),
++so an existing deployment's Gallery can never silently change appearance.
++
++**Presentation-only, still:** no variant reads or writes reservation state
++or invents image alt text (alt text always comes from the existing
++`GalleryImageItem.alt`, never generated), and no color is hard-coded —
++every value comes from the same semantic Tailwind utilities every other
++section already uses, so all six `ThemeId`s render correctly under every
++Gallery variant (visually spot-checked under `kinari`/`noir`) with zero
++variant-specific styling logic.
++
+ ## Not yet implemented (tracked for later V1.1 work)
+ 
+-- Gallery variant components — real alternate layouts for `GalleryVariant`
+-  values other than today's default (Hero's, Menu's, and Staff's are now
+-  implemented — see above).
+ - Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
+   instead of its literal JSX sequence.
+ - Curated multi-field presets — the five non-`kinari` registry entries

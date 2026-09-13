@@ -1,0 +1,934 @@
+
+> site-report-gas@0.1.0 test
+> jest --verbose
+
+PASS tests/models.test.ts
+  construction domain model shapes
+    √ accepts a minimal Site and a fully-populated Site (12 ms)
+    √ accepts a minimal Worker and a fully-populated Worker
+    √ accepts a minimal SiteReport and a fully-populated SiteReport (1 ms)
+    √ accepts a minimal ReportPhoto (1 ms)
+
+PASS tests/SheetSchemas.test.ts
+  SheetSchemas
+    √ defines exactly the five site-report sheets (18 ms)
+    √ has a REQUIRED_HEADERS entry for every sheet name (3 ms)
+    √ CONFIG has Key/Value columns
+    √ SITES/WORKERS/REPORTS/REPORT_PHOTOS match the expected column lists (1 ms)
+
+PASS tests/ConfigParser.test.ts
+  buildRawConfigMap
+    √ trims keys and keeps values as-is (37 ms)
+    √ first occurrence of a duplicate key wins (documented decision)
+    √ ignores rows with an empty key
+  parseSiteReportConfig
+    √ builds a valid SiteReportConfig from a fully-populated raw map (1 ms)
+    √ silently ignores an unrecognized key (documented decision) (1 ms)
+    √ reports a missing required key as an issue (1 ms)
+    √ reports a present-but-empty required value as an issue (1 ms)
+    √ collects every missing/empty field as a separate issue (1 ms)
+
+PASS tests/Config.test.ts
+  SITE_REPORT_CONFIG_KEYS
+    √ defines exactly the four keys required by the config layer (26 ms)
+    √ SiteReportConfig accepts a fully-populated value (14 ms)
+
+PASS tests/ReportId.test.ts
+  generateRandomSuffix
+    √ uses the injected random source deterministically (4 ms)
+    √ defaults to a 10-character alphanumeric suffix (2 ms)
+  generateReportId
+    √ is prefixed with RPT and includes the timestamp and a random suffix (1 ms)
+    √ is deterministic given the same now/random inputs (2 ms)
+    √ never collides for two calls with different random output (1 ms)
+  generatePhotoId
+    √ is prefixed with PHO (1 ms)
+
+PASS tests/AdminNotification.test.ts
+  buildAdminNotificationEmail
+    √ includes the report ID, site, report date, worker, work type, and photo count (7 ms)
+    √ includes the comment when present (1 ms)
+    √ omits a comment section when there is no comment (1 ms)
+    √ never includes anything resembling base64 photo content (1 ms)
+
+PASS tests/Health.test.ts
+  getHealthStatus
+    √ reports ok status for this service (3 ms)
+    √ returns a valid ISO 8601 timestamp
+
+PASS tests/SubmitReportService.parse.test.ts
+  parseSubmitReportInput
+    √ parses a well-formed payload (37 ms)
+    √ accepts a workerId when present (1 ms)
+    √ defaults to an empty photo list when photos is omitted (zero photos is a valid report)
+    √ rejects a non-object payload (4 ms)
+    √ reports a missing siteId (1 ms)
+    √ reports a missing required report field (workType) (1 ms)
+    √ reports an invalid reportDate format
+    √ reports an impossible calendar date (1 ms)
+    √ reports invalid photo metadata (missing fileName) (1 ms)
+    √ reports invalid photo metadata (missing mimeType) (1 ms)
+    √ reports an invalid photo payload (not valid base64) (1 ms)
+    √ rejects photos that is not an array (1 ms)
+    √ accumulates every issue in one pass rather than stopping at the first
+
+  console.error
+    [SUBMIT_REPORT] SITES sheet failed validation while resolving site: {"ok":false,"kind":"malformed","index":0,"field":"status","reason":"expected one of ACTIVE, INACTIVE, got \"PENDING\""}
+
+    [0m [90m 205 |[39m   [36mconst[39m sitesResult [33m=[39m buildSitesResult(getSiteRows())[33m;[39m
+     [90m 206 |[39m   [36mif[39m ([33m![39msitesResult[33m.[39mok) {
+    [31m[1m>[22m[39m[90m 207 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] SITES sheet failed validation while resolving site:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(sitesResult))[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 208 |[39m     [36mreturn[39m { kind[33m:[39m [32m"sites_unavailable"[39m }[33m;[39m
+     [90m 209 |[39m   }
+     [90m 210 |[39m   [36mconst[39m site[33m:[39m [33mSite[39m [33m|[39m undefined [33m=[39m sitesResult[33m.[39msites[33m.[39mfind((candidate) [33m=>[39m candidate[33m.[39msiteId [33m===[39m input[33m.[39msiteId)[33m;[39m[0m
+
+      at submitReport (src/SubmitReportService.ts:207:13)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:118:33)
+
+  console.error
+    [SUBMIT_REPORT] Drive upload failed for photo index 0: Error: Drive quota exceeded
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:189:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at uploadReportPhoto (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:63)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:228:39)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:191:33)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 234 |[39m       uploaded[33m.[39mpush({ fileId[33m:[39m result[33m.[39mfileId[33m,[39m fileUrl[33m:[39m result[33m.[39mfileUrl[33m,[39m fileName[33m,[39m mimeType[33m:[39m photo[33m.[39mmimeType })[33m;[39m
+     [90m 235 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 236 |[39m       console[33m.[39merror([32m`[SUBMIT_REPORT] Drive upload failed for photo index ${index}:`[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 237 |[39m       cleanupUploadedPhotos(uploaded)[33m;[39m
+     [90m 238 |[39m       [36mreturn[39m { kind[33m:[39m [32m"drive_upload_failed"[39m[33m,[39m reason[33m:[39m errorReason(error) }[33m;[39m
+     [90m 239 |[39m     }[0m
+
+      at submitReport (src/SubmitReportService.ts:236:15)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:191:33)
+
+  console.error
+    [SUBMIT_REPORT] Drive upload failed for photo index 1: Error: upload failed on second photo
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:204:15
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at uploadReportPhoto (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:63)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:228:39)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:208:33)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 234 |[39m       uploaded[33m.[39mpush({ fileId[33m:[39m result[33m.[39mfileId[33m,[39m fileUrl[33m:[39m result[33m.[39mfileUrl[33m,[39m fileName[33m,[39m mimeType[33m:[39m photo[33m.[39mmimeType })[33m;[39m
+     [90m 235 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 236 |[39m       console[33m.[39merror([32m`[SUBMIT_REPORT] Drive upload failed for photo index ${index}:`[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 237 |[39m       cleanupUploadedPhotos(uploaded)[33m;[39m
+     [90m 238 |[39m       [36mreturn[39m { kind[33m:[39m [32m"drive_upload_failed"[39m[33m,[39m reason[33m:[39m errorReason(error) }[33m;[39m
+     [90m 239 |[39m     }[0m
+
+      at submitReport (src/SubmitReportService.ts:236:15)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:208:33)
+
+  console.error
+    [SUBMIT_REPORT] REPORTS write failed: Error: Sheets append failed
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:236:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at appendReportRow (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:61)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:261:20)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:238:33)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 261 |[39m     appendReportRow(reportRow)[33m;[39m
+     [90m 262 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 263 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] REPORTS write failed:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 264 |[39m     cleanupUploadedPhotos(uploaded)[33m;[39m
+     [90m 265 |[39m     [36mreturn[39m { kind[33m:[39m [32m"reports_write_failed"[39m[33m,[39m reason[33m:[39m errorReason(error) }[33m;[39m
+     [90m 266 |[39m   }[0m
+
+      at submitReport (src/SubmitReportService.ts:263:13)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:238:33)
+
+  console.error
+    [SUBMIT_REPORT] REPORT_PHOTOS write failed: Error: Sheets append failed for photo row
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:275:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at appendReportPhotoRow (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:66)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:280:27)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:277:33)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 287 |[39m     [90m// safe and is performed, since without a REPORT_PHOTOS row nothing[39m
+     [90m 288 |[39m     [90m// else references these uploaded files.[39m
+    [31m[1m>[22m[39m[90m 289 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] REPORT_PHOTOS write failed:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 290 |[39m     cleanupUploadedPhotos(uploaded)[33m;[39m
+     [90m 291 |[39m     [36mreturn[39m { kind[33m:[39m [32m"report_photos_write_failed"[39m[33m,[39m reason[33m:[39m errorReason(error) }[33m;[39m
+     [90m 292 |[39m   }[0m
+
+      at submitReport (src/SubmitReportService.ts:289:13)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:277:33)
+
+  console.error
+    [SUBMIT_REPORT] admin notification failed (report already persisted): RPT-1789187257048-ZTMYRBYVKB Error: Gmail quota exceeded
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:306:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at sendAdminNotification (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:67)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:315:26)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:308:33)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 316 |[39m   } [36mcatch[39m (error) {
+     [90m 317 |[39m     notificationSent [33m=[39m [36mfalse[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 318 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] admin notification failed (report already persisted):"[39m[33m,[39m reportId[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 319 |[39m   }
+     [90m 320 |[39m
+     [90m 321 |[39m   [36mreturn[39m { kind[33m:[39m [32m"success"[39m[33m,[39m report[33m,[39m photos[33m,[39m notificationSent }[33m;[39m[0m
+
+      at submitReport (src/SubmitReportService.ts:318:13)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:308:33)
+
+  console.error
+    [SUBMIT_REPORT] Drive upload failed for photo index 0: Error: boom
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:322:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at uploadReportPhoto (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:63)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:228:39)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:324:17)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 234 |[39m       uploaded[33m.[39mpush({ fileId[33m:[39m result[33m.[39mfileId[33m,[39m fileUrl[33m:[39m result[33m.[39mfileUrl[33m,[39m fileName[33m,[39m mimeType[33m:[39m photo[33m.[39mmimeType })[33m;[39m
+     [90m 235 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 236 |[39m       console[33m.[39merror([32m`[SUBMIT_REPORT] Drive upload failed for photo index ${index}:`[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 237 |[39m       cleanupUploadedPhotos(uploaded)[33m;[39m
+     [90m 238 |[39m       [36mreturn[39m { kind[33m:[39m [32m"drive_upload_failed"[39m[33m,[39m reason[33m:[39m errorReason(error) }[33m;[39m
+     [90m 239 |[39m     }[0m
+
+      at submitReport (src/SubmitReportService.ts:236:15)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:324:17)
+
+PASS tests/SheetStore.test.ts
+  assertSheetFound
+    √ returns the sheet unchanged when it was found (11 ms)
+    √ throws a descriptive error when the sheet is null (not found) (24 ms)
+  requireHeaders
+    √ returns a header map for exactly-matching headers (1 ms)
+    √ accepts extra/unrecognized columns alongside the required ones (1 ms)
+    √ throws MissingHeadersError when a required header is absent (16 ms)
+    √ throws MissingHeadersError for a completely wrong header set (1 ms)
+    √ validates every one of the five sheet schemas (2 ms)
+
+PASS tests/RowMapper.test.ts
+  buildHeaderMap
+    √ maps header names to their column index (11 ms)
+    √ trims whitespace and ignores empty header cells
+  assertRequiredHeaders
+    √ does not throw when every required header is present (1 ms)
+    √ throws MissingHeadersError listing every missing header (42 ms)
+  rowsToObjects
+    √ maps data rows to objects using only the requested columns (1 ms)
+    √ defaults a missing cell value to an empty string, never undefined (1 ms)
+    √ throws MissingHeadersError when a required column is absent (1 ms)
+    √ includes an optional column's value when the sheet has that header (1 ms)
+    √ never throws when an optional column's header is entirely absent from the sheet (4 ms)
+  objectToRow
+    √ serializes in deterministic column order (1 ms)
+    √ converts undefined and null to empty string (4 ms)
+    √ throws instead of silently producing [object Object] (1 ms)
+  findRowIndexByColumnValue
+    √ returns the 0-based index of the first matching row
+    √ returns null when no row matches
+    √ returns null when the column itself does not exist in the header map
+    √ coerces both sides through String() before comparing (1 ms)
+  mapSiteRow
+    √ maps a valid row to a Site (1 ms)
+    √ converts an empty optional cell to undefined (1 ms)
+    √ preserves an empty required cell as an empty string rather than inventing a value (1 ms)
+    √ converts a Date timestamp cell to an ISO string (2 ms)
+    √ preserves IDs as strings
+    √ rejects a status value outside the allowed set (4 ms)
+  mapWorkerRow
+    √ maps a valid row to a Worker (1 ms)
+    √ converts an empty optional cell to undefined
+    √ rejects a status value outside the allowed set (1 ms)
+  mapReportRow
+    √ maps a valid row to a SiteReport (1 ms)
+    √ converts an empty optional cell to undefined
+    √ coerces a numeric-string photoCount cell to a number
+    √ rejects a non-numeric photoCount cell instead of silently defaulting it
+    √ rejects an empty required photoCount cell instead of silently defaulting to zero (1 ms)
+    √ rejects a status value other than SUBMITTED (1 ms)
+  mapReportPhotoRow
+    √ maps a valid row to a ReportPhoto (1 ms)
+    √ preserves an empty required cell as an empty string rather than inventing a value
+    √ converts a Date timestamp cell to an ISO string
+
+  console.error
+    [SUBMIT_REPORT] REPORTS write failed: Error: boom
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:332:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at appendReportRow (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:61)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:261:20)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:334:33)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 261 |[39m     appendReportRow(reportRow)[33m;[39m
+     [90m 262 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 263 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] REPORTS write failed:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 264 |[39m     cleanupUploadedPhotos(uploaded)[33m;[39m
+     [90m 265 |[39m     [36mreturn[39m { kind[33m:[39m [32m"reports_write_failed"[39m[33m,[39m reason[33m:[39m errorReason(error) }[33m;[39m
+     [90m 266 |[39m   }[0m
+
+      at submitReport (src/SubmitReportService.ts:263:13)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:334:33)
+
+  console.error
+    [SUBMIT_REPORT] REPORT_PHOTOS write failed: Error: boom
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:342:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at appendReportPhotoRow (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:66)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:280:27)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:344:33)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 287 |[39m     [90m// safe and is performed, since without a REPORT_PHOTOS row nothing[39m
+     [90m 288 |[39m     [90m// else references these uploaded files.[39m
+    [31m[1m>[22m[39m[90m 289 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] REPORT_PHOTOS write failed:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 290 |[39m     cleanupUploadedPhotos(uploaded)[33m;[39m
+     [90m 291 |[39m     [36mreturn[39m { kind[33m:[39m [32m"report_photos_write_failed"[39m[33m,[39m reason[33m:[39m errorReason(error) }[33m;[39m
+     [90m 292 |[39m   }[0m
+
+      at submitReport (src/SubmitReportService.ts:289:13)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:344:33)
+
+  console.error
+    [SUBMIT_REPORT] admin notification failed (report already persisted): RPT-1789187257075-7HK4901HQO Error: boom
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:351:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at sendAdminNotification (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:67)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:315:26)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:353:33)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 316 |[39m   } [36mcatch[39m (error) {
+     [90m 317 |[39m     notificationSent [33m=[39m [36mfalse[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 318 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] admin notification failed (report already persisted):"[39m[33m,[39m reportId[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 319 |[39m   }
+     [90m 320 |[39m
+     [90m 321 |[39m   [36mreturn[39m { kind[33m:[39m [32m"success"[39m[33m,[39m report[33m,[39m photos[33m,[39m notificationSent }[33m;[39m[0m
+
+      at submitReport (src/SubmitReportService.ts:318:13)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:353:33)
+
+  console.error
+    [SUBMIT_REPORT] REPORTS write failed: Error: boom
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:360:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at appendReportRow (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:61)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:261:20)
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:365:30
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\expect\build\toThrowMatchers.js:74:11)
+        at Object.throwingMatcher [as toThrow] (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\expect\build\index.js:320:21)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:365:53)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 261 |[39m     appendReportRow(reportRow)[33m;[39m
+     [90m 262 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 263 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] REPORTS write failed:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 264 |[39m     cleanupUploadedPhotos(uploaded)[33m;[39m
+     [90m 265 |[39m     [36mreturn[39m { kind[33m:[39m [32m"reports_write_failed"[39m[33m,[39m reason[33m:[39m errorReason(error) }[33m;[39m
+     [90m 266 |[39m   }[0m
+
+      at submitReport (src/SubmitReportService.ts:263:13)
+      at tests/SubmitReportService.test.ts:365:30
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:365:53)
+
+  console.error
+    [SUBMIT_REPORT] cleanup failed for Drive file: FILE-RPT-1789187257082-3FG65OT56P_1_a.jpg Error: trash failed
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:363:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at deleteUploadedFile (eval at _createMockFunction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:566:31), <anonymous>:3:64)
+        at cleanupUploadedPhotos (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:180:25)
+        at submitReport (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\SubmitReportService.ts:264:5)
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:365:30
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\expect\build\toThrowMatchers.js:74:11)
+        at Object.throwingMatcher [as toThrow] (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\expect\build\index.js:320:21)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\SubmitReportService.test.ts:365:53)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 180 |[39m       deleteUploadedFile(photo[33m.[39mfileId)[33m;[39m
+     [90m 181 |[39m     } [36mcatch[39m (cleanupError) {
+    [31m[1m>[22m[39m[90m 182 |[39m       console[33m.[39merror([32m"[SUBMIT_REPORT] cleanup failed for Drive file:"[39m[33m,[39m photo[33m.[39mfileId[33m,[39m cleanupError)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 183 |[39m     }
+     [90m 184 |[39m   }
+     [90m 185 |[39m }[0m
+
+      at cleanupUploadedPhotos (src/SubmitReportService.ts:182:15)
+      at submitReport (src/SubmitReportService.ts:264:5)
+      at tests/SubmitReportService.test.ts:365:30
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.<anonymous> (tests/SubmitReportService.test.ts:365:53)
+
+PASS tests/SubmitReportService.test.ts
+  site lookup
+    √ proceeds for a valid, existing site (18 ms)
+    √ returns site_not_found for an unknown siteId, without any writes (2 ms)
+    √ returns sites_unavailable when the SITES sheet itself fails validation, without any writes (170 ms)
+  report ID
+    √ uses the same reportId for the REPORTS row, every REPORT_PHOTOS row, and the response (2 ms)
+    √ generates a distinct photoId for every photo in the submission (1 ms)
+  Drive upload
+    √ uploads a single photo into the configured folder (3 ms)
+    √ uploads multiple photos
+    √ builds a deterministic filename from reportId, sequence, and the original name (1 ms)
+    √ stores the resulting fileId and fileUrl into the REPORT_PHOTOS row (1 ms)
+    √ persists the correct mimeType per photo (1 ms)
+    √ returns a structured drive_upload_failed error when Drive throws, without writing REPORTS (52 ms)
+    √ cleans up already-uploaded photos when a later photo in the same submission fails to upload (21 ms)
+  REPORTS write
+    √ writes a row with the correct siteId, reportDate, status, and photoCount (1 ms)
+    √ generates matching, valid ISO createdAt/updatedAt timestamps (1 ms)
+    √ returns a structured reports_write_failed error and cleans up uploaded Drive files (12 ms)
+  REPORT_PHOTOS write
+    √ writes one row for one photo (1 ms)
+    √ writes three rows for three photos, every one referencing the same reportId (1 ms)
+    √ persists fileId, fileUrl, fileName, and mimeType per row (2 ms)
+    √ returns a structured report_photos_write_failed error and cleans up uploaded Drive files (10 ms)
+  admin notification
+    √ sends the notification after successful persistence, to the configured admin address (1 ms)
+    √ includes the persisted report and site in the notification call
+    √ still returns success with notificationSent:false when email fails, without creating a duplicate report (7 ms)
+  partial failure policy
+    √ Case 2 — Drive upload fails: no REPORTS/REPORT_PHOTOS write, no email (6 ms)
+    √ Case 3 — REPORTS write fails after Drive upload: cleanup attempted, no email (6 ms)
+    √ Case 4 — REPORT_PHOTOS write fails: no success, cleanup attempted (8 ms)
+    √ Case 5 — email fails after successful persistence: success with notificationSent:false, single report only (7 ms)
+    √ does not attempt Drive cleanup on a cleanup call's own failure beyond logging (never throws out of submitReport) (15 ms)
+
+  console.error
+    [GET_SITES] CONFIG_INVALID: [{"field":"TIMEZONE","reason":"missing or empty string"}]
+
+    [0m [90m 90 |[39m [90m *  salon's mapConfigErrorToResponse). */[39m
+     [90m 91 |[39m [36mexport[39m [36mfunction[39m mapConfigErrorToResponse(error[33m:[39m [33mSiteReportConfigError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 92 |[39m   console[33m.[39merror([32m"[GET_SITES] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 93 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 94 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 95 |[39m     [32m"Site Report configuration could not be loaded. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:92:11)
+      at Object.<anonymous> (tests/Api.test.ts:116:46)
+
+  console.error
+    [GET_SITES] SHEET_ERROR: missing headers: siteId, siteCode
+
+    [0m [90m 103 |[39m [90m *  mapMissingHeadersErrorToResponse). */[39m
+     [90m 104 |[39m [36mexport[39m [36mfunction[39m mapMissingHeadersErrorToResponse(error[33m:[39m [33mMissingHeadersError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 105 |[39m   console[33m.[39merror([32m"[GET_SITES] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 106 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 107 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 108 |[39m     [32m"The Sites sheet could not be read. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:105:11)
+      at Object.<anonymous> (tests/Api.test.ts:130:54)
+
+PASS tests/Validation.test.ts
+  validateSiteRow
+    √ returns no issues for a valid row (9 ms)
+    √ reports a missing required ID (2 ms)
+    √ reports a missing required text field
+    √ reports an invalid status value (1 ms)
+    √ reports an invalid timestamp (1 ms)
+    √ reports an invalid optional date without requiring it (1 ms)
+    √ accumulates every issue in one pass rather than stopping at the first
+  validateWorkerRow
+    √ returns no issues for a valid row
+    √ reports a missing required ID (1 ms)
+    √ reports a missing required text field
+    √ reports an invalid status value (1 ms)
+  validateReportRow
+    √ returns no issues for a valid row
+    √ reports the missing report/site relationship (1 ms)
+    √ reports a missing required text field
+    √ reports an invalid status value
+    √ reports an invalid report date
+    √ reports an invalid timestamp (4 ms)
+    √ reports a malformed photoCount without treating it as valid
+    √ does not require the optional workerId relationship (1 ms)
+  validateReportPhotoRow
+    √ returns no issues for a valid row
+    √ reports the missing photo/report relationship (1 ms)
+    √ reports a missing required text field
+    √ reports an invalid timestamp
+
+  console.error
+    [GET_SITES] invalid row at index 0: [{"field":"siteId","reason":"is required"}]
+
+    [0m [90m 130 |[39m       )[33m;[39m
+     [90m 131 |[39m     } [36melse[39m {
+    [31m[1m>[22m[39m[90m 132 |[39m       console[33m.[39merror([32m`[GET_SITES] invalid row at index ${result.index}:`[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(result[33m.[39missues))[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 133 |[39m     }
+     [90m 134 |[39m     [36mreturn[39m buildErrorResponse(
+     [90m 135 |[39m       [33mERROR_CODES[39m[33m.[39m[33mDATA_INVALID[39m[33m,[39m[0m
+
+      at getSitesActionInner (src/Api.ts:132:15)
+      at getSitesAction (src/Api.ts:151:12)
+      at Object.<anonymous> (tests/Api.test.ts:246:36)
+
+PASS tests/ConfigStore.test.ts
+  buildSiteReportConfigFromRawRows
+    √ builds a valid SiteReportConfig from valid rows (10 ms)
+    √ throws SiteReportConfigError when a required key is missing (12 ms)
+    √ SiteReportConfigError carries the field issues for server-side logging (1 ms)
+    √ throws when a required value is present but empty (1 ms)
+    √ first occurrence of a duplicate CONFIG row wins (1 ms)
+    √ ignores an unrecognized CONFIG key (1 ms)
+
+  console.error
+    [GET_SITES] malformed row at index 0, field "status": expected one of ACTIVE, INACTIVE, got "PENDING"
+
+    [0m [90m 126 |[39m   [36mif[39m ([33m![39mresult[33m.[39mok) {
+     [90m 127 |[39m     [36mif[39m (result[33m.[39mkind [33m===[39m [32m"malformed"[39m) {
+    [31m[1m>[22m[39m[90m 128 |[39m       console[33m.[39merror(
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 129 |[39m         [32m`[GET_SITES] malformed row at index ${result.index}, field "${result.field}": ${result.reason}`[39m[33m,[39m
+     [90m 130 |[39m       )[33m;[39m
+     [90m 131 |[39m     } [36melse[39m {[0m
+
+      at getSitesActionInner (src/Api.ts:128:15)
+      at getSitesAction (src/Api.ts:151:12)
+      at Object.<anonymous> (tests/Api.test.ts:256:36)
+
+  console.error
+    [GET_SITES] CONFIG_INVALID: [{"field":"TIMEZONE","reason":"missing or empty string"}]
+
+    [0m [90m 90 |[39m [90m *  salon's mapConfigErrorToResponse). */[39m
+     [90m 91 |[39m [36mexport[39m [36mfunction[39m mapConfigErrorToResponse(error[33m:[39m [33mSiteReportConfigError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 92 |[39m   console[33m.[39merror([32m"[GET_SITES] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 93 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 94 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 95 |[39m     [32m"Site Report configuration could not be loaded. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:92:11)
+      at getSitesAction (src/Api.ts:154:14)
+      at Object.<anonymous> (tests/Api.test.ts:268:36)
+
+  console.error
+    [GET_SITES] SHEET_ERROR: missing headers: siteId
+
+    [0m [90m 103 |[39m [90m *  mapMissingHeadersErrorToResponse). */[39m
+     [90m 104 |[39m [36mexport[39m [36mfunction[39m mapMissingHeadersErrorToResponse(error[33m:[39m [33mMissingHeadersError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 105 |[39m   console[33m.[39merror([32m"[GET_SITES] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 106 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 107 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 108 |[39m     [32m"The Sites sheet could not be read. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:105:11)
+      at getSitesAction (src/Api.ts:157:14)
+      at Object.<anonymous> (tests/Api.test.ts:280:36)
+
+  console.error
+    [GET_SITES] unexpected error: Error: Sheet "SITES" was not found in the spreadsheet.
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\Api.test.ts:290:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at getSitesActionInner (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\Api.ts:124:27)
+        at getSitesAction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\Api.ts:151:12)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\Api.test.ts:292:36)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 157 |[39m       [36mreturn[39m mapMissingHeadersErrorToResponse(error)[33m;[39m
+     [90m 158 |[39m     }
+    [31m[1m>[22m[39m[90m 159 |[39m     console[33m.[39merror([32m"[GET_SITES] unexpected error:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 160 |[39m     [36mreturn[39m buildErrorResponse([33mERROR_CODES[39m[33m.[39m[33mINTERNAL_ERROR[39m[33m,[39m [32m"An unexpected server error occurred."[39m)[33m;[39m
+     [90m 161 |[39m   }
+     [90m 162 |[39m }[0m
+
+      at getSitesAction (src/Api.ts:159:13)
+      at Object.<anonymous> (tests/Api.test.ts:292:36)
+
+  console.error
+    [SUBMIT_REPORT] request validation failed: [{"field":"siteId","reason":"is required"}]
+
+    [0m [90m 217 |[39m   [36mconst[39m parsed [33m=[39m parseSubmitReportInput(rawPayload)[33m;[39m
+     [90m 218 |[39m   [36mif[39m ([33m![39mparsed[33m.[39mok) {
+    [31m[1m>[22m[39m[90m 219 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] request validation failed:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(parsed[33m.[39missues))[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 220 |[39m     [36mreturn[39m buildErrorResponse(
+     [90m 221 |[39m       [33mERROR_CODES[39m[33m.[39m[33mVALIDATION_ERROR[39m[33m,[39m
+     [90m 222 |[39m       [32m"The submitted report failed validation. Please check the required fields and try again."[39m[33m,[39m[0m
+
+      at submitReportActionInner (src/Api.ts:219:13)
+      at submitReportAction (src/Api.ts:239:12)
+      at Object.<anonymous> (tests/Api.test.ts:384:40)
+
+  console.error
+    [SUBMIT_REPORT] SITES sheet unavailable while resolving site.
+
+    [0m [90m 191 |[39m       [90m// GET_SITES uses (SitesRepository.buildSitesResult) — same public[39m
+     [90m 192 |[39m       [90m// code GET_SITES itself would return for that condition.[39m
+    [31m[1m>[22m[39m[90m 193 |[39m       console[33m.[39merror([32m"[SUBMIT_REPORT] SITES sheet unavailable while resolving site."[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 194 |[39m       [36mreturn[39m buildErrorResponse(
+     [90m 195 |[39m         [33mERROR_CODES[39m[33m.[39m[33mDATA_INVALID[39m[33m,[39m
+     [90m 196 |[39m         [32m"Site data could not be validated. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapSubmitReportOutcomeToResponse (src/Api.ts:193:15)
+      at submitReportActionInner (src/Api.ts:225:10)
+      at submitReportAction (src/Api.ts:239:12)
+      at Object.<anonymous> (tests/Api.test.ts:403:40)
+
+  console.error
+    [SUBMIT_REPORT] Drive upload failed: Drive quota exceeded for user X
+
+    [0m [90m 197 |[39m       )[33m;[39m
+     [90m 198 |[39m     [36mcase[39m [32m"drive_upload_failed"[39m[33m:[39m
+    [31m[1m>[22m[39m[90m 199 |[39m       console[33m.[39merror([32m"[SUBMIT_REPORT] Drive upload failed:"[39m[33m,[39m outcome[33m.[39mreason)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 200 |[39m       [36mreturn[39m buildErrorResponse(
+     [90m 201 |[39m         [33mERROR_CODES[39m[33m.[39m[33mDRIVE_ERROR[39m[33m,[39m
+     [90m 202 |[39m         [32m"One or more report photos could not be uploaded. Please try again."[39m[33m,[39m[0m
+
+      at mapSubmitReportOutcomeToResponse (src/Api.ts:199:15)
+      at submitReportActionInner (src/Api.ts:225:10)
+      at submitReportAction (src/Api.ts:239:12)
+      at Object.<anonymous> (tests/Api.test.ts:412:40)
+
+  console.error
+    [SUBMIT_REPORT] REPORTS write failed: internal Sheets stack trace
+
+    [0m [90m 203 |[39m       )[33m;[39m
+     [90m 204 |[39m     [36mcase[39m [32m"reports_write_failed"[39m[33m:[39m
+    [31m[1m>[22m[39m[90m 205 |[39m       console[33m.[39merror([32m"[SUBMIT_REPORT] REPORTS write failed:"[39m[33m,[39m outcome[33m.[39mreason)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 206 |[39m       [36mreturn[39m buildErrorResponse([33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m [32m"The report could not be saved. Please try again."[39m)[33m;[39m
+     [90m 207 |[39m     [36mcase[39m [32m"report_photos_write_failed"[39m[33m:[39m
+     [90m 208 |[39m       console[33m.[39merror([32m"[SUBMIT_REPORT] REPORT_PHOTOS write failed:"[39m[33m,[39m outcome[33m.[39mreason)[33m;[39m[0m
+
+      at mapSubmitReportOutcomeToResponse (src/Api.ts:205:15)
+      at submitReportActionInner (src/Api.ts:225:10)
+      at submitReportAction (src/Api.ts:239:12)
+      at Object.<anonymous> (tests/Api.test.ts:422:40)
+
+  console.error
+    [SUBMIT_REPORT] REPORT_PHOTOS write failed: boom
+
+    [0m [90m 206 |[39m       [36mreturn[39m buildErrorResponse([33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m [32m"The report could not be saved. Please try again."[39m)[33m;[39m
+     [90m 207 |[39m     [36mcase[39m [32m"report_photos_write_failed"[39m[33m:[39m
+    [31m[1m>[22m[39m[90m 208 |[39m       console[33m.[39merror([32m"[SUBMIT_REPORT] REPORT_PHOTOS write failed:"[39m[33m,[39m outcome[33m.[39mreason)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 209 |[39m       [36mreturn[39m buildErrorResponse(
+     [90m 210 |[39m         [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 211 |[39m         [32m"The report could not be fully saved. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapSubmitReportOutcomeToResponse (src/Api.ts:208:15)
+      at submitReportActionInner (src/Api.ts:225:10)
+      at submitReportAction (src/Api.ts:239:12)
+      at Object.<anonymous> (tests/Api.test.ts:432:40)
+
+  console.error
+    [GET_SITES] CONFIG_INVALID: [{"field":"TIMEZONE","reason":"missing or empty string"}]
+
+    [0m [90m 90 |[39m [90m *  salon's mapConfigErrorToResponse). */[39m
+     [90m 91 |[39m [36mexport[39m [36mfunction[39m mapConfigErrorToResponse(error[33m:[39m [33mSiteReportConfigError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 92 |[39m   console[33m.[39merror([32m"[GET_SITES] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 93 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 94 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 95 |[39m     [32m"Site Report configuration could not be loaded. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:92:11)
+      at submitReportAction (src/Api.ts:242:14)
+      at Object.<anonymous> (tests/Api.test.ts:443:40)
+
+  console.error
+    [GET_SITES] SHEET_ERROR: missing headers: siteId
+
+    [0m [90m 103 |[39m [90m *  mapMissingHeadersErrorToResponse). */[39m
+     [90m 104 |[39m [36mexport[39m [36mfunction[39m mapMissingHeadersErrorToResponse(error[33m:[39m [33mMissingHeadersError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 105 |[39m   console[33m.[39merror([32m"[GET_SITES] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 106 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 107 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 108 |[39m     [32m"The Sites sheet could not be read. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:105:11)
+      at submitReportAction (src/Api.ts:245:14)
+      at Object.<anonymous> (tests/Api.test.ts:454:40)
+
+  console.error
+    [SUBMIT_REPORT] unexpected error: Error: unexpected internal failure detail
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\Api.test.ts:463:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at submitReportActionInner (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\Api.ts:225:55)
+        at submitReportAction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\Api.ts:239:12)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\Api.test.ts:465:40)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 245 |[39m       [36mreturn[39m mapMissingHeadersErrorToResponse(error)[33m;[39m
+     [90m 246 |[39m     }
+    [31m[1m>[22m[39m[90m 247 |[39m     console[33m.[39merror([32m"[SUBMIT_REPORT] unexpected error:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 248 |[39m     [36mreturn[39m buildErrorResponse([33mERROR_CODES[39m[33m.[39m[33mINTERNAL_ERROR[39m[33m,[39m [32m"An unexpected server error occurred."[39m)[33m;[39m
+     [90m 249 |[39m   }
+     [90m 250 |[39m }[0m
+
+      at submitReportAction (src/Api.ts:247:13)
+      at Object.<anonymous> (tests/Api.test.ts:465:40)
+
+PASS tests/Api.test.ts
+  parseApiRequest
+    √ parses a well-formed request (22 ms)
+    √ rejects an empty or missing body (1 ms)
+    √ rejects malformed JSON (1 ms)
+    √ rejects a body missing a non-empty action field (1 ms)
+  response builders
+    √ buildSuccessResponse wraps data in the ok envelope (1 ms)
+    √ buildErrorResponse wraps a code/message in the error envelope (1 ms)
+  mapConfigErrorToResponse
+    √ maps to a stable CONFIG_INVALID error without leaking the raw issues (76 ms)
+  mapMissingHeadersErrorToResponse
+    √ maps to a stable SHEET_ERROR without leaking the missing header names (6 ms)
+  buildSitesResult
+    √ maps every valid row to a Site, preserving Spreadsheet row order (2 ms)
+    √ returns an empty list for zero data rows
+    √ maps representative fields for a valid row
+    √ converts empty optional cells to undefined in the mapped Site (1 ms)
+    √ reports the first row that fails business validation instead of corrupting it into a valid Site (1 ms)
+    √ reports the first row mapSiteRow rejects as malformed instead of dropping or defaulting it (1 ms)
+  getSitesAction
+    √ returns the success envelope with sites read from the configured sheet (1 ms)
+    √ returns an empty sites array for a valid sheet with no data rows
+    √ returns a structured DATA_INVALID error for a row failing business validation, without leaking row details (5 ms)
+    √ returns a structured DATA_INVALID error for a malformed row, without leaking the raw value (6 ms)
+    √ returns CONFIG_INVALID and never reads SITES when CONFIG itself is invalid (4 ms)
+    √ returns SHEET_ERROR when the SITES sheet is missing a required header (3 ms)
+    √ returns INTERNAL_ERROR for an unexpected Spreadsheet exception (e.g. sheet not found) without leaking details (20 ms)
+  handleApiRequest
+    √ routes the GET_SITES action to getSitesAction
+    √ rejects an unsupported action (1 ms)
+    √ rejects an empty request body
+    √ routes the SUBMIT_REPORT action to submitReportAction (1 ms)
+  submitReportAction
+    √ returns the success envelope with reportId, photoCount, and notificationSent
+    √ returns a VALIDATION_ERROR response and never calls submitReport when the request fails validation (3 ms)
+    √ returns SITE_NOT_FOUND for an unknown site
+    √ returns DATA_INVALID when the SITES sheet itself is unavailable (3 ms)
+    √ returns a DRIVE_ERROR response without leaking the raw reason (3 ms)
+    √ returns a SHEET_ERROR response for a REPORTS write failure without leaking the raw reason (3 ms)
+    √ returns a SHEET_ERROR response for a REPORT_PHOTOS write failure (4 ms)
+    √ maps a thrown SiteReportConfigError to CONFIG_INVALID, same as getSitesAction (3 ms)
+    √ maps a thrown MissingHeadersError to SHEET_ERROR, same as getSitesAction (3 ms)
+    √ maps an unexpected thrown error to INTERNAL_ERROR without leaking details (3 ms)
+
+Test Suites: 14 passed, 14 total
+Tests:       175 passed, 175 total
+Snapshots:   0 total
+Time:        4.361 s
+Ran all test suites.

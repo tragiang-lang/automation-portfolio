@@ -1,0 +1,13 @@
+ apps/salon-portfolio/web/app/layout.tsx            |  13 ++-
+ apps/salon-portfolio/web/app/page.tsx              |  22 ++--
+ .../web/components/sections/StaffCard.tsx          |  41 ++++++--
+ .../web/components/sections/StaffSection.test.tsx  |  11 ++
+ .../web/lib/config/resolveCatalog.test.ts          |  43 ++++++++
+ .../web/lib/config/resolveCatalog.ts               |  29 ++++++
+ .../web/lib/config/runtimeCatalog.test.ts          | 116 +++++++++++++++++++++
+ .../web/lib/config/runtimeCatalog.ts               |  77 ++++++++++++++
+ .../web/lib/validation/catalogValidator.test.ts    |  47 +++++++++
+ .../web/lib/validation/catalogValidator.ts         |  66 ++++++++++++
+ apps/salon-portfolio/web/types/content.ts          |  12 ++-
+ docs/runtime-config-guide.md                       |  28 +++--
+ 12 files changed, 470 insertions(+), 35 deletions(-)

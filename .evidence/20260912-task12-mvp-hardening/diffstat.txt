@@ -1,0 +1,29 @@
+warning: in the working copy of 'apps/site-report/gas/src/Api.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/SheetStore.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/models/Site.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/models/Worker.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/tests/models.test.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/app/globals.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/app/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/jest.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/package.json', LF will be replaced by CRLF the next time Git touches it
+ README.md                                    |   31 +-
+ apps/site-report/gas/src/Api.ts              |  270 +++++-
+ apps/site-report/gas/src/RowMapper.ts        |  162 ++++
+ apps/site-report/gas/src/SheetStore.ts       |    9 +
+ apps/site-report/gas/src/index.ts            |   28 +-
+ apps/site-report/gas/src/models/Site.ts      |    8 +
+ apps/site-report/gas/src/models/Worker.ts    |    4 +
+ apps/site-report/gas/tests/RowMapper.test.ts |  195 ++++
+ apps/site-report/gas/tests/models.test.ts    |   25 +-
+ apps/site-report/web/app/globals.css         |   25 +
+ apps/site-report/web/app/layout.tsx          |    2 +-
+ apps/site-report/web/app/page.tsx            |   16 +-
+ apps/site-report/web/jest.config.ts          |    1 +
+ apps/site-report/web/package-lock.json       | 1328 +++++++++++++++++++++++++-
+ apps/site-report/web/package.json            |    3 +
+ docs/site-report-architecture-overview.md    |  437 ++++++++-
+ 16 files changed, 2485 insertions(+), 59 deletions(-)

@@ -1,0 +1,38 @@
+
+> salon-portfolio-gas@0.1.0 test
+> jest --silent
+
+PASS tests/Utils.test.ts
+PASS tests/SheetSchemas.test.ts
+PASS tests/Health.test.ts
+PASS tests/ConfigValidator.test.ts
+PASS tests/ReservationId.test.ts
+PASS tests/ConfigParser.test.ts
+PASS tests/availability/StaffAvailabilityStrategy.test.ts
+PASS tests/availability/ReservationAvailabilityFactory.test.ts
+PASS tests/DemoSeed.test.ts
+PASS tests/PublicConfig.test.ts
+PASS tests/ReservationRules.test.ts
+PASS tests/RowMapper.test.ts
+PASS tests/ReservationRepository.test.ts
+PASS tests/PublicCatalog.test.ts
+PASS tests/ReservationErrorMapping.test.ts
+PASS tests/availability/AvailabilityStrategy.test.ts
+PASS tests/Logging.test.ts
+PASS tests/ConfigStore.test.ts
+PASS tests/SlotEngine.test.ts
+PASS tests/CatalogParser.test.ts
+PASS tests/Validation.test.ts
+PASS tests/Api.test.ts
+PASS tests/ReservationEmailTemplates.test.ts
+PASS tests/ReservationMapper.test.ts
+PASS tests/ids/CancellationToken.test.ts
+PASS tests/availability/SharedAvailabilityStrategy.test.ts
+PASS tests/availability/CalendarOverlapAvailability.test.ts
+PASS tests/Calendar.test.ts
+PASS tests/Idempotency.test.ts
+
+Test Suites: 29 passed, 29 total
+Tests:       256 passed, 256 total
+Snapshots:   0 total
+Time:        7.021 s

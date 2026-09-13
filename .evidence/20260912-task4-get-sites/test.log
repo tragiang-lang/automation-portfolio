@@ -1,0 +1,295 @@
+
+> site-report-gas@0.1.0 test
+> jest --verbose
+
+PASS tests/Health.test.ts
+  getHealthStatus
+    √ reports ok status for this service (50 ms)
+    √ returns a valid ISO 8601 timestamp
+
+PASS tests/Config.test.ts
+  SITE_REPORT_CONFIG_KEYS
+    √ defines exactly the four keys required by the config layer (28 ms)
+    √ SiteReportConfig accepts a fully-populated value (1 ms)
+
+PASS tests/SheetStore.test.ts
+  assertSheetFound
+    √ returns the sheet unchanged when it was found (20 ms)
+    √ throws a descriptive error when the sheet is null (not found) (29 ms)
+  requireHeaders
+    √ returns a header map for exactly-matching headers (1 ms)
+    √ accepts extra/unrecognized columns alongside the required ones
+    √ throws MissingHeadersError when a required header is absent (15 ms)
+    √ throws MissingHeadersError for a completely wrong header set (1 ms)
+    √ validates every one of the five sheet schemas (19 ms)
+
+PASS tests/models.test.ts
+  construction domain model shapes
+    √ accepts a minimal Site and a fully-populated Site (10 ms)
+    √ accepts a minimal Worker and a fully-populated Worker (4 ms)
+    √ accepts a minimal SiteReport and a fully-populated SiteReport (1 ms)
+    √ accepts a minimal ReportPhoto (1 ms)
+
+PASS tests/ConfigParser.test.ts
+  buildRawConfigMap
+    √ trims keys and keeps values as-is (35 ms)
+    √ first occurrence of a duplicate key wins (documented decision) (1 ms)
+    √ ignores rows with an empty key
+  parseSiteReportConfig
+    √ builds a valid SiteReportConfig from a fully-populated raw map (1 ms)
+    √ silently ignores an unrecognized key (documented decision) (1 ms)
+    √ reports a missing required key as an issue (8 ms)
+    √ reports a present-but-empty required value as an issue
+    √ collects every missing/empty field as a separate issue (1 ms)
+
+PASS tests/RowMapper.test.ts
+  buildHeaderMap
+    √ maps header names to their column index (16 ms)
+    √ trims whitespace and ignores empty header cells (1 ms)
+  assertRequiredHeaders
+    √ does not throw when every required header is present (1 ms)
+    √ throws MissingHeadersError listing every missing header (59 ms)
+  rowsToObjects
+    √ maps data rows to objects using only the requested columns (3 ms)
+    √ defaults a missing cell value to an empty string, never undefined (1 ms)
+    √ throws MissingHeadersError when a required column is absent (1 ms)
+    √ includes an optional column's value when the sheet has that header (1 ms)
+    √ never throws when an optional column's header is entirely absent from the sheet (1 ms)
+  objectToRow
+    √ serializes in deterministic column order
+    √ converts undefined and null to empty string (1 ms)
+    √ throws instead of silently producing [object Object] (1 ms)
+  findRowIndexByColumnValue
+    √ returns the 0-based index of the first matching row (1 ms)
+    √ returns null when no row matches
+    √ returns null when the column itself does not exist in the header map (1 ms)
+    √ coerces both sides through String() before comparing
+  mapSiteRow
+    √ maps a valid row to a Site (7 ms)
+    √ converts an empty optional cell to undefined (4 ms)
+    √ preserves an empty required cell as an empty string rather than inventing a value (1 ms)
+    √ converts a Date timestamp cell to an ISO string (2 ms)
+    √ preserves IDs as strings (1 ms)
+    √ rejects a status value outside the allowed set (1 ms)
+  mapWorkerRow
+    √ maps a valid row to a Worker
+    √ converts an empty optional cell to undefined (1 ms)
+    √ rejects a status value outside the allowed set (1 ms)
+  mapReportRow
+    √ maps a valid row to a SiteReport (1 ms)
+    √ converts an empty optional cell to undefined
+    √ coerces a numeric-string photoCount cell to a number (30 ms)
+    √ rejects a non-numeric photoCount cell instead of silently defaulting it (1 ms)
+    √ rejects an empty required photoCount cell instead of silently defaulting to zero (1 ms)
+    √ rejects a status value other than SUBMITTED (1 ms)
+  mapReportPhotoRow
+    √ maps a valid row to a ReportPhoto (1 ms)
+    √ preserves an empty required cell as an empty string rather than inventing a value
+    √ converts a Date timestamp cell to an ISO string
+
+PASS tests/Validation.test.ts
+  validateSiteRow
+    √ returns no issues for a valid row (16 ms)
+    √ reports a missing required ID (1 ms)
+    √ reports a missing required text field (1 ms)
+    √ reports an invalid status value
+    √ reports an invalid timestamp (1 ms)
+    √ reports an invalid optional date without requiring it
+    √ accumulates every issue in one pass rather than stopping at the first
+  validateWorkerRow
+    √ returns no issues for a valid row (1 ms)
+    √ reports a missing required ID (1 ms)
+    √ reports a missing required text field
+    √ reports an invalid status value
+  validateReportRow
+    √ returns no issues for a valid row
+    √ reports the missing report/site relationship
+    √ reports a missing required text field
+    √ reports an invalid status value (1 ms)
+    √ reports an invalid report date
+    √ reports an invalid timestamp
+    √ reports a malformed photoCount without treating it as valid (1 ms)
+    √ does not require the optional workerId relationship
+  validateReportPhotoRow
+    √ returns no issues for a valid row (1 ms)
+    √ reports the missing photo/report relationship
+    √ reports a missing required text field
+    √ reports an invalid timestamp
+
+  console.error
+    [GET_SITES] CONFIG_INVALID: [{"field":"TIMEZONE","reason":"missing or empty string"}]
+
+    [0m [90m 74 |[39m [90m *  salon's mapConfigErrorToResponse). */[39m
+     [90m 75 |[39m [36mexport[39m [36mfunction[39m mapConfigErrorToResponse(error[33m:[39m [33mSiteReportConfigError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 76 |[39m   console[33m.[39merror([32m"[GET_SITES] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 77 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 78 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 79 |[39m     [32m"Site Report configuration could not be loaded. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:76:11)
+      at Object.<anonymous> (tests/Api.test.ts:99:46)
+
+  console.error
+    [GET_SITES] SHEET_ERROR: missing headers: siteId, siteCode
+
+    [0m [90m 87 |[39m [90m *  mapMissingHeadersErrorToResponse). */[39m
+     [90m 88 |[39m [36mexport[39m [36mfunction[39m mapMissingHeadersErrorToResponse(error[33m:[39m [33mMissingHeadersError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 89 |[39m   console[33m.[39merror([32m"[GET_SITES] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 90 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 91 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 92 |[39m     [32m"The Sites sheet could not be read. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:89:11)
+      at Object.<anonymous> (tests/Api.test.ts:113:54)
+
+  console.error
+    [GET_SITES] invalid row at index 0: [{"field":"siteId","reason":"is required"}]
+
+    [0m [90m 160 |[39m       )[33m;[39m
+     [90m 161 |[39m     } [36melse[39m {
+    [31m[1m>[22m[39m[90m 162 |[39m       console[33m.[39merror([32m`[GET_SITES] invalid row at index ${result.index}:`[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(result[33m.[39missues))[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 163 |[39m     }
+     [90m 164 |[39m     [36mreturn[39m buildErrorResponse(
+     [90m 165 |[39m       [33mERROR_CODES[39m[33m.[39m[33mDATA_INVALID[39m[33m,[39m[0m
+
+      at getSitesActionInner (src/Api.ts:162:15)
+      at getSitesAction (src/Api.ts:181:12)
+      at Object.<anonymous> (tests/Api.test.ts:229:36)
+
+  console.error
+    [GET_SITES] malformed row at index 0, field "status": expected one of ACTIVE, INACTIVE, got "PENDING"
+
+    [0m [90m 156 |[39m   [36mif[39m ([33m![39mresult[33m.[39mok) {
+     [90m 157 |[39m     [36mif[39m (result[33m.[39mkind [33m===[39m [32m"malformed"[39m) {
+    [31m[1m>[22m[39m[90m 158 |[39m       console[33m.[39merror(
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 159 |[39m         [32m`[GET_SITES] malformed row at index ${result.index}, field "${result.field}": ${result.reason}`[39m[33m,[39m
+     [90m 160 |[39m       )[33m;[39m
+     [90m 161 |[39m     } [36melse[39m {[0m
+
+      at getSitesActionInner (src/Api.ts:158:15)
+      at getSitesAction (src/Api.ts:181:12)
+      at Object.<anonymous> (tests/Api.test.ts:239:36)
+
+  console.error
+    [GET_SITES] CONFIG_INVALID: [{"field":"TIMEZONE","reason":"missing or empty string"}]
+
+    [0m [90m 74 |[39m [90m *  salon's mapConfigErrorToResponse). */[39m
+     [90m 75 |[39m [36mexport[39m [36mfunction[39m mapConfigErrorToResponse(error[33m:[39m [33mSiteReportConfigError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 76 |[39m   console[33m.[39merror([32m"[GET_SITES] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 77 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 78 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 79 |[39m     [32m"Site Report configuration could not be loaded. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:76:11)
+      at getSitesAction (src/Api.ts:184:14)
+      at Object.<anonymous> (tests/Api.test.ts:251:36)
+
+  console.error
+    [GET_SITES] SHEET_ERROR: missing headers: siteId
+
+    [0m [90m 87 |[39m [90m *  mapMissingHeadersErrorToResponse). */[39m
+     [90m 88 |[39m [36mexport[39m [36mfunction[39m mapMissingHeadersErrorToResponse(error[33m:[39m [33mMissingHeadersError[39m)[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 89 |[39m   console[33m.[39merror([32m"[GET_SITES] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 90 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 91 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 92 |[39m     [32m"The Sites sheet could not be read. Please contact the administrator."[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:89:11)
+      at getSitesAction (src/Api.ts:187:14)
+      at Object.<anonymous> (tests/Api.test.ts:263:36)
+
+  console.error
+    [GET_SITES] unexpected error: Error: Sheet "SITES" was not found in the spreadsheet.
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\Api.test.ts:273:13
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:397:39
+        at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:404:13
+        at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-mock\build\index.js:148:19)
+        at getSitesActionInner (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\Api.ts:154:27)
+        at getSitesAction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\src\Api.ts:181:12)
+        at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\tests\Api.test.ts:275:36)
+        at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\runTest.js:444:34)
+        at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\site-report\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 187 |[39m       [36mreturn[39m mapMissingHeadersErrorToResponse(error)[33m;[39m
+     [90m 188 |[39m     }
+    [31m[1m>[22m[39m[90m 189 |[39m     console[33m.[39merror([32m"[GET_SITES] unexpected error:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 190 |[39m     [36mreturn[39m buildErrorResponse([33mERROR_CODES[39m[33m.[39m[33mINTERNAL_ERROR[39m[33m,[39m [32m"An unexpected server error occurred."[39m)[33m;[39m
+     [90m 191 |[39m   }
+     [90m 192 |[39m }[0m
+
+      at getSitesAction (src/Api.ts:189:13)
+      at Object.<anonymous> (tests/Api.test.ts:275:36)
+
+PASS tests/Api.test.ts
+  parseApiRequest
+    √ parses a well-formed request (14 ms)
+    √ rejects an empty or missing body
+    √ rejects malformed JSON (1 ms)
+    √ rejects a body missing a non-empty action field (1 ms)
+  response builders
+    √ buildSuccessResponse wraps data in the ok envelope (1 ms)
+    √ buildErrorResponse wraps a code/message in the error envelope
+  mapConfigErrorToResponse
+    √ maps to a stable CONFIG_INVALID error without leaking the raw issues (68 ms)
+  mapMissingHeadersErrorToResponse
+    √ maps to a stable SHEET_ERROR without leaking the missing header names (4 ms)
+  buildSitesResult
+    √ maps every valid row to a Site, preserving Spreadsheet row order (2 ms)
+    √ returns an empty list for zero data rows
+    √ maps representative fields for a valid row (1 ms)
+    √ converts empty optional cells to undefined in the mapped Site
+    √ reports the first row that fails business validation instead of corrupting it into a valid Site
+    √ reports the first row mapSiteRow rejects as malformed instead of dropping or defaulting it (1 ms)
+  getSitesAction
+    √ returns the success envelope with sites read from the configured sheet (1 ms)
+    √ returns an empty sites array for a valid sheet with no data rows (1 ms)
+    √ returns a structured DATA_INVALID error for a row failing business validation, without leaking row details (5 ms)
+    √ returns a structured DATA_INVALID error for a malformed row, without leaking the raw value (5 ms)
+    √ returns CONFIG_INVALID and never reads SITES when CONFIG itself is invalid (8 ms)
+    √ returns SHEET_ERROR when the SITES sheet is missing a required header (4 ms)
+    √ returns INTERNAL_ERROR for an unexpected Spreadsheet exception (e.g. sheet not found) without leaking details (19 ms)
+  handleApiRequest
+    √ routes the GET_SITES action to getSitesAction
+    √ rejects an unsupported action (1 ms)
+    √ rejects an empty request body
+
+PASS tests/SheetSchemas.test.ts
+  SheetSchemas
+    √ defines exactly the five site-report sheets (6 ms)
+    √ has a REQUIRED_HEADERS entry for every sheet name (2 ms)
+    √ CONFIG has Key/Value columns (1 ms)
+    √ SITES/WORKERS/REPORTS/REPORT_PHOTOS match the expected column lists (5 ms)
+
+PASS tests/ConfigStore.test.ts
+  buildSiteReportConfigFromRawRows
+    √ builds a valid SiteReportConfig from valid rows (8 ms)
+    √ throws SiteReportConfigError when a required key is missing (11 ms)
+    √ SiteReportConfigError carries the field issues for server-side logging (2 ms)
+    √ throws when a required value is present but empty (1 ms)
+    √ first occurrence of a duplicate CONFIG row wins (1 ms)
+    √ ignores an unrecognized CONFIG key
+
+Test Suites: 10 passed, 10 total
+Tests:       114 passed, 114 total
+Snapshots:   0 total
+Time:        4.286 s
+Ran all test suites.

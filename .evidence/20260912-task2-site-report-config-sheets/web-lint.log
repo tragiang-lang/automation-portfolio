@@ -1,0 +1,5 @@
+
+> site-report-web@0.1.0 lint
+> eslint
+
+web lint exit: 0

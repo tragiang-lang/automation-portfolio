@@ -1,0 +1,10 @@
+
+> salon-portfolio-web@0.1.0 test
+> jest --runInBand
+
+
+Test Suites: 52 passed, 52 total
+Tests:       465 passed, 465 total
+Snapshots:   0 total
+Time:        38.991 s
+Ran all test suites.
