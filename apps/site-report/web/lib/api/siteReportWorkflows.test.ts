@@ -1,34 +1,50 @@
 /**
  * @jest-environment node
  *
- * Mocks `lib/api/siteReportClient.ts` entirely — no real HTTP request,
- * no deployed GAS. Verifies the workflow layer is a thin, correctly
- * typed pass-through onto `callSiteReportAction`, nothing more.
+ * `siteReportWorkflows.ts` is imported directly by the "use client"
+ * `SiteReportScreen.tsx` (see that file's imports), so it must never pull
+ * in the server-only `siteReportClient.ts` at runtime — its transport is
+ * `fetch("/api/site-report")`, the same same-origin route proxy Salon's
+ * `lib/api/reservationClient.ts` uses for `/api/gas`. These tests mock
+ * `global.fetch` directly (not `siteReportClient`) specifically to prove
+ * that boundary — mocking `siteReportClient` here would hide the exact P0
+ * this file exists to fix.
  */
 import { getSites, submitReport } from "./siteReportWorkflows";
 import type { GetSitesResponseData, SubmitReportInput, SubmitReportResponseData } from "@/types/api";
 
-jest.mock("./siteReportClient", () => ({
-  callSiteReportAction: jest.fn(),
-}));
-
-const { callSiteReportAction } = jest.requireMock("./siteReportClient") as {
-  callSiteReportAction: jest.Mock;
-};
+function mockFetchOnce(body: unknown, init: { ok?: boolean; status?: number } = {}) {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: init.ok ?? true,
+    status: init.status ?? 200,
+    json: async () => body,
+  });
+}
 
 beforeEach(() => {
-  callSiteReportAction.mockReset();
+  global.fetch = jest.fn();
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe("getSites", () => {
-  // Test 1 — calls correct action
-  it("calls callSiteReportAction with GET_SITES and an empty payload", async () => {
-    callSiteReportAction.mockResolvedValue({ ok: true, data: { sites: [] } });
+  // Test 1 — calls the same-origin route proxy, never GAS_WEBAPP_URL directly
+  it("POSTs GET_SITES with an empty payload to /api/site-report", async () => {
+    mockFetchOnce({ ok: true, data: { sites: [] } });
 
     await getSites();
 
-    expect(callSiteReportAction).toHaveBeenCalledWith("GET_SITES", {});
-    expect(callSiteReportAction).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/site-report",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "GET_SITES", payload: {} }),
+      }),
+    );
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
   // Test 2 — returns typed response unchanged
@@ -45,18 +61,15 @@ describe("getSites", () => {
         },
       ],
     };
-    callSiteReportAction.mockResolvedValue({ ok: true, data });
+    mockFetchOnce({ ok: true, data });
 
     const result = await getSites();
 
     expect(result).toEqual({ ok: true, data });
   });
 
-  it("returns the error envelope unchanged when callSiteReportAction reports ok:false", async () => {
-    callSiteReportAction.mockResolvedValue({
-      ok: false,
-      error: { code: "SHEET_ERROR", message: "The Sites sheet could not be read." },
-    });
+  it("returns the error envelope unchanged when the route reports ok:false", async () => {
+    mockFetchOnce({ ok: false, error: { code: "SHEET_ERROR", message: "The Sites sheet could not be read." } });
 
     const result = await getSites();
 
@@ -66,20 +79,36 @@ describe("getSites", () => {
     });
   });
 
-  // Test 3 — propagates client rejection (does not swallow)
-  it("propagates a callSiteReportAction rejection instead of swallowing it", async () => {
-    callSiteReportAction.mockRejectedValue(new Error("GAS_WEBAPP_URL is not configured."));
+  // Test 3 — a network failure resolves to a NETWORK_ERROR envelope,
+  // never an unhandled rejection (SiteReportScreen has no try/catch of its
+  // own around getSites() for this case).
+  it("resolves to a NETWORK_ERROR envelope when fetch rejects", async () => {
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("boom"));
 
-    await expect(getSites()).rejects.toThrow("GAS_WEBAPP_URL is not configured.");
+    const result = await getSites();
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe("NETWORK_ERROR");
+    }
   });
 
-  // Test 4 (original spec) intentionally omitted: the actual GAS contract
-  // (`apps/site-report/gas/src/Api.ts`'s `getSitesAction()`) takes no
-  // parameters and never reads a payload at all — GET_SITES accepts no
-  // userId/authentication field to validate. Adding a client-side check
-  // for a "missing userId" would invent a requirement the GAS contract
-  // does not have (Task 7's Step 0/1 inspection confirmed this; see the
-  // Task 7 design discussion in chat and the architecture doc update).
+  it("resolves to an INVALID_RESPONSE envelope when the response body is not valid JSON", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new Error("not json");
+      },
+    });
+
+    const result = await getSites();
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe("INVALID_RESPONSE");
+    }
+  });
 });
 
 describe("submitReport", () => {
@@ -99,43 +128,33 @@ describe("submitReport", () => {
     ],
   };
 
-  // Test 5 — calls correct action
-  it("calls callSiteReportAction with SUBMIT_REPORT", async () => {
-    callSiteReportAction.mockResolvedValue({
-      ok: true,
-      data: { reportId: "RPT-1", photoCount: 1, notificationSent: true },
-    });
+  // Test 5 — calls the same route with SUBMIT_REPORT
+  it("POSTs SUBMIT_REPORT with the input unchanged to /api/site-report", async () => {
+    mockFetchOnce({ ok: true, data: { reportId: "RPT-1", photoCount: 1, notificationSent: true } });
 
     await submitReport(validInput);
 
-    expect(callSiteReportAction).toHaveBeenCalledWith("SUBMIT_REPORT", validInput);
-    expect(callSiteReportAction).toHaveBeenCalledTimes(1);
-  });
-
-  // Test 6 — preserves the report payload unchanged (deep equality, same
-  // object reference not required, but no field added/removed/renamed)
-  it("passes the SubmitReportInput payload through unchanged, including photos", async () => {
-    callSiteReportAction.mockResolvedValue({
-      ok: true,
-      data: { reportId: "RPT-1", photoCount: 1, notificationSent: true },
-    });
-
-    await submitReport(validInput);
-
-    const [, payloadArg] = callSiteReportAction.mock.calls[0];
-    expect(payloadArg).toEqual(validInput);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/site-report",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SUBMIT_REPORT", payload: validInput }),
+      }),
+    );
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
   it("passes a report with zero photos through unchanged", async () => {
     const noPhotoInput: SubmitReportInput = { ...validInput, comment: undefined, photos: [] };
-    callSiteReportAction.mockResolvedValue({
-      ok: true,
-      data: { reportId: "RPT-2", photoCount: 0, notificationSent: true },
-    });
+    mockFetchOnce({ ok: true, data: { reportId: "RPT-2", photoCount: 0, notificationSent: true } });
 
     await submitReport(noPhotoInput);
 
-    expect(callSiteReportAction).toHaveBeenCalledWith("SUBMIT_REPORT", noPhotoInput);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/site-report",
+      expect.objectContaining({ body: JSON.stringify({ action: "SUBMIT_REPORT", payload: noPhotoInput }) }),
+    );
   });
 
   // Test 7 — returns typed response
@@ -145,18 +164,15 @@ describe("submitReport", () => {
       photoCount: 1,
       notificationSent: false,
     };
-    callSiteReportAction.mockResolvedValue({ ok: true, data });
+    mockFetchOnce({ ok: true, data });
 
     const result = await submitReport(validInput);
 
     expect(result).toEqual({ ok: true, data });
   });
 
-  it("returns the error envelope unchanged when callSiteReportAction reports ok:false", async () => {
-    callSiteReportAction.mockResolvedValue({
-      ok: false,
-      error: { code: "SITE_NOT_FOUND", message: "The selected site could not be found." },
-    });
+  it("returns the error envelope unchanged when the route reports ok:false", async () => {
+    mockFetchOnce({ ok: false, error: { code: "SITE_NOT_FOUND", message: "The selected site could not be found." } });
 
     const result = await submitReport(validInput);
 
@@ -166,12 +182,15 @@ describe("submitReport", () => {
     });
   });
 
-  // Test 8 — propagates client rejection (does not swallow)
-  it("propagates a callSiteReportAction rejection instead of swallowing it", async () => {
-    callSiteReportAction.mockRejectedValue(new Error("GAS_WEBAPP_URL is not configured."));
+  // Test 8 — a network failure resolves to a NETWORK_ERROR envelope
+  it("resolves to a NETWORK_ERROR envelope when fetch rejects", async () => {
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("network down"));
 
-    await expect(submitReport(validInput)).rejects.toThrow(
-      "GAS_WEBAPP_URL is not configured.",
-    );
+    const result = await submitReport(validInput);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe("NETWORK_ERROR");
+    }
   });
 });

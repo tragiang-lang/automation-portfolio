@@ -12,11 +12,14 @@
  * opposite boundary from `lib/liff.ts`'s `NEXT_PUBLIC_LIFF_ID`, which
  * must be public because the LIFF SDK runs in the browser.
  *
- * Task 6 scope: this file only establishes the boundary. No
- * `getSites()`/`submitReport()` wrapper exists yet, and nothing in this
- * app calls `callSiteReportAction` yet — that is a later task's job,
- * once it decides how the browser reaches this server-only code (e.g. a
- * Route Handler proxy, mirroring `app/api/health/route.ts`'s pattern).
+ * The only caller is `app/api/site-report/route.ts` — the Route Handler
+ * proxy the browser reaches via `fetch("/api/site-report")`
+ * (`lib/api/siteReportWorkflows.ts`'s `getSites()`/`submitReport()`).
+ * That boundary was missing through Task 11: `siteReportWorkflows.ts`
+ * called `callSiteReportAction` directly and was itself imported by the
+ * "use client" `SiteReportScreen.tsx`, which meant this server-only file
+ * was reachable from client-bundled code. Fixed by routing the workflow
+ * functions through the Route Handler instead of this module.
  */
 
 import type { SiteReportAction, SiteReportApiResponse } from "@/types/api";
