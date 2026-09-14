@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ReportEntryShell } from "./ReportEntryShell";
-import type { Site, SubmitReportResponseData } from "@/types/api";
+import type { Site, SubmitReportResponseData, WorkType } from "@/types/api";
 import type { ReportDraft, ReportDraftPhoto } from "./reportDraft";
 import { IDLE_SUBMISSION_STATE, type SubmissionState } from "./submission";
 
@@ -34,6 +34,16 @@ const DRAFT: ReportDraft = {
   photos: [],
 };
 
+const EMPTY_DRAFT: ReportDraft = {
+  workerName: "Taro Yamada",
+  workType: "",
+  reportDate: "2026-09-12",
+  comment: "",
+  photos: [],
+};
+
+const WORK_TYPES: WorkType[] = [{ code: "Inspection", name: "検査", status: "ACTIVE", sortOrder: 1 }];
+
 const SUCCESS_DATA: SubmitReportResponseData = { reportId: "RPT-1", photoCount: 0, notificationSent: true };
 
 function makePhoto(id: string): ReportDraftPhoto {
@@ -50,20 +60,24 @@ function makePhoto(id: string): ReportDraftPhoto {
 function renderShell(overrides: {
   draft?: ReportDraft;
   onDraftChange?: (draft: ReportDraft) => void;
+  workTypes?: WorkType[];
   submission?: SubmissionState;
   submitAttempted?: boolean;
   onSubmit?: () => void;
   onCreateAnother?: () => void;
+  onChangeSite?: () => void;
 } = {}) {
   return render(
     <ReportEntryShell
       selectedSite={SELECTED_SITE}
       draft={overrides.draft ?? DRAFT}
       onDraftChange={overrides.onDraftChange ?? (() => {})}
+      workTypes={overrides.workTypes ?? WORK_TYPES}
       submission={overrides.submission ?? IDLE_SUBMISSION_STATE}
       submitAttempted={overrides.submitAttempted ?? false}
       onSubmit={overrides.onSubmit ?? (() => {})}
       onCreateAnother={overrides.onCreateAnother ?? (() => {})}
+      onChangeSite={overrides.onChangeSite ?? (() => {})}
     />,
   );
 }
@@ -202,5 +216,41 @@ describe("ReportEntryShell", () => {
     fireEvent.click(screen.getByRole("button", { name: /1\.jpg/ }));
 
     expect(onDraftChange).toHaveBeenCalledWith({ ...draftWithPhotos, photos: [makePhoto("2")] });
+  });
+});
+
+describe("ReportEntryShell — change site (Phase 1 P0)", () => {
+  it("renders a 現場を変更 button while the form is editable", () => {
+    renderShell({ draft: EMPTY_DRAFT });
+
+    expect(screen.getByRole("button", { name: "現場を変更" })).toBeInTheDocument();
+  });
+
+  it("calls onChangeSite immediately when the draft is still untouched", () => {
+    const onChangeSite = jest.fn();
+    renderShell({ draft: EMPTY_DRAFT, onChangeSite });
+
+    fireEvent.click(screen.getByRole("button", { name: "現場を変更" }));
+
+    expect(onChangeSite).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a confirmation instead of navigating immediately once a field has been edited", () => {
+    const onChangeSite = jest.fn();
+    renderShell({ draft: { ...EMPTY_DRAFT, comment: "some notes" }, onChangeSite });
+
+    fireEvent.click(screen.getByRole("button", { name: "現場を変更" }));
+
+    expect(onChangeSite).not.toHaveBeenCalled();
+    expect(screen.getByText(/現在入力中の内容は失われます/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "現場を変更する" }));
+    expect(onChangeSite).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not show the 現場を変更 button after a successful submission", () => {
+    renderShell({ submission: { status: "success", result: SUCCESS_DATA } });
+
+    expect(screen.queryByRole("button", { name: "現場を変更" })).not.toBeInTheDocument();
   });
 });

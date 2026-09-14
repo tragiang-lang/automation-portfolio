@@ -1,4 +1,5 @@
-import type { Site } from "@/types/api";
+import { useState } from "react";
+import type { Site, WorkType } from "@/types/api";
 import { addPhotosToDraft, removePhotoFromDraft, type ReportDraft } from "./reportDraft";
 import { ReportForm } from "./ReportForm";
 import { PhotoUploader } from "./PhotoUploader";
@@ -27,24 +28,49 @@ import styles from "./site-report.module.css";
  * is only ever reset when the user activates that action (`onCreateAnother`,
  * handled by `SiteReportScreen` — this component never resets state on
  * its own).
+ *
+ * 現場を変更 (Phase 1 P0): lets the user return to the site-selection
+ * dropdown without abandoning the whole app. An untouched draft (never
+ * given a work type, comment, or photo — the same shape
+ * `createInitialReportDraft` produces) navigates back immediately; any
+ * other draft state shows an inline confirmation panel first (never
+ * `window.confirm` — this project avoids native browser dialogs in favor
+ * of testable UI), describing the concrete consequence rather than a bare
+ * "are you sure?".
  */
 export function ReportEntryShell({
   selectedSite,
   draft,
   onDraftChange,
+  workTypes,
   submission,
   submitAttempted,
   onSubmit,
   onCreateAnother,
+  onChangeSite,
 }: {
   selectedSite: Site;
   draft: ReportDraft;
   onDraftChange: (draft: ReportDraft) => void;
+  workTypes: WorkType[];
   submission: SubmissionState;
   submitAttempted: boolean;
   onSubmit: () => void;
   onCreateAnother: () => void;
+  onChangeSite: () => void;
 }) {
+  const [confirmingChangeSite, setConfirmingChangeSite] = useState(false);
+
+  const draftIsUntouched = draft.workType === "" && draft.comment === "" && draft.photos.length === 0;
+
+  const handleChangeSiteClick = () => {
+    if (draftIsUntouched) {
+      onChangeSite();
+    } else {
+      setConfirmingChangeSite(true);
+    }
+  };
+
   if (submission.status === "success") {
     return (
       <section aria-labelledby="report-entry-heading" className={styles.reportEntry}>
@@ -82,9 +108,23 @@ export function ReportEntryShell({
         <h2 className={styles.sectionTitle}>現場</h2>
         <p className={styles.message}>{selectedSite.name}</p>
         <p className={styles.hint}>{selectedSite.siteCode}</p>
+        <button type="button" className={styles.buttonSecondary} onClick={handleChangeSiteClick}>
+          現場を変更
+        </button>
+        {confirmingChangeSite ? (
+          <div className={styles.errorBox} role="alertdialog">
+            <p className={styles.message}>現在入力中の内容は失われます。現場を変更しますか？</p>
+            <button type="button" className={styles.buttonSecondary} onClick={() => setConfirmingChangeSite(false)}>
+              キャンセル
+            </button>
+            <button type="button" className={styles.button} onClick={onChangeSite}>
+              現場を変更する
+            </button>
+          </div>
+        ) : null}
       </div>
 
-      <ReportForm draft={draft} onChange={onDraftChange} showAllErrors={submitAttempted} />
+      <ReportForm draft={draft} onChange={onDraftChange} workTypes={workTypes} showAllErrors={submitAttempted} />
 
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>写真</h2>
