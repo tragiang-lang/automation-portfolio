@@ -210,6 +210,27 @@ describe("buildSitesResult", () => {
       throw new Error("expected a malformed-kind result");
     }
   });
+
+  it("filters out INACTIVE sites from the result", () => {
+    const result = buildSitesResult([
+      siteRow({ siteId: "STE-1", status: "ACTIVE" }),
+      siteRow({ siteId: "STE-2", status: "INACTIVE" }),
+    ]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.sites.map((site) => site.siteId)).toEqual(["STE-1"]);
+    }
+  });
+
+  it("still validates an INACTIVE row's other fields before filtering it out", () => {
+    const result = buildSitesResult([siteRow({ siteId: "", status: "INACTIVE" })]);
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.kind === "invalid") {
+      expect(result.issues).toContainEqual({ field: "siteId", reason: "is required" });
+    } else {
+      throw new Error("expected an invalid-kind result");
+    }
+  });
 });
 
 function workTypeRow(overrides: Partial<WorkTypeRow> = {}): WorkTypeRow {
@@ -302,6 +323,18 @@ describe("getSitesAction", () => {
   it("returns an empty sites array for a valid sheet with no data rows", () => {
     mockGetSiteRows.mockReturnValue([]);
     expect(getSitesAction()).toEqual({ ok: true, data: { sites: [] } });
+  });
+
+  it("excludes INACTIVE sites from the GET_SITES response", () => {
+    mockGetSiteRows.mockReturnValue([
+      siteRow({ siteId: "STE-1", status: "ACTIVE" }),
+      siteRow({ siteId: "STE-2", status: "INACTIVE" }),
+    ]);
+    const response = getSitesAction();
+    expect(response.ok).toBe(true);
+    if (response.ok) {
+      expect(response.data.sites.map((site) => site.siteId)).toEqual(["STE-1"]);
+    }
   });
 
   it("returns a structured DATA_INVALID error for a row failing business validation, without leaking row details", () => {

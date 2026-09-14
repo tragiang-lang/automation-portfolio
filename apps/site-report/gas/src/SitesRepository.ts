@@ -73,5 +73,10 @@ export function buildSitesResult(rows: SiteRow[]): SitesResult {
     }
     sites.push(site);
   }
-  return { ok: true, sites };
+  // Phase 1 P0: only ACTIVE sites are ever surfaced to GET_SITES or
+  // SUBMIT_REPORT's site lookup (both call this function) — every row is
+  // still fully mapped+validated above regardless of status, so an
+  // invalid INACTIVE row still fails the whole result rather than being
+  // silently filtered away unnoticed.
+  return { ok: true, sites: sites.filter((site) => site.status === "ACTIVE") };
 }
