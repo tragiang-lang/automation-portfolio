@@ -1,4 +1,4 @@
-import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow } from "./SheetSchemas";
+import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow } from "./SheetSchemas";
 
 /**
  * Pure business/domain validation for Site Report rows (Task 3). Operates
@@ -154,5 +154,17 @@ export function validateReportPhotoRow(row: ReportPhotoRow): ValidationIssue[] {
   requireNonEmptyString(row.fileName, "fileName", issues);
   requireNonEmptyString(row.mimeType, "mimeType", issues);
   requireValidTimestamp(row.createdAt, "createdAt", issues);
+  return issues;
+}
+
+/** Validates a WORK_TYPES row. */
+export function validateWorkTypeRow(row: WorkTypeRow): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  requireNonEmptyString(row.code, "code", issues);
+  requireNonEmptyString(row.name, "name", issues);
+  requireStatus(row.status, "status", ["ACTIVE", "INACTIVE"] as const, issues);
+  if (typeof row.sortOrder !== "number" || !Number.isInteger(row.sortOrder) || row.sortOrder < 0) {
+    issues.push({ field: "sortOrder", reason: "must be a non-negative integer" });
+  }
   return issues;
 }

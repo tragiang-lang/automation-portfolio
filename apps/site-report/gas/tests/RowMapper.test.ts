@@ -6,12 +6,13 @@ import {
   mapReportRow,
   mapSiteRow,
   mapWorkerRow,
+  mapWorkTypeRow,
   MalformedRowValueError,
   MissingHeadersError,
   objectToRow,
   rowsToObjects,
 } from "../src/RowMapper";
-import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow } from "../src/SheetSchemas";
+import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow } from "../src/SheetSchemas";
 
 describe("buildHeaderMap", () => {
   it("maps header names to their column index", () => {
@@ -341,5 +342,45 @@ describe("mapReportPhotoRow", () => {
     const date = new Date("2026-09-12T03:04:05.000Z");
     const photo = mapReportPhotoRow({ ...validRow, createdAt: date as unknown as string });
     expect(photo.createdAt).toBe("2026-09-12T03:04:05.000Z");
+  });
+});
+
+describe("mapWorkTypeRow", () => {
+  it("maps a valid row to a WorkType", () => {
+    const row: WorkTypeRow = { code: "EXTERIOR_WALL", name: "外壁工事", status: "ACTIVE", sortOrder: 10 };
+    expect(mapWorkTypeRow(row)).toEqual({ code: "EXTERIOR_WALL", name: "外壁工事", status: "ACTIVE", sortOrder: 10 });
+  });
+
+  it("rejects a status outside ACTIVE/INACTIVE as malformed", () => {
+    const row: WorkTypeRow = { code: "X", name: "Y", status: "PENDING", sortOrder: 1 };
+    expect(() => mapWorkTypeRow(row)).toThrow(MalformedRowValueError);
+  });
+
+  it("rejects a non-numeric sortOrder as malformed", () => {
+    const row = { code: "X", name: "Y", status: "ACTIVE", sortOrder: "not-a-number" } as unknown as WorkTypeRow;
+    expect(() => mapWorkTypeRow(row)).toThrow(MalformedRowValueError);
+  });
+});
+
+describe("mapReportRow — workTypeName", () => {
+  const validRow: ReportRow = {
+    reportId: "RPT-1",
+    siteId: "STE-1",
+    lineUserId: "U1",
+    workerName: "Taro",
+    reportDate: "2026-09-12",
+    workType: "EXTERIOR_WALL",
+    photoCount: 0,
+    status: "SUBMITTED",
+    createdAt: "2026-09-12T00:00:00.000Z",
+    updatedAt: "2026-09-12T00:00:00.000Z",
+  };
+
+  it("converts an empty workTypeName cell to undefined", () => {
+    expect(mapReportRow({ ...validRow, workTypeName: "" }).workTypeName).toBeUndefined();
+  });
+
+  it("passes through a present workTypeName", () => {
+    expect(mapReportRow({ ...validRow, workTypeName: "外壁工事" }).workTypeName).toBe("外壁工事");
   });
 });

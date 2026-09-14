@@ -15,4 +15,7 @@ export interface SiteReport {
   status: "SUBMITTED";
   createdAt: string;
   updatedAt: string;
+  /** Phase 1 P0: Japanese label resolved from WORK_TYPES at submission
+   *  time — see SubmitReportService.submitReport. */
+  workTypeName?: string;
 }

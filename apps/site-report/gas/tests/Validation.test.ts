@@ -3,8 +3,9 @@ import {
   validateReportRow,
   validateSiteRow,
   validateWorkerRow,
+  validateWorkTypeRow,
 } from "../src/Validation";
-import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow } from "../src/SheetSchemas";
+import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow } from "../src/SheetSchemas";
 
 describe("validateSiteRow", () => {
   const validRow: SiteRow = {
@@ -201,6 +202,36 @@ describe("validateReportPhotoRow", () => {
     expect(validateReportPhotoRow({ ...validRow, createdAt: "not-a-date" })).toContainEqual({
       field: "createdAt",
       reason: "must be a valid ISO 8601 timestamp",
+    });
+  });
+});
+
+describe("validateWorkTypeRow", () => {
+  const validRow: WorkTypeRow = { code: "EXTERIOR_WALL", name: "外壁工事", status: "ACTIVE", sortOrder: 10 };
+
+  it("returns no issues for a valid row", () => {
+    expect(validateWorkTypeRow(validRow)).toEqual([]);
+  });
+
+  it("reports a missing required code", () => {
+    expect(validateWorkTypeRow({ ...validRow, code: "" })).toContainEqual({ field: "code", reason: "is required" });
+  });
+
+  it("reports a missing required name", () => {
+    expect(validateWorkTypeRow({ ...validRow, name: "" })).toContainEqual({ field: "name", reason: "is required" });
+  });
+
+  it("reports an invalid status value", () => {
+    expect(validateWorkTypeRow({ ...validRow, status: "PENDING" })).toContainEqual({
+      field: "status",
+      reason: 'must be "ACTIVE" or "INACTIVE", got "PENDING"',
+    });
+  });
+
+  it("reports a negative sortOrder", () => {
+    expect(validateWorkTypeRow({ ...validRow, sortOrder: -1 })).toContainEqual({
+      field: "sortOrder",
+      reason: "must be a non-negative integer",
     });
   });
 });

@@ -1,8 +1,9 @@
-import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow } from "./SheetSchemas";
+import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow } from "./SheetSchemas";
 import { Site } from "./models/Site";
 import { Worker } from "./models/Worker";
 import { SiteReport } from "./models/Report";
 import { ReportPhoto } from "./models/ReportPhoto";
+import { WorkType } from "./models/WorkType";
 
 /**
  * Pure header-mapping and row<->object helpers shared by every sheet
@@ -255,6 +256,17 @@ export function mapReportRow(row: ReportRow): SiteReport {
     status: toEnum(row.status, "status", ["SUBMITTED"] as const),
     createdAt: toTimestamp(row.createdAt, "createdAt"),
     updatedAt: toTimestamp(row.updatedAt, "updatedAt"),
+    workTypeName: toOptionalString(row.workTypeName, "workTypeName"),
+  };
+}
+
+/** Maps a WORK_TYPES data row to a WorkType. */
+export function mapWorkTypeRow(row: WorkTypeRow): WorkType {
+  return {
+    code: toTrimmedString(row.code, "code"),
+    name: toTrimmedString(row.name, "name"),
+    status: toEnum(row.status, "status", ["ACTIVE", "INACTIVE"] as const),
+    sortOrder: toNonNegativeInteger(row.sortOrder, "sortOrder"),
   };
 }
 
