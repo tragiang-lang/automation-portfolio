@@ -30,7 +30,8 @@ import { getSiteReportConfig, SiteReportConfigError } from "../src/ConfigStore";
 import { getSiteRows } from "../src/SitesRepository";
 import { submitReport } from "../src/SubmitReportService";
 import { MissingHeadersError } from "../src/RowMapper";
-import { SiteRow } from "../src/SheetSchemas";
+import { SiteRow, WorkTypeRow } from "../src/SheetSchemas";
+import { buildWorkTypesResult } from "../src/WorkTypesRepository";
 import { SiteReportConfig } from "../src/Config";
 import { SiteReport } from "../src/models/Report";
 import { ReportPhoto } from "../src/models/ReportPhoto";
@@ -201,6 +202,68 @@ describe("buildSitesResult", () => {
 
   it("reports the first row mapSiteRow rejects as malformed instead of dropping or defaulting it", () => {
     const result = buildSitesResult([siteRow(), siteRow({ status: "PENDING" })]);
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.kind === "malformed") {
+      expect(result.index).toBe(1);
+      expect(result.field).toBe("status");
+    } else {
+      throw new Error("expected a malformed-kind result");
+    }
+  });
+});
+
+function workTypeRow(overrides: Partial<WorkTypeRow> = {}): WorkTypeRow {
+  return { code: "EXTERIOR_WALL", name: "外壁工事", status: "ACTIVE", sortOrder: 10, ...overrides };
+}
+
+describe("buildWorkTypesResult", () => {
+  it("maps every valid row to a WorkType", () => {
+    const result = buildWorkTypesResult([workTypeRow()]);
+    expect(result).toEqual({
+      ok: true,
+      workTypes: [{ code: "EXTERIOR_WALL", name: "外壁工事", status: "ACTIVE", sortOrder: 10 }],
+    });
+  });
+
+  it("returns an empty list for zero data rows", () => {
+    expect(buildWorkTypesResult([])).toEqual({ ok: true, workTypes: [] });
+  });
+
+  it("filters out INACTIVE work types", () => {
+    const result = buildWorkTypesResult([
+      workTypeRow({ code: "A", sortOrder: 1 }),
+      workTypeRow({ code: "B", sortOrder: 2, status: "INACTIVE" }),
+    ]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.workTypes.map((w) => w.code)).toEqual(["A"]);
+    }
+  });
+
+  it("sorts the result by sortOrder ascending regardless of sheet row order", () => {
+    const result = buildWorkTypesResult([
+      workTypeRow({ code: "B", sortOrder: 20 }),
+      workTypeRow({ code: "A", sortOrder: 10 }),
+    ]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.workTypes.map((w) => w.code)).toEqual(["A", "B"]);
+    }
+  });
+
+  it("reports the first row that fails business validation instead of corrupting it", () => {
+    const result = buildWorkTypesResult([workTypeRow(), workTypeRow({ code: "" })]);
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.kind === "invalid") {
+      expect(result.index).toBe(1);
+      expect(result.issues).toContainEqual({ field: "code", reason: "is required" });
+    } else {
+      throw new Error("expected an invalid-kind result");
+    }
+  });
+
+  it("reports the first row mapWorkTypeRow rejects as malformed", () => {
+    const result = buildWorkTypesResult([workTypeRow(), workTypeRow({ status: "PENDING" })]);
     expect(result.ok).toBe(false);
     if (!result.ok && result.kind === "malformed") {
       expect(result.index).toBe(1);
