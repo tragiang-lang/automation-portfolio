@@ -6,12 +6,13 @@ import {
   WORKERS_HEADERS,
   REPORTS_HEADERS,
   REPORT_PHOTOS_HEADERS,
+  WORK_TYPES_HEADERS,
 } from "../src/SheetSchemas";
 
 describe("SheetSchemas", () => {
-  it("defines exactly the five site-report sheets", () => {
+  it("defines exactly the six site-report sheets", () => {
     expect(Object.keys(SHEET_NAMES).sort()).toEqual(
-      ["CONFIG", "REPORTS", "REPORT_PHOTOS", "SITES", "WORKERS"].sort(),
+      ["CONFIG", "REPORTS", "REPORT_PHOTOS", "SITES", "WORKERS", "WORK_TYPES"].sort(),
     );
   });
 
@@ -26,7 +27,7 @@ describe("SheetSchemas", () => {
     expect(CONFIG_HEADERS).toEqual(["Key", "Value"]);
   });
 
-  it("SITES/WORKERS/REPORTS/REPORT_PHOTOS match the expected column lists", () => {
+  it("SITES/WORKERS/REPORTS/REPORT_PHOTOS/WORK_TYPES match the expected column lists", () => {
     expect(SITES_HEADERS).toEqual([
       "siteId",
       "siteCode",
@@ -62,6 +63,7 @@ describe("SheetSchemas", () => {
       "status",
       "createdAt",
       "updatedAt",
+      "workTypeName",
     ]);
     expect(REPORT_PHOTOS_HEADERS).toEqual([
       "photoId",
@@ -72,5 +74,27 @@ describe("SheetSchemas", () => {
       "mimeType",
       "createdAt",
     ]);
+    expect(WORK_TYPES_HEADERS).toEqual(["code", "name", "status", "sortOrder"]);
+  });
+
+  it("REQUIRED_HEADERS.REPORTS stays the original 12 columns, never the 13-column REPORTS_HEADERS", () => {
+    // Regression guard for the Phase 1 migration hazard (spec §4.4/§6):
+    // making workTypeName "required" would abort setupSiteReport() on
+    // every existing production spreadsheet.
+    expect(REQUIRED_HEADERS[SHEET_NAMES.REPORTS]).toEqual([
+      "reportId",
+      "siteId",
+      "workerId",
+      "lineUserId",
+      "workerName",
+      "reportDate",
+      "workType",
+      "comment",
+      "photoCount",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ]);
+    expect(REQUIRED_HEADERS[SHEET_NAMES.REPORTS]).not.toEqual(REPORTS_HEADERS);
   });
 });

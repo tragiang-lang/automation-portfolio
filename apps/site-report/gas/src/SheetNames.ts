@@ -9,6 +9,7 @@ export const SHEET_NAMES = {
   WORKERS: "WORKERS",
   REPORTS: "REPORTS",
   REPORT_PHOTOS: "REPORT_PHOTOS",
+  WORK_TYPES: "WORK_TYPES",
 } as const;
 
 export type SheetName = (typeof SHEET_NAMES)[keyof typeof SHEET_NAMES];
