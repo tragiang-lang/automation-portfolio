@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ReportDraft } from "./reportDraft";
 import { validateReportDraft } from "./reportValidation";
+import type { WorkType } from "@/types/api";
 import styles from "./site-report.module.css";
 
 type TouchedFields = Partial<Record<keyof ReportDraft, boolean>>;
@@ -31,10 +32,12 @@ type TouchedFields = Partial<Record<keyof ReportDraft, boolean>>;
 export function ReportForm({
   draft,
   onChange,
+  workTypes,
   showAllErrors = false,
 }: {
   draft: ReportDraft;
   onChange: (draft: ReportDraft) => void;
+  workTypes: WorkType[];
   showAllErrors?: boolean;
 }) {
   const [touched, setTouched] = useState<TouchedFields>({});
@@ -73,16 +76,24 @@ export function ReportForm({
         <label htmlFor="report-work-type" className={styles.label}>
           作業種別
         </label>
-        <input
+        <select
           id="report-work-type"
-          type="text"
           className={styles.input}
           value={draft.workType}
           onChange={(event) => onChange({ ...draft, workType: event.target.value })}
           onBlur={() => markTouched("workType")}
           aria-invalid={Boolean(isShown("workType") && errors.workType)}
           aria-describedby={isShown("workType") && errors.workType ? "report-work-type-error" : undefined}
-        />
+        >
+          <option value="" disabled>
+            選択してください
+          </option>
+          {workTypes.map((workType) => (
+            <option key={workType.code} value={workType.code}>
+              {workType.name}
+            </option>
+          ))}
+        </select>
         {isShown("workType") && errors.workType ? (
           <p id="report-work-type-error" className={styles.fieldError} role="alert">
             {errors.workType}
