@@ -122,6 +122,21 @@ Exactly **one** new column is appended at the end:
   `toOptionalString` already handles the same way every other optional
   column does.
 
+**Migration mechanism (critical — see §6 finding):** `REQUIRED_HEADERS[SHEET_NAMES.REPORTS]`
+stays pointed at the **original 12-column** list, never the new 13-column
+`REPORTS_HEADERS` — `setupSiteReport()`'s generic per-sheet loop treats any
+header row missing a "required" column as `SetupSchemaMismatchError` and
+aborts the *entire* provisioning run (including WORK_TYPES creation/seeding
+later in the same function), so making `workTypeName` "required" would
+brick re-provisioning on every existing production spreadsheet the moment
+this ships. Instead, `setupSiteReport()` gets one small, dedicated,
+additive step after the generic loop: if the REPORTS header row does not
+yet contain a `workTypeName` cell, append it in the very next free column
+(`getRange(1, existingHeaderRow.length + 1).setValue("workTypeName")`) —
+never touching any existing cell. This runs unconditionally (fresh sheet or
+pre-existing) and is naturally idempotent, since a rerun finds the header
+already present.
+
 `SubmitReportInput` (the wire payload) is **unchanged** — still just
 `workType: string`. The client sends the code; GAS resolves the matching
 `WorkType` row (same existence-check pattern as `siteId`) and derives
@@ -200,6 +215,19 @@ one before writing).
 
 ## 6. Hidden dependencies / assumptions found during re-check (step 2)
 
+- **Critical:** `setupSiteReport()`'s generic per-sheet header loop treats
+  any "required" column absent from an existing, non-empty header row as
+  `SetupSchemaMismatchError` and throws immediately, aborting the whole
+  function — including every sheet processed after REPORTS in
+  `Object.values(SHEET_NAMES)` order. Naively appending `workTypeName` to
+  `REPORTS_HEADERS` *and* reusing that same constant for
+  `REQUIRED_HEADERS[REPORTS]` would mean re-running `setupSiteReport()`
+  against any existing production spreadsheet throws before WORK_TYPES is
+  ever created or seeded — a hard operational blocker discovered only by
+  tracing `describeSheetHeaderState`/`REQUIRED_HEADERS`'s actual runtime
+  behavior, not obvious from the schema table alone. Resolved in §4.4 by
+  keeping `REQUIRED_HEADERS[REPORTS]` on the original 12 columns and adding
+  a dedicated, additive backfill step for the 13th.
 - No existing GAS test fixture uses `status: "INACTIVE"` for a SITES row
   (only `"ACTIVE"` and the invalid `"PENDING"` are used today) — the new
   ACTIVE-filter is a genuine behavior change but does not break any
