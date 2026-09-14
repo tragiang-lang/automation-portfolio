@@ -30,6 +30,7 @@ export type SiteReportApiResponse<T = unknown> =
  *  action name. */
 export const SITE_REPORT_ACTIONS = {
   GET_SITES: "GET_SITES",
+  GET_WORK_TYPES: "GET_WORK_TYPES",
   SUBMIT_REPORT: "SUBMIT_REPORT",
 } as const;
 
@@ -53,6 +54,20 @@ export interface Site {
  *  success payload. */
 export interface GetSitesResponseData {
   sites: Site[];
+}
+
+/** Mirrors GAS `models/WorkType.ts`'s `WorkType` exactly. */
+export interface WorkType {
+  code: string;
+  name: string;
+  status: "ACTIVE" | "INACTIVE";
+  sortOrder: number;
+}
+
+/** Mirrors GAS `Api.ts`'s `GetWorkTypesResponseData` — the
+ *  `GET_WORK_TYPES` success payload. */
+export interface GetWorkTypesResponseData {
+  workTypes: WorkType[];
 }
 
 /** Mirrors GAS `models/SubmitReportInput.ts`'s `SubmitReportPhotoInput`.
