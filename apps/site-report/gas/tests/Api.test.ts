@@ -555,6 +555,24 @@ describe("submitReportAction", () => {
     }
   });
 
+  it("maps a work_type_not_found outcome to WORK_TYPE_NOT_FOUND", () => {
+    mockSubmitReport.mockReturnValue({ kind: "work_type_not_found" });
+    const response = submitReportAction(validPayload);
+    expect(response).toEqual({
+      ok: false,
+      error: { code: ERROR_CODES.WORK_TYPE_NOT_FOUND, message: "The referenced work type could not be found." },
+    });
+  });
+
+  it("maps a work_types_unavailable outcome to DATA_INVALID", () => {
+    mockSubmitReport.mockReturnValue({ kind: "work_types_unavailable" });
+    const response = submitReportAction(validPayload);
+    expect(response.ok).toBe(false);
+    if (!response.ok) {
+      expect(response.error.code).toBe(ERROR_CODES.DATA_INVALID);
+    }
+  });
+
   it("returns a DRIVE_ERROR response without leaking the raw reason", () => {
     mockSubmitReport.mockReturnValue({ kind: "drive_upload_failed", reason: "Drive quota exceeded for user X" });
     const response = submitReportAction(validPayload);

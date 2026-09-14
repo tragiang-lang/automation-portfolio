@@ -5,6 +5,7 @@ import { SubmitReportInput, SubmitReportPhotoInput } from "./models/SubmitReport
 import { ValidationIssue } from "./Validation";
 import { getSiteReportConfig } from "./ConfigStore";
 import { buildSitesResult, getSiteRows } from "./SitesRepository";
+import { buildWorkTypesResult, getWorkTypeRows } from "./WorkTypesRepository";
 import { generatePhotoId, generateReportId } from "./ids/ReportId";
 import { deleteUploadedFile, uploadReportPhoto } from "./DriveStorage";
 import { appendReportPhotoRow, appendReportRow } from "./ReportsRepository";
@@ -142,6 +143,8 @@ export function parseSubmitReportInput(rawPayload: unknown): ParseSubmitReportIn
 export type SubmitReportOutcome =
   | { kind: "site_not_found" }
   | { kind: "sites_unavailable" }
+  | { kind: "work_type_not_found" }
+  | { kind: "work_types_unavailable" }
   | { kind: "drive_upload_failed"; reason: string }
   | { kind: "reports_write_failed"; reason: string }
   | { kind: "report_photos_write_failed"; reason: string }
@@ -212,6 +215,22 @@ export function submitReport(input: SubmitReportInput): SubmitReportOutcome {
     return { kind: "site_not_found" };
   }
 
+  // Phase 1 P0: same existence-check pattern as the site lookup above,
+  // reusing GET_WORK_TYPES's own infrastructure rather than a duplicate
+  // lookup.
+  const workTypesResult = buildWorkTypesResult(getWorkTypeRows());
+  if (!workTypesResult.ok) {
+    console.error(
+      "[SUBMIT_REPORT] WORK_TYPES sheet failed validation while resolving work type:",
+      JSON.stringify(workTypesResult),
+    );
+    return { kind: "work_types_unavailable" };
+  }
+  const workType = workTypesResult.workTypes.find((candidate) => candidate.code === input.workType);
+  if (!workType) {
+    return { kind: "work_type_not_found" };
+  }
+
   const now = new Date();
   const nowIso = now.toISOString();
   const reportId = generateReportId(now);
@@ -255,6 +274,7 @@ export function submitReport(input: SubmitReportInput): SubmitReportOutcome {
     status: "SUBMITTED",
     createdAt: nowIso,
     updatedAt: nowIso,
+    workTypeName: workType.name,
   };
 
   try {
@@ -304,6 +324,7 @@ export function submitReport(input: SubmitReportInput): SubmitReportOutcome {
     status: "SUBMITTED",
     createdAt: reportRow.createdAt,
     updatedAt: reportRow.updatedAt,
+    workTypeName: reportRow.workTypeName,
   };
   const photos: ReportPhoto[] = photoRows.map((row) => ({ ...row }));
 

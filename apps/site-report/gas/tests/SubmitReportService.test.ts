@@ -8,6 +8,12 @@ jest.mock("../src/SitesRepository", () => ({
   ...jest.requireActual("../src/SitesRepository"),
   getSiteRows: jest.fn(),
 }));
+jest.mock("../src/WorkTypesRepository", () => ({
+  // Same convention: buildWorkTypesResult is pure — kept real; only the
+  // Sheets-touching getWorkTypeRows is mocked.
+  ...jest.requireActual("../src/WorkTypesRepository"),
+  getWorkTypeRows: jest.fn(),
+}));
 jest.mock("../src/DriveStorage");
 jest.mock("../src/ReportsRepository");
 jest.mock("../src/AdminNotification");
@@ -15,15 +21,17 @@ jest.mock("../src/AdminNotification");
 import { submitReport } from "../src/SubmitReportService";
 import { getSiteReportConfig } from "../src/ConfigStore";
 import { getSiteRows } from "../src/SitesRepository";
+import { getWorkTypeRows } from "../src/WorkTypesRepository";
 import { deleteUploadedFile, uploadReportPhoto } from "../src/DriveStorage";
 import { appendReportPhotoRow, appendReportRow } from "../src/ReportsRepository";
 import { sendAdminNotification } from "../src/AdminNotification";
-import { SiteRow } from "../src/SheetSchemas";
+import { SiteRow, WorkTypeRow } from "../src/SheetSchemas";
 import { SiteReportConfig } from "../src/Config";
 import { SubmitReportInput } from "../src/models/SubmitReportInput";
 
 const mockGetSiteReportConfig = getSiteReportConfig as jest.Mock;
 const mockGetSiteRows = getSiteRows as jest.Mock;
+const mockGetWorkTypeRows = getWorkTypeRows as jest.Mock;
 const mockUploadReportPhoto = uploadReportPhoto as jest.Mock;
 const mockDeleteUploadedFile = deleteUploadedFile as jest.Mock;
 const mockAppendReportRow = appendReportRow as jest.Mock;
@@ -82,6 +90,10 @@ function threePhotosInput(): SubmitReportInput {
   });
 }
 
+function workTypeRow(overrides: Partial<WorkTypeRow> = {}): WorkTypeRow {
+  return { code: "wiring", name: "電気工事", status: "ACTIVE", sortOrder: 1, ...overrides };
+}
+
 beforeEach(() => {
   // resetAllMocks (not clearAllMocks): clearAllMocks only clears call
   // history, not a mockImplementation set by an earlier test — a
@@ -90,6 +102,7 @@ beforeEach(() => {
   jest.resetAllMocks();
   mockGetSiteReportConfig.mockReturnValue(validConfig);
   mockGetSiteRows.mockReturnValue([siteRow()]);
+  mockGetWorkTypeRows.mockReturnValue([workTypeRow()]);
   mockUploadReportPhoto.mockImplementation(({ fileName }: { fileName: string }) => ({
     fileId: `FILE-${fileName}`,
     fileUrl: `https://drive.google.com/${fileName}`,
@@ -117,6 +130,38 @@ describe("site lookup", () => {
     mockGetSiteRows.mockReturnValue([siteRow({ status: "PENDING" })]);
     const outcome = submitReport(submitInput());
     expect(outcome.kind).toBe("sites_unavailable");
+    expect(mockAppendReportRow).not.toHaveBeenCalled();
+  });
+});
+
+describe("work type lookup", () => {
+  it("proceeds and derives workTypeName for a valid, existing work type code", () => {
+    const outcome = submitReport(submitInput());
+    expect(outcome.kind).toBe("success");
+    expect(mockAppendReportRow.mock.calls[0][0].workTypeName).toBe("電気工事");
+    if (outcome.kind === "success") {
+      expect(outcome.report.workTypeName).toBe("電気工事");
+    }
+  });
+
+  it("returns work_type_not_found for an unknown code, without any writes", () => {
+    const outcome = submitReport(submitInput({ workType: "unknown-code" }));
+    expect(outcome.kind).toBe("work_type_not_found");
+    expect(mockUploadReportPhoto).not.toHaveBeenCalled();
+    expect(mockAppendReportRow).not.toHaveBeenCalled();
+    expect(mockSendAdminNotification).not.toHaveBeenCalled();
+  });
+
+  it("returns work_type_not_found for an INACTIVE work type code", () => {
+    mockGetWorkTypeRows.mockReturnValue([workTypeRow({ status: "INACTIVE" })]);
+    const outcome = submitReport(submitInput());
+    expect(outcome.kind).toBe("work_type_not_found");
+  });
+
+  it("returns work_types_unavailable when the WORK_TYPES sheet itself fails validation, without any writes", () => {
+    mockGetWorkTypeRows.mockReturnValue([{ ...workTypeRow(), status: "PENDING" }]);
+    const outcome = submitReport(submitInput());
+    expect(outcome.kind).toBe("work_types_unavailable");
     expect(mockAppendReportRow).not.toHaveBeenCalled();
   });
 });

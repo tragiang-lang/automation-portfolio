@@ -244,6 +244,14 @@ function mapSubmitReportOutcomeToResponse(outcome: SubmitReportOutcome): ApiResp
         ERROR_CODES.DATA_INVALID,
         "Site data could not be validated. Please contact the administrator.",
       );
+    case "work_type_not_found":
+      return buildErrorResponse(ERROR_CODES.WORK_TYPE_NOT_FOUND, "The referenced work type could not be found.");
+    case "work_types_unavailable":
+      console.error("[SUBMIT_REPORT] WORK_TYPES sheet unavailable while resolving work type.");
+      return buildErrorResponse(
+        ERROR_CODES.DATA_INVALID,
+        "Work type data could not be validated. Please contact the administrator.",
+      );
     case "drive_upload_failed":
       console.error("[SUBMIT_REPORT] Drive upload failed:", outcome.reason);
       return buildErrorResponse(
