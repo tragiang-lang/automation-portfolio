@@ -30,6 +30,7 @@ import type { SiteReportClientResult } from "./siteReportClient";
 import { SITE_REPORT_ACTIONS } from "@/types/api";
 import type {
   GetSitesResponseData,
+  GetWorkTypesResponseData,
   SiteReportAction,
   SubmitReportInput,
   SubmitReportResponseData,
@@ -105,6 +106,14 @@ async function callSiteReportRoute<T>(
  */
 export function getSites(): Promise<SiteReportClientResult<GetSitesResponseData>> {
   return callSiteReportRoute<GetSitesResponseData>(SITE_REPORT_ACTIONS.GET_SITES, {});
+}
+
+/**
+ * Calls `GET_WORK_TYPES`. Same shape as `getSites()` above — the GAS
+ * handler takes no payload.
+ */
+export function getWorkTypes(): Promise<SiteReportClientResult<GetWorkTypesResponseData>> {
+  return callSiteReportRoute<GetWorkTypesResponseData>(SITE_REPORT_ACTIONS.GET_WORK_TYPES, {});
 }
 
 /**

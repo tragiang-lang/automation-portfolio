@@ -10,8 +10,8 @@
  * that boundary — mocking `siteReportClient` here would hide the exact P0
  * this file exists to fix.
  */
-import { getSites, submitReport } from "./siteReportWorkflows";
-import type { GetSitesResponseData, SubmitReportInput, SubmitReportResponseData } from "@/types/api";
+import { getSites, getWorkTypes, submitReport } from "./siteReportWorkflows";
+import type { GetSitesResponseData, GetWorkTypesResponseData, SubmitReportInput, SubmitReportResponseData } from "@/types/api";
 
 function mockFetchOnce(body: unknown, init: { ok?: boolean; status?: number } = {}) {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -108,6 +108,35 @@ describe("getSites", () => {
     if (!result.ok) {
       expect(result.error.code).toBe("INVALID_RESPONSE");
     }
+  });
+});
+
+describe("getWorkTypes", () => {
+  it("POSTs GET_WORK_TYPES with an empty payload to /api/site-report", async () => {
+    mockFetchOnce({ ok: true, data: { workTypes: [] } });
+
+    await getWorkTypes();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/site-report",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "GET_WORK_TYPES", payload: {} }),
+      }),
+    );
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the typed GetWorkTypesResponseData result unchanged", async () => {
+    const data: GetWorkTypesResponseData = {
+      workTypes: [{ code: "INSPECTION", name: "検査", status: "ACTIVE", sortOrder: 21 }],
+    };
+    mockFetchOnce({ ok: true, data });
+
+    const result = await getWorkTypes();
+
+    expect(result).toEqual({ ok: true, data });
   });
 });
 
