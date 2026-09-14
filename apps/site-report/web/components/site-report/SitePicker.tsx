@@ -2,11 +2,13 @@ import type { Site } from "@/types/api";
 import styles from "./site-report.module.css";
 
 /**
- * Mobile-friendly site picker (Task 8 §8). Renders only fields that
- * actually exist on `Site` (`types/api.ts`) — `address` is shown when
- * present, nothing is invented for a site that lacks it. Selecting a
- * site hands the caller the full `Site` object, never a partial/
- * reconstructed one.
+ * Mobile-friendly site dropdown (Phase 1 P0 — replaces the Task 8
+ * button-list). A native `<select>`: one tap to open, one tap to choose,
+ * standard mobile OS picker UI — no custom listbox to maintain. A leading
+ * disabled placeholder option means no site is ever silently selected
+ * without the user acting; `onSelect(site)` fires once, from `onChange`,
+ * only for a real site option (never for the placeholder, whose `value`
+ * is the empty string and is filtered out below).
  */
 export function SitePicker({
   sites,
@@ -15,22 +17,28 @@ export function SitePicker({
   sites: Site[];
   onSelect: (site: Site) => void;
 }) {
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const site = sites.find((candidate) => candidate.siteId === event.target.value);
+    if (site) {
+      onSelect(site);
+    }
+  };
+
   return (
-    <ul className={styles.siteList}>
-      {sites.map((site) => (
-        <li key={site.siteId}>
-          <button
-            type="button"
-            className={styles.siteItem}
-            onClick={() => onSelect(site)}
-            aria-label={`${site.name} ${site.siteCode}`}
-          >
-            <span className={styles.siteName}>{site.name}</span>
-            <span className={styles.siteMeta}>{site.siteCode}</span>
-            {site.address ? <span className={styles.siteMeta}>{site.address}</span> : null}
-          </button>
-        </li>
-      ))}
-    </ul>
+    <div className={styles.field}>
+      <label htmlFor="site-picker" className={styles.label}>
+        現場名
+      </label>
+      <select id="site-picker" className={styles.input} defaultValue="" onChange={handleChange}>
+        <option value="" disabled>
+          現場を選択してください
+        </option>
+        {sites.map((site) => (
+          <option key={site.siteId} value={site.siteId}>
+            {site.name}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

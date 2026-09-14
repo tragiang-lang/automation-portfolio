@@ -22,23 +22,39 @@ const SITE_B: Site = {
 };
 
 describe("SitePicker", () => {
-  it("renders every site's name, code, and address when available", () => {
+  it("renders a labeled dropdown with a placeholder plus one option per site", () => {
     render(<SitePicker sites={[SITE_A, SITE_B]} onSelect={() => {}} />);
 
-    expect(screen.getByText("Shibuya Tower")).toBeInTheDocument();
-    expect(screen.getByText("S001")).toBeInTheDocument();
-    expect(screen.getByText("Shibuya, Tokyo")).toBeInTheDocument();
-    expect(screen.getByText("Shinjuku Plaza")).toBeInTheDocument();
-    expect(screen.getByText("S002")).toBeInTheDocument();
+    const select = screen.getByRole("combobox", { name: "現場名" });
+    expect(select).toBeInTheDocument();
+    expect(screen.getByText("現場を選択してください")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Shibuya Tower" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Shinjuku Plaza" })).toBeInTheDocument();
   });
 
-  it("calls onSelect with the full Site object for the activated site", () => {
+  it("starts with no site selected (the placeholder option)", () => {
+    render(<SitePicker sites={[SITE_A, SITE_B]} onSelect={() => {}} />);
+
+    expect(screen.getByRole("combobox", { name: "現場名" })).toHaveValue("");
+  });
+
+  it("calls onSelect with the full Site object when a site is chosen", () => {
     const onSelect = jest.fn();
     render(<SitePicker sites={[SITE_A, SITE_B]} onSelect={onSelect} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Shinjuku Plaza/ }));
+    fireEvent.change(screen.getByRole("combobox", { name: "現場名" }), { target: { value: SITE_B.siteId } });
 
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith(SITE_B);
+  });
+
+  it("never calls onSelect for the placeholder option itself", () => {
+    const onSelect = jest.fn();
+    render(<SitePicker sites={[SITE_A]} onSelect={onSelect} />);
+
+    fireEvent.change(screen.getByRole("combobox", { name: "現場名" }), { target: { value: SITE_A.siteId } });
+    fireEvent.change(screen.getByRole("combobox", { name: "現場名" }), { target: { value: "" } });
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
   });
 });
