@@ -1,7 +1,9 @@
 import { getSiteReportConfig, SiteReportConfigError } from "./ConfigStore";
 import { buildSitesResult, getSiteRows, SitesResult } from "./SitesRepository";
+import { buildWorkTypesResult, getWorkTypeRows } from "./WorkTypesRepository";
 import { MissingHeadersError } from "./RowMapper";
 import { Site } from "./models/Site";
+import { WorkType } from "./models/WorkType";
 import { parseSubmitReportInput, submitReport, SubmitReportOutcome } from "./SubmitReportService";
 
 // Re-exported unchanged for backward compatibility: buildSitesResult/
@@ -43,6 +45,11 @@ export const ERROR_CODES = {
   SITE_NOT_FOUND: "SITE_NOT_FOUND",
   /** Task 5: a Drive upload failed for one of the submitted photos. */
   DRIVE_ERROR: "DRIVE_ERROR",
+  /** Phase 1 P0: SUBMIT_REPORT references a workType code that
+   *  GET_WORK_TYPES-equivalent lookup could not find — same relationship
+   *  to DATA_INVALID as SITE_NOT_FOUND has (this means the sheet is fine
+   *  but the given code isn't in it). */
+  WORK_TYPE_NOT_FOUND: "WORK_TYPE_NOT_FOUND",
   INTERNAL_ERROR: "INTERNAL_ERROR",
 } as const;
 
@@ -161,6 +168,48 @@ export function getSitesAction(): ApiResponse<GetSitesResponseData> {
   }
 }
 
+export interface GetWorkTypesResponseData {
+  workTypes: WorkType[];
+}
+
+function getWorkTypesActionInner(): ApiResponse<GetWorkTypesResponseData> {
+  getSiteReportConfig();
+  const rows = getWorkTypeRows();
+  const result = buildWorkTypesResult(rows);
+  if (!result.ok) {
+    if (result.kind === "malformed") {
+      console.error(
+        `[GET_WORK_TYPES] malformed row at index ${result.index}, field "${result.field}": ${result.reason}`,
+      );
+    } else {
+      console.error(`[GET_WORK_TYPES] invalid row at index ${result.index}:`, JSON.stringify(result.issues));
+    }
+    return buildErrorResponse(
+      ERROR_CODES.DATA_INVALID,
+      "Work type data failed validation. Please contact the administrator.",
+    );
+  }
+  return buildSuccessResponse({ workTypes: result.workTypes });
+}
+
+/** `GET_WORK_TYPES` action handler (Phase 1 P0) — mirrors getSitesAction
+ *  exactly. Independently callable from GET_SITES (no shared state, no
+ *  ordering requirement between the two). */
+export function getWorkTypesAction(): ApiResponse<GetWorkTypesResponseData> {
+  try {
+    return getWorkTypesActionInner();
+  } catch (error) {
+    if (error instanceof SiteReportConfigError) {
+      return mapConfigErrorToResponse(error);
+    }
+    if (error instanceof MissingHeadersError) {
+      return mapMissingHeadersErrorToResponse(error);
+    }
+    console.error("[GET_WORK_TYPES] unexpected error:", error);
+    return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "An unexpected server error occurred.");
+  }
+}
+
 export interface SubmitReportResponseData {
   reportId: string;
   photoCount: number;
@@ -262,6 +311,8 @@ export function handleApiRequest(rawBody: string | undefined): ApiResponse {
   switch (parsed.request.action) {
     case "GET_SITES":
       return getSitesAction();
+    case "GET_WORK_TYPES":
+      return getWorkTypesAction();
     case "SUBMIT_REPORT":
       return submitReportAction(parsed.request.payload);
     default:

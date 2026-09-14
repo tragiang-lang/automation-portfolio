@@ -9,6 +9,12 @@ jest.mock("../src/SitesRepository", () => ({
   ...jest.requireActual("../src/SitesRepository"),
   getSiteRows: jest.fn(),
 }));
+jest.mock("../src/WorkTypesRepository", () => ({
+  // Same convention: buildWorkTypesResult is pure and kept real; only the
+  // Sheets-touching getWorkTypeRows is mocked.
+  ...jest.requireActual("../src/WorkTypesRepository"),
+  getWorkTypeRows: jest.fn(),
+}));
 jest.mock("../src/SubmitReportService", () => ({
   ...jest.requireActual("../src/SubmitReportService"),
   submitReport: jest.fn(),
@@ -20,6 +26,7 @@ import {
   buildSuccessResponse,
   ERROR_CODES,
   getSitesAction,
+  getWorkTypesAction,
   handleApiRequest,
   mapConfigErrorToResponse,
   mapMissingHeadersErrorToResponse,
@@ -28,6 +35,7 @@ import {
 } from "../src/Api";
 import { getSiteReportConfig, SiteReportConfigError } from "../src/ConfigStore";
 import { getSiteRows } from "../src/SitesRepository";
+import { getWorkTypeRows } from "../src/WorkTypesRepository";
 import { submitReport } from "../src/SubmitReportService";
 import { MissingHeadersError } from "../src/RowMapper";
 import { SiteRow, WorkTypeRow } from "../src/SheetSchemas";
@@ -40,6 +48,7 @@ const mockSubmitReport = submitReport as jest.Mock;
 
 const mockGetSiteReportConfig = getSiteReportConfig as jest.Mock;
 const mockGetSiteRows = getSiteRows as jest.Mock;
+const mockGetWorkTypeRows = getWorkTypeRows as jest.Mock;
 
 const validConfig: SiteReportConfig = {
   businessName: "Acme Construction",
@@ -394,10 +403,53 @@ describe("getSitesAction", () => {
   });
 });
 
+describe("getWorkTypesAction", () => {
+  it("returns the success envelope with ACTIVE work types read from the configured sheet, sorted by sortOrder", () => {
+    mockGetWorkTypeRows.mockReturnValue([workTypeRow({ code: "B", sortOrder: 2 }), workTypeRow({ code: "A", sortOrder: 1 })]);
+    const response = getWorkTypesAction();
+    expect(response.ok).toBe(true);
+    if (response.ok) {
+      expect(response.data.workTypes.map((w) => w.code)).toEqual(["A", "B"]);
+    }
+  });
+
+  it("returns an empty work types array for a valid sheet with no data rows", () => {
+    mockGetWorkTypeRows.mockReturnValue([]);
+    expect(getWorkTypesAction()).toEqual({ ok: true, data: { workTypes: [] } });
+  });
+
+  it("returns a structured DATA_INVALID error for a row failing business validation, without leaking row details", () => {
+    mockGetWorkTypeRows.mockReturnValue([workTypeRow({ code: "" })]);
+    const response = getWorkTypesAction();
+    expect(response.ok).toBe(false);
+    if (!response.ok) {
+      expect(response.error.code).toBe(ERROR_CODES.DATA_INVALID);
+      expect(JSON.stringify(response)).not.toContain("is required");
+    }
+  });
+
+  it("returns CONFIG_INVALID when getSiteReportConfig throws, same as getSitesAction", () => {
+    mockGetSiteReportConfig.mockImplementationOnce(() => {
+      throw new SiteReportConfigError([{ field: "ADMIN_EMAIL", reason: "is required" }]);
+    });
+    const response = getWorkTypesAction();
+    expect(response.ok).toBe(false);
+    if (!response.ok) {
+      expect(response.error.code).toBe(ERROR_CODES.CONFIG_INVALID);
+    }
+  });
+});
+
 describe("handleApiRequest", () => {
   it("routes the GET_SITES action to getSitesAction", () => {
     mockGetSiteRows.mockReturnValue([]);
     expect(handleApiRequest('{"action":"GET_SITES"}')).toEqual({ ok: true, data: { sites: [] } });
+  });
+
+  it("dispatches GET_WORK_TYPES to getWorkTypesAction", () => {
+    mockGetWorkTypeRows.mockReturnValue([]);
+    const response = handleApiRequest(JSON.stringify({ action: "GET_WORK_TYPES" }));
+    expect(response).toEqual({ ok: true, data: { workTypes: [] } });
   });
 
   it("rejects an unsupported action", () => {
