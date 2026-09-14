@@ -53,4 +53,15 @@ describe("buildAdminNotificationEmail", () => {
     const email = buildAdminNotificationEmail(report, site);
     expect(email.body).not.toMatch(/base64/i);
   });
+
+  it("shows workTypeName instead of the raw workType code when present", () => {
+    const email = buildAdminNotificationEmail({ ...report, workType: "EXTERIOR_WALL", workTypeName: "外壁工事" }, site);
+    expect(email.body).toContain("Work type: 外壁工事");
+    expect(email.body).not.toContain("EXTERIOR_WALL");
+  });
+
+  it("falls back to the raw workType code when workTypeName is absent", () => {
+    const email = buildAdminNotificationEmail({ ...report, workType: "legacy free text", workTypeName: undefined }, site);
+    expect(email.body).toContain("Work type: legacy free text");
+  });
 });

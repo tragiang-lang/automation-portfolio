@@ -21,7 +21,7 @@ export function buildAdminNotificationEmail(report: SiteReport, site: Site): Adm
     `Site: ${site.name} (${site.siteCode})`,
     `Report date: ${report.reportDate}`,
     `Worker: ${report.workerName}`,
-    `Work type: ${report.workType}`,
+    `Work type: ${report.workTypeName ?? report.workType}`,
     `Photos: ${report.photoCount}`,
   ];
   if (report.comment) {
