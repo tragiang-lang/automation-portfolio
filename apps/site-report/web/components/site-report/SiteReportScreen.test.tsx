@@ -9,7 +9,7 @@
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SiteReportScreen } from "./SiteReportScreen";
-import type { Site } from "@/types/api";
+import type { Site, WorkType } from "@/types/api";
 import type { SiteReportLiffUser } from "@/types/liff";
 
 // Mocked by relative path, not the `@/` alias — matching lib/liff.test.ts
@@ -22,6 +22,7 @@ jest.mock("../../lib/liff", () => ({
 }));
 jest.mock("../../lib/api/siteReportWorkflows", () => ({
   getSites: jest.fn(),
+  getWorkTypes: jest.fn(),
   submitReport: jest.fn(),
 }));
 // The real compressor uses FileReader/Image/canvas — jsdom has no native
@@ -37,8 +38,9 @@ const { initializeSiteReportLiff, loginToSiteReport } = jest.requireMock("../../
   initializeSiteReportLiff: jest.Mock;
   loginToSiteReport: jest.Mock;
 };
-const { getSites, submitReport } = jest.requireMock("../../lib/api/siteReportWorkflows") as {
+const { getSites, getWorkTypes, submitReport } = jest.requireMock("../../lib/api/siteReportWorkflows") as {
   getSites: jest.Mock;
+  getWorkTypes: jest.Mock;
   submitReport: jest.Mock;
 };
 
@@ -63,14 +65,27 @@ const SITE_B: Site = {
   updatedAt: "2026-01-01T00:00:00.000Z",
 };
 
+const WORK_TYPE_A: WorkType = { code: "INSPECTION", name: "検査", status: "ACTIVE", sortOrder: 21 };
+
 function neverResolves<T>(): Promise<T> {
   return new Promise<T>(() => {});
+}
+
+function mockOneSiteOneWorkType() {
+  getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A] } });
+  getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
+}
+
+function mockTwoSitesOneWorkType() {
+  getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A, SITE_B] } });
+  getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
 }
 
 beforeEach(() => {
   initializeSiteReportLiff.mockReset();
   loginToSiteReport.mockReset().mockResolvedValue(undefined);
   getSites.mockReset();
+  getWorkTypes.mockReset();
   submitReport.mockReset();
 });
 
@@ -115,30 +130,36 @@ describe("SiteReportScreen — LIFF orchestration", () => {
   });
 });
 
-describe("SiteReportScreen — GET_SITES orchestration", () => {
-  it("calls getSites with no arguments once LIFF is ready", async () => {
+describe("SiteReportScreen — GET_SITES/GET_WORK_TYPES orchestration", () => {
+  it("calls getSites and getWorkTypes in parallel, both with no arguments, once LIFF is ready", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
     getSites.mockReturnValue(neverResolves());
+    getWorkTypes.mockReturnValue(neverResolves());
 
     render(<SiteReportScreen />);
 
-    await waitFor(() => expect(getSites).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(getSites).toHaveBeenCalledTimes(1);
+      expect(getWorkTypes).toHaveBeenCalledTimes(1);
+    });
     expect(getSites.mock.calls[0]).toEqual([]);
+    expect(getWorkTypes.mock.calls[0]).toEqual([]);
   });
 
-  it("renders the site list on successful loading", async () => {
+  it("renders the site dropdown with every ACTIVE site once both loads succeed", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
-    getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A, SITE_B] } });
+    mockTwoSitesOneWorkType();
 
     render(<SiteReportScreen />);
 
-    expect(await screen.findByText("Shibuya Tower")).toBeInTheDocument();
-    expect(screen.getByText("Shinjuku Plaza")).toBeInTheDocument();
+    expect(await screen.findByRole("option", { name: "Shibuya Tower" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Shinjuku Plaza" })).toBeInTheDocument();
   });
 
   it("shows an empty state when the site list is empty", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
     getSites.mockResolvedValue({ ok: true, data: { sites: [] } });
+    getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
 
     render(<SiteReportScreen />);
 
@@ -147,125 +168,153 @@ describe("SiteReportScreen — GET_SITES orchestration", () => {
 
   it("shows an error state when getSites resolves ok:false", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
-    getSites.mockResolvedValue({
-      ok: false,
-      error: { code: "SHEET_ERROR", message: "The Sites sheet could not be read." },
-    });
+    getSites.mockResolvedValue({ ok: false, error: { code: "SHEET_ERROR", message: "The Sites sheet could not be read." } });
+    getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
 
     render(<SiteReportScreen />);
 
     expect(await screen.findByText("The Sites sheet could not be read.")).toBeInTheDocument();
   });
 
-  it("shows an error state when getSites rejects", async () => {
+  it("shows an error state when getWorkTypes resolves ok:false", async () => {
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+    getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A] } });
+    getWorkTypes.mockResolvedValue({ ok: false, error: { code: "DATA_INVALID", message: "Work type data failed validation." } });
+
+    render(<SiteReportScreen />);
+
+    expect(await screen.findByText("Work type data failed validation.")).toBeInTheDocument();
+  });
+
+  it("shows an error state when either call rejects", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
     getSites.mockRejectedValue(new Error("network down"));
+    getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
 
     render(<SiteReportScreen />);
 
     expect(await screen.findByText(/現場一覧の取得に失敗しました/)).toBeInTheDocument();
   });
 
-  it("calls getSites again when retry is activated after a failure", async () => {
+  it("retries both getSites and getWorkTypes when retry is activated after a failure", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
-    getSites.mockResolvedValueOnce({
-      ok: false,
-      error: { code: "SHEET_ERROR", message: "The Sites sheet could not be read." },
-    });
+    getSites.mockResolvedValueOnce({ ok: false, error: { code: "SHEET_ERROR", message: "The Sites sheet could not be read." } });
+    getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
 
     render(<SiteReportScreen />);
     const retryButton = await screen.findByRole("button", { name: /再試行/ });
 
-    getSites.mockResolvedValueOnce({ ok: true, data: { sites: [SITE_A] } });
+    getSites.mockResolvedValueOnce({ ok: true, data: { sites: [SITE_A, SITE_B] } });
     fireEvent.click(retryButton);
 
-    expect(await screen.findByText("Shibuya Tower")).toBeInTheDocument();
+    expect(await screen.findByRole("option", { name: "Shibuya Tower" })).toBeInTheDocument();
     expect(getSites).toHaveBeenCalledTimes(2);
+    expect(getWorkTypes).toHaveBeenCalledTimes(2);
   });
 });
 
 describe("SiteReportScreen — site selection", () => {
-  it("transitions to the report-entry shell showing the selected site after selection", async () => {
+  it("shows the dropdown and waits for a choice when more than one ACTIVE site exists", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
-    getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A, SITE_B] } });
+    mockTwoSitesOneWorkType();
 
     render(<SiteReportScreen />);
-    const siteButton = await screen.findByRole("button", { name: /Shibuya Tower/ });
-    fireEvent.click(siteButton);
+    await screen.findByRole("option", { name: "Shibuya Tower" });
+
+    expect(screen.queryByRole("heading", { name: "現場報告" })).not.toBeInTheDocument();
+  });
+
+  it("transitions to the report-entry shell showing the chosen site after a dropdown selection", async () => {
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+    mockTwoSitesOneWorkType();
+
+    render(<SiteReportScreen />);
+    const select = await screen.findByRole("combobox", { name: "現場名" });
+    fireEvent.change(select, { target: { value: SITE_A.siteId } });
 
     expect(await screen.findByRole("heading", { name: "現場報告" })).toBeInTheDocument();
     expect(screen.getByText("Shibuya Tower")).toBeInTheDocument();
-    expect(screen.queryByText("Shinjuku Plaza")).not.toBeInTheDocument();
+  });
+
+  it("auto-advances straight to report-entry when exactly one ACTIVE site exists", async () => {
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+    mockOneSiteOneWorkType();
+
+    render(<SiteReportScreen />);
+
+    expect(await screen.findByRole("heading", { name: "現場報告" })).toBeInTheDocument();
+    expect(screen.getByText("Shibuya Tower")).toBeInTheDocument();
+  });
+
+  it("returns to the dropdown, without refetching, when 現場を変更 is activated", async () => {
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+    mockTwoSitesOneWorkType();
+
+    render(<SiteReportScreen />);
+    fireEvent.change(await screen.findByRole("combobox", { name: "現場名" }), { target: { value: SITE_A.siteId } });
+    await screen.findByRole("heading", { name: "現場報告" });
+
+    fireEvent.click(screen.getByRole("button", { name: "現場を変更" }));
+
+    expect(await screen.findByRole("combobox", { name: "現場名" })).toBeInTheDocument();
+    expect(getSites).toHaveBeenCalledTimes(1);
+    expect(getWorkTypes).toHaveBeenCalledTimes(1);
   });
 
   it("never calls submitReport just from selecting a site", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
-    getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A] } });
+    mockOneSiteOneWorkType();
 
     render(<SiteReportScreen />);
-    const siteButton = await screen.findByRole("button", { name: /Shibuya Tower/ });
-    fireEvent.click(siteButton);
 
     await screen.findByRole("heading", { name: "現場報告" });
     expect(submitReport).not.toHaveBeenCalled();
   });
 });
 
-describe("SiteReportScreen — report entry form (Task 9)", () => {
-  async function selectSiteAndReachReportEntry() {
+describe("SiteReportScreen — report entry form (Task 9/Phase 1 P0)", () => {
+  async function reachReportEntry() {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
-    getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A] } });
-
+    mockOneSiteOneWorkType();
     render(<SiteReportScreen />);
-    const siteButton = await screen.findByRole("button", { name: /Shibuya Tower/ });
-    fireEvent.click(siteButton);
     await screen.findByRole("heading", { name: "現場報告" });
   }
 
-  // S1 — selected site opens the real report form
-  it("shows the real report form fields after selecting a site", async () => {
-    await selectSiteAndReachReportEntry();
+  it("shows the real report form fields after reaching report entry", async () => {
+    await reachReportEntry();
 
-    expect(screen.getByLabelText("作業種別")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "作業種別" })).toBeInTheDocument();
     expect(screen.getByLabelText("報告日")).toBeInTheDocument();
     expect(screen.getByLabelText("コメント")).toBeInTheDocument();
   });
 
-  // S2 — the LIFF profile remains available and pre-fills the draft
   it("pre-fills the worker name field from the authenticated LIFF profile", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
 
     expect(screen.getByLabelText("作業者名")).toHaveValue(PROFILE.displayName);
   });
 
-  // S3 — draft updates flow through the screen's state
   it("reflects a user edit to a field in the rendered input", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
 
-    const workTypeInput = screen.getByLabelText("作業種別") as HTMLInputElement;
-    fireEvent.change(workTypeInput, { target: { value: "Cleaning" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "作業種別" }), { target: { value: WORK_TYPE_A.code } });
 
-    expect(screen.getByLabelText("作業種別")).toHaveValue("Cleaning");
+    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue(WORK_TYPE_A.code);
   });
 
-  // S4 — no submission
   it("never calls submitReport while editing report fields", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
 
     fireEvent.change(screen.getByLabelText("コメント"), { target: { value: "Some notes" } });
 
     expect(submitReport).not.toHaveBeenCalled();
   });
 
-  // S5 — photo pipeline is real (Task 10): exactly one file input, no
-  // camera-specific native API usage anywhere in this component tree.
   it("renders exactly one real file input for adding photos on the report-entry screen", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
-    getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A] } });
+    mockOneSiteOneWorkType();
 
     const { container } = render(<SiteReportScreen />);
-    const siteButton = await screen.findByRole("button", { name: /Shibuya Tower/ });
-    fireEvent.click(siteButton);
     await screen.findByRole("heading", { name: "現場報告" });
 
     expect(container.querySelectorAll('input[type="file"]').length).toBe(1);
@@ -273,30 +322,27 @@ describe("SiteReportScreen — report entry form (Task 9)", () => {
 });
 
 describe("SiteReportScreen — photo pipeline (Task 10)", () => {
-  async function selectSiteAndReachReportEntry() {
+  async function reachReportEntry() {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
-    getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A] } });
-
+    mockOneSiteOneWorkType();
     render(<SiteReportScreen />);
-    const siteButton = await screen.findByRole("button", { name: /Shibuya Tower/ });
-    fireEvent.click(siteButton);
     await screen.findByRole("heading", { name: "現場報告" });
   }
 
   it("adds a selected photo to the draft without resetting other report fields", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
 
-    fireEvent.change(screen.getByLabelText("作業種別"), { target: { value: "Cleaning" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "作業種別" }), { target: { value: WORK_TYPE_A.code } });
     fireEvent.change(screen.getByLabelText("写真を追加"), {
       target: { files: [new File(["x"], "a.jpg", { type: "image/jpeg" })] },
     });
 
     await waitFor(() => expect(screen.getAllByRole("img")).toHaveLength(1));
-    expect(screen.getByLabelText("作業種別")).toHaveValue("Cleaning");
+    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue(WORK_TYPE_A.code);
   });
 
   it("keeps an added photo when an unrelated report field is edited afterward", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
 
     fireEvent.change(screen.getByLabelText("写真を追加"), {
       target: { files: [new File(["x"], "a.jpg", { type: "image/jpeg" })] },
@@ -309,7 +355,7 @@ describe("SiteReportScreen — photo pipeline (Task 10)", () => {
   });
 
   it("removes a photo without resetting report fields", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fireEvent.change(screen.getByLabelText("作業者名"), { target: { value: "Custom Name" } });
     fireEvent.change(screen.getByLabelText("写真を追加"), {
       target: { files: [new File(["x"], "a.jpg", { type: "image/jpeg" })] },
@@ -323,7 +369,7 @@ describe("SiteReportScreen — photo pipeline (Task 10)", () => {
   });
 
   it("never calls submitReport while adding or removing photos", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
 
     fireEvent.change(screen.getByLabelText("写真を追加"), {
       target: { files: [new File(["x"], "a.jpg", { type: "image/jpeg" })] },
@@ -336,25 +382,22 @@ describe("SiteReportScreen — photo pipeline (Task 10)", () => {
 });
 
 describe("SiteReportScreen — submission (Task 11)", () => {
-  async function selectSiteAndReachReportEntry() {
+  async function reachReportEntry() {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
-    getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A] } });
-
+    mockOneSiteOneWorkType();
     render(<SiteReportScreen />);
-    const siteButton = await screen.findByRole("button", { name: /Shibuya Tower/ });
-    fireEvent.click(siteButton);
     await screen.findByRole("heading", { name: "現場報告" });
   }
 
   function fillValidDraft() {
-    fireEvent.change(screen.getByLabelText("作業種別"), { target: { value: "Inspection" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "作業種別" }), { target: { value: WORK_TYPE_A.code } });
   }
 
   const SUCCESS_RESULT = { ok: true, data: { reportId: "RPT-1", photoCount: 0, notificationSent: true } } as const;
 
   // S1 — valid submission: exact payload built from site + profile + draft
   it("builds the payload from site/profile/draft and calls submitReport when the submit control is activated", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     submitReport.mockResolvedValue(SUCCESS_RESULT);
 
@@ -366,7 +409,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
       lineUserId: PROFILE.userId,
       workerName: PROFILE.displayName,
       reportDate: expect.any(String),
-      workType: "Inspection",
+      workType: WORK_TYPE_A.code,
       comment: "",
       photos: [],
     });
@@ -374,7 +417,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
   // S2 — no photos: still submits successfully
   it("submits successfully with an empty photos array", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     submitReport.mockResolvedValue(SUCCESS_RESULT);
 
@@ -386,8 +429,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
   // S5 — validation failure: submitReport not called, errors shown
   it("does not call submitReport and shows validation errors for an invalid draft", async () => {
-    await selectSiteAndReachReportEntry();
-    fireEvent.change(screen.getByLabelText("作業種別"), { target: { value: "" } });
+    await reachReportEntry();
 
     fireEvent.click(screen.getByRole("button", { name: /送信/ }));
 
@@ -397,7 +439,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
   // S6 — loading state
   it("disables the submit control while submission is pending", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     submitReport.mockReturnValue(neverResolves());
 
@@ -408,7 +450,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
   // S7 — double click: submitReport called exactly once
   it("calls submitReport only once for two rapid submit clicks", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     submitReport.mockReturnValue(neverResolves());
 
@@ -422,7 +464,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
   // S8 — API error: draft preserved, error shown, retry available
   it("shows the server error message and keeps the draft when submitReport resolves ok:false", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     submitReport.mockResolvedValue({
       ok: false,
@@ -432,13 +474,13 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     fireEvent.click(screen.getByRole("button", { name: /送信/ }));
 
     expect(await screen.findByText("The submitted report failed validation.")).toBeInTheDocument();
-    expect(screen.getByLabelText("作業種別")).toHaveValue("Inspection");
+    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue(WORK_TYPE_A.code);
     expect(screen.getByRole("button", { name: /送信/ })).not.toBeDisabled();
   });
 
   // S9 — unexpected rejection: recovers to an error state, retry succeeds
   it("recovers to an error state and allows a successful retry when submitReport rejects unexpectedly", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     submitReport.mockRejectedValueOnce(new Error("network down"));
 
@@ -457,7 +499,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
   // S10 — success: no automatic second submission
   it("shows a success state and does not call submitReport again automatically", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     submitReport.mockResolvedValue(SUCCESS_RESULT);
 
@@ -470,7 +512,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
   // S13 — report fields preserved after a submission error
   it("preserves report fields after a submission error", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fireEvent.change(screen.getByLabelText("作業者名"), { target: { value: "Custom Name" } });
     fillValidDraft();
     fireEvent.change(screen.getByLabelText("コメント"), { target: { value: "Some notes" } });
@@ -483,13 +525,13 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
     await screen.findByRole("alert");
     expect(screen.getByLabelText("作業者名")).toHaveValue("Custom Name");
-    expect(screen.getByLabelText("作業種別")).toHaveValue("Inspection");
+    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue(WORK_TYPE_A.code);
     expect(screen.getByLabelText("コメント")).toHaveValue("Some notes");
   });
 
   // S14 — photo removed before submit: payload reflects current photos
   it("submits the current photos, not stale state, after a photo is removed", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     fireEvent.change(screen.getByLabelText("写真を追加"), {
       target: {
@@ -515,7 +557,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
   // S15 — editing a field right before submit: payload has the latest value
   it("submits the latest field value after an edit made just before submit", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     fireEvent.change(screen.getByLabelText("コメント"), { target: { value: "Final notes" } });
     submitReport.mockResolvedValue(SUCCESS_RESULT);
@@ -530,7 +572,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
   // user explicitly chooses to create another report; it is never reset
   // or resubmitted automatically.
   it("resets to a fresh draft and idle submission when creating another report after success", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fireEvent.change(screen.getByLabelText("作業者名"), { target: { value: "Custom Name" } });
     fillValidDraft();
     fireEvent.change(screen.getByLabelText("コメント"), { target: { value: "Some notes" } });
@@ -545,7 +587,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     fireEvent.click(screen.getByRole("button", { name: /別のレポートを作成/ }));
 
     expect(screen.getByLabelText("作業者名")).toHaveValue(PROFILE.displayName);
-    expect(screen.getByLabelText("作業種別")).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue("");
     expect(screen.getByLabelText("コメント")).toHaveValue("");
     expect(screen.queryAllByRole("img")).toHaveLength(0);
     expect(screen.queryByText(/送信しました/)).not.toBeInTheDocument();
@@ -553,7 +595,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
   });
 
   it("does not call submitReport again just from creating another report", async () => {
-    await selectSiteAndReachReportEntry();
+    await reachReportEntry();
     fillValidDraft();
     submitReport.mockResolvedValue(SUCCESS_RESULT);
     fireEvent.click(screen.getByRole("button", { name: /送信/ }));

@@ -5,7 +5,7 @@
  *
  * Owns UI/application orchestration only:
  *   initializeSiteReportLiff() -> login-required / error / ready
- *                                          -> getSites() -> loading / error / empty / list
+ *                                          -> getSites()+getWorkTypes() -> loading / error / empty / list
  *                                                                  -> site selected -> report-entry shell
  *                                                                                        -> submit (Task 11)
  *
@@ -19,9 +19,9 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { initializeSiteReportLiff, loginToSiteReport } from "@/lib/liff";
-import { getSites } from "@/lib/api/siteReportWorkflows";
+import { getSites, getWorkTypes } from "@/lib/api/siteReportWorkflows";
 import type { LiffError, SiteReportLiffUser } from "@/types/liff";
-import type { Site } from "@/types/api";
+import type { Site, WorkType } from "@/types/api";
 import { SitePicker } from "./SitePicker";
 import { ReportEntryShell } from "./ReportEntryShell";
 import { createInitialReportDraft, type ReportDraft } from "./reportDraft";
@@ -29,20 +29,21 @@ import { validateReportDraft } from "./reportValidation";
 import { IDLE_SUBMISSION_STATE, submitReportDraft, type SubmissionState } from "./submission";
 import styles from "./site-report.module.css";
 
-type GetSitesError = { code: string; message: string };
+type FormOptionsError = { code: string; message: string };
 
 type ScreenState =
   | { status: "liff-loading" }
   | { status: "login-required" }
   | { status: "liff-error"; error: LiffError }
-  | { status: "sites-loading"; profile: SiteReportLiffUser }
-  | { status: "sites-error"; profile: SiteReportLiffUser; error: GetSitesError }
+  | { status: "options-loading"; profile: SiteReportLiffUser }
+  | { status: "options-error"; profile: SiteReportLiffUser; error: FormOptionsError }
   | { status: "sites-empty"; profile: SiteReportLiffUser }
-  | { status: "site-selection"; profile: SiteReportLiffUser; sites: Site[] }
+  | { status: "site-selection"; profile: SiteReportLiffUser; sites: Site[]; workTypes: WorkType[] }
   | {
       status: "report-entry";
       profile: SiteReportLiffUser;
       sites: Site[];
+      workTypes: WorkType[];
       selectedSite: Site;
       draft: ReportDraft;
       /** Task 11 — result of the most recent submit attempt, or idle if
@@ -55,31 +56,55 @@ type ScreenState =
       submitAttempted: boolean;
     };
 
-const GENERIC_SITES_ERROR: GetSitesError = {
-  code: "GET_SITES_FAILED",
+const GENERIC_OPTIONS_ERROR: FormOptionsError = {
+  code: "LOAD_FORM_OPTIONS_FAILED",
   message: "現場一覧の取得に失敗しました。もう一度お試しください。",
 };
 
 export function SiteReportScreen() {
   const [state, setState] = useState<ScreenState>({ status: "liff-loading" });
 
-  const loadSites = useCallback((profile: SiteReportLiffUser) => {
-    setState({ status: "sites-loading", profile });
-    getSites()
-      .then((result) => {
-        if (!result.ok) {
-          setState({ status: "sites-error", profile, error: result.error });
+  // Phase 1 P0: GET_SITES and GET_WORK_TYPES load in parallel — neither
+  // depends on the other's result, and this app is a mobile/LIFF workflow
+  // where a serial round-trip pair would double the wait on a slow job-site
+  // connection. Either failing shows the same error/retry UI; both are
+  // re-requested together on retry.
+  const loadFormOptions = useCallback((profile: SiteReportLiffUser) => {
+    setState({ status: "options-loading", profile });
+    Promise.all([getSites(), getWorkTypes()])
+      .then(([sitesResult, workTypesResult]) => {
+        if (!sitesResult.ok) {
+          setState({ status: "options-error", profile, error: sitesResult.error });
           return;
         }
-        const { sites } = result.data;
+        if (!workTypesResult.ok) {
+          setState({ status: "options-error", profile, error: workTypesResult.error });
+          return;
+        }
+        const { sites } = sitesResult.data;
+        const { workTypes } = workTypesResult.data;
         if (sites.length === 0) {
           setState({ status: "sites-empty", profile });
+        } else if (sites.length === 1) {
+          // Phase 1 P0: exactly one ACTIVE site auto-advances — the user
+          // can still change it via ReportEntryShell's 現場を変更, which
+          // returns to "site-selection" without refetching.
+          setState({
+            status: "report-entry",
+            profile,
+            sites,
+            workTypes,
+            selectedSite: sites[0],
+            draft: createInitialReportDraft(profile),
+            submission: IDLE_SUBMISSION_STATE,
+            submitAttempted: false,
+          });
         } else {
-          setState({ status: "site-selection", profile, sites });
+          setState({ status: "site-selection", profile, sites, workTypes });
         }
       })
       .catch(() => {
-        setState({ status: "sites-error", profile, error: GENERIC_SITES_ERROR });
+        setState({ status: "options-error", profile, error: GENERIC_OPTIONS_ERROR });
       });
   }, []);
 
@@ -95,14 +120,14 @@ export function SiteReportScreen() {
       } else if (liffState.status === "error") {
         setState({ status: "liff-error", error: liffState.error });
       } else if (liffState.status === "ready") {
-        loadSites(liffState.profile);
+        loadFormOptions(liffState.profile);
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [loadSites]);
+  }, [loadFormOptions]);
 
   const handleLogin = useCallback(() => {
     // loginToSiteReport() redirects the browser to LINE login on success;
@@ -119,11 +144,23 @@ export function SiteReportScreen() {
             status: "report-entry",
             profile: prev.profile,
             sites: prev.sites,
+            workTypes: prev.workTypes,
             selectedSite: site,
             draft: createInitialReportDraft(prev.profile),
             submission: IDLE_SUBMISSION_STATE,
             submitAttempted: false,
           }
+        : prev,
+    );
+  }, []);
+
+  // Phase 1 P0: returns to the dropdown without refetching GET_SITES/
+  // GET_WORK_TYPES — sites/workTypes are already in memory from the
+  // report-entry state being left.
+  const handleChangeSite = useCallback(() => {
+    setState((prev) =>
+      prev.status === "report-entry"
+        ? { status: "site-selection", profile: prev.profile, sites: prev.sites, workTypes: prev.workTypes }
         : prev,
     );
   }, []);
@@ -186,8 +223,9 @@ export function SiteReportScreen() {
       {renderBody(
         state,
         handleLogin,
-        loadSites,
+        loadFormOptions,
         handleSelectSite,
+        handleChangeSite,
         handleDraftChange,
         handleSubmit,
         handleCreateAnother,
@@ -199,8 +237,9 @@ export function SiteReportScreen() {
 function renderBody(
   state: ScreenState,
   handleLogin: () => void,
-  loadSites: (profile: SiteReportLiffUser) => void,
+  loadFormOptions: (profile: SiteReportLiffUser) => void,
   handleSelectSite: (site: Site) => void,
+  handleChangeSite: () => void,
   handleDraftChange: (draft: ReportDraft) => void,
   handleSubmit: () => void,
   handleCreateAnother: () => void,
@@ -232,22 +271,18 @@ function renderBody(
         </div>
       );
 
-    case "sites-loading":
+    case "options-loading":
       return (
         <p role="status" className={styles.message}>
           現場一覧を読み込んでいます...
         </p>
       );
 
-    case "sites-error":
+    case "options-error":
       return (
         <div className={styles.errorBox} role="alert">
           <p className={styles.message}>{state.error.message}</p>
-          <button
-            type="button"
-            className={styles.buttonSecondary}
-            onClick={() => loadSites(state.profile)}
-          >
+          <button type="button" className={styles.buttonSecondary} onClick={() => loadFormOptions(state.profile)}>
             再試行
           </button>
         </div>
@@ -259,11 +294,7 @@ function renderBody(
           <h1 className={styles.heading}>現場を選択</h1>
           <p className={styles.message}>現在、利用できる現場がありません。</p>
           <p className={styles.hint}>担当者にお問い合わせいただくか、後でもう一度お試しください。</p>
-          <button
-            type="button"
-            className={styles.buttonSecondary}
-            onClick={() => loadSites(state.profile)}
-          >
+          <button type="button" className={styles.buttonSecondary} onClick={() => loadFormOptions(state.profile)}>
             再試行
           </button>
         </>
@@ -284,10 +315,12 @@ function renderBody(
           selectedSite={state.selectedSite}
           draft={state.draft}
           onDraftChange={handleDraftChange}
+          workTypes={state.workTypes}
           submission={state.submission}
           submitAttempted={state.submitAttempted}
           onSubmit={handleSubmit}
           onCreateAnother={handleCreateAnother}
+          onChangeSite={handleChangeSite}
         />
       );
 
