@@ -706,6 +706,36 @@ describe("SiteReportScreen — draft persistence", () => {
     expect(screen.getByLabelText(/作業者名/)).toHaveValue(PROFILE.displayName);
   });
 
+  // Regression guard for the debounced-save useEffect's cross-site skip:
+  // while the cross-site offer notice is showing (draftNotice.kind ===
+  // "cross-site"), the debounced save must never fire and overwrite the
+  // still-undecided offered draft with SITE_A's fresh/default content —
+  // proven here with real elapsed time past the 500ms debounce window,
+  // not just by inspecting the guard's code shape.
+  it("never overwrites the offered cross-site draft in localStorage while the offer is showing, even after the debounce window elapses", async () => {
+    const seededRaw = serializeDraft({ lineUserId: PROFILE.userId, siteId: SITE_B.siteId, draft: RESTORABLE_DRAFT });
+    window.localStorage.setItem(DRAFT_STORAGE_KEY, seededRaw);
+    mockTwoSitesOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+
+    fireEvent.change(await screen.findByRole("combobox", { name: /現場名/ }), { target: { value: SITE_A.siteId } });
+    await screen.findByText("前回の下書きがあります");
+
+    // Do NOT click either notice button — just let real time pass well
+    // past the 500ms debounce window (same 1000ms convention used by the
+    // debounce test above).
+    await new Promise((resolve) => setTimeout(resolve, 700));
+
+    await waitFor(
+      () => {
+        expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toBe(seededRaw);
+      },
+      { timeout: 1000 },
+    );
+  });
+
   it("switches to the draft's site and restores its fields when the user confirms a cross-site restore", async () => {
     window.localStorage.setItem(
       DRAFT_STORAGE_KEY,
