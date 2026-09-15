@@ -13,6 +13,9 @@ const VALID_DRAFT: ReportDraft = {
   workType: "Inspection",
   reportDate: "2026-09-12",
   comment: "All clear.",
+  progressStatus: "IN_PROGRESS",
+  hasIssue: "NO",
+  issueDetail: "",
   photos: [],
 };
 
@@ -37,6 +40,36 @@ describe("validateReportDraft", () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors.workType).toBeDefined();
+  });
+
+  // Phase 2 — missing progress status
+  it("returns a progressStatus error when progress status is empty", () => {
+    const result = validateReportDraft({ ...VALID_DRAFT, progressStatus: "" });
+
+    expect(result.valid).toBe(false);
+    expect(result.errors.progressStatus).toBeDefined();
+  });
+
+  // Phase 2 — conditional issueDetail
+  it("does not report an issueDetail error when hasIssue is NO, even if issueDetail is empty", () => {
+    const result = validateReportDraft({ ...VALID_DRAFT, hasIssue: "NO", issueDetail: "" });
+
+    expect(result.valid).toBe(true);
+    expect(result.errors.issueDetail).toBeUndefined();
+  });
+
+  it("returns an issueDetail error when hasIssue is YES and issueDetail is empty", () => {
+    const result = validateReportDraft({ ...VALID_DRAFT, hasIssue: "YES", issueDetail: "" });
+
+    expect(result.valid).toBe(false);
+    expect(result.errors.issueDetail).toBeDefined();
+  });
+
+  it("does not report an issueDetail error when hasIssue is YES and issueDetail is non-empty", () => {
+    const result = validateReportDraft({ ...VALID_DRAFT, hasIssue: "YES", issueDetail: "足場が不足しています" });
+
+    expect(result.valid).toBe(true);
+    expect(result.errors.issueDetail).toBeUndefined();
   });
 
   // V3 — missing report date

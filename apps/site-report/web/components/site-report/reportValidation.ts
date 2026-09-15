@@ -3,11 +3,15 @@ import type { ReportDraft } from "./reportDraft";
 /** Field-level error messages, one optional entry per invalid field.
  *  `comment` has no entry at all — `SubmitReportInput.comment` is
  *  optional with no documented format/length rule, so it can never be
- *  invalid on shape grounds alone (Task 9 §7/§8). */
+ *  invalid on shape grounds alone (Task 9 §7/§8). `hasIssue` has no entry
+ *  either — it is always "YES" or "NO" by construction (a radio pair, set
+ *  via ReportForm), never blank, so it can never fail this validator. */
 export interface ReportDraftErrors {
   workerName?: string;
   workType?: string;
   reportDate?: string;
+  progressStatus?: string;
+  issueDetail?: string;
 }
 
 export interface ReportDraftValidationResult {
@@ -58,6 +62,12 @@ export function validateReportDraft(draft: ReportDraft): ReportDraftValidationRe
     errors.reportDate = "報告日を入力してください。";
   } else if (!isValidCalendarDateString(draft.reportDate)) {
     errors.reportDate = "報告日はYYYY-MM-DD形式の正しい日付で入力してください。";
+  }
+  if (draft.progressStatus.trim().length === 0) {
+    errors.progressStatus = "進捗状況を選択してください。";
+  }
+  if (draft.hasIssue === "YES" && draft.issueDetail.trim().length === 0) {
+    errors.issueDetail = "問題内容を入力してください。";
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
