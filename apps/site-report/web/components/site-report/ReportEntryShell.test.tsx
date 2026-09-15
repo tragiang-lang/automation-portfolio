@@ -3,6 +3,7 @@ import { ReportEntryShell } from "./ReportEntryShell";
 import type { ProgressStatus, Site, SubmitReportResponseData, WorkType } from "@/types/api";
 import type { ReportDraft, ReportDraftPhoto } from "./reportDraft";
 import { IDLE_SUBMISSION_STATE, type SubmissionState } from "./submission";
+import type { DraftNoticeState } from "./ReportEntryShell";
 
 // The real compressor uses FileReader/Image/canvas — jsdom has no native
 // canvas backend. Mocking keeps these integration tests deterministic and
@@ -77,6 +78,9 @@ function renderShell(overrides: {
   onSubmit?: () => void;
   onCreateAnother?: () => void;
   onChangeSite?: () => void;
+  draftNotice?: DraftNoticeState;
+  onRestoreCrossSiteDraft?: () => void;
+  onDismissDraftNotice?: () => void;
 } = {}) {
   return render(
     <ReportEntryShell
@@ -90,6 +94,9 @@ function renderShell(overrides: {
       onSubmit={overrides.onSubmit ?? (() => {})}
       onCreateAnother={overrides.onCreateAnother ?? (() => {})}
       onChangeSite={overrides.onChangeSite ?? (() => {})}
+      draftNotice={overrides.draftNotice ?? { kind: "none" }}
+      onRestoreCrossSiteDraft={overrides.onRestoreCrossSiteDraft ?? (() => {})}
+      onDismissDraftNotice={overrides.onDismissDraftNotice ?? (() => {})}
     />,
   );
 }
@@ -234,6 +241,42 @@ describe("ReportEntryShell", () => {
     fireEvent.click(screen.getByRole("button", { name: /1\.jpg/ }));
 
     expect(onDraftChange).toHaveBeenCalledWith({ ...draftWithPhotos, photos: [makePhoto("2")] });
+  });
+
+  describe("draft notice", () => {
+    it("shows nothing when draftNotice is none", () => {
+      renderShell({ draftNotice: { kind: "none" } });
+
+      expect(screen.queryByText(/前回の/)).not.toBeInTheDocument();
+    });
+
+    it("shows a restored message with a discard button when draftNotice is restored", () => {
+      const onDismissDraftNotice = jest.fn();
+      renderShell({ draftNotice: { kind: "restored" }, onDismissDraftNotice });
+
+      expect(screen.getByText("前回の入力内容を復元しました。")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "破棄" }));
+      expect(onDismissDraftNotice).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows the cross-site offer with the saved site's name and two actions", () => {
+      const onRestoreCrossSiteDraft = jest.fn();
+      const onDismissDraftNotice = jest.fn();
+      renderShell({
+        draftNotice: { kind: "cross-site", siteName: "Shinjuku Plaza" },
+        onRestoreCrossSiteDraft,
+        onDismissDraftNotice,
+      });
+
+      expect(screen.getByText("前回の下書きがあります")).toBeInTheDocument();
+      expect(screen.getByText("現場：Shinjuku Plaza")).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "この下書きを復元" }));
+      expect(onRestoreCrossSiteDraft).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(screen.getByRole("button", { name: "破棄" }));
+      expect(onDismissDraftNotice).toHaveBeenCalledTimes(1);
+    });
   });
 });
 

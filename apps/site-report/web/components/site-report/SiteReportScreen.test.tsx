@@ -11,6 +11,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SiteReportScreen } from "./SiteReportScreen";
 import type { ProgressStatus, Site, WorkType } from "@/types/api";
 import type { SiteReportLiffUser } from "@/types/liff";
+import { DRAFT_STORAGE_KEY, serializeDraft } from "./reportDraftStorage";
+import type { ReportDraft } from "./reportDraft";
 
 // Mocked by relative path, not the `@/` alias — matching lib/liff.test.ts
 // and lib/api/siteReportWorkflows.test.ts's existing convention. `jest.mock`'s
@@ -637,5 +639,185 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     fireEvent.click(screen.getByRole("button", { name: /別のレポートを作成/ }));
 
     expect(submitReport).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("SiteReportScreen — draft persistence", () => {
+  const RESTORABLE_DRAFT: ReportDraft = {
+    workerName: "Restored Name",
+    workType: "INSPECTION",
+    reportDate: "2026-09-14",
+    comment: "restored comment",
+    progressStatus: "IN_PROGRESS",
+    hasIssue: "NO",
+    issueDetail: "",
+    photos: [],
+  };
+
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  it("auto-restores a same-user, same-site draft and shows the restored notice (single-site auto-advance)", async () => {
+    window.localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      serializeDraft({ lineUserId: PROFILE.userId, siteId: SITE_A.siteId, draft: RESTORABLE_DRAFT }),
+    );
+    mockOneSiteOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+
+    expect(await screen.findByDisplayValue("Restored Name")).toBeInTheDocument();
+    expect(screen.getByText("前回の入力内容を復元しました。")).toBeInTheDocument();
+  });
+
+  it("does not restore a draft belonging to a different LINE user", async () => {
+    window.localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      serializeDraft({ lineUserId: "SOMEONE-ELSE", siteId: SITE_A.siteId, draft: RESTORABLE_DRAFT }),
+    );
+    mockOneSiteOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+
+    expect(await screen.findByLabelText(/作業者名/)).toHaveValue(PROFILE.displayName);
+    expect(screen.queryByText(/前回の/)).not.toBeInTheDocument();
+  });
+
+  it("offers a cross-site restore instead of auto-restoring when the draft belongs to a different, still-active site", async () => {
+    window.localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      serializeDraft({ lineUserId: PROFILE.userId, siteId: SITE_B.siteId, draft: RESTORABLE_DRAFT }),
+    );
+    mockTwoSitesOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+
+    // Two sites -> site-selection screen first; pick SITE_A (not the draft's site).
+    const picker = await screen.findByRole("combobox", { name: /現場名/ });
+    fireEvent.change(picker, { target: { value: SITE_A.siteId } });
+
+    expect(await screen.findByText("前回の下書きがあります")).toBeInTheDocument();
+    expect(screen.getByText(`現場：${SITE_B.name}`)).toBeInTheDocument();
+    // Form must stay untouched (SITE_A's fresh draft), not silently show SITE_B's content.
+    expect(screen.getByLabelText(/作業者名/)).toHaveValue(PROFILE.displayName);
+  });
+
+  it("switches to the draft's site and restores its fields when the user confirms a cross-site restore", async () => {
+    window.localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      serializeDraft({ lineUserId: PROFILE.userId, siteId: SITE_B.siteId, draft: RESTORABLE_DRAFT }),
+    );
+    mockTwoSitesOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+
+    fireEvent.change(await screen.findByRole("combobox", { name: /現場名/ }), { target: { value: SITE_A.siteId } });
+    fireEvent.click(await screen.findByRole("button", { name: "この下書きを復元" }));
+
+    expect(await screen.findByText(SITE_B.name)).toBeInTheDocument(); // site switched to SITE_B
+    expect(screen.getByLabelText(/作業者名/)).toHaveValue("Restored Name");
+    expect(screen.getByText("前回の入力内容を復元しました。")).toBeInTheDocument();
+  });
+
+  it("discards the offered cross-site draft and leaves the current site/form untouched on 破棄", async () => {
+    window.localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      serializeDraft({ lineUserId: PROFILE.userId, siteId: SITE_B.siteId, draft: RESTORABLE_DRAFT }),
+    );
+    mockTwoSitesOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+
+    fireEvent.change(await screen.findByRole("combobox", { name: /現場名/ }), { target: { value: SITE_A.siteId } });
+    fireEvent.click(await screen.findByRole("button", { name: "破棄" }));
+
+    expect(await screen.findByText(SITE_A.name)).toBeInTheDocument(); // still on SITE_A
+    expect(screen.getByLabelText(/作業者名/)).toHaveValue(PROFILE.displayName); // fresh draft, not SITE_B's
+    expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("clears the stored draft after a successful submit", async () => {
+    window.localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      serializeDraft({ lineUserId: PROFILE.userId, siteId: SITE_A.siteId, draft: RESTORABLE_DRAFT }),
+    );
+    mockOneSiteOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+    submitReport.mockResolvedValue({ ok: true, data: { reportId: "RPT-1", photoCount: 0, notificationSent: true } });
+
+    render(<SiteReportScreen />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "レポートを送信" }));
+
+    await waitFor(() => expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toBeNull());
+  });
+
+  it("keeps the stored draft when a submit fails", async () => {
+    window.localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      serializeDraft({ lineUserId: PROFILE.userId, siteId: SITE_A.siteId, draft: RESTORABLE_DRAFT }),
+    );
+    mockOneSiteOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+    submitReport.mockResolvedValue({ ok: false, error: { code: "SITE_NOT_FOUND", message: "現場が見つかりません。" } });
+
+    render(<SiteReportScreen />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "レポートを送信" }));
+
+    await screen.findByText("現場が見つかりません。");
+    expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).not.toBeNull();
+  });
+
+  // Spec §27 Basic-10 — debounced persistence occurs correctly.
+  it("debounces localStorage writes as the user types, saving only after inactivity", async () => {
+    mockOneSiteOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+    const nameInput = await screen.findByLabelText(/作業者名/);
+
+    fireEvent.change(nameInput, { target: { value: "New Worker Name" } });
+    // Nothing written yet — the debounce window has not elapsed.
+    expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toBeNull();
+
+    await waitFor(
+      () => {
+        const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+        expect(raw).not.toBeNull();
+        expect(JSON.parse(raw as string).workerName).toBe("New Worker Name");
+      },
+      { timeout: 1000 },
+    );
+  });
+
+  // Spec §27 Site-18 — site change updates subsequent draft siteId.
+  it("tags subsequent draft writes with the new site's id after an explicit 現場を変更 site change", async () => {
+    mockTwoSitesOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+    fireEvent.change(await screen.findByRole("combobox", { name: /現場名/ }), { target: { value: SITE_A.siteId } });
+
+    // Draft is untouched, so 現場を変更 navigates straight back to the
+    // picker without the confirm panel (ReportEntryShell's own logic).
+    fireEvent.click(await screen.findByRole("button", { name: "現場を変更" }));
+    fireEvent.change(await screen.findByRole("combobox", { name: /現場名/ }), { target: { value: SITE_B.siteId } });
+
+    fireEvent.change(await screen.findByLabelText(/作業者名/), { target: { value: "Updated For B" } });
+
+    await waitFor(() => {
+      const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+      expect(raw).not.toBeNull();
+      const parsed = JSON.parse(raw as string);
+      expect(parsed.siteId).toBe(SITE_B.siteId);
+      expect(parsed.workerName).toBe("Updated For B");
+    });
   });
 });

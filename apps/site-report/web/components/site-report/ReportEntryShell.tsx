@@ -7,6 +7,16 @@ import { PhotoPreviewList } from "./PhotoPreviewList";
 import type { SubmissionState } from "./submission";
 import styles from "./site-report.module.css";
 
+/** Phase 2 spec §21 — what SiteReportScreen tells this shell to show
+ *  about a candidate localStorage draft. Deliberately decoupled from
+ *  reportDraftStorage.ts's SiteReportDraftV1 shape — this component only
+ *  ever needs a display name for the cross-site case, never the raw
+ *  stored draft. */
+export type DraftNoticeState =
+  | { kind: "none" }
+  | { kind: "restored" }
+  | { kind: "cross-site"; siteName: string };
+
 /**
  * Report-entry screen shell (Task 8 §12, real form in Task 9, real photo
  * pipeline in Task 10, real submission in Task 11). Confirms the selected
@@ -49,6 +59,9 @@ export function ReportEntryShell({
   onSubmit,
   onCreateAnother,
   onChangeSite,
+  draftNotice,
+  onRestoreCrossSiteDraft,
+  onDismissDraftNotice,
 }: {
   selectedSite: Site;
   draft: ReportDraft;
@@ -60,6 +73,9 @@ export function ReportEntryShell({
   onSubmit: () => void;
   onCreateAnother: () => void;
   onChangeSite: () => void;
+  draftNotice: DraftNoticeState;
+  onRestoreCrossSiteDraft: () => void;
+  onDismissDraftNotice: () => void;
 }) {
   const [confirmingChangeSite, setConfirmingChangeSite] = useState(false);
 
@@ -125,6 +141,28 @@ export function ReportEntryShell({
           </div>
         ) : null}
       </div>
+
+      {draftNotice.kind === "restored" ? (
+        <div className={styles.draftNotice} role="status">
+          <p className={styles.message}>前回の入力内容を復元しました。</p>
+          <button type="button" className={styles.buttonSecondary} onClick={onDismissDraftNotice}>
+            破棄
+          </button>
+        </div>
+      ) : null}
+
+      {draftNotice.kind === "cross-site" ? (
+        <div className={styles.draftNotice} role="alertdialog">
+          <p className={styles.message}>前回の下書きがあります</p>
+          <p className={styles.hint}>現場：{draftNotice.siteName}</p>
+          <button type="button" className={styles.buttonSecondary} onClick={onDismissDraftNotice}>
+            破棄
+          </button>
+          <button type="button" className={styles.button} onClick={onRestoreCrossSiteDraft}>
+            この下書きを復元
+          </button>
+        </div>
+      ) : null}
 
       <ReportForm
         draft={draft}
