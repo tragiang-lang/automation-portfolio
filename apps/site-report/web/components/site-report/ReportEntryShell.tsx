@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Site, WorkType } from "@/types/api";
+import type { ProgressStatus, Site, WorkType } from "@/types/api";
 import { addPhotosToDraft, removePhotoFromDraft, type ReportDraft } from "./reportDraft";
 import { ReportForm } from "./ReportForm";
 import { PhotoUploader } from "./PhotoUploader";
@@ -43,6 +43,7 @@ export function ReportEntryShell({
   draft,
   onDraftChange,
   workTypes,
+  progressStatuses,
   submission,
   submitAttempted,
   onSubmit,
@@ -53,6 +54,7 @@ export function ReportEntryShell({
   draft: ReportDraft;
   onDraftChange: (draft: ReportDraft) => void;
   workTypes: WorkType[];
+  progressStatuses: ProgressStatus[];
   submission: SubmissionState;
   submitAttempted: boolean;
   onSubmit: () => void;
@@ -124,7 +126,13 @@ export function ReportEntryShell({
         ) : null}
       </div>
 
-      <ReportForm draft={draft} onChange={onDraftChange} workTypes={workTypes} showAllErrors={submitAttempted} />
+      <ReportForm
+        draft={draft}
+        onChange={onDraftChange}
+        workTypes={workTypes}
+        progressStatuses={progressStatuses}
+        showAllErrors={submitAttempted}
+      />
 
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>写真</h2>

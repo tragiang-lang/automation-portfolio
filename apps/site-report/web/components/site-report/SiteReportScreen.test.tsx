@@ -9,7 +9,7 @@
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SiteReportScreen } from "./SiteReportScreen";
-import type { Site, WorkType } from "@/types/api";
+import type { ProgressStatus, Site, WorkType } from "@/types/api";
 import type { SiteReportLiffUser } from "@/types/liff";
 
 // Mocked by relative path, not the `@/` alias — matching lib/liff.test.ts
@@ -23,6 +23,7 @@ jest.mock("../../lib/liff", () => ({
 jest.mock("../../lib/api/siteReportWorkflows", () => ({
   getSites: jest.fn(),
   getWorkTypes: jest.fn(),
+  getProgressStatuses: jest.fn(),
   submitReport: jest.fn(),
 }));
 // The real compressor uses FileReader/Image/canvas — jsdom has no native
@@ -38,9 +39,10 @@ const { initializeSiteReportLiff, loginToSiteReport } = jest.requireMock("../../
   initializeSiteReportLiff: jest.Mock;
   loginToSiteReport: jest.Mock;
 };
-const { getSites, getWorkTypes, submitReport } = jest.requireMock("../../lib/api/siteReportWorkflows") as {
+const { getSites, getWorkTypes, getProgressStatuses, submitReport } = jest.requireMock("../../lib/api/siteReportWorkflows") as {
   getSites: jest.Mock;
   getWorkTypes: jest.Mock;
+  getProgressStatuses: jest.Mock;
   submitReport: jest.Mock;
 };
 
@@ -67,6 +69,8 @@ const SITE_B: Site = {
 
 const WORK_TYPE_A: WorkType = { code: "INSPECTION", name: "検査", status: "ACTIVE", sortOrder: 21 };
 
+const PROGRESS_STATUS_A: ProgressStatus = { code: "IN_PROGRESS", name: "進行中", status: "ACTIVE", sortOrder: 2 };
+
 function neverResolves<T>(): Promise<T> {
   return new Promise<T>(() => {});
 }
@@ -74,11 +78,13 @@ function neverResolves<T>(): Promise<T> {
 function mockOneSiteOneWorkType() {
   getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A] } });
   getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
+  getProgressStatuses.mockResolvedValue({ ok: true, data: { progressStatuses: [PROGRESS_STATUS_A] } });
 }
 
 function mockTwoSitesOneWorkType() {
   getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A, SITE_B] } });
   getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
+  getProgressStatuses.mockResolvedValue({ ok: true, data: { progressStatuses: [PROGRESS_STATUS_A] } });
 }
 
 beforeEach(() => {
@@ -86,6 +92,7 @@ beforeEach(() => {
   loginToSiteReport.mockReset().mockResolvedValue(undefined);
   getSites.mockReset();
   getWorkTypes.mockReset();
+  getProgressStatuses.mockReset();
   submitReport.mockReset();
 });
 
@@ -131,19 +138,22 @@ describe("SiteReportScreen — LIFF orchestration", () => {
 });
 
 describe("SiteReportScreen — GET_SITES/GET_WORK_TYPES orchestration", () => {
-  it("calls getSites and getWorkTypes in parallel, both with no arguments, once LIFF is ready", async () => {
+  it("calls getSites, getWorkTypes, and getProgressStatuses in parallel, all with no arguments, once LIFF is ready", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
     getSites.mockReturnValue(neverResolves());
     getWorkTypes.mockReturnValue(neverResolves());
+    getProgressStatuses.mockReturnValue(neverResolves());
 
     render(<SiteReportScreen />);
 
     await waitFor(() => {
       expect(getSites).toHaveBeenCalledTimes(1);
       expect(getWorkTypes).toHaveBeenCalledTimes(1);
+      expect(getProgressStatuses).toHaveBeenCalledTimes(1);
     });
     expect(getSites.mock.calls[0]).toEqual([]);
     expect(getWorkTypes.mock.calls[0]).toEqual([]);
+    expect(getProgressStatuses.mock.calls[0]).toEqual([]);
   });
 
   it("renders the site dropdown with every ACTIVE site once both loads succeed", async () => {
@@ -160,6 +170,7 @@ describe("SiteReportScreen — GET_SITES/GET_WORK_TYPES orchestration", () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
     getSites.mockResolvedValue({ ok: true, data: { sites: [] } });
     getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
+    getProgressStatuses.mockResolvedValue({ ok: true, data: { progressStatuses: [] } });
 
     render(<SiteReportScreen />);
 
@@ -170,6 +181,7 @@ describe("SiteReportScreen — GET_SITES/GET_WORK_TYPES orchestration", () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
     getSites.mockResolvedValue({ ok: false, error: { code: "SHEET_ERROR", message: "The Sites sheet could not be read." } });
     getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
+    getProgressStatuses.mockResolvedValue({ ok: true, data: { progressStatuses: [PROGRESS_STATUS_A] } });
 
     render(<SiteReportScreen />);
 
@@ -186,6 +198,20 @@ describe("SiteReportScreen — GET_SITES/GET_WORK_TYPES orchestration", () => {
     expect(await screen.findByText("Work type data failed validation.")).toBeInTheDocument();
   });
 
+  it("shows an error state when getProgressStatuses resolves ok:false", async () => {
+    getSites.mockResolvedValue({ ok: true, data: { sites: [SITE_A] } });
+    getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
+    getProgressStatuses.mockResolvedValue({
+      ok: false,
+      error: { code: "DATA_INVALID", message: "Progress status data failed validation." },
+    });
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+
+    expect(await screen.findByText("Progress status data failed validation.")).toBeInTheDocument();
+  });
+
   it("shows an error state when either call rejects", async () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
     getSites.mockRejectedValue(new Error("network down"));
@@ -200,6 +226,7 @@ describe("SiteReportScreen — GET_SITES/GET_WORK_TYPES orchestration", () => {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
     getSites.mockResolvedValueOnce({ ok: false, error: { code: "SHEET_ERROR", message: "The Sites sheet could not be read." } });
     getWorkTypes.mockResolvedValue({ ok: true, data: { workTypes: [WORK_TYPE_A] } });
+    getProgressStatuses.mockResolvedValue({ ok: true, data: { progressStatuses: [PROGRESS_STATUS_A] } });
 
     render(<SiteReportScreen />);
     const retryButton = await screen.findByRole("button", { name: /再試行/ });
@@ -229,7 +256,7 @@ describe("SiteReportScreen — site selection", () => {
     mockTwoSitesOneWorkType();
 
     render(<SiteReportScreen />);
-    const select = await screen.findByRole("combobox", { name: "現場名" });
+    const select = await screen.findByRole("combobox", { name: /現場名/ });
     fireEvent.change(select, { target: { value: SITE_A.siteId } });
 
     expect(await screen.findByRole("heading", { name: "現場報告" })).toBeInTheDocument();
@@ -251,12 +278,12 @@ describe("SiteReportScreen — site selection", () => {
     mockTwoSitesOneWorkType();
 
     render(<SiteReportScreen />);
-    fireEvent.change(await screen.findByRole("combobox", { name: "現場名" }), { target: { value: SITE_A.siteId } });
+    fireEvent.change(await screen.findByRole("combobox", { name: /現場名/ }), { target: { value: SITE_A.siteId } });
     await screen.findByRole("heading", { name: "現場報告" });
 
     fireEvent.click(screen.getByRole("button", { name: "現場を変更" }));
 
-    expect(await screen.findByRole("combobox", { name: "現場名" })).toBeInTheDocument();
+    expect(await screen.findByRole("combobox", { name: /現場名/ })).toBeInTheDocument();
     expect(getSites).toHaveBeenCalledTimes(1);
     expect(getWorkTypes).toHaveBeenCalledTimes(1);
   });
@@ -283,23 +310,23 @@ describe("SiteReportScreen — report entry form (Task 9/Phase 1 P0)", () => {
   it("shows the real report form fields after reaching report entry", async () => {
     await reachReportEntry();
 
-    expect(screen.getByRole("combobox", { name: "作業種別" })).toBeInTheDocument();
-    expect(screen.getByLabelText("報告日")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /作業種別/ })).toBeInTheDocument();
+    expect(screen.getByLabelText(/報告日/)).toBeInTheDocument();
     expect(screen.getByLabelText("コメント")).toBeInTheDocument();
   });
 
   it("pre-fills the worker name field from the authenticated LIFF profile", async () => {
     await reachReportEntry();
 
-    expect(screen.getByLabelText("作業者名")).toHaveValue(PROFILE.displayName);
+    expect(screen.getByLabelText(/作業者名/)).toHaveValue(PROFILE.displayName);
   });
 
   it("reflects a user edit to a field in the rendered input", async () => {
     await reachReportEntry();
 
-    fireEvent.change(screen.getByRole("combobox", { name: "作業種別" }), { target: { value: WORK_TYPE_A.code } });
+    fireEvent.change(screen.getByRole("combobox", { name: /作業種別/ }), { target: { value: WORK_TYPE_A.code } });
 
-    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue(WORK_TYPE_A.code);
+    expect(screen.getByRole("combobox", { name: /作業種別/ })).toHaveValue(WORK_TYPE_A.code);
   });
 
   it("never calls submitReport while editing report fields", async () => {
@@ -332,13 +359,13 @@ describe("SiteReportScreen — photo pipeline (Task 10)", () => {
   it("adds a selected photo to the draft without resetting other report fields", async () => {
     await reachReportEntry();
 
-    fireEvent.change(screen.getByRole("combobox", { name: "作業種別" }), { target: { value: WORK_TYPE_A.code } });
+    fireEvent.change(screen.getByRole("combobox", { name: /作業種別/ }), { target: { value: WORK_TYPE_A.code } });
     fireEvent.change(screen.getByLabelText("写真を追加"), {
       target: { files: [new File(["x"], "a.jpg", { type: "image/jpeg" })] },
     });
 
     await waitFor(() => expect(screen.getAllByRole("img")).toHaveLength(1));
-    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue(WORK_TYPE_A.code);
+    expect(screen.getByRole("combobox", { name: /作業種別/ })).toHaveValue(WORK_TYPE_A.code);
   });
 
   it("keeps an added photo when an unrelated report field is edited afterward", async () => {
@@ -356,7 +383,7 @@ describe("SiteReportScreen — photo pipeline (Task 10)", () => {
 
   it("removes a photo without resetting report fields", async () => {
     await reachReportEntry();
-    fireEvent.change(screen.getByLabelText("作業者名"), { target: { value: "Custom Name" } });
+    fireEvent.change(screen.getByLabelText(/作業者名/), { target: { value: "Custom Name" } });
     fireEvent.change(screen.getByLabelText("写真を追加"), {
       target: { files: [new File(["x"], "a.jpg", { type: "image/jpeg" })] },
     });
@@ -365,7 +392,7 @@ describe("SiteReportScreen — photo pipeline (Task 10)", () => {
     fireEvent.click(screen.getByRole("button", { name: /a\.jpg/ }));
 
     expect(screen.queryAllByRole("img")).toHaveLength(0);
-    expect(screen.getByLabelText("作業者名")).toHaveValue("Custom Name");
+    expect(screen.getByLabelText(/作業者名/)).toHaveValue("Custom Name");
   });
 
   it("never calls submitReport while adding or removing photos", async () => {
@@ -390,7 +417,10 @@ describe("SiteReportScreen — submission (Task 11)", () => {
   }
 
   function fillValidDraft() {
-    fireEvent.change(screen.getByRole("combobox", { name: "作業種別" }), { target: { value: WORK_TYPE_A.code } });
+    fireEvent.change(screen.getByRole("combobox", { name: /作業種別/ }), { target: { value: WORK_TYPE_A.code } });
+    fireEvent.change(screen.getByRole("combobox", { name: /進捗状況/ }), {
+      target: { value: PROGRESS_STATUS_A.code },
+    });
   }
 
   const SUCCESS_RESULT = { ok: true, data: { reportId: "RPT-1", photoCount: 0, notificationSent: true } } as const;
@@ -411,6 +441,9 @@ describe("SiteReportScreen — submission (Task 11)", () => {
       reportDate: expect.any(String),
       workType: WORK_TYPE_A.code,
       comment: "",
+      progressStatus: PROGRESS_STATUS_A.code,
+      hasIssue: "NO",
+      issueDetail: undefined,
       photos: [],
     });
   });
@@ -434,7 +467,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     fireEvent.click(screen.getByRole("button", { name: /送信/ }));
 
     expect(submitReport).not.toHaveBeenCalled();
-    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect((await screen.findAllByRole("alert")).length).toBeGreaterThan(0);
   });
 
   // S6 — loading state
@@ -474,7 +507,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     fireEvent.click(screen.getByRole("button", { name: /送信/ }));
 
     expect(await screen.findByText("The submitted report failed validation.")).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue(WORK_TYPE_A.code);
+    expect(screen.getByRole("combobox", { name: /作業種別/ })).toHaveValue(WORK_TYPE_A.code);
     expect(screen.getByRole("button", { name: /送信/ })).not.toBeDisabled();
   });
 
@@ -513,7 +546,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
   // S13 — report fields preserved after a submission error
   it("preserves report fields after a submission error", async () => {
     await reachReportEntry();
-    fireEvent.change(screen.getByLabelText("作業者名"), { target: { value: "Custom Name" } });
+    fireEvent.change(screen.getByLabelText(/作業者名/), { target: { value: "Custom Name" } });
     fillValidDraft();
     fireEvent.change(screen.getByLabelText("コメント"), { target: { value: "Some notes" } });
     submitReport.mockResolvedValue({
@@ -524,8 +557,8 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     fireEvent.click(screen.getByRole("button", { name: /送信/ }));
 
     await screen.findByRole("alert");
-    expect(screen.getByLabelText("作業者名")).toHaveValue("Custom Name");
-    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue(WORK_TYPE_A.code);
+    expect(screen.getByLabelText(/作業者名/)).toHaveValue("Custom Name");
+    expect(screen.getByRole("combobox", { name: /作業種別/ })).toHaveValue(WORK_TYPE_A.code);
     expect(screen.getByLabelText("コメント")).toHaveValue("Some notes");
   });
 
@@ -573,7 +606,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
   // or resubmitted automatically.
   it("resets to a fresh draft and idle submission when creating another report after success", async () => {
     await reachReportEntry();
-    fireEvent.change(screen.getByLabelText("作業者名"), { target: { value: "Custom Name" } });
+    fireEvent.change(screen.getByLabelText(/作業者名/), { target: { value: "Custom Name" } });
     fillValidDraft();
     fireEvent.change(screen.getByLabelText("コメント"), { target: { value: "Some notes" } });
     fireEvent.change(screen.getByLabelText("写真を追加"), {
@@ -586,8 +619,8 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /別のレポートを作成/ }));
 
-    expect(screen.getByLabelText("作業者名")).toHaveValue(PROFILE.displayName);
-    expect(screen.getByRole("combobox", { name: "作業種別" })).toHaveValue("");
+    expect(screen.getByLabelText(/作業者名/)).toHaveValue(PROFILE.displayName);
+    expect(screen.getByRole("combobox", { name: /作業種別/ })).toHaveValue("");
     expect(screen.getByLabelText("コメント")).toHaveValue("");
     expect(screen.queryAllByRole("img")).toHaveLength(0);
     expect(screen.queryByText(/送信しました/)).not.toBeInTheDocument();

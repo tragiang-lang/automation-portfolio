@@ -19,9 +19,9 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { initializeSiteReportLiff, loginToSiteReport } from "@/lib/liff";
-import { getSites, getWorkTypes } from "@/lib/api/siteReportWorkflows";
+import { getSites, getWorkTypes, getProgressStatuses } from "@/lib/api/siteReportWorkflows";
 import type { LiffError, SiteReportLiffUser } from "@/types/liff";
-import type { Site, WorkType } from "@/types/api";
+import type { ProgressStatus, Site, WorkType } from "@/types/api";
 import { SitePicker } from "./SitePicker";
 import { ReportEntryShell } from "./ReportEntryShell";
 import { createInitialReportDraft, type ReportDraft } from "./reportDraft";
@@ -38,12 +38,13 @@ type ScreenState =
   | { status: "options-loading"; profile: SiteReportLiffUser }
   | { status: "options-error"; profile: SiteReportLiffUser; error: FormOptionsError }
   | { status: "sites-empty"; profile: SiteReportLiffUser }
-  | { status: "site-selection"; profile: SiteReportLiffUser; sites: Site[]; workTypes: WorkType[] }
+  | { status: "site-selection"; profile: SiteReportLiffUser; sites: Site[]; workTypes: WorkType[]; progressStatuses: ProgressStatus[] }
   | {
       status: "report-entry";
       profile: SiteReportLiffUser;
       sites: Site[];
       workTypes: WorkType[];
+      progressStatuses: ProgressStatus[];
       selectedSite: Site;
       draft: ReportDraft;
       /** Task 11 — result of the most recent submit attempt, or idle if
@@ -71,8 +72,8 @@ export function SiteReportScreen() {
   // re-requested together on retry.
   const loadFormOptions = useCallback((profile: SiteReportLiffUser) => {
     setState({ status: "options-loading", profile });
-    Promise.all([getSites(), getWorkTypes()])
-      .then(([sitesResult, workTypesResult]) => {
+    Promise.all([getSites(), getWorkTypes(), getProgressStatuses()])
+      .then(([sitesResult, workTypesResult, progressStatusesResult]) => {
         if (!sitesResult.ok) {
           setState({ status: "options-error", profile, error: sitesResult.error });
           return;
@@ -81,8 +82,13 @@ export function SiteReportScreen() {
           setState({ status: "options-error", profile, error: workTypesResult.error });
           return;
         }
+        if (!progressStatusesResult.ok) {
+          setState({ status: "options-error", profile, error: progressStatusesResult.error });
+          return;
+        }
         const { sites } = sitesResult.data;
         const { workTypes } = workTypesResult.data;
+        const { progressStatuses } = progressStatusesResult.data;
         if (sites.length === 0) {
           setState({ status: "sites-empty", profile });
         } else if (sites.length === 1) {
@@ -94,13 +100,14 @@ export function SiteReportScreen() {
             profile,
             sites,
             workTypes,
+            progressStatuses,
             selectedSite: sites[0],
             draft: createInitialReportDraft(profile),
             submission: IDLE_SUBMISSION_STATE,
             submitAttempted: false,
           });
         } else {
-          setState({ status: "site-selection", profile, sites, workTypes });
+          setState({ status: "site-selection", profile, sites, workTypes, progressStatuses });
         }
       })
       .catch(() => {
@@ -145,6 +152,7 @@ export function SiteReportScreen() {
             profile: prev.profile,
             sites: prev.sites,
             workTypes: prev.workTypes,
+            progressStatuses: prev.progressStatuses,
             selectedSite: site,
             draft: createInitialReportDraft(prev.profile),
             submission: IDLE_SUBMISSION_STATE,
@@ -160,7 +168,13 @@ export function SiteReportScreen() {
   const handleChangeSite = useCallback(() => {
     setState((prev) =>
       prev.status === "report-entry"
-        ? { status: "site-selection", profile: prev.profile, sites: prev.sites, workTypes: prev.workTypes }
+        ? {
+            status: "site-selection",
+            profile: prev.profile,
+            sites: prev.sites,
+            workTypes: prev.workTypes,
+            progressStatuses: prev.progressStatuses,
+          }
         : prev,
     );
   }, []);
@@ -316,6 +330,7 @@ function renderBody(
           draft={state.draft}
           onDraftChange={handleDraftChange}
           workTypes={state.workTypes}
+          progressStatuses={state.progressStatuses}
           submission={state.submission}
           submitAttempted={state.submitAttempted}
           onSubmit={handleSubmit}

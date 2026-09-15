@@ -31,6 +31,9 @@ const DRAFT: ReportDraft = {
   workType: "Inspection",
   reportDate: "2026-09-12",
   comment: "",
+  progressStatus: "IN_PROGRESS",
+  hasIssue: "NO",
+  issueDetail: "",
   photos: [],
 };
 
@@ -51,6 +54,9 @@ describe("submitReportDraft", () => {
       reportDate: "2026-09-12",
       workType: "Inspection",
       comment: "",
+      progressStatus: "IN_PROGRESS",
+      hasIssue: "NO",
+      issueDetail: undefined,
       photos: [],
     });
   });

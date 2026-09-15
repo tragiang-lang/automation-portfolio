@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ReportEntryShell } from "./ReportEntryShell";
-import type { Site, SubmitReportResponseData, WorkType } from "@/types/api";
+import type { ProgressStatus, Site, SubmitReportResponseData, WorkType } from "@/types/api";
 import type { ReportDraft, ReportDraftPhoto } from "./reportDraft";
 import { IDLE_SUBMISSION_STATE, type SubmissionState } from "./submission";
 
@@ -31,6 +31,9 @@ const DRAFT: ReportDraft = {
   workType: "Inspection",
   reportDate: "2026-09-12",
   comment: "",
+  progressStatus: "IN_PROGRESS",
+  hasIssue: "NO",
+  issueDetail: "",
   photos: [],
 };
 
@@ -39,10 +42,17 @@ const EMPTY_DRAFT: ReportDraft = {
   workType: "",
   reportDate: "2026-09-12",
   comment: "",
+  progressStatus: "",
+  hasIssue: "NO",
+  issueDetail: "",
   photos: [],
 };
 
 const WORK_TYPES: WorkType[] = [{ code: "Inspection", name: "検査", status: "ACTIVE", sortOrder: 1 }];
+
+const PROGRESS_STATUSES: ProgressStatus[] = [
+  { code: "IN_PROGRESS", name: "進行中", status: "ACTIVE", sortOrder: 2 },
+];
 
 const SUCCESS_DATA: SubmitReportResponseData = { reportId: "RPT-1", photoCount: 0, notificationSent: true };
 
@@ -61,6 +71,7 @@ function renderShell(overrides: {
   draft?: ReportDraft;
   onDraftChange?: (draft: ReportDraft) => void;
   workTypes?: WorkType[];
+  progressStatuses?: ProgressStatus[];
   submission?: SubmissionState;
   submitAttempted?: boolean;
   onSubmit?: () => void;
@@ -73,6 +84,7 @@ function renderShell(overrides: {
       draft={overrides.draft ?? DRAFT}
       onDraftChange={overrides.onDraftChange ?? (() => {})}
       workTypes={overrides.workTypes ?? WORK_TYPES}
+      progressStatuses={overrides.progressStatuses ?? PROGRESS_STATUSES}
       submission={overrides.submission ?? IDLE_SUBMISSION_STATE}
       submitAttempted={overrides.submitAttempted ?? false}
       onSubmit={overrides.onSubmit ?? (() => {})}
@@ -93,8 +105,14 @@ describe("ReportEntryShell", () => {
   it("renders the real report form fields, not a placeholder", () => {
     renderShell();
 
-    expect(screen.getByLabelText("作業種別")).toHaveValue("Inspection");
-    expect(screen.getByLabelText("報告日")).toHaveValue("2026-09-12");
+    expect(screen.getByLabelText(/作業種別/)).toHaveValue("Inspection");
+    expect(screen.getByLabelText(/報告日/)).toHaveValue("2026-09-12");
+  });
+
+  it("passes progressStatuses through to ReportForm's 進捗状況 dropdown", () => {
+    renderShell();
+
+    expect(screen.getByRole("option", { name: "進行中" })).toBeInTheDocument();
   });
 
   // Task 11 — the submit control is now real: enabled while idle, so a
@@ -128,7 +146,7 @@ describe("ReportEntryShell", () => {
     renderShell({ submission: { status: "error", message: "The submitted report failed validation." } });
 
     expect(screen.getByRole("alert")).toHaveTextContent("The submitted report failed validation.");
-    expect(screen.getByLabelText("作業種別")).toHaveValue("Inspection");
+    expect(screen.getByLabelText(/作業種別/)).toHaveValue("Inspection");
   });
 
   // Task 12 §7 (Option A): after success, the form/photo pipeline is
