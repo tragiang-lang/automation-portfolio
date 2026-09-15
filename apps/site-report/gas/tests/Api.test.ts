@@ -601,7 +601,7 @@ describe("handleApiRequest", () => {
     };
     mockSubmitReport.mockReturnValue({ kind: "success", report, photos: [], notificationSent: true });
     const response = handleApiRequest(
-      '{"action":"SUBMIT_REPORT","payload":{"siteId":"STE-1","lineUserId":"U123","workerName":"Taro","reportDate":"2026-09-12","workType":"wiring","photos":[]}}',
+      '{"action":"SUBMIT_REPORT","payload":{"siteId":"STE-1","lineUserId":"U123","workerName":"Taro","reportDate":"2026-09-12","workType":"wiring","progressStatus":"IN_PROGRESS","hasIssue":"NO","photos":[]}}',
     );
     expect(response).toEqual({
       ok: true,
@@ -617,6 +617,8 @@ describe("submitReportAction", () => {
     workerName: "Taro",
     reportDate: "2026-09-12",
     workType: "wiring",
+    progressStatus: "IN_PROGRESS",
+    hasIssue: "NO",
     photos: [],
   };
 
@@ -684,6 +686,27 @@ describe("submitReportAction", () => {
 
   it("maps a work_types_unavailable outcome to DATA_INVALID", () => {
     mockSubmitReport.mockReturnValue({ kind: "work_types_unavailable" });
+    const response = submitReportAction(validPayload);
+    expect(response.ok).toBe(false);
+    if (!response.ok) {
+      expect(response.error.code).toBe(ERROR_CODES.DATA_INVALID);
+    }
+  });
+
+  it("maps a progress_status_not_found outcome to PROGRESS_STATUS_NOT_FOUND", () => {
+    mockSubmitReport.mockReturnValue({ kind: "progress_status_not_found" });
+    const response = submitReportAction(validPayload);
+    expect(response).toEqual({
+      ok: false,
+      error: {
+        code: ERROR_CODES.PROGRESS_STATUS_NOT_FOUND,
+        message: "The referenced progress status could not be found.",
+      },
+    });
+  });
+
+  it("maps a progress_statuses_unavailable outcome to DATA_INVALID", () => {
+    mockSubmitReport.mockReturnValue({ kind: "progress_statuses_unavailable" });
     const response = submitReportAction(validPayload);
     expect(response.ok).toBe(false);
     if (!response.ok) {

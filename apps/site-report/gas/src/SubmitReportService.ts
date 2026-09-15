@@ -6,6 +6,7 @@ import { ValidationIssue } from "./Validation";
 import { getSiteReportConfig } from "./ConfigStore";
 import { buildSitesResult, getSiteRows } from "./SitesRepository";
 import { buildWorkTypesResult, getWorkTypeRows } from "./WorkTypesRepository";
+import { buildProgressStatusResult, getProgressStatusRows } from "./ProgressStatusRepository";
 import { generatePhotoId, generateReportId } from "./ids/ReportId";
 import { deleteUploadedFile, uploadReportPhoto } from "./DriveStorage";
 import { appendReportPhotoRow, appendReportRow } from "./ReportsRepository";
@@ -178,6 +179,8 @@ export type SubmitReportOutcome =
   | { kind: "sites_unavailable" }
   | { kind: "work_type_not_found" }
   | { kind: "work_types_unavailable" }
+  | { kind: "progress_status_not_found" }
+  | { kind: "progress_statuses_unavailable" }
   | { kind: "drive_upload_failed"; reason: string }
   | { kind: "reports_write_failed"; reason: string }
   | { kind: "report_photos_write_failed"; reason: string }
@@ -264,6 +267,24 @@ export function submitReport(input: SubmitReportInput): SubmitReportOutcome {
     return { kind: "work_type_not_found" };
   }
 
+  // Phase 2: same existence-check pattern as the work-type lookup above,
+  // reusing GET_PROGRESS_STATUS's own infrastructure rather than a
+  // duplicate lookup.
+  const progressStatusesResult = buildProgressStatusResult(getProgressStatusRows());
+  if (!progressStatusesResult.ok) {
+    console.error(
+      "[SUBMIT_REPORT] PROGRESS_STATUS sheet failed validation while resolving progress status:",
+      JSON.stringify(progressStatusesResult),
+    );
+    return { kind: "progress_statuses_unavailable" };
+  }
+  const progressStatus = progressStatusesResult.progressStatuses.find(
+    (candidate) => candidate.code === input.progressStatus,
+  );
+  if (!progressStatus) {
+    return { kind: "progress_status_not_found" };
+  }
+
   const now = new Date();
   const nowIso = now.toISOString();
   const reportId = generateReportId(now);
@@ -308,6 +329,10 @@ export function submitReport(input: SubmitReportInput): SubmitReportOutcome {
     createdAt: nowIso,
     updatedAt: nowIso,
     workTypeName: workType.name,
+    progressStatus: input.progressStatus,
+    progressStatusName: progressStatus.name,
+    hasIssue: input.hasIssue,
+    issueDetail: input.issueDetail,
   };
 
   try {
@@ -358,6 +383,10 @@ export function submitReport(input: SubmitReportInput): SubmitReportOutcome {
     createdAt: reportRow.createdAt,
     updatedAt: reportRow.updatedAt,
     workTypeName: reportRow.workTypeName,
+    progressStatus: reportRow.progressStatus,
+    progressStatusName: reportRow.progressStatusName,
+    hasIssue: reportRow.hasIssue as "YES" | "NO",
+    issueDetail: reportRow.issueDetail,
   };
   const photos: ReportPhoto[] = photoRows.map((row) => ({ ...row }));
 

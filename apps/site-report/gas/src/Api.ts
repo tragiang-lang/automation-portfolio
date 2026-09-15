@@ -300,6 +300,17 @@ function mapSubmitReportOutcomeToResponse(outcome: SubmitReportOutcome): ApiResp
         ERROR_CODES.DATA_INVALID,
         "Work type data could not be validated. Please contact the administrator.",
       );
+    case "progress_status_not_found":
+      return buildErrorResponse(
+        ERROR_CODES.PROGRESS_STATUS_NOT_FOUND,
+        "The referenced progress status could not be found.",
+      );
+    case "progress_statuses_unavailable":
+      console.error("[SUBMIT_REPORT] PROGRESS_STATUS sheet unavailable while resolving progress status.");
+      return buildErrorResponse(
+        ERROR_CODES.DATA_INVALID,
+        "Progress status data could not be validated. Please contact the administrator.",
+      );
     case "drive_upload_failed":
       console.error("[SUBMIT_REPORT] Drive upload failed:", outcome.reason);
       return buildErrorResponse(

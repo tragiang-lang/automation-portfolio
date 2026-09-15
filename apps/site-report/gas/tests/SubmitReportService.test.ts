@@ -14,6 +14,10 @@ jest.mock("../src/WorkTypesRepository", () => ({
   ...jest.requireActual("../src/WorkTypesRepository"),
   getWorkTypeRows: jest.fn(),
 }));
+jest.mock("../src/ProgressStatusRepository", () => ({
+  ...jest.requireActual("../src/ProgressStatusRepository"),
+  getProgressStatusRows: jest.fn(),
+}));
 jest.mock("../src/DriveStorage");
 jest.mock("../src/ReportsRepository");
 jest.mock("../src/AdminNotification");
@@ -22,16 +26,18 @@ import { submitReport } from "../src/SubmitReportService";
 import { getSiteReportConfig } from "../src/ConfigStore";
 import { getSiteRows } from "../src/SitesRepository";
 import { getWorkTypeRows } from "../src/WorkTypesRepository";
+import { getProgressStatusRows } from "../src/ProgressStatusRepository";
 import { deleteUploadedFile, uploadReportPhoto } from "../src/DriveStorage";
 import { appendReportPhotoRow, appendReportRow } from "../src/ReportsRepository";
 import { sendAdminNotification } from "../src/AdminNotification";
-import { SiteRow, WorkTypeRow } from "../src/SheetSchemas";
+import { SiteRow, WorkTypeRow, ProgressStatusRow } from "../src/SheetSchemas";
 import { SiteReportConfig } from "../src/Config";
 import { SubmitReportInput } from "../src/models/SubmitReportInput";
 
 const mockGetSiteReportConfig = getSiteReportConfig as jest.Mock;
 const mockGetSiteRows = getSiteRows as jest.Mock;
 const mockGetWorkTypeRows = getWorkTypeRows as jest.Mock;
+const mockGetProgressStatusRows = getProgressStatusRows as jest.Mock;
 const mockUploadReportPhoto = uploadReportPhoto as jest.Mock;
 const mockDeleteUploadedFile = deleteUploadedFile as jest.Mock;
 const mockAppendReportRow = appendReportRow as jest.Mock;
@@ -69,6 +75,8 @@ function submitInput(overrides: Partial<SubmitReportInput> = {}): SubmitReportIn
     reportDate: "2026-09-12",
     workType: "wiring",
     comment: "done",
+    progressStatus: "IN_PROGRESS",
+    hasIssue: "NO",
     photos: [],
     ...overrides,
   };
@@ -94,6 +102,10 @@ function workTypeRow(overrides: Partial<WorkTypeRow> = {}): WorkTypeRow {
   return { code: "wiring", name: "電気工事", status: "ACTIVE", sortOrder: 1, ...overrides };
 }
 
+function progressStatusRow(overrides: Partial<ProgressStatusRow> = {}): ProgressStatusRow {
+  return { code: "IN_PROGRESS", name: "進行中", status: "ACTIVE", sortOrder: 2, ...overrides };
+}
+
 beforeEach(() => {
   // resetAllMocks (not clearAllMocks): clearAllMocks only clears call
   // history, not a mockImplementation set by an earlier test — a
@@ -103,6 +115,7 @@ beforeEach(() => {
   mockGetSiteReportConfig.mockReturnValue(validConfig);
   mockGetSiteRows.mockReturnValue([siteRow()]);
   mockGetWorkTypeRows.mockReturnValue([workTypeRow()]);
+  mockGetProgressStatusRows.mockReturnValue([progressStatusRow()]);
   mockUploadReportPhoto.mockImplementation(({ fileName }: { fileName: string }) => ({
     fileId: `FILE-${fileName}`,
     fileUrl: `https://drive.google.com/${fileName}`,
@@ -162,6 +175,38 @@ describe("work type lookup", () => {
     mockGetWorkTypeRows.mockReturnValue([{ ...workTypeRow(), status: "PENDING" }]);
     const outcome = submitReport(submitInput());
     expect(outcome.kind).toBe("work_types_unavailable");
+    expect(mockAppendReportRow).not.toHaveBeenCalled();
+  });
+});
+
+describe("progress status lookup", () => {
+  it("proceeds and derives progressStatusName for a valid, existing progress status code", () => {
+    const outcome = submitReport(submitInput());
+    expect(outcome.kind).toBe("success");
+    expect(mockAppendReportRow.mock.calls[0][0].progressStatusName).toBe("進行中");
+    if (outcome.kind === "success") {
+      expect(outcome.report.progressStatusName).toBe("進行中");
+    }
+  });
+
+  it("returns progress_status_not_found for an unknown code, without any writes", () => {
+    const outcome = submitReport(submitInput({ progressStatus: "unknown-code" }));
+    expect(outcome.kind).toBe("progress_status_not_found");
+    expect(mockUploadReportPhoto).not.toHaveBeenCalled();
+    expect(mockAppendReportRow).not.toHaveBeenCalled();
+    expect(mockSendAdminNotification).not.toHaveBeenCalled();
+  });
+
+  it("returns progress_status_not_found for an INACTIVE progress status code", () => {
+    mockGetProgressStatusRows.mockReturnValue([progressStatusRow({ status: "INACTIVE" })]);
+    const outcome = submitReport(submitInput());
+    expect(outcome.kind).toBe("progress_status_not_found");
+  });
+
+  it("returns progress_statuses_unavailable when the PROGRESS_STATUS sheet itself fails validation, without any writes", () => {
+    mockGetProgressStatusRows.mockReturnValue([{ ...progressStatusRow(), status: "PENDING" }]);
+    const outcome = submitReport(submitInput());
+    expect(outcome.kind).toBe("progress_statuses_unavailable");
     expect(mockAppendReportRow).not.toHaveBeenCalled();
   });
 });
@@ -267,6 +312,20 @@ describe("REPORTS write", () => {
     expect(row.reportDate).toBe("2026-09-12");
     expect(row.status).toBe("SUBMITTED");
     expect(row.photoCount).toBe(3);
+  });
+
+  it("writes hasIssue and issueDetail through unchanged from the input", () => {
+    submitReport(submitInput({ hasIssue: "YES", issueDetail: "足場が不足しています" }));
+    const row = mockAppendReportRow.mock.calls[0][0];
+    expect(row.hasIssue).toBe("YES");
+    expect(row.issueDetail).toBe("足場が不足しています");
+  });
+
+  it("writes hasIssue:NO with no issueDetail when the input has none", () => {
+    submitReport(submitInput({ hasIssue: "NO" }));
+    const row = mockAppendReportRow.mock.calls[0][0];
+    expect(row.hasIssue).toBe("NO");
+    expect(row.issueDetail).toBeUndefined();
   });
 
   it("generates matching, valid ISO createdAt/updatedAt timestamps", () => {
