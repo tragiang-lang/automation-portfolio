@@ -786,6 +786,15 @@ describe("SiteReportScreen — draft persistence", () => {
     fireEvent.click(await screen.findByRole("button", { name: "レポートを送信" }));
 
     await waitFor(() => expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toBeNull());
+
+    // Regression guard: the debounced-save effect re-runs after the
+    // post-submit setState (state identity changed), so without the
+    // submission-success guard it would re-save the just-submitted draft
+    // ~500ms later, undoing clearDraft() above. Wait past the debounce
+    // window with real elapsed time (same convention as the cross-site-
+    // offer-skip test above) and confirm the draft is STILL null.
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toBeNull();
   });
 
   it("keeps the stored draft when a submit fails", async () => {

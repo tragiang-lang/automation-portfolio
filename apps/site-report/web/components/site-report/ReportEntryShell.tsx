@@ -79,7 +79,12 @@ export function ReportEntryShell({
 }) {
   const [confirmingChangeSite, setConfirmingChangeSite] = useState(false);
 
-  const draftIsUntouched = draft.workType === "" && draft.comment === "" && draft.photos.length === 0;
+  const draftIsUntouched =
+    draft.workType === "" &&
+    draft.comment === "" &&
+    draft.progressStatus === "" &&
+    draft.issueDetail === "" &&
+    draft.photos.length === 0;
 
   const handleChangeSiteClick = () => {
     if (draftIsUntouched) {

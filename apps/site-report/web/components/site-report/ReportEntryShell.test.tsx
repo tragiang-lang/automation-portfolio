@@ -170,7 +170,7 @@ describe("ReportEntryShell", () => {
   it("hides the report form and photo pipeline after a successful submission", () => {
     renderShell({ submission: { status: "success", result: SUCCESS_DATA } });
 
-    expect(screen.queryByLabelText("作業種別")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/作業種別/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText("写真を追加")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^レポートを送信$/ })).not.toBeInTheDocument();
   });
@@ -307,6 +307,30 @@ describe("ReportEntryShell — change site (Phase 1 P0)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "現場を変更する" }));
     expect(onChangeSite).toHaveBeenCalledTimes(1);
+  });
+
+  // Regression guard: draftIsUntouched must also cover the Phase 2 fields
+  // (progressStatus/issueDetail) added after this check was first written —
+  // otherwise a user who only filled in 進捗状況 or 問題内容 loses that
+  // input with no warning when navigating back to the site picker.
+  it("shows a confirmation instead of navigating immediately once only progressStatus has been edited", () => {
+    const onChangeSite = jest.fn();
+    renderShell({ draft: { ...EMPTY_DRAFT, progressStatus: "IN_PROGRESS" }, onChangeSite });
+
+    fireEvent.click(screen.getByRole("button", { name: "現場を変更" }));
+
+    expect(onChangeSite).not.toHaveBeenCalled();
+    expect(screen.getByText(/現在入力中の内容は失われます/)).toBeInTheDocument();
+  });
+
+  it("shows a confirmation instead of navigating immediately once only issueDetail has been edited", () => {
+    const onChangeSite = jest.fn();
+    renderShell({ draft: { ...EMPTY_DRAFT, hasIssue: "YES", issueDetail: "leak" }, onChangeSite });
+
+    fireEvent.click(screen.getByRole("button", { name: "現場を変更" }));
+
+    expect(onChangeSite).not.toHaveBeenCalled();
+    expect(screen.getByText(/現在入力中の内容は失われます/)).toBeInTheDocument();
   });
 
   it("does not show the 現場を変更 button after a successful submission", () => {

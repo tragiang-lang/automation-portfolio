@@ -330,13 +330,24 @@ export function SiteReportScreen() {
   // Phase 2 spec §18 — debounced draft persistence. Skipped while a
   // cross-site offer is pending (draftNotice.kind === "cross-site"): the
   // current site's fresh, untouched draft must never overwrite the
-  // still-undecided offered draft before the user chooses. Depending on
-  // the whole `state` (not just `state.draft`) is deliberate — every
-  // branch below is a no-op re-save of the same content when an
-  // unrelated field (e.g. submission status) changes, which is harmless
-  // since saveDraft is idempotent.
+  // still-undecided offered draft before the user chooses. Also skipped
+  // once the current submission has succeeded: handleSubmit's clearDraft()
+  // must stick until the user explicitly starts another report via
+  // handleCreateAnother (which resets `draft` to a fresh value) — without
+  // this guard, this effect re-runs after the post-submit setState (state
+  // identity changed) and, ~500ms later, re-saves the just-submitted
+  // `state.draft` right back into localStorage, undoing clearDraft() and
+  // causing a stale "前回の入力内容を復元しました" restore (and a possible
+  // duplicate resubmission) next time the app opens. Depending on the
+  // whole `state` (not just `state.draft`) is deliberate — every other
+  // branch below is a no-op re-save of the same content when an unrelated
+  // field changes, which is harmless since saveDraft is idempotent.
   useEffect(() => {
-    if (state.status !== "report-entry" || state.draftNotice.kind === "cross-site") {
+    if (
+      state.status !== "report-entry" ||
+      state.draftNotice.kind === "cross-site" ||
+      state.submission.status === "success"
+    ) {
       return;
     }
     const { profile, selectedSite, draft } = state;
