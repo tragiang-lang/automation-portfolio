@@ -33,6 +33,7 @@ import {
   ERROR_CODES,
   getSitesAction,
   getWorkTypesAction,
+  getProgressStatusAction,
   handleApiRequest,
   mapConfigErrorToResponse,
   mapMissingHeadersErrorToResponse,
@@ -42,6 +43,7 @@ import {
 import { getSiteReportConfig, SiteReportConfigError } from "../src/ConfigStore";
 import { getSiteRows } from "../src/SitesRepository";
 import { getWorkTypeRows } from "../src/WorkTypesRepository";
+import { getProgressStatusRows } from "../src/ProgressStatusRepository";
 import { submitReport } from "../src/SubmitReportService";
 import { MissingHeadersError } from "../src/RowMapper";
 import { SiteRow, WorkTypeRow, ProgressStatusRow } from "../src/SheetSchemas";
@@ -56,6 +58,7 @@ const mockSubmitReport = submitReport as jest.Mock;
 const mockGetSiteReportConfig = getSiteReportConfig as jest.Mock;
 const mockGetSiteRows = getSiteRows as jest.Mock;
 const mockGetWorkTypeRows = getWorkTypeRows as jest.Mock;
+const mockGetProgressStatusRows = getProgressStatusRows as jest.Mock;
 
 const validConfig: SiteReportConfig = {
   businessName: "Acme Construction",
@@ -251,6 +254,10 @@ describe("buildSitesResult", () => {
 
 function workTypeRow(overrides: Partial<WorkTypeRow> = {}): WorkTypeRow {
   return { code: "EXTERIOR_WALL", name: "外壁工事", status: "ACTIVE", sortOrder: 10, ...overrides };
+}
+
+function progressStatusRow(overrides: Partial<ProgressStatusRow> = {}): ProgressStatusRow {
+  return { code: "PENDING", name: "保留中", status: "ACTIVE", sortOrder: 10, ...overrides };
 }
 
 describe("buildWorkTypesResult", () => {
@@ -509,6 +516,46 @@ describe("getWorkTypesAction", () => {
   });
 });
 
+describe("getProgressStatusAction", () => {
+  it("returns the success envelope with ACTIVE progress statuses read from the configured sheet, sorted by sortOrder", () => {
+    mockGetProgressStatusRows.mockReturnValue([
+      progressStatusRow({ code: "DONE", sortOrder: 3 }),
+      progressStatusRow({ code: "NOT_STARTED", sortOrder: 1 }),
+    ]);
+    const response = getProgressStatusAction();
+    expect(response.ok).toBe(true);
+    if (response.ok) {
+      expect(response.data.progressStatuses.map((p) => p.code)).toEqual(["NOT_STARTED", "DONE"]);
+    }
+  });
+
+  it("returns an empty progressStatuses array for a valid sheet with no data rows", () => {
+    mockGetProgressStatusRows.mockReturnValue([]);
+    expect(getProgressStatusAction()).toEqual({ ok: true, data: { progressStatuses: [] } });
+  });
+
+  it("returns a structured DATA_INVALID error for a row failing business validation, without leaking row details", () => {
+    mockGetProgressStatusRows.mockReturnValue([progressStatusRow({ code: "" })]);
+    const response = getProgressStatusAction();
+    expect(response.ok).toBe(false);
+    if (!response.ok) {
+      expect(response.error.code).toBe(ERROR_CODES.DATA_INVALID);
+      expect(JSON.stringify(response)).not.toContain("is required");
+    }
+  });
+
+  it("returns CONFIG_INVALID when getSiteReportConfig throws, same as getSitesAction", () => {
+    mockGetSiteReportConfig.mockImplementationOnce(() => {
+      throw new SiteReportConfigError([{ field: "ADMIN_EMAIL", reason: "is required" }]);
+    });
+    const response = getProgressStatusAction();
+    expect(response.ok).toBe(false);
+    if (!response.ok) {
+      expect(response.error.code).toBe(ERROR_CODES.CONFIG_INVALID);
+    }
+  });
+});
+
 describe("handleApiRequest", () => {
   it("routes the GET_SITES action to getSitesAction", () => {
     mockGetSiteRows.mockReturnValue([]);
@@ -519,6 +566,12 @@ describe("handleApiRequest", () => {
     mockGetWorkTypeRows.mockReturnValue([]);
     const response = handleApiRequest(JSON.stringify({ action: "GET_WORK_TYPES" }));
     expect(response).toEqual({ ok: true, data: { workTypes: [] } });
+  });
+
+  it("dispatches GET_PROGRESS_STATUS to getProgressStatusAction", () => {
+    mockGetProgressStatusRows.mockReturnValue([]);
+    const response = handleApiRequest(JSON.stringify({ action: "GET_PROGRESS_STATUS" }));
+    expect(response).toEqual({ ok: true, data: { progressStatuses: [] } });
   });
 
   it("rejects an unsupported action", () => {

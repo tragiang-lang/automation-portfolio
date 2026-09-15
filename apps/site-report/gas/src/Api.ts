@@ -1,9 +1,11 @@
 import { getSiteReportConfig, SiteReportConfigError } from "./ConfigStore";
 import { buildSitesResult, getSiteRows, SitesResult } from "./SitesRepository";
 import { buildWorkTypesResult, getWorkTypeRows } from "./WorkTypesRepository";
+import { buildProgressStatusResult, getProgressStatusRows } from "./ProgressStatusRepository";
 import { MissingHeadersError } from "./RowMapper";
 import { Site } from "./models/Site";
 import { WorkType } from "./models/WorkType";
+import { ProgressStatus } from "./models/ProgressStatus";
 import { parseSubmitReportInput, submitReport, SubmitReportOutcome } from "./SubmitReportService";
 
 // Re-exported unchanged for backward compatibility: buildSitesResult/
@@ -50,6 +52,10 @@ export const ERROR_CODES = {
    *  to DATA_INVALID as SITE_NOT_FOUND has (this means the sheet is fine
    *  but the given code isn't in it). */
   WORK_TYPE_NOT_FOUND: "WORK_TYPE_NOT_FOUND",
+  /** Phase 2: SUBMIT_REPORT references a progressStatus code that
+   *  GET_PROGRESS_STATUS-equivalent lookup could not find — same
+   *  relationship to DATA_INVALID as WORK_TYPE_NOT_FOUND has. */
+  PROGRESS_STATUS_NOT_FOUND: "PROGRESS_STATUS_NOT_FOUND",
   INTERNAL_ERROR: "INTERNAL_ERROR",
 } as const;
 
@@ -210,6 +216,48 @@ export function getWorkTypesAction(): ApiResponse<GetWorkTypesResponseData> {
   }
 }
 
+export interface GetProgressStatusResponseData {
+  progressStatuses: ProgressStatus[];
+}
+
+function getProgressStatusActionInner(): ApiResponse<GetProgressStatusResponseData> {
+  getSiteReportConfig();
+  const rows = getProgressStatusRows();
+  const result = buildProgressStatusResult(rows);
+  if (!result.ok) {
+    if (result.kind === "malformed") {
+      console.error(
+        `[GET_PROGRESS_STATUS] malformed row at index ${result.index}, field "${result.field}": ${result.reason}`,
+      );
+    } else {
+      console.error(`[GET_PROGRESS_STATUS] invalid row at index ${result.index}:`, JSON.stringify(result.issues));
+    }
+    return buildErrorResponse(
+      ERROR_CODES.DATA_INVALID,
+      "Progress status data failed validation. Please contact the administrator.",
+    );
+  }
+  return buildSuccessResponse({ progressStatuses: result.progressStatuses });
+}
+
+/** `GET_PROGRESS_STATUS` action handler (Phase 2) — mirrors
+ *  getWorkTypesAction exactly. Independently callable from GET_SITES/
+ *  GET_WORK_TYPES (no shared state, no ordering requirement). */
+export function getProgressStatusAction(): ApiResponse<GetProgressStatusResponseData> {
+  try {
+    return getProgressStatusActionInner();
+  } catch (error) {
+    if (error instanceof SiteReportConfigError) {
+      return mapConfigErrorToResponse(error);
+    }
+    if (error instanceof MissingHeadersError) {
+      return mapMissingHeadersErrorToResponse(error);
+    }
+    console.error("[GET_PROGRESS_STATUS] unexpected error:", error);
+    return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "An unexpected server error occurred.");
+  }
+}
+
 export interface SubmitReportResponseData {
   reportId: string;
   photoCount: number;
@@ -321,6 +369,8 @@ export function handleApiRequest(rawBody: string | undefined): ApiResponse {
       return getSitesAction();
     case "GET_WORK_TYPES":
       return getWorkTypesAction();
+    case "GET_PROGRESS_STATUS":
+      return getProgressStatusAction();
     case "SUBMIT_REPORT":
       return submitReportAction(parsed.request.payload);
     default:
