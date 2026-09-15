@@ -19,6 +19,12 @@ jest.mock("../src/SubmitReportService", () => ({
   ...jest.requireActual("../src/SubmitReportService"),
   submitReport: jest.fn(),
 }));
+jest.mock("../src/ProgressStatusRepository", () => ({
+  // Same convention: buildProgressStatusResult is pure and kept real; only the
+  // Sheets-touching getProgressStatusRows is mocked.
+  ...jest.requireActual("../src/ProgressStatusRepository"),
+  getProgressStatusRows: jest.fn(),
+}));
 
 import {
   buildErrorResponse,
@@ -38,8 +44,9 @@ import { getSiteRows } from "../src/SitesRepository";
 import { getWorkTypeRows } from "../src/WorkTypesRepository";
 import { submitReport } from "../src/SubmitReportService";
 import { MissingHeadersError } from "../src/RowMapper";
-import { SiteRow, WorkTypeRow } from "../src/SheetSchemas";
+import { SiteRow, WorkTypeRow, ProgressStatusRow } from "../src/SheetSchemas";
 import { buildWorkTypesResult } from "../src/WorkTypesRepository";
+import { buildProgressStatusResult } from "../src/ProgressStatusRepository";
 import { SiteReportConfig } from "../src/Config";
 import { SiteReport } from "../src/models/Report";
 import { ReportPhoto } from "../src/models/ReportPhoto";
@@ -294,6 +301,68 @@ describe("buildWorkTypesResult", () => {
 
   it("reports the first row mapWorkTypeRow rejects as malformed", () => {
     const result = buildWorkTypesResult([workTypeRow(), workTypeRow({ status: "PENDING" })]);
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.kind === "malformed") {
+      expect(result.index).toBe(1);
+      expect(result.field).toBe("status");
+    } else {
+      throw new Error("expected a malformed-kind result");
+    }
+  });
+});
+
+function progressStatusRow(overrides: Partial<ProgressStatusRow> = {}): ProgressStatusRow {
+  return { code: "IN_PROGRESS", name: "進行中", status: "ACTIVE", sortOrder: 2, ...overrides };
+}
+
+describe("buildProgressStatusResult", () => {
+  it("maps every valid row to a ProgressStatus", () => {
+    const result = buildProgressStatusResult([progressStatusRow()]);
+    expect(result).toEqual({
+      ok: true,
+      progressStatuses: [{ code: "IN_PROGRESS", name: "進行中", status: "ACTIVE", sortOrder: 2 }],
+    });
+  });
+
+  it("returns an empty list for zero data rows", () => {
+    expect(buildProgressStatusResult([])).toEqual({ ok: true, progressStatuses: [] });
+  });
+
+  it("filters out INACTIVE progress statuses", () => {
+    const result = buildProgressStatusResult([
+      progressStatusRow({ code: "A", sortOrder: 1 }),
+      progressStatusRow({ code: "B", sortOrder: 2, status: "INACTIVE" }),
+    ]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.progressStatuses.map((p) => p.code)).toEqual(["A"]);
+    }
+  });
+
+  it("sorts the result by sortOrder ascending regardless of sheet row order", () => {
+    const result = buildProgressStatusResult([
+      progressStatusRow({ code: "B", sortOrder: 20 }),
+      progressStatusRow({ code: "A", sortOrder: 10 }),
+    ]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.progressStatuses.map((p) => p.code)).toEqual(["A", "B"]);
+    }
+  });
+
+  it("reports the first row that fails business validation instead of corrupting it", () => {
+    const result = buildProgressStatusResult([progressStatusRow(), progressStatusRow({ code: "" })]);
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.kind === "invalid") {
+      expect(result.index).toBe(1);
+      expect(result.issues).toContainEqual({ field: "code", reason: "is required" });
+    } else {
+      throw new Error("expected an invalid-kind result");
+    }
+  });
+
+  it("reports the first row mapProgressStatusRow rejects as malformed", () => {
+    const result = buildProgressStatusResult([progressStatusRow(), progressStatusRow({ status: "PENDING" })]);
     expect(result.ok).toBe(false);
     if (!result.ok && result.kind === "malformed") {
       expect(result.index).toBe(1);
