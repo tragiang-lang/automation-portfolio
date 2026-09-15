@@ -1,5 +1,15 @@
 import { SHEET_NAMES, SheetName } from "./SheetNames";
-import { CONFIG_HEADERS, ConfigRow, REQUIRED_HEADERS, SITES_HEADERS, SiteRow, WORK_TYPES_HEADERS, WorkTypeRow } from "./SheetSchemas";
+import {
+  CONFIG_HEADERS,
+  ConfigRow,
+  REQUIRED_HEADERS,
+  SITES_HEADERS,
+  SiteRow,
+  WORK_TYPES_HEADERS,
+  WorkTypeRow,
+  PROGRESS_STATUS_HEADERS,
+  ProgressStatusRow,
+} from "./SheetSchemas";
 import { SPREADSHEET_ID_PROPERTY, appendRow, getHeaderRow, getRequiredSheet, readRawRows } from "./SheetStore";
 import { buildHeaderMap, findRowIndexByColumnValue, objectToRow, rowsToObjects } from "./RowMapper";
 import { buildRawConfigMap } from "./ConfigParser";
@@ -180,6 +190,27 @@ export function buildWorkTypeRowsToInsert(existingCodes: Set<string>): WorkTypeR
   }));
 }
 
+/** The 3 initial 進捗状況 (Phase 2 spec §5.1). sortOrder is the dropdown's
+ *  display order, matching this table's row order — same convention as
+ *  WORK_TYPE_SEED_ROWS. */
+export const PROGRESS_STATUS_SEED_ROWS: readonly { code: string; name: string; sortOrder: number }[] = [
+  { code: "NOT_STARTED", name: "未着手", sortOrder: 1 },
+  { code: "IN_PROGRESS", name: "進行中", sortOrder: 2 },
+  { code: "DONE", name: "完了", sortOrder: 3 },
+] as const;
+
+/** Returns only the seed rows whose code is not already in `existingCodes`
+ *  — exact structural copy of buildWorkTypeRowsToInsert's "never
+ *  overwrite/duplicate an operator's data" contract. */
+export function buildProgressStatusRowsToInsert(existingCodes: Set<string>): ProgressStatusRow[] {
+  return PROGRESS_STATUS_SEED_ROWS.filter((seed) => !existingCodes.has(seed.code)).map((seed) => ({
+    code: seed.code,
+    name: seed.name,
+    status: "ACTIVE",
+    sortOrder: seed.sortOrder,
+  }));
+}
+
 /** True when the given REPORTS header row does not yet contain a
  *  "workTypeName" cell — a header row written before this column existed
  *  (pre-existing production sheet), or a brand-new sheet whose header was
@@ -189,6 +220,18 @@ export function buildWorkTypeRowsToInsert(existingCodes: Set<string>): WorkTypeR
  *  describeSheetHeaderState's own tolerance. */
 export function needsWorkTypeNameColumn(existingHeaderRow: unknown[]): boolean {
   return !("workTypeName" in buildHeaderMap(existingHeaderRow));
+}
+
+/** The four REPORTS columns Phase 2 adds, in their canonical order. */
+const REPORTS_PHASE2_HEADERS = ["progressStatus", "progressStatusName", "hasIssue", "issueDetail"] as const;
+
+/** Returns the subset of REPORTS_PHASE2_HEADERS absent from the given
+ *  header row — a header row written before Phase 2 (whether it has
+ *  workTypeName or not) is missing all four; column order/extra columns
+ *  are irrelevant, matching needsWorkTypeNameColumn's own tolerance. */
+export function missingReportsPhase2Headers(existingHeaderRow: unknown[]): string[] {
+  const headerMap = buildHeaderMap(existingHeaderRow);
+  return REPORTS_PHASE2_HEADERS.filter((header) => !(header in headerMap));
 }
 
 export interface RemovableSheetInfo {
@@ -218,6 +261,8 @@ export interface ProvisioningSummaryInput {
   demoSiteInserted: boolean;
   workTypesInserted: number;
   reportsWorkTypeNameColumnAdded: boolean;
+  progressStatusesInserted: number;
+  reportsPhase2ColumnsAdded: boolean;
 }
 
 /** Builds the human-readable end-of-run summary setupSiteReport() logs —
@@ -253,6 +298,8 @@ export function buildProvisioningSummary(input: ProvisioningSummaryInput): strin
     `  ACTIVE site: ${input.demoSiteInserted ? "configured" : "already present"}`,
     `  WORK_TYPES: ${input.workTypesInserted > 0 ? `${input.workTypesInserted} inserted` : "already present"}`,
     `  REPORTS.workTypeName column: ${input.reportsWorkTypeNameColumnAdded ? "added" : "already present"}`,
+    `  PROGRESS_STATUS: ${input.progressStatusesInserted > 0 ? `${input.progressStatusesInserted} inserted` : "already present"}`,
+    `  REPORTS Phase 2 columns: ${input.reportsPhase2ColumnsAdded ? "added" : "already present"}`,
     "",
     "Next steps:",
     "  1. Review CONFIG sheet",
@@ -396,6 +443,36 @@ export function setupSiteReport(): void {
     appendRow(workTypesSheet, objectToRow(WORK_TYPES_HEADERS, row as unknown as Record<string, unknown>));
   }
 
+  // 6d. REPORTS Phase 2 migration: append any of progressStatus/
+  // progressStatusName/hasIssue/issueDetail not already present, in one
+  // batch, after whatever workTypeName step 6b just did — never touches
+  // an existing header cell. Idempotent: a rerun finds all four already
+  // present and no-ops. Re-reads the header row since 6b may have just
+  // changed its length.
+  const reportsHeaderRowAfterWorkType = getHeaderRow(reportsSheet);
+  const missingPhase2Headers = missingReportsPhase2Headers(reportsHeaderRowAfterWorkType);
+  if (missingPhase2Headers.length > 0) {
+    reportsSheet
+      .getRange(1, reportsHeaderRowAfterWorkType.length + 1, 1, missingPhase2Headers.length)
+      .setValues([missingPhase2Headers]);
+  }
+
+  // 6e. Ensure every seed 進捗状況 exists (never a duplicate, never an
+  // overwrite of an operator's own edit) — same pattern as 6c.
+  const progressStatusSheet = getRequiredSheet(spreadsheet, SHEET_NAMES.PROGRESS_STATUS);
+  const progressStatusHeaderMap = buildHeaderMap(getHeaderRow(progressStatusSheet));
+  const progressStatusRawRows = readRawRows(progressStatusSheet);
+  const existingProgressCodeIndex = progressStatusHeaderMap["code"];
+  const existingProgressCodes = new Set(
+    existingProgressCodeIndex === undefined
+      ? []
+      : progressStatusRawRows.map((row) => String(row[existingProgressCodeIndex] ?? "")),
+  );
+  const progressStatusRowsToInsert = buildProgressStatusRowsToInsert(existingProgressCodes);
+  for (const row of progressStatusRowsToInsert) {
+    appendRow(progressStatusSheet, objectToRow(PROGRESS_STATUS_HEADERS, row as unknown as Record<string, unknown>));
+  }
+
   // 7. Log the final summary — never includes a secret/credential, only
   // resource names/IDs/URLs the operator can already see in the
   // Spreadsheet/Drive UI.
@@ -407,6 +484,8 @@ export function setupSiteReport(): void {
       demoSiteInserted: !demoAlreadyExists,
       workTypesInserted: workTypeRowsToInsert.length,
       reportsWorkTypeNameColumnAdded: workTypeNameColumnAdded,
+      progressStatusesInserted: progressStatusRowsToInsert.length,
+      reportsPhase2ColumnsAdded: missingPhase2Headers.length > 0,
     }),
   );
 }

@@ -1,8 +1,8 @@
 import { SHEET_NAMES } from "../src/SheetNames";
-import { CONFIG_HEADERS, SITES_HEADERS, WORK_TYPES_HEADERS } from "../src/SheetSchemas";
+import { CONFIG_HEADERS, SITES_HEADERS, WORK_TYPES_HEADERS, PROGRESS_STATUS_HEADERS } from "../src/SheetSchemas";
 import { objectToRow } from "../src/RowMapper";
-import { validateSiteRow, validateWorkTypeRow } from "../src/Validation";
-import { mapSiteRow, mapWorkTypeRow } from "../src/RowMapper";
+import { validateSiteRow, validateWorkTypeRow, validateProgressStatusRow } from "../src/Validation";
+import { mapSiteRow, mapWorkTypeRow, mapProgressStatusRow } from "../src/RowMapper";
 import { SITE_REPORT_CONFIG_KEYS } from "../src/Config";
 import {
   DEFAULT_ADMIN_EMAIL_PLACEHOLDER,
@@ -11,13 +11,16 @@ import {
   DEMO_SITE_ID,
   SetupSchemaMismatchError,
   WORK_TYPE_SEED_ROWS,
+  PROGRESS_STATUS_SEED_ROWS,
   buildConfigRowsToInsert,
   buildProvisioningSummary,
   buildSampleSiteRow,
   buildWorkTypeRowsToInsert,
+  buildProgressStatusRowsToInsert,
   describeSheetHeaderState,
   findRemovableDefaultSheets,
   needsWorkTypeNameColumn,
+  missingReportsPhase2Headers,
 } from "../src/Setup";
 
 describe("describeSheetHeaderState", () => {
@@ -226,6 +229,110 @@ describe("needsWorkTypeNameColumn", () => {
   });
 });
 
+describe("PROGRESS_STATUS_SEED_ROWS", () => {
+  it("has exactly 3 rows with unique codes and contiguous sortOrder starting at 1", () => {
+    expect(PROGRESS_STATUS_SEED_ROWS).toHaveLength(3);
+    const codes = PROGRESS_STATUS_SEED_ROWS.map((row) => row.code);
+    expect(new Set(codes).size).toBe(3);
+    expect(PROGRESS_STATUS_SEED_ROWS.map((row) => row.sortOrder)).toEqual([1, 2, 3]);
+  });
+
+  it("includes 未着手 as NOT_STARTED, 進行中 as IN_PROGRESS, and 完了 as DONE", () => {
+    expect(PROGRESS_STATUS_SEED_ROWS).toContainEqual(expect.objectContaining({ code: "NOT_STARTED", name: "未着手" }));
+    expect(PROGRESS_STATUS_SEED_ROWS).toContainEqual(expect.objectContaining({ code: "IN_PROGRESS", name: "進行中" }));
+    expect(PROGRESS_STATUS_SEED_ROWS).toContainEqual(expect.objectContaining({ code: "DONE", name: "完了" }));
+  });
+
+  it("every seed row passes the app's own PROGRESS_STATUS validator with zero issues", () => {
+    for (const seed of PROGRESS_STATUS_SEED_ROWS) {
+      const row = { ...seed, status: "ACTIVE" as const };
+      expect(validateProgressStatusRow(row)).toEqual([]);
+      expect(() => mapProgressStatusRow(row)).not.toThrow();
+    }
+  });
+});
+
+describe("buildProgressStatusRowsToInsert", () => {
+  it("returns all 3 seed rows when PROGRESS_STATUS is empty", () => {
+    const rows = buildProgressStatusRowsToInsert(new Set());
+    expect(rows).toHaveLength(3);
+    expect(rows.every((row) => row.status === "ACTIVE")).toBe(true);
+  });
+
+  it("skips a code that already exists, never duplicating it", () => {
+    const rows = buildProgressStatusRowsToInsert(new Set(["DONE"]));
+    expect(rows.some((row) => row.code === "DONE")).toBe(false);
+    expect(rows).toHaveLength(2);
+  });
+
+  it("returns nothing when every seed code already exists", () => {
+    const allCodes = new Set(PROGRESS_STATUS_SEED_ROWS.map((row) => row.code));
+    expect(buildProgressStatusRowsToInsert(allCodes)).toEqual([]);
+  });
+
+  it("serializes cleanly through objectToRow against PROGRESS_STATUS_HEADERS", () => {
+    const [row] = buildProgressStatusRowsToInsert(new Set());
+    const serialized = objectToRow(PROGRESS_STATUS_HEADERS, row as unknown as Record<string, unknown>);
+    expect(serialized).toHaveLength(PROGRESS_STATUS_HEADERS.length);
+  });
+});
+
+describe("missingReportsPhase2Headers", () => {
+  const legacyReportsHeaderRow = [
+    "reportId",
+    "siteId",
+    "workerId",
+    "lineUserId",
+    "workerName",
+    "reportDate",
+    "workType",
+    "comment",
+    "photoCount",
+    "status",
+    "createdAt",
+    "updatedAt",
+  ];
+
+  it("returns all four Phase 2 headers for a pre-Phase-1 REPORTS sheet", () => {
+    expect(missingReportsPhase2Headers(legacyReportsHeaderRow)).toEqual([
+      "progressStatus",
+      "progressStatusName",
+      "hasIssue",
+      "issueDetail",
+    ]);
+  });
+
+  it("returns all four Phase 2 headers for a Phase-1-only REPORTS sheet (workTypeName present, Phase 2 columns absent)", () => {
+    expect(missingReportsPhase2Headers([...legacyReportsHeaderRow, "workTypeName"])).toEqual([
+      "progressStatus",
+      "progressStatusName",
+      "hasIssue",
+      "issueDetail",
+    ]);
+  });
+
+  it("returns an empty array once all four are present, regardless of position", () => {
+    expect(
+      missingReportsPhase2Headers([
+        "reportId",
+        "progressStatus",
+        "progressStatusName",
+        "hasIssue",
+        "issueDetail",
+        "siteId",
+      ]),
+    ).toEqual([]);
+  });
+
+  it("returns only the still-missing subset when some Phase 2 headers are already present", () => {
+    expect(missingReportsPhase2Headers([...legacyReportsHeaderRow, "workTypeName", "progressStatus"])).toEqual([
+      "progressStatusName",
+      "hasIssue",
+      "issueDetail",
+    ]);
+  });
+});
+
 describe("findRemovableDefaultSheets", () => {
   it("returns a non-canonical, completely empty sheet name", () => {
     expect(findRemovableDefaultSheets([{ name: "Sheet1", isEmpty: true }], Object.values(SHEET_NAMES))).toEqual([
@@ -252,6 +359,8 @@ describe("buildProvisioningSummary", () => {
     demoSiteInserted: true,
     workTypesInserted: 22,
     reportsWorkTypeNameColumnAdded: true,
+    progressStatusesInserted: 3,
+    reportsPhase2ColumnsAdded: true,
   };
 
   it("lists every canonical sheet name as OK, sourced from SHEET_NAMES", () => {
@@ -261,12 +370,14 @@ describe("buildProvisioningSummary", () => {
     }
   });
 
-  it("reports 'configured' for freshly-inserted sample data", () => {
+  it("reports 'configured' for freshly-inserted sample data, including PROGRESS_STATUS and the Phase 2 columns", () => {
     const summary = buildProvisioningSummary(baseInput);
     expect(summary).toContain("CONFIG: configured");
     expect(summary).toContain("ACTIVE site: configured");
     expect(summary).toContain("WORK_TYPES: 22 inserted");
     expect(summary).toContain("REPORTS.workTypeName column: added");
+    expect(summary).toContain("PROGRESS_STATUS: 3 inserted");
+    expect(summary).toContain("REPORTS Phase 2 columns: added");
   });
 
   it("reports 'already present' on a rerun that inserted nothing new", () => {
@@ -276,11 +387,15 @@ describe("buildProvisioningSummary", () => {
       demoSiteInserted: false,
       workTypesInserted: 0,
       reportsWorkTypeNameColumnAdded: false,
+      progressStatusesInserted: 0,
+      reportsPhase2ColumnsAdded: false,
     });
     expect(summary).toContain("CONFIG: already present");
     expect(summary).toContain("ACTIVE site: already present");
     expect(summary).toContain("WORK_TYPES: already present");
     expect(summary).toContain("REPORTS.workTypeName column: already present");
+    expect(summary).toContain("PROGRESS_STATUS: already present");
+    expect(summary).toContain("REPORTS Phase 2 columns: already present");
   });
 
   it("never includes anything besides the given resource names/IDs/URLs (no secret-shaped content)", () => {
