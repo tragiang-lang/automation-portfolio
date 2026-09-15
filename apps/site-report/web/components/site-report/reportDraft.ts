@@ -30,6 +30,18 @@ export interface ReportDraft {
    *  timezone and time of day (Task 9 §5). */
   reportDate: string;
   comment: string;
+  /** Phase 2: 進捗状況 code, empty until chosen — same "no invented
+   *  default" reasoning as workType. */
+  progressStatus: string;
+  /** Phase 2: always "YES" or "NO" — a radio pair always has a selected
+   *  value, so this is never empty, unlike progressStatus/workType. */
+  hasIssue: "YES" | "NO";
+  /** Phase 2: free text, meaningful only when hasIssue is "YES" —
+   *  reportValidation.ts requires it non-empty only in that case, and
+   *  submitReportMapper.ts strips it to undefined whenever hasIssue is
+   *  "NO" so a stale value from a prior YES state can never be
+   *  submitted as an active issue. */
+  issueDetail: string;
   /** In selection/insertion order — never re-sorted (Task 10 §10). Empty
    *  until the user adds a photo; `SubmitReportInput.photos` already
    *  treats zero photos as valid (Task 5), so nothing here requires at
@@ -96,19 +108,22 @@ export function getTodayLocalDateString(now: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-/** Initial draft for a freshly selected site (Task 9 §6). `workerName` is
- *  pre-filled from the LIFF profile's `displayName` as a convenience
- *  default only — it stays a plain editable text field, not a read-only
- *  mirror of the LINE profile, since the name a worker wants on a report
- *  is not guaranteed to match their LINE display name. `workType`/
- *  `comment` start empty; no work-type enum exists anywhere in the actual
- *  contract to default to (Task 9 §5), so none is invented. */
+/** Initial draft for a freshly selected site (Task 9 §6, extended Phase
+ *  2). `workerName` is pre-filled from the LIFF profile's `displayName`
+ *  as a convenience default only — it stays a plain editable text field.
+ *  `workType`/`progressStatus`/`comment`/`issueDetail` start empty; no
+ *  enum value exists anywhere in the actual contract to default them to,
+ *  so none is invented. `hasIssue` defaults to "NO" — the common case
+ *  (no problem to report) costs the user zero taps. */
 export function createInitialReportDraft(profile: SiteReportLiffUser): ReportDraft {
   return {
     workerName: profile.displayName,
     workType: "",
     reportDate: getTodayLocalDateString(),
     comment: "",
+    progressStatus: "",
+    hasIssue: "NO",
+    issueDetail: "",
     photos: [],
   };
 }

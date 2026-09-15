@@ -19,6 +19,9 @@ const DRAFT: ReportDraft = {
   workType: "Inspection",
   reportDate: "2026-09-12",
   comment: "All clear.",
+  progressStatus: "IN_PROGRESS",
+  hasIssue: "NO",
+  issueDetail: "",
   photos: [],
 };
 
@@ -45,6 +48,9 @@ describe("buildSubmitReportInput", () => {
       reportDate: "2026-09-12",
       workType: "Inspection",
       comment: "All clear.",
+      progressStatus: "IN_PROGRESS",
+      hasIssue: "NO",
+      issueDetail: undefined,
       photos: [],
     });
   });
@@ -112,6 +118,35 @@ describe("buildSubmitReportInput", () => {
     const result = buildSubmitReportInput({ site: SITE, profile: PROFILE, draft: { ...DRAFT, comment: "" } });
 
     expect(result.comment).toBe("");
+  });
+
+  it("maps progressStatus and hasIssue through unchanged", () => {
+    const result = buildSubmitReportInput({ site: SITE, profile: PROFILE, draft: { ...DRAFT, progressStatus: "DONE", hasIssue: "NO" } });
+
+    expect(result.progressStatus).toBe("DONE");
+    expect(result.hasIssue).toBe("NO");
+  });
+
+  it("maps a non-empty issueDetail through when hasIssue is YES", () => {
+    const result = buildSubmitReportInput({
+      site: SITE,
+      profile: PROFILE,
+      draft: { ...DRAFT, hasIssue: "YES", issueDetail: "足場が不足しています" },
+    });
+
+    expect(result.hasIssue).toBe("YES");
+    expect(result.issueDetail).toBe("足場が不足しています");
+  });
+
+  it("strips issueDetail to undefined when hasIssue is NO, even if the draft still holds stale text", () => {
+    const result = buildSubmitReportInput({
+      site: SITE,
+      profile: PROFILE,
+      draft: { ...DRAFT, hasIssue: "NO", issueDetail: "stale text from a prior YES state" },
+    });
+
+    expect(result.hasIssue).toBe("NO");
+    expect(result.issueDetail).toBeUndefined();
   });
 
   // M8 — no mutation

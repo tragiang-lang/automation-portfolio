@@ -57,6 +57,13 @@ export function buildSubmitReportInput({
     // `undefined` (Task 11 §8), so no client-side normalization is
     // duplicated here.
     comment: draft.comment,
+    progressStatus: draft.progressStatus,
+    hasIssue: draft.hasIssue,
+    // Phase 2 spec §16/§22: a hidden textarea's stale content must never
+    // be submitted as an active issue — stripped to undefined here as the
+    // last line of defense before this leaves the client, regardless of
+    // whether ReportForm's own onChange already cleared it.
+    issueDetail: draft.hasIssue === "YES" ? draft.issueDetail : undefined,
     // `.map` returns a new array of new objects — `draft.photos` itself
     // (and each `ReportDraftPhoto` in it) is never mutated or reused by
     // reference in the result.

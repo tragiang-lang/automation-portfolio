@@ -14,6 +14,9 @@ const BASE_DRAFT: ReportDraft = {
   workType: "Inspection",
   reportDate: "2026-09-12",
   comment: "All clear.",
+  progressStatus: "IN_PROGRESS",
+  hasIssue: "NO",
+  issueDetail: "",
   photos: [],
 };
 
@@ -69,6 +72,14 @@ describe("createInitialReportDraft", () => {
     const draft = createInitialReportDraft(PROFILE);
 
     expect(draft.photos).toEqual([]);
+  });
+
+  it("defaults progressStatus and issueDetail to empty strings, and hasIssue to NO", () => {
+    const draft = createInitialReportDraft(PROFILE);
+
+    expect(draft.progressStatus).toBe("");
+    expect(draft.hasIssue).toBe("NO");
+    expect(draft.issueDetail).toBe("");
   });
 });
 
