@@ -10,6 +10,8 @@ export const SHEET_NAMES = {
   REPORTS: "REPORTS",
   REPORT_PHOTOS: "REPORT_PHOTOS",
   WORK_TYPES: "WORK_TYPES",
+  /** Phase 2: 進捗状況 master data — same role/shape as WORK_TYPES. */
+  PROGRESS_STATUS: "PROGRESS_STATUS",
 } as const;
 
 export type SheetName = (typeof SHEET_NAMES)[keyof typeof SHEET_NAMES];
