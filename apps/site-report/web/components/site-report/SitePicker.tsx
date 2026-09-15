@@ -1,4 +1,5 @@
 import type { Site } from "@/types/api";
+import { RequiredLabel } from "./RequiredLabel";
 import styles from "./site-report.module.css";
 
 /**
@@ -26,9 +27,7 @@ export function SitePicker({
 
   return (
     <div className={styles.field}>
-      <label htmlFor="site-picker" className={styles.label}>
-        現場名
-      </label>
+      <RequiredLabel htmlFor="site-picker">現場名</RequiredLabel>
       <select id="site-picker" className={styles.input} defaultValue="" onChange={handleChange}>
         <option value="" disabled>
           現場を選択してください

@@ -3,41 +3,39 @@
 import { useState } from "react";
 import type { ReportDraft } from "./reportDraft";
 import { validateReportDraft } from "./reportValidation";
-import type { WorkType } from "@/types/api";
+import type { ProgressStatus, WorkType } from "@/types/api";
+import { RequiredLabel } from "./RequiredLabel";
 import styles from "./site-report.module.css";
 
 type TouchedFields = Partial<Record<keyof ReportDraft, boolean>>;
 
 /**
- * The editable report-content fields (Task 9): `workerName`/`workType`/
- * `reportDate`/`comment` — the subset of `SubmitReportInput` this screen
- * actually collects (see `reportDraft.ts`'s header comment for why
- * `siteId`/`lineUserId`/`workerId`/`photos` are deliberately absent). A
- * fully controlled component: `draft` is owned by the caller
- * (`SiteReportScreen`'s `report-entry` state via `ReportEntryShell`), and
- * every edit is reported through `onChange` rather than held locally —
- * only per-field "has this been touched yet" state (for validation
- * display timing, Task 9 §9) lives inside this component, since nothing
- * outside it needs that.
+ * The editable report-content fields (Task 9, extended Phase 2 with
+ * 進捗状況/問題あり/問題内容). A fully controlled component: `draft` is
+ * owned by the caller, and every edit is reported through `onChange`
+ * rather than held locally — only per-field "has this been touched yet"
+ * state (for validation display timing) lives inside this component.
  *
  * `showAllErrors` (Task 11 §13, default `false`): when a submit attempt
- * fails client-side validation, the screen needs every invalid field's
- * error visible at once, not just the ones the user happened to already
- * blur. Rather than building a second validation system, this reuses the
- * exact same `validateReportDraft` result and just widens which fields
- * count as "touched" for display purposes — the per-field blur-based
- * `touched` state from Task 9 is untouched and still applies once this is
- * `false` again.
+ * fails client-side validation, every invalid field's error becomes
+ * visible at once, not just fields the user happened to already blur.
+ *
+ * Phase 2 §16/§22: switching the 問題あり/問題なし radio to 問題なし
+ * immediately clears `issueDetail` in the emitted draft — a hidden
+ * textarea's stale text must never look like an active issue to a later
+ * re-selection of 問題あり, or (defense in depth) to submitReportMapper.
  */
 export function ReportForm({
   draft,
   onChange,
   workTypes,
+  progressStatuses,
   showAllErrors = false,
 }: {
   draft: ReportDraft;
   onChange: (draft: ReportDraft) => void;
   workTypes: WorkType[];
+  progressStatuses: ProgressStatus[];
   showAllErrors?: boolean;
 }) {
   const [touched, setTouched] = useState<TouchedFields>({});
@@ -52,9 +50,7 @@ export function ReportForm({
   return (
     <div className={styles.reportEntry}>
       <div className={styles.field}>
-        <label htmlFor="report-worker-name" className={styles.label}>
-          作業者名
-        </label>
+        <RequiredLabel htmlFor="report-worker-name">作業者名</RequiredLabel>
         <input
           id="report-worker-name"
           type="text"
@@ -73,9 +69,7 @@ export function ReportForm({
       </div>
 
       <div className={styles.field}>
-        <label htmlFor="report-work-type" className={styles.label}>
-          作業種別
-        </label>
+        <RequiredLabel htmlFor="report-work-type">作業種別</RequiredLabel>
         <select
           id="report-work-type"
           className={styles.input}
@@ -102,9 +96,7 @@ export function ReportForm({
       </div>
 
       <div className={styles.field}>
-        <label htmlFor="report-date" className={styles.label}>
-          報告日
-        </label>
+        <RequiredLabel htmlFor="report-date">報告日</RequiredLabel>
         <input
           id="report-date"
           type="date"
@@ -121,6 +113,80 @@ export function ReportForm({
           </p>
         ) : null}
       </div>
+
+      <div className={styles.field}>
+        <RequiredLabel htmlFor="report-progress-status">進捗状況</RequiredLabel>
+        <select
+          id="report-progress-status"
+          className={styles.input}
+          value={draft.progressStatus}
+          onChange={(event) => onChange({ ...draft, progressStatus: event.target.value })}
+          onBlur={() => markTouched("progressStatus")}
+          aria-invalid={Boolean(isShown("progressStatus") && errors.progressStatus)}
+          aria-describedby={isShown("progressStatus") && errors.progressStatus ? "report-progress-status-error" : undefined}
+        >
+          <option value="" disabled>
+            選択してください
+          </option>
+          {progressStatuses.map((progressStatus) => (
+            <option key={progressStatus.code} value={progressStatus.code}>
+              {progressStatus.name}
+            </option>
+          ))}
+        </select>
+        {isShown("progressStatus") && errors.progressStatus ? (
+          <p id="report-progress-status-error" className={styles.fieldError} role="alert">
+            {errors.progressStatus}
+          </p>
+        ) : null}
+      </div>
+
+      <div className={styles.field}>
+        <span className={styles.label}>問題・課題</span>
+        <div className={styles.radioGroup} role="radiogroup" aria-label="問題・課題">
+          <label className={styles.radioOption}>
+            <input
+              type="radio"
+              name="report-has-issue"
+              value="NO"
+              checked={draft.hasIssue === "NO"}
+              onChange={() => onChange({ ...draft, hasIssue: "NO", issueDetail: "" })}
+            />
+            問題なし
+          </label>
+          <label className={styles.radioOption}>
+            <input
+              type="radio"
+              name="report-has-issue"
+              value="YES"
+              checked={draft.hasIssue === "YES"}
+              onChange={() => onChange({ ...draft, hasIssue: "YES" })}
+            />
+            問題あり
+          </label>
+        </div>
+      </div>
+
+      {draft.hasIssue === "YES" ? (
+        <div className={styles.field}>
+          <RequiredLabel htmlFor="report-issue-detail">問題内容</RequiredLabel>
+          <textarea
+            id="report-issue-detail"
+            className={styles.textarea}
+            rows={4}
+            value={draft.issueDetail}
+            onChange={(event) => onChange({ ...draft, issueDetail: event.target.value })}
+            onBlur={() => markTouched("issueDetail")}
+            aria-invalid={Boolean(isShown("issueDetail") && errors.issueDetail)}
+            aria-describedby={isShown("issueDetail") && errors.issueDetail ? "report-issue-detail-error" : undefined}
+          />
+          {isShown("issueDetail") && errors.issueDetail ? (
+            <p id="report-issue-detail-error" className={styles.fieldError} role="alert">
+              {errors.issueDetail}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className={styles.field}>
         <label htmlFor="report-comment" className={styles.label}>

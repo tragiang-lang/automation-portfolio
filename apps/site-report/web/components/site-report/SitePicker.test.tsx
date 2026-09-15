@@ -25,7 +25,7 @@ describe("SitePicker", () => {
   it("renders a labeled dropdown with a placeholder plus one option per site", () => {
     render(<SitePicker sites={[SITE_A, SITE_B]} onSelect={() => {}} />);
 
-    const select = screen.getByRole("combobox", { name: "現場名" });
+    const select = screen.getByRole("combobox", { name: /現場名/ });
     expect(select).toBeInTheDocument();
     expect(screen.getByText("現場を選択してください")).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Shibuya Tower" })).toBeInTheDocument();
@@ -35,14 +35,14 @@ describe("SitePicker", () => {
   it("starts with no site selected (the placeholder option)", () => {
     render(<SitePicker sites={[SITE_A, SITE_B]} onSelect={() => {}} />);
 
-    expect(screen.getByRole("combobox", { name: "現場名" })).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: /現場名/ })).toHaveValue("");
   });
 
   it("calls onSelect with the full Site object when a site is chosen", () => {
     const onSelect = jest.fn();
     render(<SitePicker sites={[SITE_A, SITE_B]} onSelect={onSelect} />);
 
-    fireEvent.change(screen.getByRole("combobox", { name: "現場名" }), { target: { value: SITE_B.siteId } });
+    fireEvent.change(screen.getByRole("combobox", { name: /現場名/ }), { target: { value: SITE_B.siteId } });
 
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith(SITE_B);
@@ -52,9 +52,15 @@ describe("SitePicker", () => {
     const onSelect = jest.fn();
     render(<SitePicker sites={[SITE_A]} onSelect={onSelect} />);
 
-    fireEvent.change(screen.getByRole("combobox", { name: "現場名" }), { target: { value: SITE_A.siteId } });
-    fireEvent.change(screen.getByRole("combobox", { name: "現場名" }), { target: { value: "" } });
+    fireEvent.change(screen.getByRole("combobox", { name: /現場名/ }), { target: { value: SITE_A.siteId } });
+    fireEvent.change(screen.getByRole("combobox", { name: /現場名/ }), { target: { value: "" } });
 
     expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a required marker on its label", () => {
+    render(<SitePicker sites={[SITE_A]} onSelect={() => {}} />);
+
+    expect(screen.getByText("（必須）")).toBeInTheDocument();
   });
 });
