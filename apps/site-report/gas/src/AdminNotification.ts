@@ -22,8 +22,14 @@ export function buildAdminNotificationEmail(report: SiteReport, site: Site): Adm
     `Report date: ${report.reportDate}`,
     `Worker: ${report.workerName}`,
     `Work type: ${report.workTypeName ?? report.workType}`,
-    `Photos: ${report.photoCount}`,
   ];
+  if (report.progressStatus !== undefined) {
+    lines.push(`Progress: ${report.progressStatusName ?? report.progressStatus}`);
+  }
+  lines.push(`Photos: ${report.photoCount}`);
+  if (report.hasIssue === "YES" && report.issueDetail) {
+    lines.push("", "Issue:", report.issueDetail);
+  }
   if (report.comment) {
     lines.push("", "Comment:", report.comment);
   }
