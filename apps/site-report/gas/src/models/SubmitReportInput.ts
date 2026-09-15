@@ -37,6 +37,15 @@ export interface SubmitReportInput {
   reportDate: string;
   workType: string;
   comment?: string;
+  /** Phase 2: 進捗状況 code — required, resolved/validated server-side
+   *  against PROGRESS_STATUS the same way `workType` is validated against
+   *  WORK_TYPES. */
+  progressStatus: string;
+  /** Phase 2: required — exactly "YES" or "NO", never any other value. */
+  hasIssue: "YES" | "NO";
+  /** Phase 2: required only when hasIssue is "YES" (spec §6.1) — enforced
+   *  by parseSubmitReportInput, not this type. */
+  issueDetail?: string;
   /** Zero or more — `ReportRow.photoCount`/`Validation.validateReportRow`
    *  already treat 0 as a valid photo count, so an empty submission is
    *  not rejected here either (Task 5 §26: "do not invent arbitrary

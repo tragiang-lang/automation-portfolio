@@ -58,6 +58,21 @@ function requireString(value: unknown, field: string, issues: ValidationIssue[])
   return value;
 }
 
+/** Validates a required "YES"|"NO" field — same {field, reason} issue
+ *  shape as requireString, but with a fixed allowed-value set instead of
+ *  "any non-empty string". */
+function requireYesNo(value: unknown, field: string, issues: ValidationIssue[]): "YES" | "NO" | undefined {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    issues.push({ field, reason: "is required" });
+    return undefined;
+  }
+  if (value !== "YES" && value !== "NO") {
+    issues.push({ field, reason: 'must be "YES" or "NO"' });
+    return undefined;
+  }
+  return value;
+}
+
 function parsePhotos(rawPhotos: unknown, issues: ValidationIssue[]): SubmitReportPhotoInput[] {
   if (rawPhotos === undefined) {
     return [];
@@ -117,6 +132,21 @@ export function parseSubmitReportInput(rawPayload: unknown): ParseSubmitReportIn
     payload.comment === undefined || payload.comment === ""
       ? undefined
       : requireString(payload.comment, "comment", issues);
+
+  // Phase 2: progressStatus is required, same shape as workType.
+  const progressStatus = requireString(payload.progressStatus, "progressStatus", issues);
+
+  // Phase 2: hasIssue is required and must be exactly "YES"/"NO";
+  // issueDetail is required only when hasIssue is "YES" — same
+  // "" treated as absent" normalization comment already uses.
+  const hasIssue = requireYesNo(payload.hasIssue, "hasIssue", issues);
+  const issueDetail =
+    hasIssue === "YES"
+      ? requireString(payload.issueDetail, "issueDetail", issues)
+      : payload.issueDetail === undefined || payload.issueDetail === ""
+        ? undefined
+        : requireString(payload.issueDetail, "issueDetail", issues);
+
   const photos = parsePhotos(payload.photos, issues);
 
   if (issues.length > 0) {
@@ -133,6 +163,9 @@ export function parseSubmitReportInput(rawPayload: unknown): ParseSubmitReportIn
       reportDate: reportDate as string,
       workType: workType as string,
       comment,
+      progressStatus: progressStatus as string,
+      hasIssue: hasIssue as "YES" | "NO",
+      issueDetail,
       photos,
     },
   };

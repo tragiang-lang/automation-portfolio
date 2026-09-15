@@ -8,6 +8,8 @@ function validPayload(overrides: Record<string, unknown> = {}): Record<string, u
     reportDate: "2026-09-12",
     workType: "wiring",
     comment: "done",
+    progressStatus: "IN_PROGRESS",
+    hasIssue: "NO",
     photos: [{ fileName: "a.jpg", mimeType: "image/jpeg", base64Data: "aGVsbG8=" }],
     ...overrides,
   };
@@ -26,6 +28,9 @@ describe("parseSubmitReportInput", () => {
         reportDate: "2026-09-12",
         workType: "wiring",
         comment: "done",
+        progressStatus: "IN_PROGRESS",
+        hasIssue: "NO",
+        issueDetail: undefined,
         photos: [{ fileName: "a.jpg", mimeType: "image/jpeg", base64Data: "aGVsbG8=" }],
       });
     }
@@ -70,6 +75,67 @@ describe("parseSubmitReportInput", () => {
     if (!result.ok) {
       expect(result.issues).toContainEqual({ field: "workType", reason: "is required" });
     }
+  });
+
+  it("reports a missing progressStatus", () => {
+    const result = parseSubmitReportInput(validPayload({ progressStatus: "" }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({ field: "progressStatus", reason: "is required" });
+    }
+  });
+
+  it("rejects a hasIssue value outside YES/NO", () => {
+    const result = parseSubmitReportInput(validPayload({ hasIssue: "MAYBE" }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({ field: "hasIssue", reason: 'must be "YES" or "NO"' });
+    }
+  });
+
+  it("reports a missing hasIssue", () => {
+    const payload = validPayload();
+    delete payload.hasIssue;
+    const result = parseSubmitReportInput(payload);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({ field: "hasIssue", reason: "is required" });
+    }
+  });
+
+  it("requires issueDetail when hasIssue is YES", () => {
+    const result = parseSubmitReportInput(validPayload({ hasIssue: "YES" }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({ field: "issueDetail", reason: "is required" });
+    }
+  });
+
+  it("accepts hasIssue:YES with a non-empty issueDetail", () => {
+    const result = parseSubmitReportInput(validPayload({ hasIssue: "YES", issueDetail: "足場が不足しています" }));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.input.hasIssue).toBe("YES");
+      expect(result.input.issueDetail).toBe("足場が不足しています");
+    }
+  });
+
+  it("does not require issueDetail when hasIssue is NO, even if empty/omitted", () => {
+    const withoutKey = validPayload({ hasIssue: "NO" });
+    delete withoutKey.issueDetail;
+    expect(parseSubmitReportInput(withoutKey).ok).toBe(true);
+
+    const withEmptyString = validPayload({ hasIssue: "NO", issueDetail: "" });
+    const result = parseSubmitReportInput(withEmptyString);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.input.issueDetail).toBeUndefined();
+    }
+  });
+
+  it("ignores a stray issueDetail value when hasIssue is NO rather than rejecting it (server does not persist it either — SubmitReportService.submitReport only ever reads issueDetail via input.issueDetail, which parseSubmitReportInput already normalizes)", () => {
+    const result = parseSubmitReportInput(validPayload({ hasIssue: "NO", issueDetail: "stale leftover text" }));
+    expect(result.ok).toBe(true);
   });
 
   it("reports an invalid reportDate format", () => {
