@@ -256,10 +256,6 @@ function workTypeRow(overrides: Partial<WorkTypeRow> = {}): WorkTypeRow {
   return { code: "EXTERIOR_WALL", name: "外壁工事", status: "ACTIVE", sortOrder: 10, ...overrides };
 }
 
-function progressStatusRow(overrides: Partial<ProgressStatusRow> = {}): ProgressStatusRow {
-  return { code: "PENDING", name: "保留中", status: "ACTIVE", sortOrder: 10, ...overrides };
-}
-
 describe("buildWorkTypesResult", () => {
   it("maps every valid row to a WorkType", () => {
     const result = buildWorkTypesResult([workTypeRow()]);
