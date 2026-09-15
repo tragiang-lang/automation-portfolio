@@ -7,12 +7,13 @@ import {
   mapSiteRow,
   mapWorkerRow,
   mapWorkTypeRow,
+  mapProgressStatusRow,
   MalformedRowValueError,
   MissingHeadersError,
   objectToRow,
   rowsToObjects,
 } from "../src/RowMapper";
-import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow } from "../src/SheetSchemas";
+import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow, ProgressStatusRow } from "../src/SheetSchemas";
 
 describe("buildHeaderMap", () => {
   it("maps header names to their column index", () => {
@@ -359,6 +360,23 @@ describe("mapWorkTypeRow", () => {
   it("rejects a non-numeric sortOrder as malformed", () => {
     const row = { code: "X", name: "Y", status: "ACTIVE", sortOrder: "not-a-number" } as unknown as WorkTypeRow;
     expect(() => mapWorkTypeRow(row)).toThrow(MalformedRowValueError);
+  });
+});
+
+describe("mapProgressStatusRow", () => {
+  it("maps a valid row to a ProgressStatus", () => {
+    const row: ProgressStatusRow = { code: "IN_PROGRESS", name: "進行中", status: "ACTIVE", sortOrder: 2 };
+    expect(mapProgressStatusRow(row)).toEqual({ code: "IN_PROGRESS", name: "進行中", status: "ACTIVE", sortOrder: 2 });
+  });
+
+  it("rejects a status outside ACTIVE/INACTIVE as malformed", () => {
+    const row: ProgressStatusRow = { code: "X", name: "Y", status: "PENDING", sortOrder: 1 };
+    expect(() => mapProgressStatusRow(row)).toThrow(MalformedRowValueError);
+  });
+
+  it("rejects a non-numeric sortOrder as malformed", () => {
+    const row = { code: "X", name: "Y", status: "ACTIVE", sortOrder: "not-a-number" } as unknown as ProgressStatusRow;
+    expect(() => mapProgressStatusRow(row)).toThrow(MalformedRowValueError);
   });
 });
 

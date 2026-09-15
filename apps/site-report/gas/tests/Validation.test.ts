@@ -4,8 +4,9 @@ import {
   validateSiteRow,
   validateWorkerRow,
   validateWorkTypeRow,
+  validateProgressStatusRow,
 } from "../src/Validation";
-import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow } from "../src/SheetSchemas";
+import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow, ProgressStatusRow } from "../src/SheetSchemas";
 
 describe("validateSiteRow", () => {
   const validRow: SiteRow = {
@@ -230,6 +231,42 @@ describe("validateWorkTypeRow", () => {
 
   it("reports a negative sortOrder", () => {
     expect(validateWorkTypeRow({ ...validRow, sortOrder: -1 })).toContainEqual({
+      field: "sortOrder",
+      reason: "must be a non-negative integer",
+    });
+  });
+});
+
+describe("validateProgressStatusRow", () => {
+  const validRow: ProgressStatusRow = { code: "IN_PROGRESS", name: "進行中", status: "ACTIVE", sortOrder: 2 };
+
+  it("returns no issues for a valid row", () => {
+    expect(validateProgressStatusRow(validRow)).toEqual([]);
+  });
+
+  it("reports a missing required code", () => {
+    expect(validateProgressStatusRow({ ...validRow, code: "" })).toContainEqual({
+      field: "code",
+      reason: "is required",
+    });
+  });
+
+  it("reports a missing required name", () => {
+    expect(validateProgressStatusRow({ ...validRow, name: "" })).toContainEqual({
+      field: "name",
+      reason: "is required",
+    });
+  });
+
+  it("reports an invalid status value", () => {
+    expect(validateProgressStatusRow({ ...validRow, status: "PENDING" })).toContainEqual({
+      field: "status",
+      reason: 'must be "ACTIVE" or "INACTIVE", got "PENDING"',
+    });
+  });
+
+  it("reports a negative sortOrder", () => {
+    expect(validateProgressStatusRow({ ...validRow, sortOrder: -1 })).toContainEqual({
       field: "sortOrder",
       reason: "must be a non-negative integer",
     });

@@ -1,9 +1,10 @@
-import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow } from "./SheetSchemas";
+import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow, WorkTypeRow, ProgressStatusRow } from "./SheetSchemas";
 import { Site } from "./models/Site";
 import { Worker } from "./models/Worker";
 import { SiteReport } from "./models/Report";
 import { ReportPhoto } from "./models/ReportPhoto";
 import { WorkType } from "./models/WorkType";
+import { ProgressStatus } from "./models/ProgressStatus";
 
 /**
  * Pure header-mapping and row<->object helpers shared by every sheet
@@ -198,6 +199,21 @@ function toEnum<T extends string>(value: unknown, field: string, allowed: readon
   return raw as T;
 }
 
+/** Same as toEnum, but an empty cell becomes undefined instead of
+ *  throwing — for an enum-typed field that is optional at the row-shape
+ *  level (Phase 2's `hasIssue`, absent on every pre-Phase-2 row). A
+ *  present-but-invalid value still throws, same as toEnum. */
+export function toOptionalEnum<T extends string>(value: unknown, field: string, allowed: readonly T[]): T | undefined {
+  const trimmed = toTrimmedString(value, field);
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  if (!(allowed as readonly string[]).includes(trimmed)) {
+    throw new MalformedRowValueError(field, `expected one of ${allowed.join(", ")}, got "${trimmed}"`);
+  }
+  return trimmed as T;
+}
+
 /** Coerces a cell to a non-negative integer. Accepts a real number or a
  *  numeric string; rejects an empty cell, a non-numeric string, or a
  *  negative/non-integer value — a required count field silently becoming
@@ -262,6 +278,16 @@ export function mapReportRow(row: ReportRow): SiteReport {
 
 /** Maps a WORK_TYPES data row to a WorkType. */
 export function mapWorkTypeRow(row: WorkTypeRow): WorkType {
+  return {
+    code: toTrimmedString(row.code, "code"),
+    name: toTrimmedString(row.name, "name"),
+    status: toEnum(row.status, "status", ["ACTIVE", "INACTIVE"] as const),
+    sortOrder: toNonNegativeInteger(row.sortOrder, "sortOrder"),
+  };
+}
+
+/** Maps a PROGRESS_STATUS data row to a ProgressStatus. */
+export function mapProgressStatusRow(row: ProgressStatusRow): ProgressStatus {
   return {
     code: toTrimmedString(row.code, "code"),
     name: toTrimmedString(row.name, "name"),
