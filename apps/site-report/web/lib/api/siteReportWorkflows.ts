@@ -31,6 +31,7 @@ import { SITE_REPORT_ACTIONS } from "@/types/api";
 import type {
   GetSitesResponseData,
   GetWorkTypesResponseData,
+  GetProgressStatusResponseData,
   SiteReportAction,
   SubmitReportInput,
   SubmitReportResponseData,
@@ -114,6 +115,14 @@ export function getSites(): Promise<SiteReportClientResult<GetSitesResponseData>
  */
 export function getWorkTypes(): Promise<SiteReportClientResult<GetWorkTypesResponseData>> {
   return callSiteReportRoute<GetWorkTypesResponseData>(SITE_REPORT_ACTIONS.GET_WORK_TYPES, {});
+}
+
+/**
+ * Calls `GET_PROGRESS_STATUS`. Same shape as `getWorkTypes()` above — the
+ * GAS handler takes no payload.
+ */
+export function getProgressStatuses(): Promise<SiteReportClientResult<GetProgressStatusResponseData>> {
+  return callSiteReportRoute<GetProgressStatusResponseData>(SITE_REPORT_ACTIONS.GET_PROGRESS_STATUS, {});
 }
 
 /**

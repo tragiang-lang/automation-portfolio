@@ -10,8 +10,14 @@
  * that boundary — mocking `siteReportClient` here would hide the exact P0
  * this file exists to fix.
  */
-import { getSites, getWorkTypes, submitReport } from "./siteReportWorkflows";
-import type { GetSitesResponseData, GetWorkTypesResponseData, SubmitReportInput, SubmitReportResponseData } from "@/types/api";
+import { getSites, getWorkTypes, getProgressStatuses, submitReport } from "./siteReportWorkflows";
+import type {
+  GetSitesResponseData,
+  GetWorkTypesResponseData,
+  GetProgressStatusResponseData,
+  SubmitReportInput,
+  SubmitReportResponseData,
+} from "@/types/api";
 
 function mockFetchOnce(body: unknown, init: { ok?: boolean; status?: number } = {}) {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -140,6 +146,35 @@ describe("getWorkTypes", () => {
   });
 });
 
+describe("getProgressStatuses", () => {
+  it("POSTs GET_PROGRESS_STATUS with an empty payload to /api/site-report", async () => {
+    mockFetchOnce({ ok: true, data: { progressStatuses: [] } });
+
+    await getProgressStatuses();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/site-report",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "GET_PROGRESS_STATUS", payload: {} }),
+      }),
+    );
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the typed GetProgressStatusResponseData result unchanged", async () => {
+    const data: GetProgressStatusResponseData = {
+      progressStatuses: [{ code: "IN_PROGRESS", name: "進行中", status: "ACTIVE", sortOrder: 2 }],
+    };
+    mockFetchOnce({ ok: true, data });
+
+    const result = await getProgressStatuses();
+
+    expect(result).toEqual({ ok: true, data });
+  });
+});
+
 describe("submitReport", () => {
   const validInput: SubmitReportInput = {
     siteId: "SITE-1",
@@ -148,6 +183,8 @@ describe("submitReport", () => {
     reportDate: "2026-09-12",
     workType: "Inspection",
     comment: "All clear.",
+    progressStatus: "IN_PROGRESS",
+    hasIssue: "NO",
     photos: [
       {
         fileName: "photo1.jpg",

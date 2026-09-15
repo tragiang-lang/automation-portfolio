@@ -31,6 +31,7 @@ export type SiteReportApiResponse<T = unknown> =
 export const SITE_REPORT_ACTIONS = {
   GET_SITES: "GET_SITES",
   GET_WORK_TYPES: "GET_WORK_TYPES",
+  GET_PROGRESS_STATUS: "GET_PROGRESS_STATUS",
   SUBMIT_REPORT: "SUBMIT_REPORT",
 } as const;
 
@@ -70,6 +71,20 @@ export interface GetWorkTypesResponseData {
   workTypes: WorkType[];
 }
 
+/** Mirrors GAS `models/ProgressStatus.ts`'s `ProgressStatus` exactly. */
+export interface ProgressStatus {
+  code: string;
+  name: string;
+  status: "ACTIVE" | "INACTIVE";
+  sortOrder: number;
+}
+
+/** Mirrors GAS `Api.ts`'s `GetProgressStatusResponseData` — the
+ *  `GET_PROGRESS_STATUS` success payload. */
+export interface GetProgressStatusResponseData {
+  progressStatuses: ProgressStatus[];
+}
+
 /** Mirrors GAS `models/SubmitReportInput.ts`'s `SubmitReportPhotoInput`.
  *  Base64-encoded file content, no `data:` URI prefix — the existing wire
  *  format, not redesigned here. */
@@ -90,6 +105,9 @@ export interface SubmitReportInput {
   reportDate: string;
   workType: string;
   comment?: string;
+  progressStatus: string;
+  hasIssue: "YES" | "NO";
+  issueDetail?: string;
   photos: SubmitReportPhotoInput[];
 }
 
