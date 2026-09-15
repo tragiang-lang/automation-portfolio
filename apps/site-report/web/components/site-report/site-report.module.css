@@ -237,3 +237,64 @@
     border-color: #454545;
   }
 }
+
+/* Phase 2 — required-field marker + screen-reader-only text. */
+.requiredMarker {
+  color: #d92d20;
+}
+
+@media (prefers-color-scheme: dark) {
+  .requiredMarker {
+    color: #f97066;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Phase 2 — 問題あり/問題なし radio pair. Same >=44px tap target
+   convention as every other control in this file. */
+.radioGroup {
+  display: flex;
+  gap: 16px;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.radioOption input[type="radio"] {
+  width: 20px;
+  height: 20px;
+}
+
+/* Phase 2 — draft-restore inline notice. Same shape as .successBox/
+   .errorBox but neutral (this is informational, not success/failure). */
+.draftNotice {
+  border: 1px solid #d9d9d9;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .draftNotice {
+    background: #262626;
+    border-color: #454545;
+  }
+}
