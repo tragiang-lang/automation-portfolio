@@ -273,6 +273,10 @@ export function mapReportRow(row: ReportRow): SiteReport {
     createdAt: toTimestamp(row.createdAt, "createdAt"),
     updatedAt: toTimestamp(row.updatedAt, "updatedAt"),
     workTypeName: toOptionalString(row.workTypeName, "workTypeName"),
+    progressStatus: toOptionalString(row.progressStatus, "progressStatus"),
+    progressStatusName: toOptionalString(row.progressStatusName, "progressStatusName"),
+    hasIssue: toOptionalEnum(row.hasIssue, "hasIssue", ["YES", "NO"] as const),
+    issueDetail: toOptionalString(row.issueDetail, "issueDetail"),
   };
 }
 

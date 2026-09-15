@@ -402,3 +402,55 @@ describe("mapReportRow — workTypeName", () => {
     expect(mapReportRow({ ...validRow, workTypeName: "外壁工事" }).workTypeName).toBe("外壁工事");
   });
 });
+
+describe("mapReportRow — Phase 2 fields", () => {
+  const validRow: ReportRow = {
+    reportId: "RPT-1",
+    siteId: "STE-1",
+    lineUserId: "U1",
+    workerName: "Taro",
+    reportDate: "2026-09-12",
+    workType: "EXTERIOR_WALL",
+    photoCount: 0,
+    status: "SUBMITTED",
+    createdAt: "2026-09-12T00:00:00.000Z",
+    updatedAt: "2026-09-12T00:00:00.000Z",
+  };
+
+  it("converts empty progressStatus/progressStatusName/hasIssue/issueDetail cells to undefined", () => {
+    const report = mapReportRow({ ...validRow, progressStatus: "", progressStatusName: "", hasIssue: "", issueDetail: "" });
+    expect(report.progressStatus).toBeUndefined();
+    expect(report.progressStatusName).toBeUndefined();
+    expect(report.hasIssue).toBeUndefined();
+    expect(report.issueDetail).toBeUndefined();
+  });
+
+  it("passes through present progressStatus/progressStatusName/issueDetail", () => {
+    const report = mapReportRow({
+      ...validRow,
+      progressStatus: "IN_PROGRESS",
+      progressStatusName: "進行中",
+      issueDetail: "足場が不足",
+    });
+    expect(report.progressStatus).toBe("IN_PROGRESS");
+    expect(report.progressStatusName).toBe("進行中");
+    expect(report.issueDetail).toBe("足場が不足");
+  });
+
+  it("coerces a valid hasIssue cell to the literal union", () => {
+    expect(mapReportRow({ ...validRow, hasIssue: "YES" }).hasIssue).toBe("YES");
+    expect(mapReportRow({ ...validRow, hasIssue: "NO" }).hasIssue).toBe("NO");
+  });
+
+  it("rejects a hasIssue cell outside YES/NO/empty as malformed", () => {
+    expect(() => mapReportRow({ ...validRow, hasIssue: "MAYBE" })).toThrow(MalformedRowValueError);
+  });
+
+  it("maps a pre-Phase-2 row (no Phase 2 keys at all) without throwing, all four fields undefined", () => {
+    const report = mapReportRow(validRow);
+    expect(report.progressStatus).toBeUndefined();
+    expect(report.progressStatusName).toBeUndefined();
+    expect(report.hasIssue).toBeUndefined();
+    expect(report.issueDetail).toBeUndefined();
+  });
+});
