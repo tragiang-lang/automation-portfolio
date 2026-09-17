@@ -410,7 +410,7 @@ describe("SiteReportScreen — photo pipeline (Task 10)", () => {
   });
 });
 
-describe("SiteReportScreen — submission (Task 11)", () => {
+describe("SiteReportScreen — submission (Task 11, workflow wired Phase 3)", () => {
   async function reachReportEntry() {
     initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
     mockOneSiteOneWorkType();
@@ -425,15 +425,32 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     });
   }
 
+  // Phase 3 — DRAFT's submit control is now "内容を確認する", which only
+  // transitions to CONFIRMING (never calls submitReport itself). Every
+  // test that used to click a direct "レポートを送信" control now goes
+  // through this two-step path, matching the real user flow.
+  function confirmDraft() {
+    fireEvent.click(screen.getByRole("button", { name: "内容を確認する" }));
+  }
+
+  function clickConfirmSubmit() {
+    fireEvent.click(screen.getByRole("button", { name: /この内容で送信|送信中/ }));
+  }
+
+  function confirmAndSubmit() {
+    confirmDraft();
+    clickConfirmSubmit();
+  }
+
   const SUCCESS_RESULT = { ok: true, data: { reportId: "RPT-1", photoCount: 0, notificationSent: true } } as const;
 
   // S1 — valid submission: exact payload built from site + profile + draft
-  it("builds the payload from site/profile/draft and calls submitReport when the submit control is activated", async () => {
+  it("builds the payload from site/profile/draft and calls submitReport when この内容で送信 is activated", async () => {
     await reachReportEntry();
     fillValidDraft();
     submitReport.mockResolvedValue(SUCCESS_RESULT);
 
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
 
     await waitFor(() => expect(submitReport).toHaveBeenCalledTimes(1));
     expect(submitReport).toHaveBeenCalledWith({
@@ -456,49 +473,81 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     fillValidDraft();
     submitReport.mockResolvedValue(SUCCESS_RESULT);
 
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
 
     expect(await screen.findByText(/送信しました/)).toBeInTheDocument();
     expect(submitReport.mock.calls[0][0].photos).toEqual([]);
   });
 
-  // S5 — validation failure: submitReport not called, errors shown
-  it("does not call submitReport and shows validation errors for an invalid draft", async () => {
+  // S5 — validation failure: submitReport not called, errors shown, stays
+  // DRAFT (never reaches CONFIRMING).
+  it("does not call submitReport and shows validation errors for an invalid draft, staying on DRAFT", async () => {
     await reachReportEntry();
 
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmDraft();
 
     expect(submitReport).not.toHaveBeenCalled();
     expect((await screen.findAllByRole("alert")).length).toBeGreaterThan(0);
+    expect(screen.queryByText("報告内容の確認")).not.toBeInTheDocument();
   });
 
-  // S6 — loading state
-  it("disables the submit control while submission is pending", async () => {
+  // Phase 3 DoD — a valid draft can enter CONFIRMING and shows the
+  // read-only review screen (never the editable form) before any submit.
+  it("enters the read-only CONFIRMING screen for a valid draft, without submitting yet", async () => {
+    await reachReportEntry();
+    fillValidDraft();
+
+    confirmDraft();
+
+    expect(await screen.findByText("報告内容の確認")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /作業種別/ })).not.toBeInTheDocument();
+    expect(submitReport).not.toHaveBeenCalled();
+  });
+
+  // Phase 3 DoD — 戻って修正 returns to DRAFT with the draft intact.
+  it("returns to the editable DRAFT screen with fields intact when 戻って修正 is activated", async () => {
+    await reachReportEntry();
+    fireEvent.change(screen.getByLabelText(/作業者名/), { target: { value: "Custom Name" } });
+    fillValidDraft();
+    confirmDraft();
+    await screen.findByText("報告内容の確認");
+
+    fireEvent.click(screen.getByRole("button", { name: "戻って修正" }));
+
+    expect(await screen.findByRole("combobox", { name: /作業種別/ })).toHaveValue(WORK_TYPE_A.code);
+    expect(screen.getByLabelText(/作業者名/)).toHaveValue("Custom Name");
+    expect(submitReport).not.toHaveBeenCalled();
+  });
+
+  // S6 — loading state (submit control now lives on the CONFIRMING screen)
+  it("disables the confirmation submit control while submission is pending", async () => {
     await reachReportEntry();
     fillValidDraft();
     submitReport.mockReturnValue(neverResolves());
 
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
 
-    await waitFor(() => expect(screen.getByRole("button", { name: /送信/ })).toBeDisabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "送信中..." })).toBeDisabled());
   });
 
   // S7 — double click: submitReport called exactly once
-  it("calls submitReport only once for two rapid submit clicks", async () => {
+  it("calls submitReport only once for two rapid clicks on この内容で送信", async () => {
     await reachReportEntry();
     fillValidDraft();
     submitReport.mockReturnValue(neverResolves());
+    confirmDraft();
 
-    const submitButton = screen.getByRole("button", { name: /送信/ });
+    const submitButton = await screen.findByRole("button", { name: "この内容で送信" });
     fireEvent.click(submitButton);
     fireEvent.click(submitButton);
 
-    await waitFor(() => expect(submitButton).toBeDisabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "送信中..." })).toBeDisabled());
     expect(submitReport).toHaveBeenCalledTimes(1);
   });
 
-  // S8 — API error: draft preserved, error shown, retry available
-  it("shows the server error message and keeps the draft when submitReport resolves ok:false", async () => {
+  // S8 — API error: draft preserved, error shown, retry available, and the
+  // workflow has returned to DRAFT (Phase 3 §14 SUBMIT_FAILURE -> DRAFT).
+  it("shows the server error message, keeps the draft, and returns to DRAFT when submitReport resolves ok:false", async () => {
     await reachReportEntry();
     fillValidDraft();
     submitReport.mockResolvedValue({
@@ -506,27 +555,28 @@ describe("SiteReportScreen — submission (Task 11)", () => {
       error: { code: "VALIDATION_ERROR", message: "The submitted report failed validation." },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
 
     expect(await screen.findByText("The submitted report failed validation.")).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /作業種別/ })).toHaveValue(WORK_TYPE_A.code);
-    expect(screen.getByRole("button", { name: /送信/ })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "内容を確認する" })).not.toBeDisabled();
+    expect(screen.queryByText("報告内容の確認")).not.toBeInTheDocument();
   });
 
-  // S9 — unexpected rejection: recovers to an error state, retry succeeds
+  // S9 — unexpected rejection: recovers to an error state (back in DRAFT),
+  // retry (re-confirm + re-submit) succeeds.
   it("recovers to an error state and allows a successful retry when submitReport rejects unexpectedly", async () => {
     await reachReportEntry();
     fillValidDraft();
     submitReport.mockRejectedValueOnce(new Error("network down"));
 
-    const submitButton = screen.getByRole("button", { name: /送信/ });
-    fireEvent.click(submitButton);
+    confirmAndSubmit();
 
-    await waitFor(() => expect(submitButton).not.toBeDisabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "内容を確認する" })).not.toBeDisabled());
     expect(screen.getByRole("alert")).toBeInTheDocument();
 
     submitReport.mockResolvedValueOnce(SUCCESS_RESULT);
-    fireEvent.click(submitButton);
+    confirmAndSubmit();
 
     expect(await screen.findByText(/送信しました/)).toBeInTheDocument();
     expect(submitReport).toHaveBeenCalledTimes(2);
@@ -538,7 +588,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     fillValidDraft();
     submitReport.mockResolvedValue(SUCCESS_RESULT);
 
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
 
     expect(await screen.findByText(/送信しました/)).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -556,7 +606,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
       error: { code: "INTERNAL_ERROR", message: "An unexpected server error occurred." },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
 
     await screen.findByRole("alert");
     expect(screen.getByLabelText(/作業者名/)).toHaveValue("Custom Name");
@@ -582,7 +632,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     await waitFor(() => expect(screen.getAllByRole("img")).toHaveLength(1));
 
     submitReport.mockResolvedValue({ ok: true, data: { reportId: "RPT-1", photoCount: 1, notificationSent: true } });
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
 
     await waitFor(() => expect(submitReport).toHaveBeenCalledTimes(1));
     const payload = submitReport.mock.calls[0][0];
@@ -590,14 +640,14 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     expect(payload.photos[0].fileName).toBe("b.jpg");
   });
 
-  // S15 — editing a field right before submit: payload has the latest value
-  it("submits the latest field value after an edit made just before submit", async () => {
+  // S15 — editing a field right before confirming: payload has the latest value
+  it("submits the latest field value after an edit made just before confirming", async () => {
     await reachReportEntry();
     fillValidDraft();
     fireEvent.change(screen.getByLabelText("コメント"), { target: { value: "Final notes" } });
     submitReport.mockResolvedValue(SUCCESS_RESULT);
 
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
 
     await waitFor(() => expect(submitReport).toHaveBeenCalledTimes(1));
     expect(submitReport.mock.calls[0][0].comment).toBe("Final notes");
@@ -605,7 +655,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
 
   // Task 12 §7 (Option A) — after success, the form is reset only when the
   // user explicitly chooses to create another report; it is never reset
-  // or resubmitted automatically.
+  // or resubmitted automatically. Phase 3: also back to workflowState DRAFT.
   it("resets to a fresh draft and idle submission when creating another report after success", async () => {
     await reachReportEntry();
     fireEvent.change(screen.getByLabelText(/作業者名/), { target: { value: "Custom Name" } });
@@ -616,7 +666,7 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     });
     await waitFor(() => expect(screen.getAllByRole("img")).toHaveLength(1));
     submitReport.mockResolvedValue(SUCCESS_RESULT);
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
     await screen.findByRole("button", { name: /別のレポートを作成/ });
 
     fireEvent.click(screen.getByRole("button", { name: /別のレポートを作成/ }));
@@ -626,19 +676,35 @@ describe("SiteReportScreen — submission (Task 11)", () => {
     expect(screen.getByLabelText("コメント")).toHaveValue("");
     expect(screen.queryAllByRole("img")).toHaveLength(0);
     expect(screen.queryByText(/送信しました/)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^レポートを送信$/ })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "内容を確認する" })).not.toBeDisabled();
   });
 
   it("does not call submitReport again just from creating another report", async () => {
     await reachReportEntry();
     fillValidDraft();
     submitReport.mockResolvedValue(SUCCESS_RESULT);
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    confirmAndSubmit();
     await screen.findByRole("button", { name: /別のレポートを作成/ });
 
     fireEvent.click(screen.getByRole("button", { name: /別のレポートを作成/ }));
 
     expect(submitReport).toHaveBeenCalledTimes(1);
+  });
+
+  // Phase 3 DoD — SUBMITTED cannot be re-entered: 別のレポートを作成
+  // produces a brand-new DRAFT rather than any transition of the just-
+  // submitted report, and nothing lets the user get back to a CONFIRMING
+  // or edit view of the report that was already submitted.
+  it("SUBMITTED report cannot be re-edited — only a fresh DRAFT is reachable after success", async () => {
+    await reachReportEntry();
+    fillValidDraft();
+    submitReport.mockResolvedValue(SUCCESS_RESULT);
+    confirmAndSubmit();
+    await screen.findByText(/送信しました/);
+
+    expect(screen.queryByRole("button", { name: "戻って修正" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /作業種別/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("報告内容の確認")).not.toBeInTheDocument();
   });
 });
 
@@ -783,7 +849,8 @@ describe("SiteReportScreen — draft persistence", () => {
 
     render(<SiteReportScreen />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "レポートを送信" }));
+    fireEvent.click(await screen.findByRole("button", { name: "内容を確認する" }));
+    fireEvent.click(await screen.findByRole("button", { name: "この内容で送信" }));
 
     await waitFor(() => expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toBeNull());
 
@@ -808,7 +875,8 @@ describe("SiteReportScreen — draft persistence", () => {
 
     render(<SiteReportScreen />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "レポートを送信" }));
+    fireEvent.click(await screen.findByRole("button", { name: "内容を確認する" }));
+    fireEvent.click(await screen.findByRole("button", { name: "この内容で送信" }));
 
     await screen.findByText("現場が見つかりません。");
     expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).not.toBeNull();
@@ -834,6 +902,41 @@ describe("SiteReportScreen — draft persistence", () => {
       },
       { timeout: 1000 },
     );
+  });
+
+  // Phase 3 §6 / DoD items 14-15 — autosave stops while CONFIRMING and
+  // resumes automatically once BACK returns to DRAFT.
+  it("stops autosaving a field edit made while CONFIRMING, and resumes after BACK", async () => {
+    mockOneSiteOneWorkType();
+    initializeSiteReportLiff.mockResolvedValue({ status: "ready", profile: PROFILE });
+
+    render(<SiteReportScreen />);
+    fireEvent.change(await screen.findByRole("combobox", { name: /作業種別/ }), {
+      target: { value: WORK_TYPE_A.code },
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: /進捗状況/ }), {
+      target: { value: PROGRESS_STATUS_A.code },
+    });
+    await waitFor(() => expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).not.toBeNull());
+    window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+
+    fireEvent.click(screen.getByRole("button", { name: "内容を確認する" }));
+    await screen.findByText("報告内容の確認");
+
+    // Draft is frozen/read-only while CONFIRMING — nothing to edit — but
+    // confirm the autosave effect itself does not fire during this window
+    // even though it re-runs on every state change.
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "戻って修正" }));
+    fireEvent.change(await screen.findByLabelText("コメント"), { target: { value: "post-back edit" } });
+
+    await waitFor(() => {
+      const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+      expect(raw).not.toBeNull();
+      expect(JSON.parse(raw as string).comment).toBe("post-back edit");
+    });
   });
 
   // Spec §27 Site-18 — site change updates subsequent draft siteId.

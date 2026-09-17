@@ -27,6 +27,7 @@ import { ReportEntryShell, type DraftNoticeState } from "./ReportEntryShell";
 import { createInitialReportDraft, type ReportDraft } from "./reportDraft";
 import { validateReportDraft } from "./reportValidation";
 import { IDLE_SUBMISSION_STATE, submitReportDraft, type SubmissionState } from "./submission";
+import { transitionWorkflow, type ReportWorkflowState } from "./reportWorkflow";
 import {
   clearDraft,
   decideDraftRestore,
@@ -55,6 +56,12 @@ type ScreenState =
       progressStatuses: ProgressStatus[];
       selectedSite: Site;
       draft: ReportDraft;
+      /** Phase 3 — DRAFT/CONFIRMING/SUBMITTED. Always "DRAFT" the moment
+       *  this variant is (re-)entered (single-site auto-advance, an
+       *  explicit site pick, a confirmed cross-site restore, or
+       *  handleCreateAnother's fresh start) — see docs/superpowers/specs/
+       *  2026-09-16-site-report-phase3-design.md §2. */
+      workflowState: ReportWorkflowState;
       /** Task 11 — result of the most recent submit attempt, or idle if
        *  none has happened yet for this draft/site selection. */
       submission: SubmissionState;
@@ -159,6 +166,7 @@ export function SiteReportScreen() {
             progressStatuses,
             selectedSite: sites[0],
             draft,
+            workflowState: "DRAFT",
             submission: IDLE_SUBMISSION_STATE,
             submitAttempted: false,
             draftNotice,
@@ -216,6 +224,7 @@ export function SiteReportScreen() {
         progressStatuses: prev.progressStatuses,
         selectedSite: site,
         draft,
+        workflowState: "DRAFT",
         submission: IDLE_SUBMISSION_STATE,
         submitAttempted: false,
         draftNotice,
@@ -291,28 +300,64 @@ export function SiteReportScreen() {
     });
   }, []);
 
-  // Task 11 §16 double-submit guard: checked directly against `state`
-  // (recreated fresh via `useCallback`'s `[state]` dependency every
-  // render), not a ref. This relies on React flushing the "submitting"
-  // state update — set synchronously, before the `await` below — for a
-  // discrete click event before the next discrete click event's handler
-  // runs, which is exactly what React 18's automatic batching/sync-lane
-  // handling of discrete user input (click) guarantees; verified directly
-  // by `SiteReportScreen.test.tsx`'s "calls submitReport only once for
-  // two rapid submit clicks" test (two `fireEvent.click` calls with no
-  // `await` between them).
+  // Phase 3 §8 — DRAFT's "内容を確認する" action: client-validate first
+  // (same Task 11 §13 behavior as the old direct-submit button — invalid
+  // draft never leaves DRAFT, submitAttempted flips true so ReportForm
+  // shows every error), then transition DRAFT -> CONFIRMING. Never calls
+  // submitReportDraft itself — that only happens from handleSubmit, now
+  // reachable only from the CONFIRMING screen.
+  const handleConfirm = useCallback(() => {
+    setState((prev) => {
+      if (prev.status !== "report-entry") {
+        return prev;
+      }
+      // Task 11 §13: sticky for the rest of this report-entry visit once
+      // set, same as the old direct-submit handler — set unconditionally
+      // so a later edit made back in DRAFT (e.g. after a failed submit)
+      // still shows its error immediately rather than waiting for blur.
+      const next = { ...prev, submitAttempted: true };
+      const validation = validateReportDraft(prev.draft);
+      if (!validation.valid) {
+        return next; // never transitions to CONFIRMING for an invalid draft.
+      }
+      return { ...next, workflowState: transitionWorkflow(prev.workflowState, { type: "CONFIRM" }) };
+    });
+  }, []);
+
+  // Phase 3 §9 — CONFIRMING's "戻って修正" action. The draft itself is
+  // never touched here (it was never mutated while CONFIRMING); autosave
+  // resumes on its own via the effect below once workflowState is DRAFT
+  // again.
+  const handleBack = useCallback(() => {
+    setState((prev) =>
+      prev.status === "report-entry"
+        ? { ...prev, workflowState: transitionWorkflow(prev.workflowState, { type: "BACK" }) }
+        : prev,
+    );
+  }, []);
+
+  // Task 11 §16 double-submit guard, extended by Phase 3 §10 to also
+  // require workflowState === "CONFIRMING" (the submit action no longer
+  // exists on the DRAFT screen at all — this is defense in depth, not a
+  // new mechanism). The `submission.status === "submitting"` half is
+  // checked directly against `state` (recreated fresh via `useCallback`'s
+  // `[state]` dependency every render), not a ref. This relies on React
+  // flushing the "submitting" state update — set synchronously, before the
+  // `await` below — for a discrete click event before the next discrete
+  // click event's handler runs, which is exactly what React 18's automatic
+  // batching/sync-lane handling of discrete user input (click) guarantees;
+  // verified directly by `SiteReportScreen.test.tsx`'s "calls submitReport
+  // only once for two rapid submit clicks" test (two `fireEvent.click`
+  // calls with no `await` between them).
   const handleSubmit = useCallback(async () => {
-    if (state.status !== "report-entry" || state.submission.status === "submitting") {
+    if (
+      state.status !== "report-entry" ||
+      state.workflowState !== "CONFIRMING" ||
+      state.submission.status === "submitting"
+    ) {
       return;
     }
     const { profile, selectedSite, draft } = state;
-
-    setState((prev) => (prev.status === "report-entry" ? { ...prev, submitAttempted: true } : prev));
-
-    const validation = validateReportDraft(draft);
-    if (!validation.valid) {
-      return; // Task 11 §13: never calls submitReportDraft for an invalid draft.
-    }
 
     setState((prev) =>
       prev.status === "report-entry" ? { ...prev, submission: { status: "submitting" } } : prev,
@@ -324,7 +369,21 @@ export function SiteReportScreen() {
       clearDraft();
     }
 
-    setState((prev) => (prev.status === "report-entry" ? { ...prev, submission: result } : prev));
+    // Phase 3 §10: success -> SUBMITTED; failure -> DRAFT, with `draft`
+    // and `submission` (now "error") both left exactly as `result`/the
+    // prior draft already have them — nothing is cleared on failure.
+    setState((prev) =>
+      prev.status === "report-entry"
+        ? {
+            ...prev,
+            submission: result,
+            workflowState: transitionWorkflow(
+              prev.workflowState,
+              result.status === "success" ? { type: "SUBMIT_SUCCESS" } : { type: "SUBMIT_FAILURE" },
+            ),
+          }
+        : prev,
+    );
   }, [state]);
 
   // Phase 2 spec §18 — debounced draft persistence. Skipped while a
@@ -342,9 +401,17 @@ export function SiteReportScreen() {
   // whole `state` (not just `state.draft`) is deliberate — every other
   // branch below is a no-op re-save of the same content when an unrelated
   // field changes, which is harmless since saveDraft is idempotent.
+  //
+  // Phase 3 spec §6 — also skipped whenever workflowState is not "DRAFT".
+  // The draft is frozen (uneditable) while CONFIRMING, so a skipped save
+  // here is never a missed edit; resuming is automatic (no separate
+  // "resume autosave" action) — this effect simply re-runs and saves again
+  // the next time workflowState is back to "DRAFT" (after BACK or a failed
+  // submit), the same way it already resumes after any other state change.
   useEffect(() => {
     if (
       state.status !== "report-entry" ||
+      state.workflowState !== "DRAFT" ||
       state.draftNotice.kind === "cross-site" ||
       state.submission.status === "success"
     ) {
@@ -367,6 +434,7 @@ export function SiteReportScreen() {
         ? {
             ...prev,
             draft: createInitialReportDraft(prev.profile),
+            workflowState: "DRAFT",
             submission: IDLE_SUBMISSION_STATE,
             submitAttempted: false,
             draftNotice: { kind: "none" },
@@ -385,6 +453,8 @@ export function SiteReportScreen() {
         handleSelectSite,
         handleChangeSite,
         handleDraftChange,
+        handleConfirm,
+        handleBack,
         handleSubmit,
         handleCreateAnother,
         handleRestoreCrossSiteDraft,
@@ -401,6 +471,8 @@ function renderBody(
   handleSelectSite: (site: Site) => void,
   handleChangeSite: () => void,
   handleDraftChange: (draft: ReportDraft) => void,
+  handleConfirm: () => void,
+  handleBack: () => void,
   handleSubmit: () => void,
   handleCreateAnother: () => void,
   handleRestoreCrossSiteDraft: () => void,
@@ -481,6 +553,9 @@ function renderBody(
           progressStatuses={state.progressStatuses}
           submission={state.submission}
           submitAttempted={state.submitAttempted}
+          workflowState={state.workflowState}
+          onConfirm={handleConfirm}
+          onBack={handleBack}
           onSubmit={handleSubmit}
           onCreateAnother={handleCreateAnother}
           onChangeSite={handleChangeSite}

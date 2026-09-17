@@ -3,6 +3,7 @@ import { ReportEntryShell } from "./ReportEntryShell";
 import type { ProgressStatus, Site, SubmitReportResponseData, WorkType } from "@/types/api";
 import type { ReportDraft, ReportDraftPhoto } from "./reportDraft";
 import { IDLE_SUBMISSION_STATE, type SubmissionState } from "./submission";
+import type { ReportWorkflowState } from "./reportWorkflow";
 import type { DraftNoticeState } from "./ReportEntryShell";
 
 // The real compressor uses FileReader/Image/canvas — jsdom has no native
@@ -75,6 +76,9 @@ function renderShell(overrides: {
   progressStatuses?: ProgressStatus[];
   submission?: SubmissionState;
   submitAttempted?: boolean;
+  workflowState?: ReportWorkflowState;
+  onConfirm?: () => void;
+  onBack?: () => void;
   onSubmit?: () => void;
   onCreateAnother?: () => void;
   onChangeSite?: () => void;
@@ -91,6 +95,9 @@ function renderShell(overrides: {
       progressStatuses={overrides.progressStatuses ?? PROGRESS_STATUSES}
       submission={overrides.submission ?? IDLE_SUBMISSION_STATE}
       submitAttempted={overrides.submitAttempted ?? false}
+      workflowState={overrides.workflowState ?? "DRAFT"}
+      onConfirm={overrides.onConfirm ?? (() => {})}
+      onBack={overrides.onBack ?? (() => {})}
       onSubmit={overrides.onSubmit ?? (() => {})}
       onCreateAnother={overrides.onCreateAnother ?? (() => {})}
       onChangeSite={overrides.onChangeSite ?? (() => {})}
@@ -122,34 +129,27 @@ describe("ReportEntryShell", () => {
     expect(screen.getByRole("option", { name: "進行中" })).toBeInTheDocument();
   });
 
-  // Task 11 — the submit control is now real: enabled while idle, so a
-  // click can trigger client-side validation and reveal field errors
-  // (Task 11 §13); it is no longer permanently disabled as it was in
-  // Task 8/9/10.
-  it("renders an enabled submit control while idle", () => {
+  // Phase 3 — DRAFT no longer submits directly; its bottom button opens
+  // the CONFIRMING review step instead (Task 11's direct-submit button is
+  // replaced, not removed — see the "workflow: CONFIRMING" describe block
+  // below for the actual submit action).
+  it("renders an enabled 内容を確認する control while idle", () => {
     renderShell();
 
-    const submitControl = screen.getByRole("button", { name: /送信/ });
-    expect(submitControl).not.toBeDisabled();
+    const confirmControl = screen.getByRole("button", { name: "内容を確認する" });
+    expect(confirmControl).not.toBeDisabled();
   });
 
-  it("calls onSubmit when the submit control is activated", () => {
-    const onSubmit = jest.fn();
-    renderShell({ onSubmit });
+  it("calls onConfirm when 内容を確認する is activated", () => {
+    const onConfirm = jest.fn();
+    renderShell({ onConfirm });
 
-    fireEvent.click(screen.getByRole("button", { name: /送信/ }));
+    fireEvent.click(screen.getByRole("button", { name: "内容を確認する" }));
 
-    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
-  it("disables the submit control and shows a loading indication while submitting", () => {
-    renderShell({ submission: { status: "submitting" } });
-
-    const submitControl = screen.getByRole("button", { name: /送信/ });
-    expect(submitControl).toBeDisabled();
-  });
-
-  it("shows a readable error message and keeps the draft's fields when submission fails", () => {
+  it("shows a readable error message and keeps the draft's fields when a submission has failed (back in DRAFT)", () => {
     renderShell({ submission: { status: "error", message: "The submitted report failed validation." } });
 
     expect(screen.getByRole("alert")).toHaveTextContent("The submitted report failed validation.");
@@ -172,7 +172,7 @@ describe("ReportEntryShell", () => {
 
     expect(screen.queryByLabelText(/作業種別/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText("写真を追加")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^レポートを送信$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "内容を確認する" })).not.toBeInTheDocument();
   });
 
   it("shows a create-another action after a successful submission", () => {
@@ -335,6 +335,57 @@ describe("ReportEntryShell — change site (Phase 1 P0)", () => {
 
   it("does not show the 現場を変更 button after a successful submission", () => {
     renderShell({ submission: { status: "success", result: SUCCESS_DATA } });
+
+    expect(screen.queryByRole("button", { name: "現場を変更" })).not.toBeInTheDocument();
+  });
+});
+
+// Phase 3 §5/§7 — while workflowState is CONFIRMING, ReportEntryShell
+// delegates entirely to the read-only ReportConfirmation view instead of
+// ReportForm/the photo pipeline.
+describe("ReportEntryShell — workflow: CONFIRMING", () => {
+  it("renders the read-only confirmation view instead of the editable form", () => {
+    renderShell({ workflowState: "CONFIRMING" });
+
+    expect(screen.getByText("報告内容の確認")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/作業種別/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("写真を追加")).not.toBeInTheDocument();
+  });
+
+  it("shows the draft's current values read-only", () => {
+    renderShell({ workflowState: "CONFIRMING" });
+
+    expect(screen.getByText("Taro Yamada")).toBeInTheDocument();
+    expect(screen.getByText("Shibuya Tower")).toBeInTheDocument();
+  });
+
+  it("calls onBack when 戻って修正 is activated", () => {
+    const onBack = jest.fn();
+    renderShell({ workflowState: "CONFIRMING", onBack });
+
+    fireEvent.click(screen.getByRole("button", { name: "戻って修正" }));
+
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onSubmit when この内容で送信 is activated", () => {
+    const onSubmit = jest.fn();
+    renderShell({ workflowState: "CONFIRMING", onSubmit });
+
+    fireEvent.click(screen.getByRole("button", { name: "この内容で送信" }));
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables both actions and shows 送信中... while submitting", () => {
+    renderShell({ workflowState: "CONFIRMING", submission: { status: "submitting" } });
+
+    expect(screen.getByRole("button", { name: "戻って修正" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "送信中..." })).toBeDisabled();
+  });
+
+  it("does not render the 現場を変更 button while confirming", () => {
+    renderShell({ workflowState: "CONFIRMING" });
 
     expect(screen.queryByRole("button", { name: "現場を変更" })).not.toBeInTheDocument();
   });

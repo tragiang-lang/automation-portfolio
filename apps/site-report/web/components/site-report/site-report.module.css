@@ -298,3 +298,38 @@
     border-color: #454545;
   }
 }
+
+/* Phase 3 — read-only confirmation-screen field rows. */
+.confirmRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.confirmLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #595959;
+}
+
+@media (prefers-color-scheme: dark) {
+  .confirmLabel {
+    color: #b3b3b3;
+  }
+}
+
+.confirmValue {
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+}
+
+.confirmActions > * {
+  flex: 1;
+}

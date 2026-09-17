@@ -2,9 +2,11 @@ import { useState } from "react";
 import type { ProgressStatus, Site, WorkType } from "@/types/api";
 import { addPhotosToDraft, removePhotoFromDraft, type ReportDraft } from "./reportDraft";
 import { ReportForm } from "./ReportForm";
+import { ReportConfirmation } from "./ReportConfirmation";
 import { PhotoUploader } from "./PhotoUploader";
 import { PhotoPreviewList } from "./PhotoPreviewList";
 import type { SubmissionState } from "./submission";
+import type { ReportWorkflowState } from "./reportWorkflow";
 import styles from "./site-report.module.css";
 
 /** Phase 2 spec §21 — what SiteReportScreen tells this shell to show
@@ -39,6 +41,21 @@ export type DraftNoticeState =
  * handled by `SiteReportScreen` — this component never resets state on
  * its own).
  *
+ * Phase 3 workflow (DRAFT/CONFIRMING/SUBMITTED, see docs/superpowers/specs/
+ * 2026-09-16-site-report-phase3-design.md): `workflowState` selects which
+ * of three mutually exclusive views renders — `submission.status ===
+ * "success"` (always paired with `SUBMITTED`) keeps the block above;
+ * `"CONFIRMING"` renders the read-only `ReportConfirmation` instead of
+ * `ReportForm`/the photo pipeline, with the former "レポートを送信" submit
+ * button's *action* (`onSubmit`) now living entirely inside that
+ * component; `"DRAFT"` (default) renders the editable form exactly as
+ * before, except its bottom button is now "内容を確認する" wired to
+ * `onConfirm` (client validation, then a DRAFT->CONFIRMING transition —
+ * both handled by `SiteReportScreen`, never here) rather than submitting
+ * directly. This component still does not import `submitReport`, LIFF, or
+ * any workflow-transition logic itself — `onConfirm`/`onBack`/`onSubmit`
+ * are plain callbacks.
+ *
  * 現場を変更 (Phase 1 P0): lets the user return to the site-selection
  * dropdown without abandoning the whole app. An untouched draft (never
  * given a work type, comment, or photo — the same shape
@@ -56,6 +73,9 @@ export function ReportEntryShell({
   progressStatuses,
   submission,
   submitAttempted,
+  workflowState,
+  onConfirm,
+  onBack,
   onSubmit,
   onCreateAnother,
   onChangeSite,
@@ -70,6 +90,14 @@ export function ReportEntryShell({
   progressStatuses: ProgressStatus[];
   submission: SubmissionState;
   submitAttempted: boolean;
+  /** Phase 3 — which of DRAFT/CONFIRMING/SUBMITTED to render. */
+  workflowState: ReportWorkflowState;
+  /** Phase 3 — DRAFT's "内容を確認する" action (validate, then transition
+   *  to CONFIRMING; both handled by the caller). */
+  onConfirm: () => void;
+  /** Phase 3 — CONFIRMING's "戻って修正" action (transition back to
+   *  DRAFT; the caller never resets the draft for this). */
+  onBack: () => void;
   onSubmit: () => void;
   onCreateAnother: () => void;
   onChangeSite: () => void;
@@ -120,6 +148,20 @@ export function ReportEntryShell({
   }
 
   const isSubmitting = submission.status === "submitting";
+
+  if (workflowState === "CONFIRMING") {
+    return (
+      <ReportConfirmation
+        site={selectedSite}
+        draft={draft}
+        workTypes={workTypes}
+        progressStatuses={progressStatuses}
+        isSubmitting={isSubmitting}
+        onBack={onBack}
+        onSubmit={onSubmit}
+      />
+    );
+  }
 
   return (
     <section aria-labelledby="report-entry-heading" className={styles.reportEntry}>
@@ -192,8 +234,8 @@ export function ReportEntryShell({
         </div>
       ) : null}
 
-      <button type="button" className={styles.button} onClick={onSubmit} disabled={isSubmitting}>
-        {isSubmitting ? "送信中..." : "レポートを送信"}
+      <button type="button" className={styles.button} onClick={onConfirm} disabled={isSubmitting}>
+        内容を確認する
       </button>
     </section>
   );
