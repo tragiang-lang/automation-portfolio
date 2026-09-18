@@ -28,6 +28,7 @@ export function HeroSection({
   subheadline,
   name,
   nameLatin,
+  primaryCtaLabel,
   heroVariant,
 }: HeroContentProps & {
   /**
@@ -41,5 +42,13 @@ export function HeroSection({
   const resolvedVariant = isHeroVariant(heroVariant) ? heroVariant : DEFAULT_HERO_VARIANT;
   const HeroVariantComponent = HERO_VARIANT_COMPONENTS[resolvedVariant];
 
-  return <HeroVariantComponent headline={headline} subheadline={subheadline} name={name} nameLatin={nameLatin} />;
+  return (
+    <HeroVariantComponent
+      headline={headline}
+      subheadline={subheadline}
+      name={name}
+      nameLatin={nameLatin}
+      primaryCtaLabel={primaryCtaLabel}
+    />
+  );
 }

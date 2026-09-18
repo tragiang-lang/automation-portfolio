@@ -58,4 +58,15 @@ describe("HeroSection", () => {
     expect(screen.queryByText(RUNTIME_CONTENT.name)).not.toBeInTheDocument();
     expect(screen.queryByText(RUNTIME_CONTENT.nameLatin)).not.toBeInTheDocument();
   });
+
+  it.each(["fullscreen", "split", "editorial"] as const)(
+    "uses primaryCtaLabel instead of a hard-coded term when provided (Starter MVP reusability, %s variant)",
+    (variant) => {
+      render(<HeroSection {...RUNTIME_CONTENT} heroVariant={variant} primaryCtaLabel="参加申込み" />);
+
+      const link = screen.getByRole("link", { name: "参加申込み" });
+      expect(link).toHaveAttribute("href", "/reservation");
+      expect(screen.queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
+    },
+  );
 });
