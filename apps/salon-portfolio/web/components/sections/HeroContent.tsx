@@ -69,4 +69,8 @@ export interface HeroContentProps {
   name: string;
   /** `siteConfig.business.nameLatin`. */
   nameLatin: string;
+  /** `siteConfig.labels.bookingCta` (Starter MVP reusability) — defaults
+   *  to `HERO_CTA_PRIMARY.label` ("ご予約はこちら") so every existing call
+   *  site (tests included) renders unchanged when omitted. */
+  primaryCtaLabel?: string;
 }

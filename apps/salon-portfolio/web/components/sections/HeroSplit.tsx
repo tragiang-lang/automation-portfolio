@@ -20,7 +20,13 @@ import type { HeroContentProps } from "./HeroContent";
  * purely from the existing `text-primary`/`text-secondary`/`bg-surface`
  * semantic tokens, same as every other non-Hero section.
  */
-export function HeroSplit({ headline, subheadline, name, nameLatin }: HeroContentProps) {
+export function HeroSplit({
+  headline,
+  subheadline,
+  name,
+  nameLatin,
+  primaryCtaLabel = HERO_CTA_PRIMARY.label,
+}: HeroContentProps) {
   return (
     <section data-testid="hero-split" className="bg-surface py-16 lg:py-24">
       <Container>
@@ -36,7 +42,7 @@ export function HeroSplit({ headline, subheadline, name, nameLatin }: HeroConten
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
               <Button href={HERO_CTA_PRIMARY.href} fullWidth className="sm:w-auto">
-                {HERO_CTA_PRIMARY.label}
+                {primaryCtaLabel}
               </Button>
               <Button href={HERO_CTA_SECONDARY.href} variant="text" className="text-accent sm:w-auto">
                 {HERO_CTA_SECONDARY.label}

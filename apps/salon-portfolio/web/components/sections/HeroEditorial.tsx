@@ -19,7 +19,13 @@ import type { HeroContentProps } from "./HeroContent";
  * No legibility scrim: like `HeroSplit`, the photo is never behind text,
  * so contrast is unaffected by theme choice.
  */
-export function HeroEditorial({ headline, subheadline, name, nameLatin }: HeroContentProps) {
+export function HeroEditorial({
+  headline,
+  subheadline,
+  name,
+  nameLatin,
+  primaryCtaLabel = HERO_CTA_PRIMARY.label,
+}: HeroContentProps) {
   return (
     <section data-testid="hero-editorial" className="bg-background py-20 lg:py-32">
       <Container>
@@ -60,7 +66,7 @@ export function HeroEditorial({ headline, subheadline, name, nameLatin }: HeroCo
           </p>
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center lg:justify-start">
             <Button href={HERO_CTA_PRIMARY.href} fullWidth className="sm:w-auto">
-              {HERO_CTA_PRIMARY.label}
+              {primaryCtaLabel}
             </Button>
             <Button href={HERO_CTA_SECONDARY.href} variant="text" className="text-accent sm:w-auto">
               {HERO_CTA_SECONDARY.label}

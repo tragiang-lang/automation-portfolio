@@ -41,6 +41,9 @@ const MENU_VARIANT_COMPONENTS: Record<MenuVariant, ComponentType<MenuContentProp
 export function MenuSection({
   services,
   menuVariant,
+  title = "メニュー",
+  subtitle = "施術時間は目安です。カウンセリングのお時間を含め、少し余裕を持ってご来店ください。",
+  ctaLabel = MENU_CTA.label,
 }: MenuContentProps & {
   /**
    * Optional and validated here (not trusted from the caller) so a
@@ -49,6 +52,13 @@ export function MenuSection({
    * existing deployment's current appearance (§13 backward compatibility).
    */
   menuVariant?: MenuVariant;
+  /** Business terminology (Starter MVP reusability — `siteConfig.labels.service`/
+   *  `siteConfig.content.serviceSubtitle`/`siteConfig.labels.bookingCta`).
+   *  Each defaults to the current salon copy so every existing call site
+   *  (tests included) renders unchanged when omitted. */
+  title?: string;
+  subtitle?: string;
+  ctaLabel?: string;
 }) {
   const resolvedVariant = isMenuVariant(menuVariant) ? menuVariant : DEFAULT_MENU_VARIANT;
   const MenuVariantComponent = MENU_VARIANT_COMPONENTS[resolvedVariant];
@@ -57,17 +67,13 @@ export function MenuSection({
     <section id="menu" className="bg-surface py-16 lg:py-24">
       <Container>
         <Reveal>
-          <SectionHeading
-            eyebrow="Menu"
-            title="メニュー"
-            subtitle="施術時間は目安です。カウンセリングのお時間を含め、少し余裕を持ってご来店ください。"
-          />
+          <SectionHeading eyebrow="Menu" title={title} subtitle={subtitle} />
         </Reveal>
         <Reveal delayMs={120} className="mt-12">
           <MenuVariantComponent services={services} />
         </Reveal>
         <div className="mt-12 flex justify-center">
-          <Button href={MENU_CTA.href}>{MENU_CTA.label}</Button>
+          <Button href={MENU_CTA.href}>{ctaLabel}</Button>
         </div>
       </Container>
     </section>

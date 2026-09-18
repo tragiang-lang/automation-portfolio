@@ -97,23 +97,29 @@ export default async function Home() {
     hero: (
       <HeroSection
         headline={siteConfig.business.tagline}
-        subheadline="銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。"
+        subheadline={siteConfig.content.heroSubheadline}
         name={siteConfig.business.name}
         nameLatin={siteConfig.business.nameLatin}
+        primaryCtaLabel={siteConfig.labels.bookingCta}
         heroVariant={heroVariant}
       />
     ),
     concept: sectionVisibility.concept ? (
       <ConceptSection
-        eyebrow="Concept"
-        title="静けさの中で、指先を整える時間を"
-        paragraphs={[
-          "流行を追いかけるより、長く付き合える美しさを。当店では、派手さよりも一つひとつの仕上がりの丁寧さを大切にしています。",
-          "落ち着いた空間で過ごすひとときそのものも、施術と同じくらい価値のあるものだと考えています。",
-        ]}
+        eyebrow={siteConfig.content.conceptEyebrow}
+        title={siteConfig.content.conceptTitle}
+        paragraphs={[siteConfig.content.conceptParagraph1, siteConfig.content.conceptParagraph2]}
       />
     ) : null,
-    menu: <MenuSection services={services} menuVariant={menuVariant} />,
+    menu: (
+      <MenuSection
+        services={services}
+        menuVariant={menuVariant}
+        title={siteConfig.labels.service}
+        subtitle={siteConfig.content.serviceSubtitle}
+        ctaLabel={siteConfig.labels.bookingCta}
+      />
+    ),
     staff: (
       <StaffSection
         enabled={siteConfig.features.staffSelection && sectionVisibility.staff}
@@ -128,8 +134,9 @@ export default async function Home() {
     ) : null,
     reservation: reservationEnabled ? (
       <ReservationCtaBand
-        heading="仕上がりを見て、気持ちが決まったら"
-        message="ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。"
+        heading={siteConfig.content.ctaHeading}
+        message={siteConfig.content.ctaMessage}
+        ctaLabel={siteConfig.labels.bookingCta}
       />
     ) : null,
     "salon-features": sectionVisibility["salon-features"] ? (
@@ -156,8 +163,9 @@ export default async function Home() {
 
       {reservationEnabled ? (
         <ReservationCtaBand
-          heading="最後まで読んでくださり、ありがとうございます"
-          message="少しでも気になることがあれば、まずはご予約からお気軽にどうぞ。"
+          heading={siteConfig.content.ctaClosingHeading}
+          message={siteConfig.content.ctaClosingMessage}
+          ctaLabel={siteConfig.labels.bookingCta}
         />
       ) : null}
     </main>

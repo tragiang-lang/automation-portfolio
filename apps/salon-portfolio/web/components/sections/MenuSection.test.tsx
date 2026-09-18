@@ -94,6 +94,21 @@ describe("MenuSection", () => {
     expect(screen.queryByText("丁寧なカウンセリングから仕上げまで。")).not.toBeInTheDocument();
   });
 
+  it("uses title/subtitle/ctaLabel props instead of hard-coded salon terminology when provided (Starter MVP reusability)", () => {
+    render(
+      <MenuSection
+        services={RUNTIME_SERVICES}
+        title="ワークショップ"
+        subtitle="開催時間は目安です。"
+        ctaLabel="参加申込み"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { level: 2, name: "ワークショップ" })).toBeInTheDocument();
+    expect(screen.getByText("開催時間は目安です。")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "参加申込み" })).toBeInTheDocument();
+  });
+
   it("groups editorial-list services by category once grouping threshold is exceeded (Phase 2A §9, reused unchanged)", () => {
     const grouped: Service[] = [
       ...Array.from({ length: 4 }, (_, i) =>

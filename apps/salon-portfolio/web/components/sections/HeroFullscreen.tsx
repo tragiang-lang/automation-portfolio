@@ -15,7 +15,7 @@ import type { HeroContentProps } from "./HeroContent";
  * compatibility requirement. `name`/`nameLatin` are intentionally unused:
  * the pre-Task-5 look never showed them, and this variant must not change.
  */
-export function HeroFullscreen({ headline, subheadline }: HeroContentProps) {
+export function HeroFullscreen({ headline, subheadline, primaryCtaLabel = HERO_CTA_PRIMARY.label }: HeroContentProps) {
   return (
     <section
       data-testid="hero-fullscreen"
@@ -71,7 +71,7 @@ export function HeroFullscreen({ headline, subheadline }: HeroContentProps) {
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
               <Button href={HERO_CTA_PRIMARY.href} fullWidth className="sm:w-auto">
-                {HERO_CTA_PRIMARY.label}
+                {primaryCtaLabel}
               </Button>
               <Button href={HERO_CTA_SECONDARY.href} variant="text" className="text-on-primary sm:w-auto">
                 {HERO_CTA_SECONDARY.label}

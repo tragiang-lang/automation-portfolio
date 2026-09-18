@@ -13,9 +13,14 @@ import { Button } from "@/components/ui/Button";
 export function ReservationCtaBand({
   heading,
   message,
+  ctaLabel = "ご予約はこちら",
 }: {
   heading: string;
   message: string;
+  /** Business terminology (Starter MVP reusability —
+   *  `siteConfig.labels.bookingCta`). Defaults to the current salon term
+   *  so every existing call site renders unchanged when omitted. */
+  ctaLabel?: string;
 }) {
   return (
     <section className="bg-surface-sunken py-16 lg:py-24">
@@ -24,7 +29,7 @@ export function ReservationCtaBand({
           {heading}
         </h2>
         <p className="max-w-[48ch] text-[16px] leading-[1.7] text-secondary">{message}</p>
-        <Button href="/reservation">ご予約はこちら</Button>
+        <Button href="/reservation">{ctaLabel}</Button>
       </Container>
     </section>
   );
