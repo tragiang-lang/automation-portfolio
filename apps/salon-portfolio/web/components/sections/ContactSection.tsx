@@ -8,7 +8,15 @@ import type { BusinessInfo } from "@/types/content";
  * Contact (Phase 2A §6/§15) — non-reservation inquiries, gated by
  * `features.contactForm` in the composition root (`app/page.tsx`).
  */
-export function ContactSection({ business }: { business: BusinessInfo }) {
+export function ContactSection({
+  business,
+  messageLabel,
+}: {
+  business: BusinessInfo;
+  /** `siteConfig.labels.inquiryMessage` (Starter MVP reusability) —
+   *  defaults to `ContactForm`'s own "お問い合わせ内容" when omitted. */
+  messageLabel?: string;
+}) {
   return (
     <section id="contact" className="bg-surface py-16 lg:py-24">
       <Container narrow>
@@ -20,7 +28,7 @@ export function ContactSection({ business }: { business: BusinessInfo }) {
           />
         </Reveal>
         <Reveal delayMs={120} className="mt-12">
-          <ContactForm />
+          <ContactForm messageLabel={messageLabel} />
         </Reveal>
       </Container>
     </section>

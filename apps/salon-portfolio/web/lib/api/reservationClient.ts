@@ -8,6 +8,7 @@ import {
   ReservationSubmissionResult,
   ReservationSubmissionSuccess,
 } from "@/types/reservation";
+import { callGasApiAction as callAction } from "@/lib/api/apiActionClient";
 
 /**
  * Client-safe wrapper for every browser-initiated GAS action this
@@ -15,37 +16,12 @@ import {
  * `app/api/gas/route.ts`) — this file may be imported from a Client
  * Component; it never touches `GAS_WEBAPP_URL` directly (that stays inside
  * the server-only `lib/api/gasClient.ts`, reached only via the Next.js
- * route handler). `callAction` is the one shared "POST an action, parse
- * the envelope" primitive every exported function below builds on — added
- * in Phase 5 alongside `getServices`/`getStaff`/`getAvailability`;
- * `submitReservation` (Phase 4) is reimplemented on top of it with an
- * unchanged external signature and JSON request body.
+ * route handler). `callAction` (`lib/api/apiActionClient.ts`'s
+ * `callGasApiAction`) is the one shared "POST an action, parse the
+ * envelope" primitive every exported function below builds on — extracted
+ * to its own module when `inquiryClient.ts` needed the identical
+ * primitive (Starter MVP reusability).
  */
-async function callAction<T>(action: string, payload?: unknown): Promise<ApiActionResult<T>> {
-  let response: Response;
-  try {
-    response = await fetch("/api/gas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: payload === undefined ? JSON.stringify({ action }) : JSON.stringify({ action, payload }),
-    });
-  } catch {
-    return { ok: false, error: { code: "NETWORK_ERROR", message: "サーバーに接続できませんでした。" } };
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = await response.json();
-  } catch {
-    return { ok: false, error: { code: "INVALID_RESPONSE", message: "サーバーからの応答を処理できませんでした。" } };
-  }
-
-  if (typeof parsed !== "object" || parsed === null || typeof (parsed as { ok?: unknown }).ok !== "boolean") {
-    return { ok: false, error: { code: "INVALID_RESPONSE", message: "サーバーからの応答を処理できませんでした。" } };
-  }
-
-  return parsed as ApiActionResult<T>;
-}
 
 /** Building an actual reservation form/wizard UI around this function was
  *  out of scope for Phase 4 — Phase 5 is exactly that UI. */

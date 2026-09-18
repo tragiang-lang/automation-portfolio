@@ -5,13 +5,15 @@ import { FormField } from "@/components/forms/FormField";
 import { HoneypotField } from "@/components/forms/HoneypotField";
 import { Button } from "@/components/ui/Button";
 import type { ContactFormValues } from "@/types/content";
+import { submitInquiry } from "@/lib/api/inquiryClient";
+import { generateSubmissionId } from "@/lib/utils/id";
 
 type FieldErrors = Partial<Record<keyof ContactFormValues, string>>;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_FILL_TIME_MS = 1500;
 
-function validate(values: ContactFormValues): FieldErrors {
+function validate(values: ContactFormValues, messageLabel: string): FieldErrors {
   const errors: FieldErrors = {};
   if (!values.name.trim()) errors.name = "お名前を入力してください。";
   if (!values.email.trim()) {
@@ -19,7 +21,7 @@ function validate(values: ContactFormValues): FieldErrors {
   } else if (!EMAIL_PATTERN.test(values.email)) {
     errors.email = "メールアドレスの形式が正しくありません。";
   }
-  if (!values.message.trim()) errors.message = "お問い合わせ内容を入力してください。";
+  if (!values.message.trim()) errors.message = `${messageLabel}を入力してください。`;
   if (!values.consent) errors.consent = "プライバシーポリシーへの同意が必要です。";
   return errors;
 }
@@ -35,14 +37,16 @@ const initialValues: ContactFormValues = {
 /**
  * Contact form UI (Phase 2A §15) — field order matches `ContactRequest`
  * (Phase 0 §F): name, email, phone (optional), message, then submit.
- * No real submission endpoint yet (Phase 2B scope): submit simulates the
- * loading → success flow so the UX is demonstrable without a backend.
+ * Submits to GAS via `submitInquiry` (`/api/gas` -> `createInquiry`),
+ * the same proven architecture the booking wizard already uses (Starter
+ * MVP §5 — not a Google Form).
  */
-export function ContactForm() {
+export function ContactForm({ messageLabel = "お問い合わせ内容" }: { messageLabel?: string } = {}) {
   const [values, setValues] = useState<ContactFormValues>(initialValues);
   const [touched, setTouched] = useState<Partial<Record<keyof ContactFormValues, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [honeypot, setHoneypot] = useState("");
   // `Date.now()` is impure, so it can't be called during render (as a
   // useRef initializer would be) — it's read once in an effect after
@@ -55,7 +59,7 @@ export function ContactForm() {
     mountedAt.current = Date.now();
   }, []);
 
-  const errors = validate(values);
+  const errors = validate(values, messageLabel);
 
   function handleChange<K extends keyof ContactFormValues>(key: K, value: ContactFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -65,16 +69,14 @@ export function ContactForm() {
     setTouched((prev) => ({ ...prev, [key]: true }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setTouched({ name: true, email: true, phone: true, message: true, consent: true });
 
     if (Object.keys(errors).length > 0) return;
 
     // Anti-spam checks (Phase 0 §P) — silently no-op rather than telling a
-    // bot why it failed. A real submission (createInquiry) is out of
-    // scope for Phase 2B; this only demonstrates the UI's loading/success
-    // states.
+    // bot why it failed, and never sent to the server.
     const filledTooFast =
       mountedAt.current !== null && Date.now() - mountedAt.current < MIN_FILL_TIME_MS;
     if (honeypot.trim().length > 0 || filledTooFast) {
@@ -83,10 +85,20 @@ export function ContactForm() {
     }
 
     setSubmitting(true);
-    window.setTimeout(() => {
-      setSubmitting(false);
+    setSubmitError(null);
+    const result = await submitInquiry({
+      submissionId: generateSubmissionId(),
+      name: values.name,
+      email: values.email,
+      phone: values.phone.trim() || undefined,
+      message: values.message,
+    });
+    setSubmitting(false);
+    if (result.ok) {
       setSubmitted(true);
-    }, 800);
+    } else {
+      setSubmitError(result.error.message);
+    }
   }
 
   if (submitted) {
@@ -143,7 +155,7 @@ export function ContactForm() {
       />
       <FormField
         id="contact-message"
-        label="お問い合わせ内容"
+        label={messageLabel}
         as="textarea"
         required
         value={values.message}
@@ -173,6 +185,12 @@ export function ContactForm() {
           {touched.consent ? errors.consent : ""}
         </p>
       </div>
+
+      {submitError ? (
+        <p role="alert" aria-live="polite" className="text-[14px] text-error">
+          {submitError}
+        </p>
+      ) : null}
 
       <Button type="submit" fullWidth disabled={submitting}>
         {submitting ? "送信中..." : "送信する"}
