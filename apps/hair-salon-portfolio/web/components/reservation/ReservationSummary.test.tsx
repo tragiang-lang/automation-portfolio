@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ReservationSummary } from "./ReservationSummary";
 
-const service = { serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 };
+const service = { serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 };
 const customer = { name: "山田太郎", email: "yamada@example.com", phone: "09012345678", notes: "" };
 
 describe("ReservationSummary", () => {
@@ -19,7 +19,7 @@ describe("ReservationSummary", () => {
         confirming={false}
       />,
     );
-    expect(screen.getByText("まつげパーマ")).toBeInTheDocument();
+    expect(screen.getByText("カット")).toBeInTheDocument();
     expect(screen.getByText("60分")).toBeInTheDocument();
     expect(screen.getByText("¥6,600")).toBeInTheDocument();
     expect(screen.getByText("指名なし（お任せ）")).toBeInTheDocument();

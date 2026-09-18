@@ -112,17 +112,17 @@ describe("MenuSection", () => {
   it("groups editorial-list services by category once grouping threshold is exceeded (Phase 2A §9, reused unchanged)", () => {
     const grouped: Service[] = [
       ...Array.from({ length: 4 }, (_, i) =>
-        makeService({ serviceId: `A${i}`, name: `ジェルA${i}`, category: "ジェルネイル" }),
+        makeService({ serviceId: `A${i}`, name: `カットA${i}`, category: "カラー" }),
       ),
       ...Array.from({ length: 4 }, (_, i) =>
-        makeService({ serviceId: `B${i}`, name: `まつげB${i}`, category: "まつげエクステ" }),
+        makeService({ serviceId: `B${i}`, name: `カラーB${i}`, category: "パーマ" }),
       ),
     ];
 
     render(<MenuSection services={grouped} menuVariant="editorial-list" />);
 
-    expect(screen.getByText("ジェルネイル")).toBeInTheDocument();
-    expect(screen.getByText("まつげエクステ")).toBeInTheDocument();
+    expect(screen.getByText("カラー")).toBeInTheDocument();
+    expect(screen.getByText("パーマ")).toBeInTheDocument();
   });
 
   it("shows each service's category as a per-card label in card-grid, independent of the grouping threshold", () => {
@@ -142,18 +142,18 @@ describe("MenuSection", () => {
   it("renders minimal-price-list as a compact, distinct composition from editorial-list (no category grouping)", () => {
     const grouped: Service[] = [
       ...Array.from({ length: 4 }, (_, i) =>
-        makeService({ serviceId: `A${i}`, name: `ジェルA${i}`, category: "ジェルネイル" }),
+        makeService({ serviceId: `A${i}`, name: `カットA${i}`, category: "カラー" }),
       ),
       ...Array.from({ length: 4 }, (_, i) =>
-        makeService({ serviceId: `B${i}`, name: `まつげB${i}`, category: "まつげエクステ" }),
+        makeService({ serviceId: `B${i}`, name: `カラーB${i}`, category: "パーマ" }),
       ),
     ];
 
     render(<MenuSection services={grouped} menuVariant="minimal-price-list" />);
 
     // Every service name/price still renders...
-    expect(screen.getByText("ジェルA0")).toBeInTheDocument();
+    expect(screen.getByText("カットA0")).toBeInTheDocument();
     // ...but minimal-price-list never renders a category-group heading, unlike editorial-list.
-    expect(screen.queryByText("ジェルネイル")).not.toBeInTheDocument();
+    expect(screen.queryByText("カラー")).not.toBeInTheDocument();
   });
 });

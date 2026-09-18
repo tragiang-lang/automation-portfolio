@@ -2,10 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { HeroSection } from "./HeroSection";
 
 const RUNTIME_CONTENT = {
-  headline: "静けさの中で、指先を整える時間を",
+  headline: "自然体の美しさを引き出す、静かなヘアサロン。",
   subheadline: "テスト用の説明文です。",
-  name: "凛 銀座店",
-  nameLatin: "Rin Ginza",
+  name: "アトリエ イト 神宮前店",
+  nameLatin: "atelier ito Jingumae",
 };
 
 describe("HeroSection", () => {
@@ -34,7 +34,7 @@ describe("HeroSection", () => {
     // Exactly one h1 per variant — heading hierarchy stays valid.
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     // Reservation CTA remains a real link, not a styled div.
-    const reservationLink = screen.getByRole("link", { name: "ご予約はこちら" });
+    const reservationLink = screen.getByRole("link", { name: "予約する" });
     expect(reservationLink).toHaveAttribute("href", "/reservation");
   });
 
@@ -66,7 +66,7 @@ describe("HeroSection", () => {
 
       const link = screen.getByRole("link", { name: "参加申込み" });
       expect(link).toHaveAttribute("href", "/reservation");
-      expect(screen.queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "予約する" })).not.toBeInTheDocument();
     },
   );
 });

@@ -26,20 +26,20 @@ describe("groupServices", () => {
 
   it("groups by category once there are more than 6 services with more than one category", () => {
     const services = [
-      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `A${i}`, category: "ジェルネイル" })),
-      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `B${i}`, category: "まつげエクステ" })),
+      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `A${i}`, category: "カラー" })),
+      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `B${i}`, category: "パーマ" })),
     ];
 
     const groups = groupServices(services);
 
-    expect(groups.map((g) => g.category)).toEqual(["ジェルネイル", "まつげエクステ"]);
+    expect(groups.map((g) => g.category)).toEqual(["カラー", "パーマ"]);
     expect(groups[0].services).toHaveLength(4);
     expect(groups[1].services).toHaveLength(4);
   });
 
   it("does not group when every service shares the same single category, even above the threshold", () => {
     const services = Array.from({ length: 8 }, (_, i) =>
-      makeService({ serviceId: `SV${i}`, category: "ジェルネイル" }),
+      makeService({ serviceId: `SV${i}`, category: "カラー" }),
     );
 
     const groups = groupServices(services);

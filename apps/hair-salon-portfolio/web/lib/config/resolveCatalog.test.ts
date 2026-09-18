@@ -5,24 +5,24 @@ describe("mapPublicServiceToService", () => {
   it("carries serviceId/name/durationMinutes/price through unchanged", () => {
     const input: PublicService = {
       serviceId: "SV001",
-      name: "ジェルネイル",
+      name: "カラー",
       durationMinutes: 60,
       price: 6000,
       displayOrder: 1,
     };
     expect(mapPublicServiceToService(input)).toEqual({
       serviceId: "SV001",
-      name: "ジェルネイル",
+      name: "カラー",
       durationMinutes: 60,
       price: 6000,
     });
   });
 
   it("passes description/category through when the wire payload has them (V1.1 Task 4)", () => {
-    const input: PublicService = { serviceId: "SV001", name: "x", durationMinutes: 1, price: 1, displayOrder: 1, description: "説明", category: "ネイル" };
+    const input: PublicService = { serviceId: "SV001", name: "x", durationMinutes: 1, price: 1, displayOrder: 1, description: "説明", category: "カラー" };
     const result = mapPublicServiceToService(input);
     expect(result.description).toBe("説明");
-    expect(result.category).toBe("ネイル");
+    expect(result.category).toBe("カラー");
   });
 
   it("leaves description/category undefined when the wire payload has none (never invents content)", () => {

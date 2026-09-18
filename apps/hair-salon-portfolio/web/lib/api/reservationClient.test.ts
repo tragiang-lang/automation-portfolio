@@ -67,7 +67,7 @@ describe("getServices", () => {
   it("POSTs the getServices action with no payload", async () => {
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ ok: true, data: [{ serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 }] }),
+      json: async () => ({ ok: true, data: [{ serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 }] }),
     });
     global.fetch = fetchMock as unknown as typeof fetch;
 
@@ -77,7 +77,7 @@ describe("getServices", () => {
       "/api/gas",
       expect.objectContaining({ method: "POST", body: JSON.stringify({ action: "getServices" }) }),
     );
-    expect(result).toEqual({ ok: true, data: [{ serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 }] });
+    expect(result).toEqual({ ok: true, data: [{ serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 }] });
   });
 
   it("returns a controlled NETWORK_ERROR when fetch throws", async () => {

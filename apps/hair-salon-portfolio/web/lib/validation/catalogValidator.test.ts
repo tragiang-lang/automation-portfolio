@@ -3,8 +3,8 @@ import { parsePublicServices, parsePublicStaff } from "./catalogValidator";
 describe("parsePublicServices", () => {
   it("returns the array unchanged when every item has the expected shape", () => {
     const input = [
-      { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000, displayOrder: 1 },
-      { serviceId: "SV002", name: "フットジェル", durationMinutes: 90, price: 8000, displayOrder: 2 },
+      { serviceId: "SV001", name: "カラー", durationMinutes: 60, price: 6000, displayOrder: 1 },
+      { serviceId: "SV002", name: "トリートメント", durationMinutes: 90, price: 8000, displayOrder: 2 },
     ];
     expect(parsePublicServices(input)).toEqual(input);
   });
@@ -14,11 +14,11 @@ describe("parsePublicServices", () => {
   });
 
   it("returns null when an item is missing a required field", () => {
-    expect(parsePublicServices([{ serviceId: "SV001", name: "ジェルネイル" }])).toBeNull();
+    expect(parsePublicServices([{ serviceId: "SV001", name: "カラー" }])).toBeNull();
   });
 
   it("returns null when a numeric field has the wrong type", () => {
-    const input = [{ serviceId: "SV001", name: "ジェルネイル", durationMinutes: "60", price: 6000, displayOrder: 1 }];
+    const input = [{ serviceId: "SV001", name: "カラー", durationMinutes: "60", price: 6000, displayOrder: 1 }];
     expect(parsePublicServices(input)).toBeNull();
   });
 
@@ -49,7 +49,7 @@ describe("parsePublicStaff", () => {
 describe("parsePublicServices optional presentation fields (V1.1 Task 4)", () => {
   it("passes through description/category when present", () => {
     const input = [
-      { serviceId: "SV001", name: "x", durationMinutes: 60, price: 6000, displayOrder: 1, description: "説明", category: "ネイル" },
+      { serviceId: "SV001", name: "x", durationMinutes: 60, price: 6000, displayOrder: 1, description: "説明", category: "カラー" },
     ];
     expect(parsePublicServices(input)).toEqual(input);
   });

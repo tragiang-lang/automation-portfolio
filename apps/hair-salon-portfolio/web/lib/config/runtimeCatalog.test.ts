@@ -10,7 +10,7 @@ const mockedCallGasAction = callGasAction as jest.Mock;
 const ORIGINAL_ENV = process.env;
 
 const RUNTIME_SERVICES = [
-  { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000, displayOrder: 1 },
+  { serviceId: "SV001", name: "カラー", durationMinutes: 60, price: 6000, displayOrder: 1 },
 ];
 const RUNTIME_STAFF = [{ staffId: "ST001", name: "田中 あい", displayOrder: 1 }];
 
@@ -47,7 +47,7 @@ describe("loadRuntimeCatalog", () => {
 
     expect(result.status).toBe("runtime");
     expect(result.services).toEqual([
-      { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000 },
+      { serviceId: "SV001", name: "カラー", durationMinutes: 60, price: 6000 },
     ]);
     expect(result.staff).toEqual([{ staffId: "ST001", name: "田中 あい" }]);
   });

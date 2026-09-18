@@ -29,7 +29,7 @@ describe("StaffPhotoFallback", () => {
 
   it("marks the tile as decorative (aria-hidden) — the sibling name text carries the identity", () => {
     const { container } = render(
-      <StaffPhotoFallback initial="凛" aspectRatio="800 / 1000" textClassName="text-[56px]" />,
+      <StaffPhotoFallback initial="ア" aspectRatio="800 / 1000" textClassName="text-[56px]" />,
     );
     expect(container.querySelector("[aria-hidden='true']")).toBeInTheDocument();
   });

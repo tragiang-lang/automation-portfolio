@@ -3,9 +3,9 @@ import { ContactSection } from "./ContactSection";
 import type { BusinessInfo } from "@/types/content";
 
 const business: BusinessInfo = {
-  name: "凛",
-  nameLatin: "Rin",
-  tagline: "静けさの中で。",
+  name: "アトリエ イト",
+  nameLatin: "atelier ito",
+  tagline: "髪と向き合う、静かな時間。",
   phone: "03-1234-5678",
   email: "info@example.com",
   address: "東京都",

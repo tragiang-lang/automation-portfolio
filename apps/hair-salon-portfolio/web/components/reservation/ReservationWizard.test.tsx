@@ -13,7 +13,7 @@ jest.mock("../../lib/api/reservationClient");
 function mockHappyPath() {
   (reservationClient.getServices as jest.Mock).mockResolvedValue({
     ok: true,
-    data: [{ serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 }],
+    data: [{ serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 }],
   });
   (reservationClient.getStaff as jest.Mock).mockResolvedValue({ ok: true, data: [] });
   (reservationClient.getAvailability as jest.Mock).mockResolvedValue({
@@ -38,8 +38,8 @@ describe("ReservationWizard", () => {
     mockHappyPath();
     render(<ReservationWizard minDate="2026-09-02" maxDate="2026-11-01" />);
 
-    await waitFor(() => expect(screen.getByRole("radio", { name: /まつげパーマ/ })).toBeInTheDocument());
-    await userEvent.click(screen.getByRole("radio", { name: /まつげパーマ/ }));
+    await waitFor(() => expect(screen.getByRole("radio", { name: /カット/ })).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("radio", { name: /カット/ }));
     await userEvent.click(screen.getByRole("button", { name: "次へ" }));
 
     // staff step is skipped (getStaff returned []) — straight to date/time
@@ -68,8 +68,8 @@ describe("ReservationWizard", () => {
     });
     render(<ReservationWizard minDate="2026-09-02" maxDate="2026-11-01" />);
 
-    await waitFor(() => expect(screen.getByRole("radio", { name: /まつげパーマ/ })).toBeInTheDocument());
-    await userEvent.click(screen.getByRole("radio", { name: /まつげパーマ/ }));
+    await waitFor(() => expect(screen.getByRole("radio", { name: /カット/ })).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("radio", { name: /カット/ }));
     await userEvent.click(screen.getByRole("button", { name: "次へ" }));
     await userEvent.type(await screen.findByLabelText("日付"), "2026-09-10");
     await waitFor(() => expect(screen.getByRole("button", { name: "10:00" })).toBeInTheDocument());
@@ -90,8 +90,8 @@ describe("ReservationWizard", () => {
     (reservationClient.submitReservation as jest.Mock).mockReturnValue(new Promise((resolve) => { resolveSubmit = resolve; }));
     render(<ReservationWizard minDate="2026-09-02" maxDate="2026-11-01" />);
 
-    await waitFor(() => expect(screen.getByRole("radio", { name: /まつげパーマ/ })).toBeInTheDocument());
-    await userEvent.click(screen.getByRole("radio", { name: /まつげパーマ/ }));
+    await waitFor(() => expect(screen.getByRole("radio", { name: /カット/ })).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("radio", { name: /カット/ }));
     await userEvent.click(screen.getByRole("button", { name: "次へ" }));
     await userEvent.type(await screen.findByLabelText("日付"), "2026-09-10");
     await waitFor(() => expect(screen.getByRole("button", { name: "10:00" })).toBeInTheDocument());

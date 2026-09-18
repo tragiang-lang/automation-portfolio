@@ -5,7 +5,7 @@ import { useReservationWizard } from "./useReservationWizard";
 import * as reservationClient from "@/lib/api/reservationClient";
 import { ANY_STAFF } from "@/types/reservation";
 
-const services = [{ serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 }];
+const services = [{ serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 }];
 const staff = [{ staffId: "ST001", name: "鈴木", displayOrder: 1 }];
 
 function mockCatalog(overrides: Partial<{ servicesOk: boolean; staffOk: boolean; staffList: typeof staff }> = {}) {

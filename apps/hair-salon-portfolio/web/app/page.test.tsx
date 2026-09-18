@@ -38,7 +38,7 @@ describe("Home", () => {
   it("renders every section with the default design config, unchanged from before this task", async () => {
     render(await Home());
 
-    expect(screen.getByRole("heading", { name: "静けさの中で、指先を整える時間を" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "自然体の美しさを引き出す、静かなヘアサロン。" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "スタッフ紹介" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "ギャラリー" })).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { name: "よくあるご質問" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "アクセス" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "お問い合わせ" })).toBeInTheDocument();
-    expect(screen.getAllByText("ご予約はこちら").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("予約する").length).toBeGreaterThanOrEqual(2);
   });
 
   it("renders every section under a non-default theme preset (Theme Presets task — theme selection is CSS-only, never gates rendering)", async () => {
@@ -55,7 +55,7 @@ describe("Home", () => {
 
     render(await Home());
 
-    expect(screen.getByRole("heading", { name: "静けさの中で、指先を整える時間を" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "自然体の美しさを引き出す、静かなヘアサロン。" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "スタッフ紹介" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "ギャラリー" })).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe("Home", () => {
 
     render(await Home());
 
-    expect(screen.getByRole("heading", { name: "静けさの中で、指先を整える時間を" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "自然体の美しさを引き出す、静かなヘアサロン。" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "スタッフ紹介" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "ギャラリー" })).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe("Home", () => {
     render(await Home());
 
     expect(
-      screen.queryByRole("heading", { name: "静けさの中で、指先を整える時間を" }),
+      screen.queryByRole("heading", { name: "自然体の美しさを引き出す、静かなヘアサロン。" }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
   });
@@ -106,7 +106,7 @@ describe("Home", () => {
     render(await Home());
 
     expect(screen.queryByRole("heading", { name: "スタッフ紹介" })).not.toBeInTheDocument();
-    expect(screen.queryByText("仕上がりを見て、気持ちが決まったら")).not.toBeInTheDocument();
+    expect(screen.queryByText("スタイルのイメージが決まったら")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "お問い合わせ" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
   });
@@ -130,7 +130,7 @@ describe("Home", () => {
     render(await Home());
 
     expect(screen.queryByRole("heading", { name: "スタッフ紹介" })).not.toBeInTheDocument();
-    expect(screen.queryByText("仕上がりを見て、気持ちが決まったら")).not.toBeInTheDocument();
+    expect(screen.queryByText("スタイルのイメージが決まったら")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "お問い合わせ" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
   });
@@ -150,12 +150,12 @@ describe("Home", () => {
  * `sectionHeadingElement` below); lookup uses heading level 1 instead.
  */
 const SECTION_MARKERS: Record<(typeof ALL_HOME_SECTIONS)[number], string> = {
-  hero: "静けさの中で、指先とまなざしを整える。",
-  concept: "静けさの中で、指先を整える時間を",
+  hero: "髪と向き合う、静かな時間。",
+  concept: "自然体の美しさを引き出す、静かなヘアサロン。",
   menu: "メニュー",
   staff: "スタッフ紹介",
   gallery: "ギャラリー",
-  reservation: "仕上がりを見て、気持ちが決まったら",
+  reservation: "スタイルのイメージが決まったら",
   "salon-features": "サロンについて",
   "customer-flow": "ご来店の流れ",
   faq: "よくあるご質問",
@@ -258,7 +258,7 @@ describe("Home — section ordering (V1.1 Task 9)", () => {
 
     render(await Home());
 
-    expect(screen.queryByText("仕上がりを見て、気持ちが決まったら")).not.toBeInTheDocument();
+    expect(screen.queryByText("スタイルのイメージが決まったら")).not.toBeInTheDocument();
     expect(screen.queryByText(CLOSING_RESERVATION_CTA_TEXT)).not.toBeInTheDocument();
   });
 });

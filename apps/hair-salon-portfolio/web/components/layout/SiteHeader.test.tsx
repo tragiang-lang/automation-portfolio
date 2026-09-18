@@ -8,13 +8,13 @@ jest.mock("next/navigation", () => ({
 }));
 
 const business: BusinessInfo = {
-  name: "凛",
-  nameLatin: "Rin Nail & Eyelash",
-  tagline: "静けさの中で、指先とまなざしを整える。",
-  phone: "03-1234-5678",
-  email: "info@example.com",
-  address: "東京都中央区銀座1-2-3",
-  postalCode: "〒104-0061",
+  name: "アトリエ イト",
+  nameLatin: "atelier ito",
+  tagline: "髪と向き合う、静かな時間。",
+  phone: "03-2345-6789",
+  email: "info@atelier-ito.example.com",
+  address: "東京都渋谷区神宮前3-4-5",
+  postalCode: "〒150-0001",
 };
 
 const navItems: NavItem[] = [
