@@ -10,7 +10,7 @@ import {
 } from "@/lib/validation/designConfigValidator";
 import type { DesignConfig, DesignPreset } from "@/types/design-config";
 
-const ALL_PRESET_IDS: DesignPreset[] = ["kinari", "femme", "noir", "editorial", "natural", "modern"];
+const ALL_PRESET_IDS: Exclude<DesignPreset, "starter">[] = ["kinari", "femme", "noir", "editorial", "natural", "modern"];
 
 describe("DEFAULT_DESIGN_CONFIG", () => {
   it("matches the current shipped Kinari look, untouched by this task", () => {
@@ -32,7 +32,12 @@ describe("DEFAULT_DESIGN_CONFIG", () => {
 
 describe("DESIGN_PRESETS", () => {
   it("has exactly one registry entry per DesignPreset value", () => {
-    expect(Object.keys(DESIGN_PRESETS).sort()).toEqual([...ALL_PRESET_IDS].sort());
+    // "starter" (Starter MVP reusability) is additive and deliberately
+    // excluded from ALL_PRESET_IDS/TARGET_MATRIX below — it doesn't follow
+    // the "theme/typography match preset id" invariant those loops check
+    // (it reuses Kinari's), so it gets its own dedicated describe block
+    // instead of being swept into the six-preset generic assertions.
+    expect(Object.keys(DESIGN_PRESETS).sort()).toEqual([...ALL_PRESET_IDS, "starter"].sort());
   });
 
   it("tags every entry with its own preset id", () => {
@@ -82,7 +87,7 @@ describe("DESIGN_PRESETS", () => {
 // task brief for the target matrix this section verifies.
 describe("V1.1 Task 10 — curated preset compositions", () => {
   const TARGET_MATRIX: Record<
-    DesignPreset,
+    Exclude<DesignPreset, "starter">,
     Pick<DesignConfig, "heroVariant" | "menuVariant" | "staffVariant" | "galleryVariant"> & {
       sectionOrder: DesignConfig["sectionOrder"];
     }
@@ -288,5 +293,53 @@ describe("V1.1 Task 10 — curated preset compositions", () => {
       expect(serialized).not.toMatch(/https?:\/\//);
       expect(serialized).not.toMatch(/¥|円/);
     });
+  });
+});
+
+describe("starter preset (Starter MVP reusability)", () => {
+  it("tags itself with its own preset id but reuses Kinari's theme/typography, not its own", () => {
+    const preset = DESIGN_PRESETS.starter;
+    expect(preset.preset).toBe("starter");
+    expect(preset.theme).toBe("kinari");
+    expect(preset.typography).toBe("kinari");
+  });
+
+  it("shows only the Starter MVP's core sections (hero/menu are always-required; reservation/contact stay visible)", () => {
+    const visibility = DESIGN_PRESETS.starter.sectionVisibility;
+    expect(visibility.reservation).toBe(true);
+    expect(visibility.contact).toBe(true);
+  });
+
+  it("hides every salon-flavored extra section by default", () => {
+    const visibility = DESIGN_PRESETS.starter.sectionVisibility;
+    expect(visibility.concept).toBe(false);
+    expect(visibility.staff).toBe(false);
+    expect(visibility.gallery).toBe(false);
+    expect(visibility["salon-features"]).toBe(false);
+    expect(visibility["customer-flow"]).toBe(false);
+    expect(visibility.faq).toBe(false);
+    expect(visibility.access).toBe(false);
+  });
+
+  it("does not alias DEFAULT_DESIGN_CONFIG's sectionVisibility object", () => {
+    DESIGN_PRESETS.starter.sectionVisibility.reservation = false;
+    expect(DEFAULT_DESIGN_CONFIG.sectionVisibility.reservation).toBe(true);
+    DESIGN_PRESETS.starter.sectionVisibility.reservation = true;
+  });
+
+  it("uses a registered hero/menu/staff/gallery variant and a valid, complete section order", () => {
+    const preset = DESIGN_PRESETS.starter;
+    expect(isHeroVariant(preset.heroVariant)).toBe(true);
+    expect(isMenuVariant(preset.menuVariant)).toBe(true);
+    expect(isStaffVariant(preset.staffVariant)).toBe(true);
+    expect(isGalleryVariant(preset.galleryVariant)).toBe(true);
+    expect(isValidSectionOrder(preset.sectionOrder)).toBe(true);
+  });
+
+  it("leaves the existing six presets completely untouched", () => {
+    for (const id of ALL_PRESET_IDS) {
+      expect(DESIGN_PRESETS[id].theme).toBe(id);
+      expect(DESIGN_PRESETS[id].typography).toBe(id);
+    }
   });
 });

@@ -1,4 +1,6 @@
 import { DESIGN_PRESETS } from "@/config/design-presets";
+import { THEMES } from "@/config/theme-tokens";
+import { TYPOGRAPHY } from "@/config/typography-tokens";
 import { ALL_HOME_SECTIONS, REQUIRED_HOME_SECTIONS } from "@/lib/constants/design-sections";
 import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
 import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
@@ -11,6 +13,8 @@ import type {
   HomeSection,
   MenuVariant,
   StaffVariant,
+  ThemeId,
+  TypographyId,
 } from "@/types/design-config";
 
 function isNonEmptyString(value: unknown): value is string {
@@ -28,6 +32,23 @@ function isNonEmptyString(value: unknown): value is string {
 export function parseDesignPresetId(value: unknown): DesignPreset | null {
   if (!isNonEmptyString(value)) return null;
   return value in DESIGN_PRESETS ? (value as DesignPreset) : null;
+}
+
+/**
+ * True only for a `THEMES`/`TYPOGRAPHY` registry key (Starter MVP
+ * reusability) — deliberately checks these registries directly rather
+ * than reusing `parseDesignPresetId`/`DESIGN_PRESETS`. A `DesignPreset`
+ * like `"starter"` can be a registered preset id without being a
+ * registered theme/typography id (it reuses Kinari's); `applyOverrides`
+ * (`resolveDesignConfig.ts`) needs exactly this distinction to validate a
+ * `theme`/`typography` override field.
+ */
+export function isThemeId(value: unknown): value is ThemeId {
+  return typeof value === "string" && value in THEMES;
+}
+
+export function isTypographyId(value: unknown): value is TypographyId {
+  return typeof value === "string" && value in TYPOGRAPHY;
 }
 
 /** True only for one of the 11 allow-listed section names — guards against

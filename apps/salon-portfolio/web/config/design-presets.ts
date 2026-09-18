@@ -82,7 +82,7 @@ function defaultVisibility() {
  * `config/typography-tokens.ts`). Kinari itself isn't listed either — it
  * stays `DEFAULT_DESIGN_CONFIG` verbatim, the untouched baseline.
  */
-const PRESET_COMPOSITIONS: Record<Exclude<DesignPreset, "kinari">, PresetComposition> = {
+const PRESET_COMPOSITIONS: Record<Exclude<DesignPreset, "kinari" | "starter">, PresetComposition> = {
   // Femme — soft feminine beauty-salon composition: a two-column split
   // hero (photo-forward, less "banner"), bordered card-grid menu, and a
   // masonry gallery opened right after the concept copy so the visual
@@ -205,7 +205,7 @@ const PRESET_COMPOSITIONS: Record<Exclude<DesignPreset, "kinari">, PresetComposi
 // (hero/menu/staff/gallery/sectionOrder/sectionVisibility) on top of that
 // already-established theme/typography pairing — it never decouples a
 // preset's `theme`/`typography` from its own id.
-function buildPreset(preset: Exclude<DesignPreset, "kinari">): DesignConfig {
+function buildPreset(preset: Exclude<DesignPreset, "kinari" | "starter">): DesignConfig {
   const composition = PRESET_COMPOSITIONS[preset];
   return {
     preset,
@@ -228,6 +228,39 @@ function buildPreset(preset: Exclude<DesignPreset, "kinari">): DesignConfig {
  * "Design presets" section documents the rationale for each preset's
  * choices and the full target matrix.
  */
+/**
+ * Starter — bare-bones Starter MVP composition (Hero + Menu + Contact +
+ * Reservation CTA only). Reuses Kinari's `theme`/`typography` verbatim
+ * (see `types/design-config.ts`'s `DesignPreset` doc comment) rather than
+ * `buildPreset()`, since it has no dedicated palette of its own — this
+ * preset differentiates itself purely by `sectionVisibility`. Every
+ * optional section not part of the Starter MVP's 3-section scope
+ * (concept/staff/gallery/salon-features/customer-flow/faq/access) is
+ * hidden by default; a buyer who later wants one back can still enable it
+ * per business feature flag + explicit design-config override, since
+ * hiding here is a default, not a deletion of the section's code.
+ */
+const STARTER_DESIGN_CONFIG: DesignConfig = {
+  preset: "starter",
+  theme: "kinari",
+  typography: "kinari",
+  heroVariant: DEFAULT_DESIGN_CONFIG.heroVariant,
+  menuVariant: DEFAULT_DESIGN_CONFIG.menuVariant,
+  staffVariant: DEFAULT_DESIGN_CONFIG.staffVariant,
+  galleryVariant: DEFAULT_DESIGN_CONFIG.galleryVariant,
+  sectionVisibility: {
+    ...defaultVisibility(),
+    concept: false,
+    staff: false,
+    gallery: false,
+    "salon-features": false,
+    "customer-flow": false,
+    faq: false,
+    access: false,
+  },
+  sectionOrder: [...DEFAULT_ORDER],
+};
+
 export const DESIGN_PRESETS: Record<DesignPreset, DesignConfig> = {
   kinari: DEFAULT_DESIGN_CONFIG,
   femme: buildPreset("femme"),
@@ -235,4 +268,5 @@ export const DESIGN_PRESETS: Record<DesignPreset, DesignConfig> = {
   editorial: buildPreset("editorial"),
   natural: buildPreset("natural"),
   modern: buildPreset("modern"),
+  starter: STARTER_DESIGN_CONFIG,
 };

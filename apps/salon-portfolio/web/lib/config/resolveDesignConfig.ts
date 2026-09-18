@@ -4,6 +4,8 @@ import {
   isHeroVariant,
   isMenuVariant,
   isStaffVariant,
+  isThemeId,
+  isTypographyId,
   isValidSectionOrder,
   parseDesignPresetId,
 } from "@/lib/validation/designConfigValidator";
@@ -32,10 +34,12 @@ function resolveBase(rawPresetId: unknown): DesignConfig {
  * (`HeroSection`'s `isHeroVariant`, etc.) — an invalid override is simply
  * ignored (the base field wins), never thrown, mirroring this module's
  * existing "never crash, never blank the page" contract. `theme`/
- * `typography` share `DesignPreset`'s exact six-value union, so
- * `parseDesignPresetId` (already the sole authority for that value set) is
- * reused rather than adding a second `isThemeId`/`isTypographyId` guard
- * that would just duplicate it.
+ * `typography` are validated against the `THEMES`/`TYPOGRAPHY` registries
+ * directly via `isThemeId`/`isTypographyId`, not against `DESIGN_PRESETS`
+ * via `parseDesignPresetId` — a `DesignPreset` like `"starter"` (Starter
+ * MVP reusability) is a registered preset id without being a registered
+ * theme/typography id of its own (it reuses Kinari's), so reusing
+ * `parseDesignPresetId` here would wrongly accept it as a theme override.
  *
  * Returns the exact `base` object (no new object allocated) when no
  * override actually changes a field, so `resolveDesignConfig({ preset:
@@ -47,15 +51,13 @@ function applyOverrides(base: DesignConfig, rawOverrides: Record<string, unknown
   const next: DesignConfig = { ...base };
   let changed = false;
 
-  const theme = parseDesignPresetId(rawOverrides.theme);
-  if (theme !== null) {
-    next.theme = theme;
+  if (isThemeId(rawOverrides.theme)) {
+    next.theme = rawOverrides.theme;
     changed = true;
   }
 
-  const typography = parseDesignPresetId(rawOverrides.typography);
-  if (typography !== null) {
-    next.typography = typography;
+  if (isTypographyId(rawOverrides.typography)) {
+    next.typography = rawOverrides.typography;
     changed = true;
   }
 

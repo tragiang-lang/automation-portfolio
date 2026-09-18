@@ -4,6 +4,8 @@ import {
   isHomeSection,
   isMenuVariant,
   isStaffVariant,
+  isThemeId,
+  isTypographyId,
   isValidSectionOrder,
   parseDesignPresetId,
 } from "./designConfigValidator";
@@ -14,7 +16,7 @@ import { STAFF_VARIANTS } from "@/lib/constants/staff-variants";
 import { GALLERY_VARIANTS } from "@/lib/constants/gallery-variants";
 
 describe("parseDesignPresetId", () => {
-  it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])(
+  it.each(["kinari", "femme", "noir", "editorial", "natural", "modern", "starter"])(
     "accepts the registered preset id %s",
     (id) => {
       expect(parseDesignPresetId(id)).toBe(id);
@@ -23,6 +25,34 @@ describe("parseDesignPresetId", () => {
 
   it.each([undefined, null, "", "   ", "not-a-preset", 42, {}])("rejects %p", (value) => {
     expect(parseDesignPresetId(value)).toBeNull();
+  });
+});
+
+describe("isThemeId / isTypographyId (Starter MVP reusability)", () => {
+  // "starter" is a valid DesignPreset (it has a DESIGN_PRESETS registry
+  // entry) but deliberately has no dedicated theme/typography of its own
+  // — it reuses Kinari's. isThemeId/isTypographyId check the THEMES/
+  // TYPOGRAPHY registries directly (not DesignPreset) so this stays
+  // correctly rejected as a theme/typography override value, unlike
+  // `parseDesignPresetId` which only tells you a preset id is registered.
+  it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])("isThemeId accepts %s", (id) => {
+    expect(isThemeId(id)).toBe(true);
+  });
+
+  it("isThemeId rejects starter and other non-theme values", () => {
+    expect(isThemeId("starter")).toBe(false);
+    expect(isThemeId("not-a-theme")).toBe(false);
+    expect(isThemeId(undefined)).toBe(false);
+  });
+
+  it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])("isTypographyId accepts %s", (id) => {
+    expect(isTypographyId(id)).toBe(true);
+  });
+
+  it("isTypographyId rejects starter and other non-typography values", () => {
+    expect(isTypographyId("starter")).toBe(false);
+    expect(isTypographyId("not-a-typography")).toBe(false);
+    expect(isTypographyId(undefined)).toBe(false);
   });
 });
 
