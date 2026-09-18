@@ -36,6 +36,21 @@ describe("parsePublicRuntimeConfig", () => {
     expect(parsePublicRuntimeConfig(validConfig())).toEqual(validConfig());
   });
 
+  it("leaves labels/content undefined when the response omits them (backward compatible with a not-yet-upgraded GAS deployment)", () => {
+    const parsed = parsePublicRuntimeConfig(validConfig());
+    expect(parsed?.labels).toBeUndefined();
+    expect(parsed?.content).toBeUndefined();
+  });
+
+  it("parses labels/content when present, and rejects a non-string field value", () => {
+    const withLabels = { ...validConfig(), labels: { service: "ワークショップ" }, content: { heroSubheadline: "見学随時受付中です。" } };
+    const parsed = parsePublicRuntimeConfig(withLabels);
+    expect(parsed?.labels).toEqual({ service: "ワークショップ" });
+    expect(parsed?.content).toEqual({ heroSubheadline: "見学随時受付中です。" });
+
+    expect(parsePublicRuntimeConfig({ ...validConfig(), labels: { service: 42 } })).toBeNull();
+  });
+
   it("rejects a non-object value", () => {
     expect(parsePublicRuntimeConfig(null)).toBeNull();
     expect(parsePublicRuntimeConfig("nope")).toBeNull();

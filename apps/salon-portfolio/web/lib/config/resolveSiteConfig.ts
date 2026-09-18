@@ -33,5 +33,22 @@ export function resolveSiteConfig(runtime: PublicRuntimeConfig): SiteConfig {
     },
     staffAnyAvailableOption: runtime.staffAnyAvailableOption,
     socialLinks: runtime.socialLinks ?? SITE_CONFIG.socialLinks,
+    labels: {
+      service: runtime.labels?.service ?? SITE_CONFIG.labels.service,
+      bookingCta: runtime.labels?.bookingCta ?? SITE_CONFIG.labels.bookingCta,
+      inquiryMessage: runtime.labels?.inquiryMessage ?? SITE_CONFIG.labels.inquiryMessage,
+    },
+    content: {
+      heroSubheadline: runtime.content?.heroSubheadline ?? SITE_CONFIG.content.heroSubheadline,
+      conceptEyebrow: runtime.content?.conceptEyebrow ?? SITE_CONFIG.content.conceptEyebrow,
+      conceptTitle: runtime.content?.conceptTitle ?? SITE_CONFIG.content.conceptTitle,
+      conceptParagraph1: runtime.content?.conceptParagraph1 ?? SITE_CONFIG.content.conceptParagraph1,
+      conceptParagraph2: runtime.content?.conceptParagraph2 ?? SITE_CONFIG.content.conceptParagraph2,
+      serviceSubtitle: runtime.content?.serviceSubtitle ?? SITE_CONFIG.content.serviceSubtitle,
+      ctaHeading: runtime.content?.ctaHeading ?? SITE_CONFIG.content.ctaHeading,
+      ctaMessage: runtime.content?.ctaMessage ?? SITE_CONFIG.content.ctaMessage,
+      ctaClosingHeading: runtime.content?.ctaClosingHeading ?? SITE_CONFIG.content.ctaClosingHeading,
+      ctaClosingMessage: runtime.content?.ctaClosingMessage ?? SITE_CONFIG.content.ctaClosingMessage,
+    },
   };
 }

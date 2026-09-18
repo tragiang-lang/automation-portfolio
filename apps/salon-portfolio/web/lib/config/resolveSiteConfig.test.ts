@@ -28,6 +28,8 @@ const runtime: PublicRuntimeConfig = {
   },
   staffAnyAvailableOption: false,
   reservation: { timezone: "Asia/Tokyo", slotMinutes: 45, minLeadHours: 2, maxBookingDays: 30 },
+  labels: {},
+  content: {},
 };
 
 describe("resolveSiteConfig", () => {
@@ -74,5 +76,26 @@ describe("resolveSiteConfig", () => {
 
   it("carries staffAnyAvailableOption through unchanged", () => {
     expect(resolveSiteConfig(runtime).staffAnyAvailableOption).toBe(false);
+  });
+});
+
+describe("resolveSiteConfig labels/content (Starter MVP reusability)", () => {
+  it("falls back to the frontend-owned demo labels/content per-field when the runtime config omits them", () => {
+    const siteConfig = resolveSiteConfig(runtime);
+    expect(siteConfig.labels).toEqual(SITE_CONFIG.labels);
+    expect(siteConfig.content).toEqual(SITE_CONFIG.content);
+  });
+
+  it("prefers labels/content fields from the runtime config when present, per field", () => {
+    const runtimeWithOverrides: PublicRuntimeConfig = {
+      ...runtime,
+      labels: { service: "ワークショップ" },
+      content: { heroSubheadline: "週末開催のワークショップです。" },
+    };
+    const siteConfig = resolveSiteConfig(runtimeWithOverrides);
+    expect(siteConfig.labels.service).toBe("ワークショップ");
+    expect(siteConfig.labels.bookingCta).toBe(SITE_CONFIG.labels.bookingCta);
+    expect(siteConfig.content.heroSubheadline).toBe("週末開催のワークショップです。");
+    expect(siteConfig.content.conceptTitle).toBe(SITE_CONFIG.content.conceptTitle);
   });
 });

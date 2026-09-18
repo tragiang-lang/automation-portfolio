@@ -1,5 +1,11 @@
 import { HOURS_DAY_ORDER } from "@/lib/constants/hours";
-import type { PublicRuntimeBusinessHours, PublicRuntimeConfig, SocialLink } from "@/types/runtime-config";
+import type {
+  PublicRuntimeBusinessHours,
+  PublicRuntimeConfig,
+  PublicRuntimeContent,
+  PublicRuntimeLabels,
+  SocialLink,
+} from "@/types/runtime-config";
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -45,6 +51,42 @@ function parseOptionalSocialLinks(value: unknown): SocialLink[] | null | undefin
     links.push({ label: record.label, href: record.href });
   }
   return links;
+}
+
+const LABELS_KEYS: readonly (keyof PublicRuntimeLabels)[] = ["service", "bookingCta", "inquiryMessage"];
+const CONTENT_KEYS: readonly (keyof PublicRuntimeContent)[] = [
+  "heroSubheadline",
+  "conceptEyebrow",
+  "conceptTitle",
+  "conceptParagraph1",
+  "conceptParagraph2",
+  "serviceSubtitle",
+  "ctaHeading",
+  "ctaMessage",
+  "ctaClosingHeading",
+  "ctaClosingMessage",
+];
+
+/** `undefined` -> valid/absent (a response from a not-yet-upgraded GAS
+ *  deployment has no labels/content field at all); anything else must be
+ *  a plain object whose known keys (`allowedKeys`) are each an optional
+ *  non-empty string, returned as a plain `Record` (the caller casts to its
+ *  own named type) — matching `parseOptionalSocialLinks`'s own "undefined
+ *  vs. null-on-invalid" contract above. */
+function parseOptionalStringFieldGroup(
+  value: unknown,
+  allowedKeys: readonly string[],
+): Record<string, string> | null | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const result: Record<string, string> = {};
+  for (const key of allowedKeys) {
+    const cell = record[key];
+    if (!isOptionalNonEmptyString(cell)) return null;
+    if (cell !== undefined) result[key] = cell;
+  }
+  return result;
 }
 
 /**
@@ -112,6 +154,12 @@ export function parsePublicRuntimeConfig(value: unknown): PublicRuntimeConfig | 
   const socialLinks = parseOptionalSocialLinks(root.socialLinks);
   if (socialLinks === null) return null;
 
+  const labels = parseOptionalStringFieldGroup(root.labels, LABELS_KEYS) as PublicRuntimeLabels | null | undefined;
+  if (labels === null) return null;
+
+  const content = parseOptionalStringFieldGroup(root.content, CONTENT_KEYS) as PublicRuntimeContent | null | undefined;
+  if (content === null) return null;
+
   return {
     business: business as PublicRuntimeConfig["business"],
     hours,
@@ -120,5 +168,7 @@ export function parsePublicRuntimeConfig(value: unknown): PublicRuntimeConfig | 
     staffAnyAvailableOption: root.staffAnyAvailableOption,
     reservation: reservation as PublicRuntimeConfig["reservation"],
     socialLinks,
+    labels,
+    content,
   };
 }
