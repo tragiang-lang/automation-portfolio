@@ -1,4 +1,4 @@
-import { AppConfig, BUSINESS_HOURS_DAYS, RawConfigMap, SocialLink } from "./models/Config";
+import { AppConfig, BUSINESS_HOURS_DAYS, BusinessContent, BusinessLabels, RawConfigMap, SocialLink } from "./models/Config";
 
 /** One field-level parsing failure — used to build a single, stable
  *  CONFIG_INVALID error without ever repeating the raw sheet value back
@@ -125,6 +125,36 @@ function parseSocialLinks(rawConfig: RawConfigMap): SocialLink[] | undefined {
   return links.length > 0 ? links : undefined;
 }
 
+/** Business terminology overrides (Starter MVP reusability) — a fixed set
+ *  of optional `labels.*` keys, same "discrete keys, no JSON cell values"
+ *  convention as SOCIAL_LINK_DEFINITIONS above. Unlike socialLinks, this
+ *  always returns an object (never undefined) since every consumer reads
+ *  individual fields with its own `?? "salon default"` fallback. */
+function parseLabels(rawConfig: RawConfigMap): BusinessLabels {
+  return {
+    service: parseNonEmptyString(rawConfig["labels.service"]),
+    bookingCta: parseNonEmptyString(rawConfig["labels.bookingCta"]),
+    inquiryMessage: parseNonEmptyString(rawConfig["labels.inquiryMessage"]),
+  };
+}
+
+/** Business marketing-copy overrides (Starter MVP reusability) — same
+ *  shape/convention as parseLabels above. */
+function parseContent(rawConfig: RawConfigMap): BusinessContent {
+  return {
+    heroSubheadline: parseNonEmptyString(rawConfig["content.heroSubheadline"]),
+    conceptEyebrow: parseNonEmptyString(rawConfig["content.conceptEyebrow"]),
+    conceptTitle: parseNonEmptyString(rawConfig["content.conceptTitle"]),
+    conceptParagraph1: parseNonEmptyString(rawConfig["content.conceptParagraph1"]),
+    conceptParagraph2: parseNonEmptyString(rawConfig["content.conceptParagraph2"]),
+    serviceSubtitle: parseNonEmptyString(rawConfig["content.serviceSubtitle"]),
+    ctaHeading: parseNonEmptyString(rawConfig["content.ctaHeading"]),
+    ctaMessage: parseNonEmptyString(rawConfig["content.ctaMessage"]),
+    ctaClosingHeading: parseNonEmptyString(rawConfig["content.ctaClosingHeading"]),
+    ctaClosingMessage: parseNonEmptyString(rawConfig["content.ctaClosingMessage"]),
+  };
+}
+
 /** Pure CONFIG parser: raw Key/Value map + HOLIDAYS date strings -> typed
  *  AppConfig, or a list of field-level issues. Never throws — malformed
  *  input always produces `{ ok: false }`, never a partially-built,
@@ -228,6 +258,8 @@ export function parseAppConfig(
       staffAnyAvailableOption,
       reservation,
       socialLinks,
+      labels: parseLabels(rawConfig),
+      content: parseContent(rawConfig),
       calendarId,
       emailOwnerNotifyAddress,
       emailFromName,

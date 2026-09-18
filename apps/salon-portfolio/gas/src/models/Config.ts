@@ -48,6 +48,37 @@ export interface SocialLink {
   href: string;
 }
 
+/** Business terminology overrides (Starter MVP reusability — spec §9):
+ *  lets a Workshop/Class organizer say "ワークショップ"/"クラス" instead of
+ *  a nail/hair salon's "メニュー", without any component or email template
+ *  hard-coding salon-specific wording. Every field falls back to the
+ *  current salon copy at its point of use when undefined, so a CONFIG
+ *  sheet with none of these keys set renders exactly as it did before. */
+export interface BusinessLabels {
+  service?: string;
+  bookingCta?: string;
+  inquiryMessage?: string;
+}
+
+/** Business-specific marketing copy overrides (Starter MVP reusability) —
+ *  the Hero subheadline, Concept narrative, Menu subtitle, and the two
+ *  ReservationCtaBand instances were previously hard-coded literals in
+ *  `app/page.tsx`/`MenuSection.tsx` (blocking config-only reuse for a new
+ *  business type). Every field is optional and falls back to the current
+ *  salon copy at its point of use when undefined. */
+export interface BusinessContent {
+  heroSubheadline?: string;
+  conceptEyebrow?: string;
+  conceptTitle?: string;
+  conceptParagraph1?: string;
+  conceptParagraph2?: string;
+  serviceSubtitle?: string;
+  ctaHeading?: string;
+  ctaMessage?: string;
+  ctaClosingHeading?: string;
+  ctaClosingMessage?: string;
+}
+
 export interface AppConfig {
   business: {
     name: string;
@@ -70,6 +101,10 @@ export interface AppConfig {
   /** Optional (V1.1 Task 4) — built from whichever `social.*` CONFIG keys
    *  are present; undefined when none are set. */
   socialLinks?: SocialLink[];
+  /** Always present; every field within is individually optional (Starter
+   *  MVP reusability — see BusinessLabels/BusinessContent above). */
+  labels: BusinessLabels;
+  content: BusinessContent;
   /** Fallback/shared Calendar ID — internal only, never exposed via
    *  getConfig (Phase 3A §20). */
   calendarId: string;

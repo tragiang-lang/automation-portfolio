@@ -241,3 +241,42 @@ describe("parseAppConfig optional presentation fields (V1.1 Task 4)", () => {
     expect(result.ok).toBe(true);
   });
 });
+
+describe("parseAppConfig labels/content overrides (Starter MVP reusability)", () => {
+  it("leaves every labels/content field undefined when absent, with no issues", () => {
+    const result = parseAppConfig(validRawConfig(), []);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.config.labels).toEqual({});
+      expect(result.config.content).toEqual({});
+    }
+  });
+
+  it("parses labels.* keys when present, trimmed", () => {
+    const raw = validRawConfig();
+    raw["labels.service"] = "  ワークショップ  ";
+    raw["labels.bookingCta"] = " 参加申込み ";
+    raw["labels.inquiryMessage"] = " お問い合わせ・ご質問 ";
+    const result = parseAppConfig(raw, []);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.config.labels).toEqual({
+        service: "ワークショップ",
+        bookingCta: "参加申込み",
+        inquiryMessage: "お問い合わせ・ご質問",
+      });
+    }
+  });
+
+  it("parses content.* keys when present, trimmed", () => {
+    const raw = validRawConfig();
+    raw["content.heroSubheadline"] = " 週末開催のワークショップです。 ";
+    raw["content.ctaHeading"] = " 参加をご検討の方へ ";
+    const result = parseAppConfig(raw, []);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.config.content.heroSubheadline).toBe("週末開催のワークショップです。");
+      expect(result.config.content.ctaHeading).toBe("参加をご検討の方へ");
+    }
+  });
+});

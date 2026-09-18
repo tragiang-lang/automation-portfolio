@@ -33,6 +33,8 @@ function validConfig(): AppConfig {
       minLeadHours: 1,
       maxBookingDays: 60,
     },
+    labels: {},
+    content: {},
     calendarId: "primary",
     emailOwnerNotifyAddress: "owner@example.com",
     emailFromName: "Demo Salon",
