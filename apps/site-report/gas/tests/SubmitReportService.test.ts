@@ -19,6 +19,7 @@ jest.mock("../src/ProgressStatusRepository", () => ({
   getProgressStatusRows: jest.fn(),
 }));
 jest.mock("../src/DriveStorage");
+jest.mock("../src/DriveFolderResolver");
 jest.mock("../src/ReportsRepository");
 jest.mock("../src/AdminNotification");
 
@@ -28,6 +29,7 @@ import { getSiteRows } from "../src/SitesRepository";
 import { getWorkTypeRows } from "../src/WorkTypesRepository";
 import { getProgressStatusRows } from "../src/ProgressStatusRepository";
 import { deleteUploadedFile, uploadReportPhoto } from "../src/DriveStorage";
+import { resolveReportPhotoFolder } from "../src/DriveFolderResolver";
 import { appendReportPhotoRow, appendReportRow } from "../src/ReportsRepository";
 import { sendAdminNotification } from "../src/AdminNotification";
 import { SiteRow, WorkTypeRow, ProgressStatusRow } from "../src/SheetSchemas";
@@ -40,6 +42,7 @@ const mockGetWorkTypeRows = getWorkTypeRows as jest.Mock;
 const mockGetProgressStatusRows = getProgressStatusRows as jest.Mock;
 const mockUploadReportPhoto = uploadReportPhoto as jest.Mock;
 const mockDeleteUploadedFile = deleteUploadedFile as jest.Mock;
+const mockResolveReportPhotoFolder = resolveReportPhotoFolder as jest.Mock;
 const mockAppendReportRow = appendReportRow as jest.Mock;
 const mockAppendReportPhotoRow = appendReportPhotoRow as jest.Mock;
 const mockSendAdminNotification = sendAdminNotification as jest.Mock;
@@ -116,6 +119,7 @@ beforeEach(() => {
   mockGetSiteRows.mockReturnValue([siteRow()]);
   mockGetWorkTypeRows.mockReturnValue([workTypeRow()]);
   mockGetProgressStatusRows.mockReturnValue([progressStatusRow()]);
+  mockResolveReportPhotoFolder.mockReturnValue("PHOTO-FOLDER-1");
   mockUploadReportPhoto.mockImplementation(({ fileName }: { fileName: string }) => ({
     fileId: `FILE-${fileName}`,
     fileUrl: `https://drive.google.com/${fileName}`,
@@ -238,11 +242,11 @@ describe("report ID", () => {
 // --- Group D: Drive upload ---------------------------------------------------
 
 describe("Drive upload", () => {
-  it("uploads a single photo into the configured folder", () => {
+  it("uploads a single photo into the resolved photo folder", () => {
     submitReport(onePhotoInput());
     expect(mockUploadReportPhoto).toHaveBeenCalledTimes(1);
     expect(mockUploadReportPhoto.mock.calls[0][0]).toMatchObject({
-      folderId: "FOLDER-1",
+      folderId: "PHOTO-FOLDER-1",
       mimeType: "image/jpeg",
       base64Data: "aGVsbG8=",
     });
@@ -253,12 +257,26 @@ describe("Drive upload", () => {
     expect(mockUploadReportPhoto).toHaveBeenCalledTimes(3);
   });
 
-  it("builds a deterministic filename from reportId, sequence, and the original name", () => {
+  it("builds a deterministic, zero-padded filename from reportId and sequence, with the extension derived from mimeType", () => {
     submitReport(threePhotosInput());
     const reportId = mockAppendReportRow.mock.calls[0][0].reportId;
-    expect(mockUploadReportPhoto.mock.calls[0][0].fileName).toBe(`${reportId}_1_a.jpg`);
-    expect(mockUploadReportPhoto.mock.calls[1][0].fileName).toBe(`${reportId}_2_b.png`);
-    expect(mockUploadReportPhoto.mock.calls[2][0].fileName).toBe(`${reportId}_3_c.jpg`);
+    expect(mockUploadReportPhoto.mock.calls[0][0].fileName).toBe(`${reportId}_01.jpg`);
+    expect(mockUploadReportPhoto.mock.calls[1][0].fileName).toBe(`${reportId}_02.png`);
+    expect(mockUploadReportPhoto.mock.calls[2][0].fileName).toBe(`${reportId}_03.jpg`);
+  });
+
+  it("never includes the original client fileName in the Drive filename", () => {
+    submitReport(
+      submitInput({
+        photos: [{ fileName: "original-name-should-not-appear.jpg", mimeType: "image/jpeg", base64Data: "aGVsbG8=" }],
+      }),
+    );
+    expect(mockUploadReportPhoto.mock.calls[0][0].fileName).not.toContain("original-name-should-not-appear");
+  });
+
+  it("falls back to a .jpg extension for an unrecognized mimeType", () => {
+    submitReport(submitInput({ photos: [{ fileName: "x.bin", mimeType: "application/octet-stream", base64Data: "aGVsbG8=" }] }));
+    expect(mockUploadReportPhoto.mock.calls[0][0].fileName).toMatch(/\.jpg$/);
   });
 
   it("stores the resulting fileId and fileUrl into the REPORT_PHOTOS row", () => {
@@ -299,6 +317,49 @@ describe("Drive upload", () => {
     expect(outcome.kind).toBe("drive_upload_failed");
     expect(mockDeleteUploadedFile).toHaveBeenCalledTimes(1);
     expect(mockDeleteUploadedFile.mock.calls[0][0]).toMatch(/^FILE-/);
+  });
+});
+
+// --- Group D2: photo folder resolution --------------------------------------
+
+describe("photo folder resolution", () => {
+  it("resolves the photo folder exactly once per submission, with the driveRootFolderId, reportDate, site name, and workerName", () => {
+    submitReport(threePhotosInput());
+    expect(mockResolveReportPhotoFolder).toHaveBeenCalledTimes(1);
+    expect(mockResolveReportPhotoFolder).toHaveBeenCalledWith("FOLDER-1", "2026-09-12", "Site A", "Taro");
+  });
+
+  it("uses the resolved folder ID for every photo upload in the submission", () => {
+    mockResolveReportPhotoFolder.mockReturnValue("worker-folder-123");
+    submitReport(threePhotosInput());
+    expect(mockUploadReportPhoto).toHaveBeenCalledTimes(3);
+    for (const call of mockUploadReportPhoto.mock.calls) {
+      expect(call[0].folderId).toBe("worker-folder-123");
+    }
+  });
+
+  it("resolves the folder again for each separate submitReport() invocation", () => {
+    submitReport(onePhotoInput());
+    submitReport(onePhotoInput());
+    expect(mockResolveReportPhotoFolder).toHaveBeenCalledTimes(2);
+  });
+
+  it("resolves the folder exactly once even when the submission has no photos", () => {
+    submitReport(submitInput({ photos: [] }));
+    expect(mockResolveReportPhotoFolder).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns drive_upload_failed and uploads no photos when folder resolution fails, without writing REPORTS", () => {
+    mockResolveReportPhotoFolder.mockImplementation(() => {
+      throw new Error("folder resolution failed");
+    });
+    const outcome = submitReport(onePhotoInput());
+    expect(outcome.kind).toBe("drive_upload_failed");
+    if (outcome.kind === "drive_upload_failed") {
+      expect(outcome.reason).toBe("folder resolution failed");
+    }
+    expect(mockUploadReportPhoto).not.toHaveBeenCalled();
+    expect(mockAppendReportRow).not.toHaveBeenCalled();
   });
 });
 

@@ -9,6 +9,7 @@ import { buildWorkTypesResult, getWorkTypeRows } from "./WorkTypesRepository";
 import { buildProgressStatusResult, getProgressStatusRows } from "./ProgressStatusRepository";
 import { generatePhotoId, generateReportId } from "./ids/ReportId";
 import { deleteUploadedFile, uploadReportPhoto } from "./DriveStorage";
+import { resolveReportPhotoFolder } from "./DriveFolderResolver";
 import { appendReportPhotoRow, appendReportRow } from "./ReportsRepository";
 import { sendAdminNotification } from "./AdminNotification";
 import { ReportPhotoRow, ReportRow } from "./SheetSchemas";
@@ -193,20 +194,26 @@ interface UploadedPhoto {
   mimeType: string;
 }
 
-const FILENAME_SAFE_PATTERN = /[^A-Za-z0-9._-]+/g;
+const MIME_TYPE_EXTENSIONS: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/heic": "heic",
+};
 
-function sanitizeFileNamePart(name: string): string {
-  const sanitized = name.replace(FILENAME_SAFE_PATTERN, "_");
-  return sanitized.length > 0 ? sanitized : "photo";
+const DEFAULT_PHOTO_EXTENSION = "jpg";
+
+function extensionForMimeType(mimeType: string): string {
+  return MIME_TYPE_EXTENSIONS[mimeType] ?? DEFAULT_PHOTO_EXTENSION;
 }
 
-/** `{reportId}_{sequence}_{originalName}` (Task 5 §14) — deterministic
- *  and collision-free across an entire submission (the reportId+sequence
- *  prefix alone already guarantees uniqueness); the original name is kept
- *  only for human readability and is never trusted as-is (arbitrary
- *  characters are replaced, Task 5 §14/§39). */
-function buildPhotoFileName(reportId: string, sequence: number, originalName: string): string {
-  return `${reportId}_${sequence}_${sanitizeFileNamePart(originalName)}`;
+/** `{reportId}_{sequence}.{extension}` — deterministic and collision-free
+ *  across an entire submission (the reportId+sequence prefix alone
+ *  already guarantees uniqueness); the original client fileName never
+ *  appears in the Drive filename. Sequence is zero-padded to 2 digits
+ *  (naturally growing to 3+ digits past 99, no special-casing needed). */
+function buildPhotoFileName(reportId: string, sequence: number, mimeType: string): string {
+  return `${reportId}_${String(sequence).padStart(2, "0")}.${extensionForMimeType(mimeType)}`;
 }
 
 /** Best-effort cleanup of every Drive file this submission itself
@@ -289,6 +296,19 @@ export function submitReport(input: SubmitReportInput): SubmitReportOutcome {
   const nowIso = now.toISOString();
   const reportId = generateReportId(now);
 
+  // Photo storage structure: resolve (or create) the Date -> Site ->
+  // Worker folder once per submission, before any photo upload. A
+  // resolution failure must block every photo upload the same way a
+  // Drive upload failure would — reusing drive_upload_failed rather than
+  // introducing a new outcome kind.
+  let photoFolderId: string;
+  try {
+    photoFolderId = resolveReportPhotoFolder(config.driveRootFolderId, input.reportDate, site.name, input.workerName);
+  } catch (error) {
+    console.error("[SUBMIT_REPORT] Drive photo folder resolution failed:", error);
+    return { kind: "drive_upload_failed", reason: errorReason(error) };
+  }
+
   // All-or-nothing photo upload: if any photo fails, nothing has been
   // written to REPORTS/REPORT_PHOTOS yet, so the only cleanup needed is
   // the Drive files already uploaded earlier in this same loop (Task 5
@@ -296,10 +316,10 @@ export function submitReport(input: SubmitReportInput): SubmitReportOutcome {
   const uploaded: UploadedPhoto[] = [];
   for (let index = 0; index < input.photos.length; index++) {
     const photo = input.photos[index];
-    const fileName = buildPhotoFileName(reportId, index + 1, photo.fileName);
+    const fileName = buildPhotoFileName(reportId, index + 1, photo.mimeType);
     try {
       const result = uploadReportPhoto({
-        folderId: config.driveRootFolderId,
+        folderId: photoFolderId,
         fileName,
         mimeType: photo.mimeType,
         base64Data: photo.base64Data,
