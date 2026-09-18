@@ -25,10 +25,23 @@ jest.mock("../src/Calendar");
 jest.mock("../src/Mail");
 jest.mock("../src/Logging");
 jest.mock("../src/RuntimeProperties", () => ({ getSiteBaseUrl: jest.fn() }));
+jest.mock("../src/InquiryRepository", () => ({
+  // buildPendingInquiryRow is pure — kept real; only the Sheets-touching
+  // functions are mocked (mirrors the ReservationRepository mock above).
+  ...jest.requireActual("../src/InquiryRepository"),
+  appendInquiryRow: jest.fn(),
+  findInquiryBySubmissionId: jest.fn(),
+}));
+jest.mock("../src/InquiryIdempotency", () => ({
+  ...jest.requireActual("../src/InquiryIdempotency"),
+  getCachedInquiryResult: jest.fn(),
+  setCachedInquiryResult: jest.fn(),
+}));
 
 import {
   buildErrorResponse,
   buildSuccessResponse,
+  createInquiryAction,
   createReservationAction,
   getAvailabilityAction,
   getConfigAction,
@@ -45,6 +58,8 @@ import { ERROR_CODES } from "../src/models/ErrorCodes";
 import * as Catalog from "../src/Catalog";
 import * as ReservationRepository from "../src/ReservationRepository";
 import * as Idempotency from "../src/Idempotency";
+import * as InquiryRepository from "../src/InquiryRepository";
+import * as InquiryIdempotency from "../src/InquiryIdempotency";
 import * as Calendar from "../src/Calendar";
 import * as Mail from "../src/Mail";
 import * as Logging from "../src/Logging";
@@ -52,6 +67,7 @@ import * as RuntimeProperties from "../src/RuntimeProperties";
 import { ServiceRow, StaffRow } from "../src/SheetSchemas";
 import { AppConfig } from "../src/models/Config";
 import { ReservationRequest } from "../src/models/ReservationRequest";
+import { InquiryRequest } from "../src/models/InquiryRequest";
 
 describe("parseApiRequest", () => {
   it("parses a well-formed request", () => {
@@ -338,6 +354,8 @@ describe("getAvailabilityAction", () => {
     features: { contactForm: true, reservation: true, staffSelection: false, calendar: true, emailNotification: true },
     staffAnyAvailableOption: false,
     reservation: { timezone: "Asia/Tokyo", slotMinutes: 30, minLeadHours: 1, maxBookingDays: 60 },
+    labels: {},
+    content: {},
     calendarId: "shared@example.com",
     emailOwnerNotifyAddress: "owner@example.com",
     emailFromName: "Demo",
@@ -423,6 +441,8 @@ describe("createReservationAction", () => {
       features: { contactForm: true, reservation: true, staffSelection: false, calendar: true, emailNotification: true },
       staffAnyAvailableOption: true,
       reservation: { timezone: "Asia/Tokyo", slotMinutes: 30, minLeadHours: 1, maxBookingDays: 60 },
+      labels: {},
+      content: {},
       calendarId: "shared-cal",
       emailOwnerNotifyAddress: "owner@example.com",
       emailFromName: "サロン花",
@@ -659,5 +679,147 @@ describe("createReservationAction", () => {
     const serialized = JSON.stringify(response);
     expect(serialized).not.toContain("script.google.com");
     expect(serialized).not.toContain("SUPER-SECRET-DEPLOYMENT-ID");
+  });
+});
+
+describe("createInquiryAction", () => {
+  function buildInquiryConfig(overrides: Partial<AppConfig> = {}): AppConfig {
+    return {
+      business: { name: "サロン花", phone: "0300000000", email: "info@example.com", address: "東京都" },
+      hours: {
+        monday: "09:00-18:00",
+        tuesday: "09:00-18:00",
+        wednesday: "09:00-18:00",
+        thursday: "09:00-18:00",
+        friday: "09:00-18:00",
+        saturday: "09:00-18:00",
+        sunday: "closed",
+      },
+      holidays: [],
+      features: { contactForm: true, reservation: true, staffSelection: false, calendar: true, emailNotification: true },
+      staffAnyAvailableOption: true,
+      reservation: { timezone: "Asia/Tokyo", slotMinutes: 30, minLeadHours: 1, maxBookingDays: 60 },
+      labels: {},
+      content: {},
+      calendarId: "shared-cal",
+      emailOwnerNotifyAddress: "owner@example.com",
+      emailFromName: "サロン花",
+      ...overrides,
+    };
+  }
+
+  function buildInquiryRequest(overrides: Partial<InquiryRequest> = {}): InquiryRequest {
+    return {
+      submissionId: "sub-1",
+      name: "山田太郎",
+      email: "yamada@example.com",
+      message: "料金プランについて教えてください。",
+      ...overrides,
+    };
+  }
+
+  let inquiryLockState: { tryLockResults: boolean[]; releaseCount: number };
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+    inquiryLockState = { tryLockResults: [true], releaseCount: 0 };
+    (globalThis as unknown as { LockService: unknown }).LockService = {
+      getScriptLock: () => ({
+        tryLock: () => inquiryLockState.tryLockResults.shift() ?? false,
+        releaseLock: () => {
+          inquiryLockState.releaseCount += 1;
+        },
+      }),
+    };
+    (getConfig as jest.Mock).mockReturnValue(buildInquiryConfig());
+    (InquiryIdempotency.getCachedInquiryResult as jest.Mock).mockReturnValue(null);
+    (InquiryRepository.findInquiryBySubmissionId as jest.Mock).mockReturnValue(null);
+  });
+
+  it("returns FEATURE_DISABLED when features.contactForm is off", () => {
+    (getConfig as jest.Mock).mockReturnValue(
+      buildInquiryConfig({ features: { ...buildInquiryConfig().features, contactForm: false } }),
+    );
+    const response = createInquiryAction(buildInquiryRequest());
+    expect(response).toEqual({ ok: false, error: { code: "FEATURE_DISABLED", message: expect.any(String) } });
+    expect(InquiryRepository.appendInquiryRow).not.toHaveBeenCalled();
+  });
+
+  it("returns VALIDATION_ERROR and writes nothing when required fields are missing", () => {
+    const response = createInquiryAction(buildInquiryRequest({ name: "", email: "", message: "" }));
+    expect(response).toEqual({ ok: false, error: { code: "VALIDATION_ERROR", message: expect.any(String) } });
+    expect(InquiryRepository.appendInquiryRow).not.toHaveBeenCalled();
+  });
+
+  it("returns the cached result without touching the repository (idempotency fast path)", () => {
+    (InquiryIdempotency.getCachedInquiryResult as jest.Mock).mockReturnValue({ inquiryId: "INQ-CACHED" });
+    const response = createInquiryAction(buildInquiryRequest());
+    expect(response).toEqual({ ok: true, data: { inquiryId: "INQ-CACHED" } });
+    expect(InquiryRepository.appendInquiryRow).not.toHaveBeenCalled();
+    expect(Mail.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("returns the Sheet-backstop result and re-populates the cache (idempotency retry after cache expiry)", () => {
+    (InquiryRepository.findInquiryBySubmissionId as jest.Mock).mockReturnValue({
+      InquiryID: "INQ-EXISTING",
+      SubmissionID: "sub-1",
+    });
+    const response = createInquiryAction(buildInquiryRequest());
+    expect(response).toEqual({ ok: true, data: { inquiryId: "INQ-EXISTING" } });
+    expect(InquiryIdempotency.setCachedInquiryResult).toHaveBeenCalledWith("sub-1", { inquiryId: "INQ-EXISTING" });
+    expect(InquiryRepository.appendInquiryRow).not.toHaveBeenCalled();
+  });
+
+  it("returns SYSTEM_BUSY when the idempotency-claim lock cannot be acquired", () => {
+    inquiryLockState.tryLockResults = [false];
+    const response = createInquiryAction(buildInquiryRequest());
+    expect(response).toEqual({ ok: false, error: { code: "SYSTEM_BUSY", message: expect.any(String) } });
+    expect(InquiryRepository.appendInquiryRow).not.toHaveBeenCalled();
+  });
+
+  it("normal successful inquiry: appends the row and sends both emails", () => {
+    const response = createInquiryAction(buildInquiryRequest());
+    expect(response.ok).toBe(true);
+    if (response.ok) {
+      expect((response.data as { inquiryId: string }).inquiryId).toMatch(/^INQ-\d{8}-[A-Z0-9]{6}$/);
+    }
+    expect(InquiryRepository.appendInquiryRow).toHaveBeenCalledTimes(1);
+    expect(Mail.sendEmail).toHaveBeenCalledTimes(2);
+    expect(inquiryLockState.releaseCount).toBe(1);
+  });
+
+  it("a customer email send failure does not change the success response or block the owner email", () => {
+    (Mail.sendEmail as jest.Mock).mockImplementationOnce(() => {
+      throw new Error("send failed");
+    });
+    const response = createInquiryAction(buildInquiryRequest());
+    expect(response.ok).toBe(true);
+    expect(Mail.sendEmail).toHaveBeenCalledTimes(2);
+    expect(Logging.logEmail).toHaveBeenCalledWith(expect.objectContaining({ status: "failed" }));
+  });
+
+  it("sanitizes a ConfigError from getConfig into CONFIG_INVALID without leaking issues", () => {
+    const { ConfigError: ActualConfigError } = jest.requireActual("../src/ConfigStore");
+    (getConfig as jest.Mock).mockImplementation(() => {
+      throw new ActualConfigError([{ field: "calendar.id", reason: "missing" }]);
+    });
+    const response = createInquiryAction(buildInquiryRequest());
+    expect(response.ok).toBe(false);
+    if (!response.ok) {
+      expect(response.error.code).toBe("CONFIG_INVALID");
+      expect(JSON.stringify(response)).not.toContain("calendar.id");
+    }
+  });
+});
+
+describe("handleApiRequest routing for createInquiry", () => {
+  it("routes createInquiry to createInquiryAction instead of rejecting it as unsupported", () => {
+    (getConfig as jest.Mock).mockReturnValue({
+      features: { contactForm: false },
+    });
+    const response = handleApiRequest(JSON.stringify({ action: "createInquiry", payload: {} }));
+    // FEATURE_DISABLED (not VALIDATION_ERROR: "Unsupported action") proves
+    // dispatch reached createInquiryAction rather than the default case.
+    expect(response).toEqual({ ok: false, error: { code: "FEATURE_DISABLED", message: expect.any(String) } });
   });
 });
