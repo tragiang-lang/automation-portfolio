@@ -57,6 +57,26 @@ checkbox cell typed as TRUE/FALSE in Sheets works automatically.
 表示されます — 既存のスプレッドシートをお使いの場合、この項目を
 追加しなくても動作は変わりません。
 
+### 任意項目（Starter MVP — 業種の呼び方・コピーを変更する項目）
+
+Nails Salon 以外の業種（Hair Salon / Workshop / Class organizer など）
+に流用する際に編集する項目です。**すべて任意**で、未設定の場合は
+Nails Salon 用の初期文言がそのまま表示されます — コンポーネントの
+コードは一切変更不要です。
+
+| Key | 説明 | 値の例（Nails Salonの初期値） |
+|---|---|---|
+| `labels.service` | 「メニュー」に相当する呼び方 | `メニュー` / `ワークショップ` / `クラス` |
+| `labels.bookingCta` | 予約ボタンの文言 | `ご予約はこちら` / `参加申込み` |
+| `labels.inquiryMessage` | お問い合わせフォームのメッセージ欄ラベル | `お問い合わせ内容` / `お問い合わせ・ご質問` |
+| `content.heroSubheadline` | トップの見出し下に表示する説明文 | `銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。` |
+| `content.conceptEyebrow` | コンセプト欄の英字ラベル | `Concept` |
+| `content.conceptTitle` | コンセプト欄の見出し | `静けさの中で、指先を整える時間を` |
+| `content.conceptParagraph1` / `content.conceptParagraph2` | コンセプト欄の本文（2段落） | （店舗の想いを1〜2文で） |
+| `content.serviceSubtitle` | メニュー欄の補足文 | `施術時間は目安です。カウンセリングのお時間を含め、少し余裕を持ってご来店ください。` |
+| `content.ctaHeading` / `content.ctaMessage` | ページ中盤の予約案内バナー（見出し／本文） | `仕上がりを見て、気持ちが決まったら` |
+| `content.ctaClosingHeading` / `content.ctaClosingMessage` | ページ最後の予約案内バナー（見出し／本文） | `最後まで読んでくださり、ありがとうございます` |
+
 `SERVICES`/`STAFF`シートにも同様の任意項目（メニューの説明文・
 カテゴリ、スタッフの役職・紹介文・写真パス）が追加されています。詳細は
 `product/coconala-salon-template/05_CUSTOMIZATION/MENU_CUSTOMIZATION_JA.md`
@@ -84,9 +104,9 @@ duplicate a header list elsewhere. Summary:
 | `HOLIDAYS` | Closed dates. |
 | `SERVICES` | Salon menu/service catalog. |
 | `STAFF` | Stylist catalog + optional per-staff Calendar ID. |
-| `RESERVATIONS` | Reservation records (schema only — no workflow yet). |
+| `RESERVATIONS` | Reservation records — full booking workflow (real-time availability, Calendar event, both emails). |
 | `CANCELLATION_REQUESTS` | Cancellation requests (schema only). |
-| `INQUIRIES` | Contact-form submissions (schema only). |
+| `INQUIRIES` | Contact-form submissions — full workflow (Starter MVP: `createInquiry` writes here and sends both emails). |
 | `EMAIL_LOG` | Outgoing email audit trail (schema only). |
 | `ERROR_LOG` | Server-side error audit trail (schema only). |
 
