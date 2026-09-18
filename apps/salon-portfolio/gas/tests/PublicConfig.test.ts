@@ -33,6 +33,8 @@ function fullConfig(): AppConfig {
       minLeadHours: 1,
       maxBookingDays: 60,
     },
+    labels: {},
+    content: {},
     calendarId: "secret-calendar-id@group.calendar.google.com",
     emailOwnerNotifyAddress: "owner@example.com",
     emailFromName: "Demo Salon",
@@ -77,5 +79,16 @@ describe("buildPublicConfig optional presentation fields (V1.1 Task 4)", () => {
   it("leaves socialLinks undefined when the source config has none", () => {
     const result = buildPublicConfig(fullConfig());
     expect(result.socialLinks).toBeUndefined();
+  });
+});
+
+describe("buildPublicConfig labels/content (Starter MVP reusability)", () => {
+  it("carries labels/content through", () => {
+    const config = fullConfig();
+    config.labels = { service: "ワークショップ", bookingCta: "参加申込み" };
+    config.content = { heroSubheadline: "週末開催です。" };
+    const result = buildPublicConfig(config);
+    expect(result.labels).toEqual({ service: "ワークショップ", bookingCta: "参加申込み" });
+    expect(result.content).toEqual({ heroSubheadline: "週末開催です。" });
   });
 });

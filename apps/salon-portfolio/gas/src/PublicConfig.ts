@@ -12,5 +12,7 @@ export function buildPublicConfig(config: AppConfig): PublicConfig {
     staffAnyAvailableOption: config.staffAnyAvailableOption,
     reservation: config.reservation,
     socialLinks: config.socialLinks,
+    labels: config.labels,
+    content: config.content,
   };
 }

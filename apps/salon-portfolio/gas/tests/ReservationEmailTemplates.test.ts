@@ -29,6 +29,7 @@ const ctx: ReservationEmailContext = {
   reservation,
   cancellationUrl: "https://example.com/reservation/cancel?reservationId=RES-20260910-X8K2MP&token=abc",
   businessName: "サロン花",
+  serviceLabel: "メニュー",
 };
 
 describe("buildCustomerConfirmationEmail", () => {
@@ -46,6 +47,12 @@ describe("buildCustomerConfirmationEmail", () => {
     const email = buildCustomerConfirmationEmail(ctx);
     expect(email.body).not.toContain(reservation.phone!);
     expect(email.body).not.toContain(reservation.submissionId);
+  });
+
+  it("uses ctx.serviceLabel as the line label instead of a hard-coded term, so a non-salon business can say Workshop/Class instead of メニュー", () => {
+    const email = buildCustomerConfirmationEmail({ ...ctx, serviceLabel: "ワークショップ" });
+    expect(email.body).toContain("ワークショップ: ジェルネイル");
+    expect(email.body).not.toContain("メニュー:");
   });
 });
 

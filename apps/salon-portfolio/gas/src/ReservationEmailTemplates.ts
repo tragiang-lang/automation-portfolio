@@ -18,6 +18,11 @@ export interface ReservationEmailContext {
   reservation: NormalizedReservation;
   cancellationUrl: string;
   businessName: string;
+  /** Business-configurable service-line label (Starter MVP reusability —
+   *  CONFIG key `labels.service`) — "メニュー" for a nails/hair salon,
+   *  "ワークショップ"/"クラス" for a workshop/class organizer. Never
+   *  hard-coded here so this template stays business-type-agnostic. */
+  serviceLabel: string;
 }
 
 export function buildCustomerConfirmationEmail(ctx: ReservationEmailContext): EmailContent {
@@ -29,7 +34,7 @@ export function buildCustomerConfirmationEmail(ctx: ReservationEmailContext): Em
       `${ctx.businessName}をご予約いただき、誠にありがとうございます。以下の内容でご予約を承りました。`,
       "",
       `予約番号: ${ctx.reservationId}`,
-      `メニュー: ${ctx.reservation.serviceName}`,
+      `${ctx.serviceLabel}: ${ctx.reservation.serviceName}`,
       `日時: ${ctx.reservation.date} ${ctx.reservation.startTime}〜${ctx.reservation.endTime}`,
       "",
       "ご予約のキャンセルは以下のリンクから承ります。",
@@ -48,7 +53,7 @@ export function buildOwnerConfirmedNotificationEmail(ctx: ReservationEmailContex
       "",
       `予約番号: ${ctx.reservationId}`,
       `お客様名: ${ctx.reservation.customerName}`,
-      `メニュー: ${ctx.reservation.serviceName}`,
+      `${ctx.serviceLabel}: ${ctx.reservation.serviceName}`,
       `日時: ${ctx.reservation.date} ${ctx.reservation.startTime}〜${ctx.reservation.endTime}`,
       ctx.reservation.assignedStaffId ? `担当スタッフID: ${ctx.reservation.assignedStaffId}` : "",
     ]
@@ -65,7 +70,7 @@ export function buildOwnerNeedsAttentionEmail(ctx: ReservationEmailContext, reas
       "",
       `予約番号: ${ctx.reservationId}`,
       `お客様名: ${ctx.reservation.customerName}`,
-      `メニュー: ${ctx.reservation.serviceName}`,
+      `${ctx.serviceLabel}: ${ctx.reservation.serviceName}`,
       `日時: ${ctx.reservation.date} ${ctx.reservation.startTime}〜${ctx.reservation.endTime}`,
       `理由: ${reasonSummary}`,
       "",
