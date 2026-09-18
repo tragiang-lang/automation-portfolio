@@ -24,6 +24,19 @@ const config: SiteConfig = {
   features: { contactForm: true, reservation: true, staffSelection: true },
   staffAnyAvailableOption: true,
   socialLinks: [],
+  labels: { service: "メニュー", bookingCta: "ご予約はこちら", inquiryMessage: "お問い合わせ内容" },
+  content: {
+    heroSubheadline: "",
+    conceptEyebrow: "",
+    conceptTitle: "",
+    conceptParagraph1: "",
+    conceptParagraph2: "",
+    serviceSubtitle: "",
+    ctaHeading: "",
+    ctaMessage: "",
+    ctaClosingHeading: "",
+    ctaClosingMessage: "",
+  },
 };
 
 const navItems: NavItem[] = [{ label: "コンセプト", href: "#concept" }];
@@ -42,5 +55,15 @@ describe("SiteFooter reservation flag", () => {
       />,
     );
     expect(screen.queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
+  });
+
+  it("uses config.labels.bookingCta as the button text instead of a hard-coded term", () => {
+    render(
+      <SiteFooter
+        config={{ ...config, labels: { ...config.labels, bookingCta: "参加申込み" } }}
+        navItems={navItems}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "参加申込み" })).toBeInTheDocument();
   });
 });

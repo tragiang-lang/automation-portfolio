@@ -52,6 +52,30 @@ export const SITE_CONFIG: SiteConfig = {
     { label: "Instagram", href: "https://instagram.com/example" },
     { label: "LINE", href: "https://line.me/example" },
   ],
+  // Starter MVP reusability (labels/content) — these are the exact
+  // literals `app/page.tsx`/`MenuSection.tsx` previously hard-coded, moved
+  // here as this business's config values so the current site's rendered
+  // output is byte-for-byte unchanged. A different business type overrides
+  // these via the CONFIG sheet's labels.*/content.* keys instead of
+  // editing this file or any component.
+  labels: {
+    service: "メニュー",
+    bookingCta: "ご予約はこちら",
+    inquiryMessage: "お問い合わせ内容",
+  },
+  content: {
+    heroSubheadline: "銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。",
+    conceptEyebrow: "Concept",
+    conceptTitle: "静けさの中で、指先を整える時間を",
+    conceptParagraph1:
+      "流行を追いかけるより、長く付き合える美しさを。当店では、派手さよりも一つひとつの仕上がりの丁寧さを大切にしています。",
+    conceptParagraph2: "落ち着いた空間で過ごすひとときそのものも、施術と同じくらい価値のあるものだと考えています。",
+    serviceSubtitle: "施術時間は目安です。カウンセリングのお時間を含め、少し余裕を持ってご来店ください。",
+    ctaHeading: "仕上がりを見て、気持ちが決まったら",
+    ctaMessage: "ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。",
+    ctaClosingHeading: "最後まで読んでくださり、ありがとうございます",
+    ctaClosingMessage: "少しでも気になることがあれば、まずはご予約からお気軽にどうぞ。",
+  },
 };
 
 export const NAV_ITEMS: NavItem[] = [

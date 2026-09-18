@@ -37,12 +37,39 @@ export interface BusinessInfo {
   postalCode: string;
 }
 
+/** Business terminology (Starter MVP reusability, spec §9) — fully
+ *  resolved (never undefined): `resolveSiteConfig.ts` fills every field
+ *  from the frontend-owned demo default when the runtime config omits it,
+ *  so a consuming component never needs its own fallback string. */
+export interface SiteLabels {
+  service: string;
+  bookingCta: string;
+  inquiryMessage: string;
+}
+
+/** Business marketing-copy overrides (Starter MVP reusability) — same
+ *  "always fully resolved" contract as SiteLabels above. */
+export interface SiteContent {
+  heroSubheadline: string;
+  conceptEyebrow: string;
+  conceptTitle: string;
+  conceptParagraph1: string;
+  conceptParagraph2: string;
+  serviceSubtitle: string;
+  ctaHeading: string;
+  ctaMessage: string;
+  ctaClosingHeading: string;
+  ctaClosingMessage: string;
+}
+
 export interface SiteConfig {
   business: BusinessInfo;
   hours: BusinessHours;
   features: FeatureFlags;
   staffAnyAvailableOption: boolean;
   socialLinks: SocialLink[];
+  labels: SiteLabels;
+  content: SiteContent;
 }
 
 export interface SocialLink {

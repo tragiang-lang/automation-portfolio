@@ -57,6 +57,31 @@ export interface SocialLink {
   href: string;
 }
 
+/** Mirrors GAS's `BusinessLabels`/`BusinessContent` (`gas/src/models/Config.ts`)
+ *  — Starter MVP reusability (terminology + Hero/Concept/CTA copy
+ *  overrides). Optional at this type's top level (unlike GAS's AppConfig,
+ *  which always sets these) so a response from a not-yet-upgraded GAS
+ *  deployment still parses; `resolveSiteConfig.ts` falls back to the
+ *  frontend-owned demo value per-field either way. */
+export interface PublicRuntimeLabels {
+  service?: string;
+  bookingCta?: string;
+  inquiryMessage?: string;
+}
+
+export interface PublicRuntimeContent {
+  heroSubheadline?: string;
+  conceptEyebrow?: string;
+  conceptTitle?: string;
+  conceptParagraph1?: string;
+  conceptParagraph2?: string;
+  serviceSubtitle?: string;
+  ctaHeading?: string;
+  ctaMessage?: string;
+  ctaClosingHeading?: string;
+  ctaClosingMessage?: string;
+}
+
 export interface PublicRuntimeConfig {
   business: PublicRuntimeBusinessInfo;
   hours: PublicRuntimeBusinessHours;
@@ -68,6 +93,8 @@ export interface PublicRuntimeConfig {
    *  social.* keys are set yet. `resolveSiteConfig.ts` falls back to the
    *  frontend-owned demo array when undefined. */
   socialLinks?: SocialLink[];
+  labels?: PublicRuntimeLabels;
+  content?: PublicRuntimeContent;
 }
 
 /** Where a rendered page's runtime config actually came from — kept
