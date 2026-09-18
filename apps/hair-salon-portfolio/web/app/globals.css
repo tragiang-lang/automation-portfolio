@@ -1,0 +1,263 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — Phase 2A §2 (color), §3 (typography), §5 (breakpoints).
+ * Presentation-only tokens live here per Phase 2A §18; business content
+ * never appears in this file.
+ */
+:root {
+  /* Color system — "Kinari to Sumi" (Phase 2A §2) */
+  --color-background: #faf7f2;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f1ece3;
+  --color-primary: #2b2622;
+  --color-on-primary: #faf7f2;
+  --color-secondary: #6b5f55;
+  --color-accent: #9c4b3f;
+  --color-on-accent: #ffffff;
+  --color-accent-hover: #833d33;
+  --color-text: #2b2622;
+  --color-muted: #7a6f63;
+  --color-border: #e3dcd1;
+  --color-success: #4b7a62;
+  --color-error: #b3261e;
+
+  /* Radius scale — 4 / 8 / 12px only (Phase 2A §1) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-primary: var(--color-primary);
+  --color-on-primary: var(--color-on-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --color-on-accent: var(--color-on-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-text: var(--color-text);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-success: var(--color-success);
+  --color-error: var(--color-error);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+
+  --font-heading-ja: var(--font-shippori-mincho);
+  --font-heading-en: var(--font-cormorant-garamond);
+  --font-body-ja: var(--font-noto-sans-jp);
+  --font-body-en: var(--font-inter);
+
+  /* Large-desktop breakpoint moved from Tailwind's default 1280px to the
+     1440px named in Phase 2A §5, so xl: matches the spec's own name. */
+  --breakpoint-xl: 1440px;
+}
+
+/*
+ * Theme + typography presets (V1.1 Theme Presets / Typography Presets
+ * tasks) — one block per non-kinari `ThemeId`, selected by
+ * `html[data-design-preset]` (set from the resolved `DesignConfig.preset`
+ * in app/layout.tsx; see docs/presentation-config-architecture.md). Kinari
+ * has no block here on purpose: it stays defined only at `:root`/
+ * `@theme inline` above, so the current default look cannot diverge from
+ * what already ships. Every `--color-*` value is transcribed verbatim from
+ * `config/theme-tokens.ts`'s `THEMES` registry
+ * (`app/globals.css.theme-sync.test.ts` cross-checks this). Every
+ * `--font-heading-*` value (present only on `noir`/`editorial`/`modern` —
+ * `femme`/`natural` deliberately have none, since they reuse kinari's exact
+ * heading pairing and simply inherit the base `@theme inline` mapping) is
+ * transcribed verbatim from `config/typography-tokens.ts`'s `TYPOGRAPHY`
+ * registry (`app/globals.css.typography-sync.test.ts` cross-checks this).
+ * No component ever branches on which preset is active — every component
+ * still only reads the same `--color-*`/`--font-heading-*`/`--font-body-*`
+ * custom properties / `bg-background`, `text-primary`, etc. Tailwind
+ * utilities; only the values behind them change.
+ */
+html[data-design-preset="femme"] {
+  --color-background: #fdf5f3;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f7e8e4;
+  --color-primary: #3a2a28;
+  --color-on-primary: #fdf5f3;
+  --color-secondary: #8a6660;
+  --color-accent: #a14f5a;
+  --color-on-accent: #ffffff;
+  --color-accent-hover: #87424c;
+  --color-text: #3a2a28;
+  --color-muted: #7d5c56;
+  --color-border: #ecd9d4;
+  --color-success: #4b7a62;
+  --color-error: #b3261e;
+}
+
+html[data-design-preset="noir"] {
+  --color-background: #1c1917;
+  --color-surface: #242019;
+  --color-surface-sunken: #2c2721;
+  --color-primary: #e0c896;
+  --color-on-primary: #1c1917;
+  --color-secondary: #cbb9a4;
+  --color-accent: #c17b5e;
+  --color-on-accent: #1c1917;
+  --color-accent-hover: #a8664c;
+  --color-text: #e0c896;
+  --color-muted: #a89a89;
+  --color-border: #3a3229;
+  --color-success: #6fa98a;
+  --color-error: #e0776e;
+  --font-heading-en: var(--font-playfair-display);
+}
+
+html[data-design-preset="editorial"] {
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f0f0ef;
+  --color-primary: #111111;
+  --color-on-primary: #ffffff;
+  --color-secondary: #545454;
+  --color-accent: #86691f;
+  --color-on-accent: #ffffff;
+  --color-accent-hover: #6d551a;
+  --color-text: #111111;
+  --color-muted: #767676;
+  --color-border: #dcdcda;
+  --color-success: #3f7a55;
+  --color-error: #b3261e;
+  --font-heading-ja: var(--font-zen-kaku-gothic-new);
+  --font-heading-en: var(--font-playfair-display);
+}
+
+html[data-design-preset="natural"] {
+  --color-background: #f6f2e9;
+  --color-surface: #fdfbf6;
+  --color-surface-sunken: #ece4d2;
+  --color-primary: #332b1f;
+  --color-on-primary: #f6f2e9;
+  --color-secondary: #6f6349;
+  --color-accent: #56684a;
+  --color-on-accent: #ffffff;
+  --color-accent-hover: #44523a;
+  --color-text: #332b1f;
+  --color-muted: #6f6353;
+  --color-border: #ded2b8;
+  --color-success: #3f6b54;
+  --color-error: #b3261e;
+}
+
+html[data-design-preset="modern"] {
+  --color-background: #f7f7f5;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #ececea;
+  --color-primary: #1f1f1d;
+  --color-on-primary: #f7f7f5;
+  --color-secondary: #5c5c58;
+  --color-accent: #3d6b63;
+  --color-on-accent: #ffffff;
+  --color-accent-hover: #2f544e;
+  --color-text: #1f1f1d;
+  --color-muted: #6c6963;
+  --color-border: #e1e0dc;
+  --color-success: #3f7a55;
+  --color-error: #b3261e;
+  --font-heading-ja: var(--font-zen-kaku-gothic-new);
+  --font-heading-en: var(--font-inter);
+}
+
+/* This design deliberately does not ship a dark theme *toggle* (Phase 2A
+   §2, "explicitly avoided ... dark mode (out of scope for v1)") — `noir`
+   above is a deliberate dark-first preset choice, not a light/dark switch,
+   so `color-scheme` stays `light` regardless of the active preset. */
+html {
+  background: var(--color-background);
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body-ja), var(--font-body-en), "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading-ja), var(--font-heading-en),
+    "Shippori Mincho", "Hiragino Mincho ProN", serif;
+}
+
+/* Visible focus ring everywhere, including over the dark hero image
+   (Phase 2A §19) — never removed without a replacement. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+/* Hero entrance animation (Phase 2A §21) — single fade/rise on load,
+   pure CSS so it costs nothing on the main thread. */
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-enter {
+  animation: hero-enter 400ms ease-out both;
+}
+
+/* Scroll-reveal primitive used by components/ui/Reveal.tsx. */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 300ms ease-out,
+    transform 300ms ease-out;
+}
+
+/* Stagger delays (Reveal's delayMs) are removed on mobile so quick
+   scrolling never feels like it's making content wait to appear
+   (Phase 2A §21/§22). */
+@media (max-width: 639px) {
+  [data-reveal] {
+    transition-delay: 0ms !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-enter {
+    animation: none;
+  }
+
+  .reveal-hidden,
+  .reveal-visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
