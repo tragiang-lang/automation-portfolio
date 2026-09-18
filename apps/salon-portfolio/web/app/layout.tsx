@@ -15,6 +15,7 @@ import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
 import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
 import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
 import { getDesignConfig } from "@/lib/config/designConfig";
+import { filterVisibleNavItems } from "@/lib/utils/navItems";
 import "./globals.css";
 
 // Heading fonts — Japanese Mincho + a moderate-contrast Latin old-style
@@ -96,6 +97,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // business-config call and the Menu/Staff catalog call (Phase 5.1),
   // reusing the same notice rather than inventing a second one.
   const showRuntimeNotice = status === "runtime-error" || catalogStatus === "runtime-error";
+  const visibleNavItems = filterVisibleNavItems(NAV_ITEMS, designConfig.sectionVisibility, siteConfig.features);
 
   return (
     <html
@@ -107,12 +109,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <RuntimeConfigNotice show={showRuntimeNotice} />
         <SiteHeader
           business={siteConfig.business}
-          navItems={NAV_ITEMS}
+          navItems={visibleNavItems}
           reservationEnabled={siteConfig.features.reservation}
           overDarkHeroImage={designConfig.heroVariant === "fullscreen"}
         />
         <div className="flex flex-1 flex-col">{children}</div>
-        <SiteFooter config={siteConfig} navItems={NAV_ITEMS} />
+        <SiteFooter config={siteConfig} navItems={visibleNavItems} />
       </body>
     </html>
   );
