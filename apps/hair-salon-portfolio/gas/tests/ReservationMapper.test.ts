@@ -14,7 +14,7 @@ const request: ReservationRequest = {
 
 const service: ServiceRow = {
   ServiceID: "SV001",
-  Name: "ジェルネイル",
+  Name: "カット",
   DurationMinutes: 60,
   Price: 6000,
   Active: true,
@@ -35,7 +35,7 @@ describe("buildNormalizedReservation", () => {
     });
     expect(reservation.durationMinutes).toBe(60);
     expect(reservation.price).toBe(6000);
-    expect(reservation.serviceName).toBe("ジェルネイル");
+    expect(reservation.serviceName).toBe("カット");
   });
 
   it("generates a RES-YYYYMMDD-XXXXXX reservationId using the injected now/random", () => {

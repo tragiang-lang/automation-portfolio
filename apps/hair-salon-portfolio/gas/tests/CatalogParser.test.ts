@@ -5,7 +5,7 @@ describe("parseServiceRow", () => {
     expect(
       parseServiceRow({
         ServiceID: "SV001",
-        Name: "ジェルネイル",
+        Name: "カット",
         DurationMinutes: 60,
         Price: 6000,
         Active: true,
@@ -14,7 +14,7 @@ describe("parseServiceRow", () => {
       }),
     ).toEqual({
       ServiceID: "SV001",
-      Name: "ジェルネイル",
+      Name: "カット",
       DurationMinutes: 60,
       Price: 6000,
       Active: true,
@@ -27,7 +27,7 @@ describe("parseServiceRow", () => {
     expect(
       parseServiceRow({
         ServiceID: "SV002",
-        Name: "まつげエクステ",
+        Name: "カット＋パーマ",
         DurationMinutes: "90",
         Price: "8000",
         Active: "TRUE",
@@ -36,7 +36,7 @@ describe("parseServiceRow", () => {
       }),
     ).toEqual({
       ServiceID: "SV002",
-      Name: "まつげエクステ",
+      Name: "カット＋パーマ",
       DurationMinutes: 90,
       Price: 8000,
       Active: true,
@@ -46,9 +46,9 @@ describe("parseServiceRow", () => {
   });
 
   it("trims string fields and defaults missing numeric fields to NaN, not a thrown error", () => {
-    const result = parseServiceRow({ ServiceID: " SV003 ", Name: " ネイルオフ " });
+    const result = parseServiceRow({ ServiceID: " SV003 ", Name: " トリートメント " });
     expect(result.ServiceID).toBe("SV003");
-    expect(result.Name).toBe("ネイルオフ");
+    expect(result.Name).toBe("トリートメント");
     expect(Number.isNaN(result.DurationMinutes)).toBe(true);
   });
 });
@@ -57,17 +57,17 @@ describe("parseServiceRow optional presentation fields (V1.1 Task 4)", () => {
   it("trims and includes Description/Category when present", () => {
     const result = parseServiceRow({
       ServiceID: "SV001",
-      Name: "ジェルネイル",
+      Name: "カット",
       DurationMinutes: 60,
       Price: 6000,
       Active: true,
       StaffRequired: false,
       DisplayOrder: 1,
       Description: "  指先に一色。  ",
-      Category: " ジェルネイル ",
+      Category: " カット ",
     });
     expect(result.Description).toBe("指先に一色。");
-    expect(result.Category).toBe("ジェルネイル");
+    expect(result.Category).toBe("カット");
   });
 
   it("leaves Description/Category undefined when the cell is blank or the column is absent", () => {

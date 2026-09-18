@@ -2,8 +2,8 @@ import { buildPublicServices, buildPublicStaff } from "../src/PublicCatalog";
 import { ServiceRow, StaffRow } from "../src/SheetSchemas";
 
 const services: ServiceRow[] = [
-  { ServiceID: "SV002", Name: "ジェルネイル", DurationMinutes: 90, Price: 8800, Active: true, StaffRequired: false, DisplayOrder: 2 },
-  { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+  { ServiceID: "SV002", Name: "カット＋カラー", DurationMinutes: 90, Price: 8800, Active: true, StaffRequired: false, DisplayOrder: 2 },
+  { ServiceID: "SV001", Name: "カット", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
   { ServiceID: "SV003", Name: "廃止メニュー", DurationMinutes: 30, Price: 3300, Active: false, StaffRequired: false, DisplayOrder: 3 },
 ];
 
@@ -16,8 +16,8 @@ const staff: StaffRow[] = [
 describe("buildPublicServices", () => {
   it("excludes inactive services and sorts by DisplayOrder", () => {
     expect(buildPublicServices(services)).toEqual([
-      { serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 },
-      { serviceId: "SV002", name: "ジェルネイル", durationMinutes: 90, price: 8800, displayOrder: 2 },
+      { serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 },
+      { serviceId: "SV002", name: "カット＋カラー", durationMinutes: 90, price: 8800, displayOrder: 2 },
     ]);
   });
 
@@ -54,14 +54,14 @@ describe("buildPublicStaff", () => {
 const servicesWithPresentation: ServiceRow[] = [
   {
     ServiceID: "SV001",
-    Name: "ジェルネイル",
+    Name: "カット",
     DurationMinutes: 60,
     Price: 6000,
     Active: true,
     StaffRequired: false,
     DisplayOrder: 1,
     Description: "説明文",
-    Category: "ネイル",
+    Category: "カット",
   },
   { ServiceID: "SV002", Name: "オフのみ", DurationMinutes: 30, Price: 3000, Active: true, StaffRequired: false, DisplayOrder: 2 },
 ];
@@ -74,7 +74,7 @@ const staffWithPresentation: StaffRow[] = [
 describe("buildPublicServices optional presentation fields (V1.1 Task 4)", () => {
   it("carries description/category through when present", () => {
     const result = buildPublicServices(servicesWithPresentation);
-    expect(result[0]).toMatchObject({ description: "説明文", category: "ネイル" });
+    expect(result[0]).toMatchObject({ description: "説明文", category: "カット" });
   });
 
   it("leaves description/category undefined when the row has none", () => {

@@ -6,7 +6,7 @@ import { AvailabilityStrategy } from "../src/availability/AvailabilityStrategy";
 
 const activeService: ServiceRow = {
   ServiceID: "SV001",
-  Name: "ジェルネイル",
+  Name: "カット",
   DurationMinutes: 60,
   Price: 6000,
   Active: true,
@@ -222,7 +222,7 @@ describe("evaluateReservationRequest", () => {
     });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.reservation.serviceName).toBe("ジェルネイル");
+      expect(result.reservation.serviceName).toBe("カット");
       expect(result.reservation.startTime).toBe("11:00");
       expect(result.reservation.endTime).toBe("12:00");
       expect(result.reservation.reservationId).toMatch(/^RES-\d{8}-[A-Z0-9]{6}$/);
@@ -369,7 +369,7 @@ describe("evaluateAvailableSlots", () => {
     emailFromName: "Demo",
   };
   const services: ServiceRow[] = [
-    { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+    { ServiceID: "SV001", Name: "カット", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
   ];
   const staff: StaffRow[] = [{ StaffID: "ST001", Name: "鈴木", Active: true, DisplayOrder: 1 }];
   const staffEnabledConfig: AppConfig = { ...baseConfig, features: { ...baseConfig.features, staffSelection: true } };

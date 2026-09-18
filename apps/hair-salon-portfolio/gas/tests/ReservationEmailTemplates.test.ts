@@ -16,7 +16,7 @@ const reservation: NormalizedReservation = {
   startTime: "10:00",
   endTime: "11:00",
   serviceId: "SV001",
-  serviceName: "ジェルネイル",
+  serviceName: "カット",
   durationMinutes: 60,
   price: 6000,
   staffSelection: { kind: "none" },
@@ -37,7 +37,7 @@ describe("buildCustomerConfirmationEmail", () => {
     const email = buildCustomerConfirmationEmail(ctx);
     expect(email.subject).toContain("RES-20260910-X8K2MP");
     expect(email.body).toContain("山田太郎");
-    expect(email.body).toContain("ジェルネイル");
+    expect(email.body).toContain("カット");
     expect(email.body).toContain("2026-09-10");
     expect(email.body).toContain("10:00");
     expect(email.body).toContain(ctx.cancellationUrl);
@@ -51,7 +51,7 @@ describe("buildCustomerConfirmationEmail", () => {
 
   it("uses ctx.serviceLabel as the line label instead of a hard-coded term, so a non-salon business can say Workshop/Class instead of メニュー", () => {
     const email = buildCustomerConfirmationEmail({ ...ctx, serviceLabel: "ワークショップ" });
-    expect(email.body).toContain("ワークショップ: ジェルネイル");
+    expect(email.body).toContain("ワークショップ: カット");
     expect(email.body).not.toContain("メニュー:");
   });
 });

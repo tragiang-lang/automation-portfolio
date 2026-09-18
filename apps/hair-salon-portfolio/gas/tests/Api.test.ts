@@ -221,8 +221,8 @@ describe("getServicesAction", () => {
       features: { reservation: true, staffSelection: true, contactForm: true, calendar: true, emailNotification: true },
     } as AppConfig);
     (Catalog.getServiceRows as jest.Mock).mockReturnValue([
-      { ServiceID: "SV002", Name: "ジェルネイル", DurationMinutes: 90, Price: 8800, Active: true, StaffRequired: false, DisplayOrder: 2 },
-      { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+      { ServiceID: "SV002", Name: "カット＋カラー", DurationMinutes: 90, Price: 8800, Active: true, StaffRequired: false, DisplayOrder: 2 },
+      { ServiceID: "SV001", Name: "カット", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
     ] as ServiceRow[]);
 
     const response = getServicesAction();
@@ -230,8 +230,8 @@ describe("getServicesAction", () => {
     expect(response).toEqual({
       ok: true,
       data: [
-        { serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 },
-        { serviceId: "SV002", name: "ジェルネイル", durationMinutes: 90, price: 8800, displayOrder: 2 },
+        { serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 },
+        { serviceId: "SV002", name: "カット＋カラー", durationMinutes: 90, price: 8800, displayOrder: 2 },
       ],
     });
   });
@@ -361,7 +361,7 @@ describe("getAvailabilityAction", () => {
     emailFromName: "Demo",
   };
   const availabilityServices: ServiceRow[] = [
-    { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+    { ServiceID: "SV001", Name: "カット", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
   ];
 
   it("returns available slots for a valid request, fetching busy events once", () => {
@@ -415,7 +415,7 @@ describe("getAvailabilityAction", () => {
 describe("createReservationAction", () => {
   const service: ServiceRow = {
     ServiceID: "SV001",
-    Name: "ジェルネイル",
+    Name: "カット",
     DurationMinutes: 60,
     Price: 6000,
     Active: true,

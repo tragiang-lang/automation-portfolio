@@ -11,7 +11,7 @@ const baseReservation: NormalizedReservation = {
   startTime: "10:00",
   endTime: "11:00",
   serviceId: "SV001",
-  serviceName: "ジェルネイル",
+  serviceName: "カット",
   durationMinutes: 60,
   price: 6000,
   staffSelection: { kind: "none" },
