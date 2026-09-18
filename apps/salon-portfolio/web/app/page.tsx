@@ -151,7 +151,7 @@ export default async function Home() {
     ) : null,
     contact:
       siteConfig.features.contactForm && sectionVisibility.contact ? (
-        <ContactSection business={siteConfig.business} />
+        <ContactSection business={siteConfig.business} messageLabel={siteConfig.labels.inquiryMessage} />
       ) : null,
   };
 
