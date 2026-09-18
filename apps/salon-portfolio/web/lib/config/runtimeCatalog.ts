@@ -30,6 +30,17 @@ const DEMO_CATALOG = { services: SERVICES, staff: STAFF };
 export async function loadRuntimeCatalog(): Promise<RuntimeCatalogResult> {
   const url = process.env.GAS_WEBAPP_URL;
   if (!url || url.trim().length === 0) {
+    // Production safety guard — same rationale as
+    // `runtimeConfig.ts::loadRuntimeConfig`: demo-fallback is a development
+    // convenience only. Reuses the existing `runtime-error` status so
+    // `RuntimeConfigNotice` (app/layout.tsx) surfaces it, rather than a
+    // second status/notice mechanism.
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[runtimeCatalog] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.",
+      );
+      return { status: "runtime-error", ...DEMO_CATALOG };
+    }
     return { status: "demo-fallback", ...DEMO_CATALOG };
   }
 
