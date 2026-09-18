@@ -74,5 +74,11 @@ describe("resolveDesignConfig", () => {
       const resolved = resolveDesignConfig({ preset: "noir", theme: "not-a-real-theme" });
       expect(resolved.theme).toBe("noir");
     });
+
+    it("ignores 'starter' as a theme/typography override — it's a registered preset id but not a registered theme/typography id (Starter MVP reusability)", () => {
+      const resolved = resolveDesignConfig({ preset: "noir", theme: "starter", typography: "starter" });
+      expect(resolved.theme).toBe("noir");
+      expect(resolved.typography).toBe("noir");
+    });
   });
 });

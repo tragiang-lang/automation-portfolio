@@ -17,8 +17,17 @@
  * all six identical to the current Kinari look, and later tasks
  * progressively differentiate one preset's fields at a time without
  * changing this union or the registry's shape.
+ *
+ * `"starter"` (Starter MVP reusability) is a 7th, additive preset — a
+ * bare-bones composition (Hero + Menu + Contact + Reservation CTA only)
+ * for a brand-new business that hasn't built out Staff/Gallery/FAQ/Access
+ * content yet. Deliberately reuses Kinari's `theme`/`typography` (see
+ * `ThemeId`/`TypographyId` below) rather than inventing a dedicated
+ * palette — this preset differentiates itself by section visibility, not
+ * by a new visual identity, matching the Starter package's "reliability
+ * over custom branding" priority.
  */
-export type DesignPreset = "kinari" | "femme" | "noir" | "editorial" | "natural" | "modern";
+export type DesignPreset = "kinari" | "femme" | "noir" | "editorial" | "natural" | "modern" | "starter";
 
 /** Color-token theme id — one entry per curated palette in
  *  `config/theme-tokens.ts`'s `THEMES` registry. Shares its six string
