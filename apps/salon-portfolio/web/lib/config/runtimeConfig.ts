@@ -53,6 +53,19 @@ export const DEMO_RUNTIME_CONFIG: PublicRuntimeConfig = {
 export async function loadRuntimeConfig(): Promise<RuntimeConfigResult> {
   const url = process.env.GAS_WEBAPP_URL;
   if (!url || url.trim().length === 0) {
+    // Production safety guard: demo-fallback is only ever a *development*
+    // convenience (spec: "prevent production from silently serving
+    // demo-fallback data"). A production build/deploy missing
+    // GAS_WEBAPP_URL must not present demo business info as if it were
+    // real — reuse the existing `runtime-error` status so
+    // `RuntimeConfigNotice` (already wired in app/layout.tsx) surfaces it,
+    // rather than inventing a second status/notice mechanism.
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[runtimeConfig] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.",
+      );
+      return { status: "runtime-error", config: DEMO_RUNTIME_CONFIG };
+    }
     return { status: "demo-fallback", config: DEMO_RUNTIME_CONFIG };
   }
 

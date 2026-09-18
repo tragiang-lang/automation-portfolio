@@ -113,4 +113,59 @@ describe("loadRuntimeCatalog", () => {
 
     expect(result).toEqual({ status: "runtime-error", services: SERVICES, staff: STAFF });
   });
+
+  // Production safety guard — same rationale as runtimeConfig.test.ts.
+  describe("in production (NODE_ENV=production)", () => {
+    it("returns runtime-error (not demo-fallback) when GAS_WEBAPP_URL is not set, and logs why", async () => {
+      process.env = { ...process.env, NODE_ENV: "production" };
+      delete process.env.GAS_WEBAPP_URL;
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+
+      const result = await loadRuntimeCatalog();
+
+      expect(result).toEqual({ status: "runtime-error", services: SERVICES, staff: STAFF });
+      expect(mockedCallGasAction).not.toHaveBeenCalled();
+      expect(consoleError).toHaveBeenCalledWith(expect.stringContaining("GAS_WEBAPP_URL"));
+    });
+
+    it("returns runtime with mapped services/staff when GAS_WEBAPP_URL is configured (unaffected by the guard)", async () => {
+      process.env = { ...process.env, NODE_ENV: "production" };
+      process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+      mockedCallGasAction.mockImplementation((action: string) =>
+        action === "getServices"
+          ? Promise.resolve({ ok: true, data: RUNTIME_SERVICES })
+          : Promise.resolve({ ok: true, data: RUNTIME_STAFF }),
+      );
+
+      const result = await loadRuntimeCatalog();
+
+      expect(result.status).toBe("runtime");
+    });
+
+    it("still falls back to demo-content when a configured GAS backend fails (existing behavior unchanged)", async () => {
+      process.env = { ...process.env, NODE_ENV: "production" };
+      process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+      mockedCallGasAction.mockImplementation((action: string) =>
+        action === "getServices"
+          ? Promise.resolve({ ok: false, error: { code: "SHEET_ERROR", message: "x" } })
+          : Promise.resolve({ ok: true, data: RUNTIME_STAFF }),
+      );
+
+      const result = await loadRuntimeCatalog();
+
+      expect(result).toEqual({ status: "runtime-error", services: SERVICES, staff: STAFF });
+    });
+  });
+
+  describe("in development (NODE_ENV=development)", () => {
+    it("still returns demo-fallback when GAS_WEBAPP_URL is not set", async () => {
+      process.env = { ...process.env, NODE_ENV: "development" };
+      delete process.env.GAS_WEBAPP_URL;
+
+      const result = await loadRuntimeCatalog();
+
+      expect(result).toEqual({ status: "demo-fallback", services: SERVICES, staff: STAFF });
+      expect(mockedCallGasAction).not.toHaveBeenCalled();
+    });
+  });
 });
