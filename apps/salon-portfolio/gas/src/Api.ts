@@ -45,6 +45,21 @@ import {
   ReservationEmailContext,
 } from "./ReservationEmailTemplates";
 import { tokyoCalendarDayRange, toTokyoLocalDateTimeString } from "./Utils";
+import { InquiryRequest } from "./models/InquiryRequest";
+import { normalizeInquiryRequest, validateInquiryRequestShape } from "./InquiryValidation";
+import { generateInquiryId } from "./ids/InquiryId";
+import { appendInquiryRow, buildPendingInquiryRow, findInquiryBySubmissionId } from "./InquiryRepository";
+import {
+  getCachedInquiryResult,
+  setCachedInquiryResult,
+  mapInquiryRowToResult,
+  InquiryIdempotencyResult,
+} from "./InquiryIdempotency";
+import {
+  buildCustomerInquiryConfirmationEmail,
+  buildOwnerInquiryNotificationEmail,
+  InquiryEmailContext,
+} from "./InquiryEmailTemplates";
 
 /** Parses and shape-checks the raw POST body. Pure — never touches GAS
  *  globals — so the dispatch logic is Jest-testable independent of
@@ -215,6 +230,8 @@ export function handleApiRequest(rawBody: string | undefined): ApiResponse {
       return createReservationAction(parsed.request.payload);
     case "getAvailability":
       return getAvailabilityAction(parsed.request.payload);
+    case "createInquiry":
+      return createInquiryAction(parsed.request.payload);
     default:
       return buildErrorResponse(
         ERROR_CODES.VALIDATION_ERROR,
@@ -510,6 +527,7 @@ function sendReservationEmailsForOutcome(
     reservation,
     cancellationUrl: buildCancellationUrl(reservation, cancellationToken),
     businessName: config.business.name,
+    serviceLabel: config.labels.service ?? "メニュー",
   };
 
   let allSucceeded: boolean;
@@ -683,6 +701,136 @@ export function createReservationAction(
     }
     console.error("[createReservation] unexpected top-level error:", error);
     logError({ action: "createReservation", message: "Unexpected top-level error", severity: "critical" });
+    return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "サーバーエラーが発生しました。");
+  }
+}
+
+/** Closes the race two truly-simultaneous requests carrying the same
+ *  `submissionId` would otherwise have — same shape as
+ *  `claimSubmissionOrGetExisting` above, but for the much simpler Inquiry
+ *  flow (no second critical-section lock: there is no availability to
+ *  re-check, so claiming the submissionId is the only lock this flow
+ *  needs). */
+function claimInquirySubmissionOrGetExisting(
+  submissionId: string,
+  appendPendingRow: () => void,
+): { kind: "existing"; result: InquiryIdempotencyResult } | { kind: "claimed" } {
+  const cached = getCachedInquiryResult(submissionId);
+  if (cached) {
+    return { kind: "existing", result: cached };
+  }
+
+  const lock = LockService.getScriptLock();
+  let acquired = false;
+  try {
+    acquired = lock.tryLock(IDEMPOTENCY_CLAIM_LOCK_TIMEOUT_MS);
+  } catch {
+    acquired = false;
+  }
+  if (!acquired) {
+    throw new SystemBusyError();
+  }
+  try {
+    const existingRow = findInquiryBySubmissionId(submissionId);
+    if (existingRow) {
+      const result = mapInquiryRowToResult(existingRow);
+      setCachedInquiryResult(submissionId, result);
+      return { kind: "existing", result };
+    }
+    appendPendingRow();
+    return { kind: "claimed" };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function trySendInquiryEmailAndLog(
+  recipientType: "customer" | "owner",
+  recipientEmail: string,
+  content: { subject: string; body: string },
+  inquiryId: string,
+): boolean {
+  try {
+    sendEmail(recipientEmail, content.subject, content.body);
+    logEmail({ relatedType: "Inquiry", relatedId: inquiryId, recipientType, recipientEmail, subject: content.subject, status: "sent" });
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[createInquiry] email send failed:", inquiryId, recipientType, message);
+    logEmail({ relatedType: "Inquiry", relatedId: inquiryId, recipientType, recipientEmail, subject: content.subject, status: "failed", errorMessage: message });
+    logError({ action: "createInquiry", message: "Email send failed", context: { inquiryId, recipientType }, severity: "warning" });
+    return false;
+  }
+}
+
+function createInquiryActionInner(rawPayload: unknown): ApiResponse<{ inquiryId: string }> {
+  const config = getConfig();
+  if (!config.features.contactForm) {
+    return buildErrorResponse(ERROR_CODES.FEATURE_DISABLED, "現在お問い合わせの受付を停止しています。");
+  }
+  if (!rawPayload || typeof rawPayload !== "object") {
+    return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, "リクエストの形式が正しくありません。");
+  }
+
+  const now = new Date();
+  const normalized = normalizeInquiryRequest(rawPayload as InquiryRequest);
+  const issues = validateInquiryRequestShape(normalized);
+  if (issues.length > 0) {
+    return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, issues[0].message ?? "入力内容をご確認ください。");
+  }
+
+  const inquiryId = generateInquiryId(now);
+
+  let claim: { kind: "existing"; result: InquiryIdempotencyResult } | { kind: "claimed" };
+  try {
+    claim = claimInquirySubmissionOrGetExisting(normalized.submissionId, () =>
+      appendInquiryRow(buildPendingInquiryRow(normalized, inquiryId, now)),
+    );
+  } catch (error) {
+    if (error instanceof SystemBusyError) {
+      return buildErrorResponse(ERROR_CODES.SYSTEM_BUSY, "只今混み合っております。少々時間をおいて再度お試しください。");
+    }
+    logError({ action: "createInquiry", message: "Failed while claiming submissionId", context: { submissionId: normalized.submissionId }, severity: "error" }, now);
+    return buildErrorResponse(ERROR_CODES.SHEET_ERROR, "お問い合わせの受付処理に失敗しました。時間をおいて再度お試しください。");
+  }
+
+  if (claim.kind === "existing") {
+    return buildSuccessResponse(claim.result);
+  }
+
+  setCachedInquiryResult(normalized.submissionId, { inquiryId });
+
+  // Emails are strictly best-effort, outside the response's success/failure
+  // decision — the inquiry is already durably recorded by this point, same
+  // "never let email sending override an already-decided outcome" principle
+  // as sendReservationEmailsForOutcome above.
+  try {
+    const ctx: InquiryEmailContext = { inquiryId, inquiry: normalized, businessName: config.business.name, createdAt: now };
+    trySendInquiryEmailAndLog("customer", normalized.email, buildCustomerInquiryConfirmationEmail(ctx), inquiryId);
+    trySendInquiryEmailAndLog("owner", config.emailOwnerNotifyAddress, buildOwnerInquiryNotificationEmail(ctx), inquiryId);
+  } catch (error) {
+    console.error("[createInquiry] unexpected error while sending inquiry emails:", inquiryId, error);
+    logError({ action: "createInquiry", message: "Unexpected error while sending inquiry emails", context: { inquiryId }, severity: "critical" });
+  }
+
+  return buildSuccessResponse({ inquiryId });
+}
+
+/** `createInquiry` action handler (Starter MVP §5). Thin outer wrapper:
+ *  same ConfigError/MissingHeadersError mapping as `createReservationAction`
+ *  above, so a CONFIG/sheet problem never crashes past `Api.ts`'s boundary. */
+export function createInquiryAction(rawPayload: unknown): ApiResponse<{ inquiryId: string }> {
+  try {
+    return createInquiryActionInner(rawPayload);
+  } catch (error) {
+    if (error instanceof ConfigError) {
+      return mapConfigErrorToResponse(error);
+    }
+    if (error instanceof MissingHeadersError) {
+      return mapMissingHeadersErrorToResponse(error);
+    }
+    console.error("[createInquiry] unexpected top-level error:", error);
+    logError({ action: "createInquiry", message: "Unexpected top-level error", severity: "critical" });
     return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "サーバーエラーが発生しました。");
   }
 }
