@@ -1,0 +1,242 @@
+/**
+ * Business content for atelier ito (Hair Salon demo). Same role as the
+ * reference architecture's own demo-content.ts: renders the site before
+ * GAS/Sheets are configured, and is the offline fallback afterward.
+ *
+ * Import this file only from `app/*page.tsx` (the composition root).
+ * Components under `components/` take this data as props.
+ */
+import type {
+  AccessInfo,
+  CustomerFlowStep,
+  FaqItem,
+  GalleryImageItem,
+  NavItem,
+  SalonFeature,
+  Service,
+  SiteConfig,
+  StaffMember,
+} from "@/types/content";
+
+export const SITE_CONFIG: SiteConfig = {
+  business: {
+    name: "アトリエ イト",
+    nameLatin: "atelier ito",
+    tagline: "髪と向き合う、静かな時間。",
+    phone: "03-2345-6789",
+    email: "info@atelier-ito.example.com",
+    address: "東京都渋谷区神宮前3-4-5",
+    postalCode: "〒150-0001",
+  },
+  hours: {
+    monday: "closed",
+    tuesday: "10:00-19:00",
+    wednesday: "10:00-19:00",
+    thursday: "10:00-19:00",
+    friday: "10:00-20:00",
+    saturday: "10:00-19:00",
+    sunday: "10:00-18:00",
+  },
+  features: {
+    contactForm: true,
+    reservation: true,
+    staffSelection: true,
+  },
+  staffAnyAvailableOption: true,
+  socialLinks: [
+    { label: "Instagram", href: "https://instagram.com/example" },
+  ],
+  labels: {
+    service: "メニュー",
+    bookingCta: "予約する",
+    inquiryMessage: "お問い合わせ内容",
+  },
+  content: {
+    heroSubheadline: "一人ひとりの髪質とライフスタイルに寄り添い、自然体で心地よいスタイルをご提案します。",
+    conceptEyebrow: "Concept",
+    conceptTitle: "自然体の美しさを引き出す、静かなヘアサロン。",
+    conceptParagraph1:
+      "流行に合わせるだけでなく、その方本来の髪質やライフスタイルに寄り添うスタイルを大切にしています。",
+    conceptParagraph2: "落ち着いた空間で過ごす時間そのものも、施術と同じくらい価値のあるものだと考えています。",
+    serviceSubtitle: "施術時間は目安です。カウンセリングのお時間を含め、少し余裕を持ってご来店ください。",
+    ctaHeading: "スタイルのイメージが決まったら",
+    ctaMessage: "ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。",
+    ctaClosingHeading: "最後まで読んでくださり、ありがとうございます",
+    ctaClosingMessage: "少しでも気になることがあれば、まずはご予約からお気軽にどうぞ。",
+  },
+};
+
+export const NAV_ITEMS: NavItem[] = [
+  { label: "コンセプト", href: "#concept" },
+  { label: "メニュー", href: "#menu" },
+  { label: "スタッフ", href: "#staff" },
+  { label: "ギャラリー", href: "#gallery" },
+  { label: "アクセス", href: "#access" },
+  { label: "お問い合わせ", href: "#contact" },
+];
+
+export const SERVICES: Service[] = [
+  {
+    serviceId: "SV001",
+    name: "カット",
+    description: "ベースとなる髪型を、丁寧なカウンセリングから整えます。",
+    category: "カット",
+    durationMinutes: 60,
+    price: 5500,
+  },
+  {
+    serviceId: "SV002",
+    name: "カット＋カラー",
+    description: "なりたい髪色まで、カットとカラーを一度に。",
+    category: "カラー",
+    durationMinutes: 120,
+    price: 11000,
+  },
+  {
+    serviceId: "SV003",
+    name: "カット＋パーマ",
+    description: "動きのある柔らかなスタイルを、丁寧なパーマで。",
+    category: "パーマ",
+    durationMinutes: 150,
+    price: 12000,
+  },
+  {
+    serviceId: "SV004",
+    name: "カラー",
+    description: "白髪染めから明るいトーンまで、幅広く対応します。",
+    category: "カラー",
+    durationMinutes: 90,
+    price: 7700,
+  },
+  {
+    serviceId: "SV005",
+    name: "トリートメント",
+    description: "髪と頭皮に、うるおいとまとまりを。",
+    category: "トリートメント",
+    durationMinutes: 30,
+    price: 4400,
+  },
+];
+
+/**
+ * Staff photos are intentionally illustrated stand-ins, not stock photos of
+ * real people (same rationale as the reference architecture): attaching a
+ * real stranger's face to a fictional staff name/bio would misrepresent a
+ * real person. `photoAlt` says "イメージアイコン" (image icon), not "写真".
+ */
+export const STAFF: StaffMember[] = [
+  {
+    staffId: "ST001",
+    name: "伊藤 美咲",
+    role: "オーナー / スタイリスト",
+    introduction: "一人ひとりの髪質に合わせたスタイル提案を得意としています。",
+    photoSrc: "/images/staff/staff-avatar-01.svg",
+    photoAlt: "スタッフ 伊藤美咲のイメージアイコン",
+  },
+  {
+    staffId: "ST002",
+    name: "高橋 直子",
+    role: "スタイリスト",
+    introduction: "自然な質感を活かしたカットが得意です。",
+    photoSrc: "/images/staff/staff-avatar-02.svg",
+    photoAlt: "スタッフ 高橋直子のイメージアイコン",
+  },
+  {
+    staffId: "ST003",
+    name: "中村 玲奈",
+    role: "スタイリスト",
+    introduction: "似合わせカラーのご提案を大切にしています。",
+    photoSrc: "/images/staff/staff-avatar-03.svg",
+    photoAlt: "スタッフ 中村玲奈のイメージアイコン",
+  },
+  {
+    staffId: "ST004",
+    name: "小林 陽菜",
+    role: "アシスタント",
+    introduction: "施術前後のケアも丁寧にサポートします。",
+    photoSrc: "/images/staff/staff-avatar-04.svg",
+    photoAlt: "スタッフ 小林陽菜のイメージアイコン",
+  },
+];
+
+/**
+ * Gallery photography: free-license real stock photos (Unsplash License),
+ * downloaded once and hosted locally under `public/images/gallery/` -- see
+ * Task 10 and `public/images/SOURCES.md` for verified sources.
+ */
+export const GALLERY_IMAGES: GalleryImageItem[] = [
+  { id: "g1", src: "/images/gallery/gallery-hair-cutting-closeup.jpg", alt: "髪をカットする施術のクローズアップ", width: 1200, height: 800 },
+  { id: "g2", src: "/images/gallery/gallery-hair-color-application.jpg", alt: "カラーリング剤を丁寧に塗布する施術の様子", width: 1200, height: 800 },
+  { id: "g3", src: "/images/gallery/gallery-hair-texture-natural.jpg", alt: "自然な質感を活かしたヘアスタイルのディテール", width: 1200, height: 870 },
+  { id: "g4", src: "/images/gallery/gallery-salon-interior-chair.jpg", alt: "落ち着いた雰囲気のスタイリングチェアとサロン内観", width: 1200, height: 800 },
+  { id: "g5", src: "/images/gallery/gallery-salon-interior-lounge.jpg", alt: "窓から光が差し込む、静かな店内スペースの様子", width: 1200, height: 633 },
+  { id: "g6", src: "/images/gallery/gallery-hair-styling-tools.jpg", alt: "はさみとコームを使ったスタイリングの一場面", width: 1200, height: 796 },
+];
+
+export const SALON_FEATURES: SalonFeature[] = [
+  {
+    id: "hygiene",
+    title: "器具はすべてお客様ごとに滅菌",
+    description:
+      "施術に使用する器具は一件ごとに滅菌・消毒を行い、清潔な状態でご用意しています。",
+  },
+  {
+    id: "private",
+    title: "半個室でゆったりと",
+    description:
+      "隣のお客様の視線を気にせず、施術に集中していただける空間をご用意しています。",
+  },
+  {
+    id: "parking",
+    title: "近隣にコインパーキング完備",
+    description: "お車でお越しの際は、近隣のコインパーキングをご利用いただけます。",
+  },
+  {
+    id: "first-visit",
+    title: "初めての方も安心のカウンセリング",
+    description:
+      "施術前に仕上がりのご要望をゆっくり伺い、認識をすり合わせてから施術を始めます。",
+  },
+];
+
+export const CUSTOMER_FLOW_STEPS: CustomerFlowStep[] = [
+  { step: 1, title: "ご予約", description: "お電話またはWEBから、ご希望の日時・メニューをご予約ください。" },
+  { step: 2, title: "ご来店・カウンセリング", description: "当日は開始5分前にご来店ください。仕上がりのご希望を伺います。" },
+  { step: 3, title: "施術", description: "ご要望に沿って、担当スタッフが丁寧に施術を行います。" },
+  { step: 4, title: "お会計・次回のご案内", description: "施術後にお会計、必要に応じて次回のご来店目安もご案内します。" },
+];
+
+export const FAQ_ITEMS: FaqItem[] = [
+  {
+    id: "faq-1",
+    question: "予約は当日でも可能ですか？",
+    answer:
+      "空き状況によりご案内可能です。お電話にてお問い合わせいただくか、WEB予約ページの空き枠をご確認ください。",
+  },
+  {
+    id: "faq-2",
+    question: "施術にはどのくらい時間がかかりますか？",
+    answer:
+      "メニューにより異なりますが、目安時間はメニュー一覧に記載しています。カウンセリングを含めると、記載時間より少し余裕を見てご来店ください。",
+  },
+  {
+    id: "faq-3",
+    question: "担当スタッフを指名できますか？",
+    answer:
+      "ご予約時に指名も可能ですし、「指名なし（お任せ）」を選んでいただくこともできます。お任せの場合は、その時間に対応可能なスタッフがご案内します。",
+  },
+  {
+    id: "faq-4",
+    question: "キャンセルはどうすればよいですか？",
+    answer:
+      "ご予約確認のメールに記載のリンクよりお手続きいただけます。恐れ入りますが、直前のキャンセルはお電話でもご連絡ください。",
+  },
+];
+
+export const ACCESS_INFO: AccessInfo = {
+  transitDirections: [
+    { id: "t1", label: "明治神宮前駅（東京メトロ）より徒歩4分" },
+    { id: "t2", label: "原宿駅（JR）より徒歩8分" },
+    { id: "t3", label: "表参道駅（東京メトロ）より徒歩10分" },
+  ],
+};
