@@ -51,9 +51,11 @@ export function ContactForm({ messageLabel = "お問い合わせ内容" }: { mes
   // `Date.now()` is impure, so it can't be called during render (as a
   // useRef initializer would be) — it's read once in an effect after
   // mount instead (React Compiler purity rule). This is a client-side,
-  // best-effort UX signal only, matching this phase's "no real
-  // submission endpoint yet" scope; real enforcement of Phase 0 §P's
-  // min-fill-time rule happens server-side once `createInquiry` exists.
+  // best-effort UX signal only (Phase 0 §P) — a bot posting directly to
+  // /api/gas bypasses both this and the honeypot field entirely, since
+  // `createInquiry` (GAS) enforces neither server-side. Acceptable for a
+  // Starter MVP; a real anti-spam gate would be a separate addition, not
+  // part of this task's scope.
   const mountedAt = useRef<number | null>(null);
   useEffect(() => {
     mountedAt.current = Date.now();
