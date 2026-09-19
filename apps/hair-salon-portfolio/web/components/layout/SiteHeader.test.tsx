@@ -1,11 +1,14 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { usePathname } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import type { BusinessInfo, NavItem } from "@/types/content";
 
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: jest.fn(() => "/"),
 }));
+
+const mockUsePathname = usePathname as jest.Mock;
 
 const business: BusinessInfo = {
   name: "アトリエ イト",
@@ -81,6 +84,41 @@ describe("SiteHeader reservation flag", () => {
     await user.click(screen.getByRole("button", { name: "メニューを開く" }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
+  });
+});
+
+describe("SiteHeader / MobileNav nav href resolution (navigation bug fix)", () => {
+  const navItemsWithContact: NavItem[] = [
+    { label: "メニュー", href: "#menu" },
+    { label: "お問い合わせ", href: "#contact" },
+  ];
+
+  afterEach(() => {
+    mockUsePathname.mockReturnValue("/");
+  });
+
+  it("keeps section-anchor hrefs unchanged on the homepage", () => {
+    render(<SiteHeader business={business} navItems={navItemsWithContact} />);
+    expect(screen.getByRole("link", { name: "メニュー" })).toHaveAttribute("href", "#menu");
+    expect(screen.getByRole("link", { name: "お問い合わせ" })).toHaveAttribute("href", "#contact");
+  });
+
+  it("prefixes section-anchor hrefs with / in the desktop nav when rendered on /reservation", () => {
+    mockUsePathname.mockReturnValue("/reservation");
+    render(<SiteHeader business={business} navItems={navItemsWithContact} />);
+    expect(screen.getByRole("link", { name: "メニュー" })).toHaveAttribute("href", "/#menu");
+    expect(screen.getByRole("link", { name: "お問い合わせ" })).toHaveAttribute("href", "/#contact");
+  });
+
+  it("prefixes section-anchor hrefs with / in the mobile nav panel when rendered on /reservation", async () => {
+    mockUsePathname.mockReturnValue("/reservation");
+    const user = userEvent.setup();
+    render(<SiteHeader business={business} navItems={navItemsWithContact} />);
+    await user.click(screen.getByRole("button", { name: "メニューを開く" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("link", { name: "メニュー" })).toHaveAttribute("href", "/#menu");
+    expect(within(dialog).getByRole("link", { name: "お問い合わせ" })).toHaveAttribute("href", "/#contact");
   });
 });
 

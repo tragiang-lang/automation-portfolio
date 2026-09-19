@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { HOURS_DAY_ORDER, formatHours } from "@/lib/constants/hours";
+import { resolveNavHref } from "@/lib/utils/navItems";
 import type { NavItem, SiteConfig } from "@/types/content";
 
 const SHORT_DAY_LABELS: Record<(typeof HOURS_DAY_ORDER)[number], string> = {
@@ -26,6 +30,7 @@ export function SiteFooter({
   navItems: NavItem[];
 }) {
   const year = new Date().getFullYear();
+  const pathname = usePathname();
 
   return (
     <footer className="bg-primary text-on-primary">
@@ -61,7 +66,7 @@ export function SiteFooter({
           <ul className="mt-4 flex flex-col gap-3">
             {navItems.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className="text-[15px] underline-offset-4 hover:underline">
+                <Link href={resolveNavHref(item.href, pathname)} className="text-[15px] underline-offset-4 hover:underline">
                   {item.label}
                 </Link>
               </li>

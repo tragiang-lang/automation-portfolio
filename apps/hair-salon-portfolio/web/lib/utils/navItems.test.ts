@@ -1,4 +1,4 @@
-import { filterVisibleNavItems } from "./navItems";
+import { filterVisibleNavItems, resolveNavHref } from "./navItems";
 import type { NavItem, FeatureFlags } from "@/types/content";
 import { DEFAULT_SECTION_VISIBILITY } from "@/lib/constants/design-sections";
 
@@ -6,6 +6,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "コンセプト", href: "#concept" },
   { label: "メニュー", href: "#menu" },
   { label: "スタッフ", href: "#staff" },
+  { label: "お客様の声", href: "#testimonials" },
   { label: "ギャラリー", href: "#gallery" },
   { label: "アクセス", href: "#access" },
   { label: "お問い合わせ", href: "#contact" },
@@ -23,6 +24,7 @@ describe("filterVisibleNavItems", () => {
       ...DEFAULT_SECTION_VISIBILITY,
       concept: false,
       staff: false,
+      testimonials: false,
       gallery: false,
       access: false,
     };
@@ -54,5 +56,25 @@ describe("filterVisibleNavItems", () => {
   it("keeps an item whose href has no known matching section (defensive: never silently drops unrecognized nav entries)", () => {
     const customNav: NavItem[] = [{ label: "その他", href: "#other" }];
     expect(filterVisibleNavItems(customNav, DEFAULT_SECTION_VISIBILITY, allFeaturesOn)).toEqual(customNav);
+  });
+});
+
+describe("resolveNavHref", () => {
+  it("keeps a section-anchor href unchanged on the homepage", () => {
+    expect(resolveNavHref("#menu", "/")).toBe("#menu");
+    expect(resolveNavHref("#contact", "/")).toBe("#contact");
+  });
+
+  it("prefixes a section-anchor href with / when not on the homepage, so it navigates home first", () => {
+    expect(resolveNavHref("#menu", "/reservation")).toBe("/#menu");
+    expect(resolveNavHref("#contact", "/reservation")).toBe("/#contact");
+    expect(resolveNavHref("#menu", "/contact")).toBe("/#menu");
+    expect(resolveNavHref("#contact", "/contact")).toBe("/#contact");
+  });
+
+  it("leaves a non-fragment path href unchanged regardless of the current pathname", () => {
+    expect(resolveNavHref("/privacy", "/")).toBe("/privacy");
+    expect(resolveNavHref("/privacy", "/reservation")).toBe("/privacy");
+    expect(resolveNavHref("/terms", "/reservation")).toBe("/terms");
   });
 });
