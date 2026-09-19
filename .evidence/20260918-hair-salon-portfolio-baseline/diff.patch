@@ -1,0 +1,339 @@
+diff --git a/apps/hair-salon-portfolio/gas/src/DemoSeed.ts b/apps/hair-salon-portfolio/gas/src/DemoSeed.ts
+index f2ae695..45660d4 100644
+--- a/apps/hair-salon-portfolio/gas/src/DemoSeed.ts
++++ b/apps/hair-salon-portfolio/gas/src/DemoSeed.ts
+@@ -29,20 +29,20 @@ export const DEMO_SHEETS: DemoSheetSeed[] = [
+     name: SHEET_NAMES.CONFIG,
+     headers: CONFIG_HEADERS,
+     rows: [
+-      ["business.name", "Demo Salon", "店舗名"],
+-      ["business.nameLatin", "Demo Salon", "店舗名（ローマ字・任意）"],
+-      ["business.tagline", "丁寧な施術と、心地よいひとときを。", "キャッチコピー（任意）"],
+-      ["business.phone", "03-0000-0000", "電話番号"],
++      ["business.name", "アトリエ イト", "店舗名"],
++      ["business.nameLatin", "atelier ito", "店舗名（ローマ字・任意）"],
++      ["business.tagline", "髪と向き合う、静かな時間。", "キャッチコピー（任意）"],
++      ["business.phone", "03-2345-6789", "電話番号"],
+       ["business.email", "owner@example.com", "店舗メール"],
+-      ["business.address", "東京都千代田区1-1-1", "住所"],
+-      ["business.postalCode", "〒100-0001", "郵便番号（任意）"],
+-      ["hours.monday", "10:00-19:00", "月曜営業時間"],
++      ["business.address", "東京都渋谷区神宮前3-4-5", "住所"],
++      ["business.postalCode", "〒150-0001", "郵便番号（任意）"],
++      ["hours.monday", "closed", "月曜営業時間（定休日）"],
+       ["hours.tuesday", "10:00-19:00", "火曜営業時間"],
+       ["hours.wednesday", "10:00-19:00", "水曜営業時間"],
+       ["hours.thursday", "10:00-19:00", "木曜営業時間"],
+-      ["hours.friday", "10:00-19:00", "金曜営業時間"],
+-      ["hours.saturday", "10:00-18:00", "土曜営業時間"],
+-      ["hours.sunday", "closed", "日曜営業時間（定休日）"],
++      ["hours.friday", "10:00-20:00", "金曜営業時間"],
++      ["hours.saturday", "10:00-19:00", "土曜営業時間"],
++      ["hours.sunday", "10:00-18:00", "日曜営業時間"],
+       ["reservation.timezone", "Asia/Tokyo", "タイムゾーン"],
+       ["reservation.slotMinutes", 30, "予約枠の単位（分）"],
+       ["reservation.minLeadHours", 1, "予約締切（時間前）"],
+@@ -57,7 +57,7 @@ export const DEMO_SHEETS: DemoSheetSeed[] = [
+       ["social.line", "", "LINEのURL（任意・空欄可）"],
+       ["calendar.id", "primary", "カレンダーID（開発用プレースホルダー）"],
+       ["email.ownerNotifyAddress", "owner@example.com", "店舗通知メール宛先"],
+-      ["email.fromName", "Demo Salon", "送信者表示名"],
++      ["email.fromName", "atelier ito", "送信者表示名"],
+     ],
+   },
+   {
+@@ -76,9 +76,11 @@ export const DEMO_SHEETS: DemoSheetSeed[] = [
+     // never touched (setupDemoSheets never overwrites an existing sheet).
+     headers: [...SERVICES_HEADERS, ...SERVICES_OPTIONAL_HEADERS],
+     rows: [
+-      ["SV001", "ハンド | ジェルネイル", 60, 6000, true, true, 1, "指先に一色をまとわせる、定番の仕上がりです。", "ハンド"],
+-      ["SV002", "フット | ジェルペディキュア", 90, 8000, true, true, 2, "一年を通して整えたい足先に。", "フット"],
+-      ["SV003", "その他 | パラフィンパック", 20, 1500, true, false, 3, "乾燥が気になる季節におすすめです。", "その他"],
++      ["SV001", "カット", 60, 5500, true, true, 1, "ベースとなる髪型を、丁寧なカウンセリングから整えます。", "カット"],
++      ["SV002", "カット＋カラー", 120, 11000, true, true, 2, "なりたい髪色まで、カットとカラーを一度に。", "カラー"],
++      ["SV003", "カット＋パーマ", 150, 12000, true, true, 3, "動きのある柔らかなスタイルを、丁寧なパーマで。", "パーマ"],
++      ["SV004", "カラー", 90, 7700, true, true, 4, "白髪染めから明るいトーンまで、幅広く対応します。", "カラー"],
++      ["SV005", "トリートメント", 30, 4400, true, false, 5, "髪と頭皮に、うるおいとまとまりを。", "トリートメント"],
+     ],
+   },
+   {
+@@ -90,9 +92,10 @@ export const DEMO_SHEETS: DemoSheetSeed[] = [
+     // degrades gracefully (StaffCard.tsx's initial-letter tile).
+     headers: [...STAFF_HEADERS, ...STAFF_OPTIONAL_HEADERS],
+     rows: [
+-      ["ST001", "スタッフA", true, "", 1, "店長", "丁寧なカウンセリングを心がけています。", ""],
+-      ["ST002", "スタッフB", true, "", 2, "スタイリスト", "", ""],
+-      ["ST003", "スタッフC", true, "", 3, "", "", ""],
++      ["ST001", "伊藤 美咲", true, "", 1, "オーナー / スタイリスト", "一人ひとりの髪質に合わせたスタイル提案を得意としています。", ""],
++      ["ST002", "高橋 直子", true, "", 2, "スタイリスト", "自然な質感を活かしたカットが得意です。", ""],
++      ["ST003", "中村 玲奈", true, "", 3, "スタイリスト", "", ""],
++      ["ST004", "小林 陽菜", true, "", 4, "", "", ""],
+     ],
+   },
+   { name: SHEET_NAMES.RESERVATIONS, headers: RESERVATIONS_HEADERS, rows: [] },
+diff --git a/apps/hair-salon-portfolio/gas/tests/Api.test.ts b/apps/hair-salon-portfolio/gas/tests/Api.test.ts
+index aa09b6d..b6b7e2d 100644
+--- a/apps/hair-salon-portfolio/gas/tests/Api.test.ts
++++ b/apps/hair-salon-portfolio/gas/tests/Api.test.ts
+@@ -221,8 +221,8 @@ describe("getServicesAction", () => {
+       features: { reservation: true, staffSelection: true, contactForm: true, calendar: true, emailNotification: true },
+     } as AppConfig);
+     (Catalog.getServiceRows as jest.Mock).mockReturnValue([
+-      { ServiceID: "SV002", Name: "ジェルネイル", DurationMinutes: 90, Price: 8800, Active: true, StaffRequired: false, DisplayOrder: 2 },
+-      { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
++      { ServiceID: "SV002", Name: "カット＋カラー", DurationMinutes: 90, Price: 8800, Active: true, StaffRequired: false, DisplayOrder: 2 },
++      { ServiceID: "SV001", Name: "カット", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+     ] as ServiceRow[]);
+ 
+     const response = getServicesAction();
+@@ -230,8 +230,8 @@ describe("getServicesAction", () => {
+     expect(response).toEqual({
+       ok: true,
+       data: [
+-        { serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 },
+-        { serviceId: "SV002", name: "ジェルネイル", durationMinutes: 90, price: 8800, displayOrder: 2 },
++        { serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 },
++        { serviceId: "SV002", name: "カット＋カラー", durationMinutes: 90, price: 8800, displayOrder: 2 },
+       ],
+     });
+   });
+@@ -361,7 +361,7 @@ describe("getAvailabilityAction", () => {
+     emailFromName: "Demo",
+   };
+   const availabilityServices: ServiceRow[] = [
+-    { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
++    { ServiceID: "SV001", Name: "カット", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+   ];
+ 
+   it("returns available slots for a valid request, fetching busy events once", () => {
+@@ -415,7 +415,7 @@ describe("getAvailabilityAction", () => {
+ describe("createReservationAction", () => {
+   const service: ServiceRow = {
+     ServiceID: "SV001",
+-    Name: "ジェルネイル",
++    Name: "カット",
+     DurationMinutes: 60,
+     Price: 6000,
+     Active: true,
+diff --git a/apps/hair-salon-portfolio/gas/tests/CatalogParser.test.ts b/apps/hair-salon-portfolio/gas/tests/CatalogParser.test.ts
+index a088868..c13dc66 100644
+--- a/apps/hair-salon-portfolio/gas/tests/CatalogParser.test.ts
++++ b/apps/hair-salon-portfolio/gas/tests/CatalogParser.test.ts
+@@ -5,7 +5,7 @@ describe("parseServiceRow", () => {
+     expect(
+       parseServiceRow({
+         ServiceID: "SV001",
+-        Name: "ジェルネイル",
++        Name: "カット",
+         DurationMinutes: 60,
+         Price: 6000,
+         Active: true,
+@@ -14,7 +14,7 @@ describe("parseServiceRow", () => {
+       }),
+     ).toEqual({
+       ServiceID: "SV001",
+-      Name: "ジェルネイル",
++      Name: "カット",
+       DurationMinutes: 60,
+       Price: 6000,
+       Active: true,
+@@ -27,7 +27,7 @@ describe("parseServiceRow", () => {
+     expect(
+       parseServiceRow({
+         ServiceID: "SV002",
+-        Name: "まつげエクステ",
++        Name: "カット＋パーマ",
+         DurationMinutes: "90",
+         Price: "8000",
+         Active: "TRUE",
+@@ -36,7 +36,7 @@ describe("parseServiceRow", () => {
+       }),
+     ).toEqual({
+       ServiceID: "SV002",
+-      Name: "まつげエクステ",
++      Name: "カット＋パーマ",
+       DurationMinutes: 90,
+       Price: 8000,
+       Active: true,
+@@ -46,9 +46,9 @@ describe("parseServiceRow", () => {
+   });
+ 
+   it("trims string fields and defaults missing numeric fields to NaN, not a thrown error", () => {
+-    const result = parseServiceRow({ ServiceID: " SV003 ", Name: " ネイルオフ " });
++    const result = parseServiceRow({ ServiceID: " SV003 ", Name: " トリートメント " });
+     expect(result.ServiceID).toBe("SV003");
+-    expect(result.Name).toBe("ネイルオフ");
++    expect(result.Name).toBe("トリートメント");
+     expect(Number.isNaN(result.DurationMinutes)).toBe(true);
+   });
+ });
+@@ -57,17 +57,17 @@ describe("parseServiceRow optional presentation fields (V1.1 Task 4)", () => {
+   it("trims and includes Description/Category when present", () => {
+     const result = parseServiceRow({
+       ServiceID: "SV001",
+-      Name: "ジェルネイル",
++      Name: "カット",
+       DurationMinutes: 60,
+       Price: 6000,
+       Active: true,
+       StaffRequired: false,
+       DisplayOrder: 1,
+       Description: "  指先に一色。  ",
+-      Category: " ジェルネイル ",
++      Category: " カット ",
+     });
+     expect(result.Description).toBe("指先に一色。");
+-    expect(result.Category).toBe("ジェルネイル");
++    expect(result.Category).toBe("カット");
+   });
+ 
+   it("leaves Description/Category undefined when the cell is blank or the column is absent", () => {
+diff --git a/apps/hair-salon-portfolio/gas/tests/PublicCatalog.test.ts b/apps/hair-salon-portfolio/gas/tests/PublicCatalog.test.ts
+index 010a55c..a524354 100644
+--- a/apps/hair-salon-portfolio/gas/tests/PublicCatalog.test.ts
++++ b/apps/hair-salon-portfolio/gas/tests/PublicCatalog.test.ts
+@@ -2,8 +2,8 @@ import { buildPublicServices, buildPublicStaff } from "../src/PublicCatalog";
+ import { ServiceRow, StaffRow } from "../src/SheetSchemas";
+ 
+ const services: ServiceRow[] = [
+-  { ServiceID: "SV002", Name: "ジェルネイル", DurationMinutes: 90, Price: 8800, Active: true, StaffRequired: false, DisplayOrder: 2 },
+-  { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
++  { ServiceID: "SV002", Name: "カット＋カラー", DurationMinutes: 90, Price: 8800, Active: true, StaffRequired: false, DisplayOrder: 2 },
++  { ServiceID: "SV001", Name: "カット", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+   { ServiceID: "SV003", Name: "廃止メニュー", DurationMinutes: 30, Price: 3300, Active: false, StaffRequired: false, DisplayOrder: 3 },
+ ];
+ 
+@@ -16,8 +16,8 @@ const staff: StaffRow[] = [
+ describe("buildPublicServices", () => {
+   it("excludes inactive services and sorts by DisplayOrder", () => {
+     expect(buildPublicServices(services)).toEqual([
+-      { serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 },
+-      { serviceId: "SV002", name: "ジェルネイル", durationMinutes: 90, price: 8800, displayOrder: 2 },
++      { serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 },
++      { serviceId: "SV002", name: "カット＋カラー", durationMinutes: 90, price: 8800, displayOrder: 2 },
+     ]);
+   });
+ 
+@@ -54,14 +54,14 @@ describe("buildPublicStaff", () => {
+ const servicesWithPresentation: ServiceRow[] = [
+   {
+     ServiceID: "SV001",
+-    Name: "ジェルネイル",
++    Name: "カット",
+     DurationMinutes: 60,
+     Price: 6000,
+     Active: true,
+     StaffRequired: false,
+     DisplayOrder: 1,
+     Description: "説明文",
+-    Category: "ネイル",
++    Category: "カット",
+   },
+   { ServiceID: "SV002", Name: "オフのみ", DurationMinutes: 30, Price: 3000, Active: true, StaffRequired: false, DisplayOrder: 2 },
+ ];
+@@ -74,7 +74,7 @@ const staffWithPresentation: StaffRow[] = [
+ describe("buildPublicServices optional presentation fields (V1.1 Task 4)", () => {
+   it("carries description/category through when present", () => {
+     const result = buildPublicServices(servicesWithPresentation);
+-    expect(result[0]).toMatchObject({ description: "説明文", category: "ネイル" });
++    expect(result[0]).toMatchObject({ description: "説明文", category: "カット" });
+   });
+ 
+   it("leaves description/category undefined when the row has none", () => {
+diff --git a/apps/hair-salon-portfolio/gas/tests/ReservationEmailTemplates.test.ts b/apps/hair-salon-portfolio/gas/tests/ReservationEmailTemplates.test.ts
+index bf49caf..16ea7fa 100644
+--- a/apps/hair-salon-portfolio/gas/tests/ReservationEmailTemplates.test.ts
++++ b/apps/hair-salon-portfolio/gas/tests/ReservationEmailTemplates.test.ts
+@@ -16,7 +16,7 @@ const reservation: NormalizedReservation = {
+   startTime: "10:00",
+   endTime: "11:00",
+   serviceId: "SV001",
+-  serviceName: "ジェルネイル",
++  serviceName: "カット",
+   durationMinutes: 60,
+   price: 6000,
+   staffSelection: { kind: "none" },
+@@ -37,7 +37,7 @@ describe("buildCustomerConfirmationEmail", () => {
+     const email = buildCustomerConfirmationEmail(ctx);
+     expect(email.subject).toContain("RES-20260910-X8K2MP");
+     expect(email.body).toContain("山田太郎");
+-    expect(email.body).toContain("ジェルネイル");
++    expect(email.body).toContain("カット");
+     expect(email.body).toContain("2026-09-10");
+     expect(email.body).toContain("10:00");
+     expect(email.body).toContain(ctx.cancellationUrl);
+@@ -51,7 +51,7 @@ describe("buildCustomerConfirmationEmail", () => {
+ 
+   it("uses ctx.serviceLabel as the line label instead of a hard-coded term, so a non-salon business can say Workshop/Class instead of メニュー", () => {
+     const email = buildCustomerConfirmationEmail({ ...ctx, serviceLabel: "ワークショップ" });
+-    expect(email.body).toContain("ワークショップ: ジェルネイル");
++    expect(email.body).toContain("ワークショップ: カット");
+     expect(email.body).not.toContain("メニュー:");
+   });
+ });
+diff --git a/apps/hair-salon-portfolio/gas/tests/ReservationMapper.test.ts b/apps/hair-salon-portfolio/gas/tests/ReservationMapper.test.ts
+index 91dd114..701c5e2 100644
+--- a/apps/hair-salon-portfolio/gas/tests/ReservationMapper.test.ts
++++ b/apps/hair-salon-portfolio/gas/tests/ReservationMapper.test.ts
+@@ -14,7 +14,7 @@ const request: ReservationRequest = {
+ 
+ const service: ServiceRow = {
+   ServiceID: "SV001",
+-  Name: "ジェルネイル",
++  Name: "カット",
+   DurationMinutes: 60,
+   Price: 6000,
+   Active: true,
+@@ -35,7 +35,7 @@ describe("buildNormalizedReservation", () => {
+     });
+     expect(reservation.durationMinutes).toBe(60);
+     expect(reservation.price).toBe(6000);
+-    expect(reservation.serviceName).toBe("ジェルネイル");
++    expect(reservation.serviceName).toBe("カット");
+   });
+ 
+   it("generates a RES-YYYYMMDD-XXXXXX reservationId using the injected now/random", () => {
+diff --git a/apps/hair-salon-portfolio/gas/tests/ReservationRepository.test.ts b/apps/hair-salon-portfolio/gas/tests/ReservationRepository.test.ts
+index 1492f6e..1214119 100644
+--- a/apps/hair-salon-portfolio/gas/tests/ReservationRepository.test.ts
++++ b/apps/hair-salon-portfolio/gas/tests/ReservationRepository.test.ts
+@@ -11,7 +11,7 @@ const baseReservation: NormalizedReservation = {
+   startTime: "10:00",
+   endTime: "11:00",
+   serviceId: "SV001",
+-  serviceName: "ジェルネイル",
++  serviceName: "カット",
+   durationMinutes: 60,
+   price: 6000,
+   staffSelection: { kind: "none" },
+diff --git a/apps/hair-salon-portfolio/gas/tests/ReservationRules.test.ts b/apps/hair-salon-portfolio/gas/tests/ReservationRules.test.ts
+index 96f8393..a2beb12 100644
+--- a/apps/hair-salon-portfolio/gas/tests/ReservationRules.test.ts
++++ b/apps/hair-salon-portfolio/gas/tests/ReservationRules.test.ts
+@@ -6,7 +6,7 @@ import { AvailabilityStrategy } from "../src/availability/AvailabilityStrategy";
+ 
+ const activeService: ServiceRow = {
+   ServiceID: "SV001",
+-  Name: "ジェルネイル",
++  Name: "カット",
+   DurationMinutes: 60,
+   Price: 6000,
+   Active: true,
+@@ -222,7 +222,7 @@ describe("evaluateReservationRequest", () => {
+     });
+     expect(result.ok).toBe(true);
+     if (result.ok) {
+-      expect(result.reservation.serviceName).toBe("ジェルネイル");
++      expect(result.reservation.serviceName).toBe("カット");
+       expect(result.reservation.startTime).toBe("11:00");
+       expect(result.reservation.endTime).toBe("12:00");
+       expect(result.reservation.reservationId).toMatch(/^RES-\d{8}-[A-Z0-9]{6}$/);
+@@ -369,7 +369,7 @@ describe("evaluateAvailableSlots", () => {
+     emailFromName: "Demo",
+   };
+   const services: ServiceRow[] = [
+-    { ServiceID: "SV001", Name: "まつげパーマ", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
++    { ServiceID: "SV001", Name: "カット", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+   ];
+   const staff: StaffRow[] = [{ StaffID: "ST001", Name: "鈴木", Active: true, DisplayOrder: 1 }];
+   const staffEnabledConfig: AppConfig = { ...baseConfig, features: { ...baseConfig.features, staffSelection: true } };

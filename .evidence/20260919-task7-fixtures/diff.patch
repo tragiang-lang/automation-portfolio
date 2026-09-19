@@ -1,0 +1,654 @@
+diff --git a/apps/hair-salon-portfolio/web/app/page.test.tsx b/apps/hair-salon-portfolio/web/app/page.test.tsx
+index aa45b90..55c0a56 100644
+--- a/apps/hair-salon-portfolio/web/app/page.test.tsx
++++ b/apps/hair-salon-portfolio/web/app/page.test.tsx
+@@ -38,7 +38,7 @@ describe("Home", () => {
+   it("renders every section with the default design config, unchanged from before this task", async () => {
+     render(await Home());
+ 
+-    expect(screen.getByRole("heading", { name: "静けさの中で、指先を整える時間を" })).toBeInTheDocument();
++    expect(screen.getByRole("heading", { name: "自然体の美しさを引き出す、静かなヘアサロン。" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "スタッフ紹介" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "ギャラリー" })).toBeInTheDocument();
+@@ -47,7 +47,7 @@ describe("Home", () => {
+     expect(screen.getByRole("heading", { name: "よくあるご質問" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "アクセス" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "お問い合わせ" })).toBeInTheDocument();
+-    expect(screen.getAllByText("ご予約はこちら").length).toBeGreaterThanOrEqual(2);
++    expect(screen.getAllByText("予約する").length).toBeGreaterThanOrEqual(2);
+   });
+ 
+   it("renders every section under a non-default theme preset (Theme Presets task — theme selection is CSS-only, never gates rendering)", async () => {
+@@ -55,7 +55,7 @@ describe("Home", () => {
+ 
+     render(await Home());
+ 
+-    expect(screen.getByRole("heading", { name: "静けさの中で、指先を整える時間を" })).toBeInTheDocument();
++    expect(screen.getByRole("heading", { name: "自然体の美しさを引き出す、静かなヘアサロン。" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "スタッフ紹介" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "ギャラリー" })).toBeInTheDocument();
+@@ -72,7 +72,7 @@ describe("Home", () => {
+ 
+     render(await Home());
+ 
+-    expect(screen.getByRole("heading", { name: "静けさの中で、指先を整える時間を" })).toBeInTheDocument();
++    expect(screen.getByRole("heading", { name: "自然体の美しさを引き出す、静かなヘアサロン。" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "スタッフ紹介" })).toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "ギャラリー" })).toBeInTheDocument();
+@@ -88,7 +88,7 @@ describe("Home", () => {
+     render(await Home());
+ 
+     expect(
+-      screen.queryByRole("heading", { name: "静けさの中で、指先を整える時間を" }),
++      screen.queryByRole("heading", { name: "自然体の美しさを引き出す、静かなヘアサロン。" }),
+     ).not.toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
+   });
+@@ -106,7 +106,7 @@ describe("Home", () => {
+     render(await Home());
+ 
+     expect(screen.queryByRole("heading", { name: "スタッフ紹介" })).not.toBeInTheDocument();
+-    expect(screen.queryByText("仕上がりを見て、気持ちが決まったら")).not.toBeInTheDocument();
++    expect(screen.queryByText("スタイルのイメージが決まったら")).not.toBeInTheDocument();
+     expect(screen.queryByRole("heading", { name: "お問い合わせ" })).not.toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
+   });
+@@ -130,7 +130,7 @@ describe("Home", () => {
+     render(await Home());
+ 
+     expect(screen.queryByRole("heading", { name: "スタッフ紹介" })).not.toBeInTheDocument();
+-    expect(screen.queryByText("仕上がりを見て、気持ちが決まったら")).not.toBeInTheDocument();
++    expect(screen.queryByText("スタイルのイメージが決まったら")).not.toBeInTheDocument();
+     expect(screen.queryByRole("heading", { name: "お問い合わせ" })).not.toBeInTheDocument();
+     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
+   });
+@@ -150,12 +150,12 @@ describe("Home", () => {
+  * `sectionHeadingElement` below); lookup uses heading level 1 instead.
+  */
+ const SECTION_MARKERS: Record<(typeof ALL_HOME_SECTIONS)[number], string> = {
+-  hero: "静けさの中で、指先とまなざしを整える。",
+-  concept: "静けさの中で、指先を整える時間を",
++  hero: "髪と向き合う、静かな時間。",
++  concept: "自然体の美しさを引き出す、静かなヘアサロン。",
+   menu: "メニュー",
+   staff: "スタッフ紹介",
+   gallery: "ギャラリー",
+-  reservation: "仕上がりを見て、気持ちが決まったら",
++  reservation: "スタイルのイメージが決まったら",
+   "salon-features": "サロンについて",
+   "customer-flow": "ご来店の流れ",
+   faq: "よくあるご質問",
+@@ -258,7 +258,7 @@ describe("Home — section ordering (V1.1 Task 9)", () => {
+ 
+     render(await Home());
+ 
+-    expect(screen.queryByText("仕上がりを見て、気持ちが決まったら")).not.toBeInTheDocument();
++    expect(screen.queryByText("スタイルのイメージが決まったら")).not.toBeInTheDocument();
+     expect(screen.queryByText(CLOSING_RESERVATION_CTA_TEXT)).not.toBeInTheDocument();
+   });
+ });
+diff --git a/apps/hair-salon-portfolio/web/components/layout/SiteFooter.test.tsx b/apps/hair-salon-portfolio/web/components/layout/SiteFooter.test.tsx
+index be725b4..1841d96 100644
+--- a/apps/hair-salon-portfolio/web/components/layout/SiteFooter.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/layout/SiteFooter.test.tsx
+@@ -4,13 +4,13 @@ import type { NavItem, SiteConfig } from "@/types/content";
+ 
+ const config: SiteConfig = {
+   business: {
+-    name: "凛",
+-    nameLatin: "Rin Nail & Eyelash",
+-    tagline: "静けさの中で、指先とまなざしを整える。",
+-    phone: "03-1234-5678",
+-    email: "info@example.com",
+-    address: "東京都中央区銀座1-2-3",
+-    postalCode: "〒104-0061",
++    name: "アトリエ イト",
++    nameLatin: "atelier ito",
++    tagline: "髪と向き合う、静かな時間。",
++    phone: "03-2345-6789",
++    email: "info@atelier-ito.example.com",
++    address: "東京都渋谷区神宮前3-4-5",
++    postalCode: "〒150-0001",
+   },
+   hours: {
+     monday: "10:00-19:00",
+diff --git a/apps/hair-salon-portfolio/web/components/layout/SiteHeader.test.tsx b/apps/hair-salon-portfolio/web/components/layout/SiteHeader.test.tsx
+index 4f6ec5f..b66c302 100644
+--- a/apps/hair-salon-portfolio/web/components/layout/SiteHeader.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/layout/SiteHeader.test.tsx
+@@ -8,13 +8,13 @@ jest.mock("next/navigation", () => ({
+ }));
+ 
+ const business: BusinessInfo = {
+-  name: "凛",
+-  nameLatin: "Rin Nail & Eyelash",
+-  tagline: "静けさの中で、指先とまなざしを整える。",
+-  phone: "03-1234-5678",
+-  email: "info@example.com",
+-  address: "東京都中央区銀座1-2-3",
+-  postalCode: "〒104-0061",
++  name: "アトリエ イト",
++  nameLatin: "atelier ito",
++  tagline: "髪と向き合う、静かな時間。",
++  phone: "03-2345-6789",
++  email: "info@atelier-ito.example.com",
++  address: "東京都渋谷区神宮前3-4-5",
++  postalCode: "〒150-0001",
+ };
+ 
+ const navItems: NavItem[] = [
+diff --git a/apps/hair-salon-portfolio/web/components/reservation/ReservationSummary.test.tsx b/apps/hair-salon-portfolio/web/components/reservation/ReservationSummary.test.tsx
+index 7597668..e3e0efa 100644
+--- a/apps/hair-salon-portfolio/web/components/reservation/ReservationSummary.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/reservation/ReservationSummary.test.tsx
+@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
+ import userEvent from "@testing-library/user-event";
+ import { ReservationSummary } from "./ReservationSummary";
+ 
+-const service = { serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 };
++const service = { serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 };
+ const customer = { name: "山田太郎", email: "yamada@example.com", phone: "09012345678", notes: "" };
+ 
+ describe("ReservationSummary", () => {
+@@ -19,7 +19,7 @@ describe("ReservationSummary", () => {
+         confirming={false}
+       />,
+     );
+-    expect(screen.getByText("まつげパーマ")).toBeInTheDocument();
++    expect(screen.getByText("カット")).toBeInTheDocument();
+     expect(screen.getByText("60分")).toBeInTheDocument();
+     expect(screen.getByText("¥6,600")).toBeInTheDocument();
+     expect(screen.getByText("指名なし（お任せ）")).toBeInTheDocument();
+diff --git a/apps/hair-salon-portfolio/web/components/reservation/ReservationWizard.test.tsx b/apps/hair-salon-portfolio/web/components/reservation/ReservationWizard.test.tsx
+index f034388..9a9be80 100644
+--- a/apps/hair-salon-portfolio/web/components/reservation/ReservationWizard.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/reservation/ReservationWizard.test.tsx
+@@ -13,7 +13,7 @@ jest.mock("../../lib/api/reservationClient");
+ function mockHappyPath() {
+   (reservationClient.getServices as jest.Mock).mockResolvedValue({
+     ok: true,
+-    data: [{ serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 }],
++    data: [{ serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 }],
+   });
+   (reservationClient.getStaff as jest.Mock).mockResolvedValue({ ok: true, data: [] });
+   (reservationClient.getAvailability as jest.Mock).mockResolvedValue({
+@@ -38,8 +38,8 @@ describe("ReservationWizard", () => {
+     mockHappyPath();
+     render(<ReservationWizard minDate="2026-09-02" maxDate="2026-11-01" />);
+ 
+-    await waitFor(() => expect(screen.getByRole("radio", { name: /まつげパーマ/ })).toBeInTheDocument());
+-    await userEvent.click(screen.getByRole("radio", { name: /まつげパーマ/ }));
++    await waitFor(() => expect(screen.getByRole("radio", { name: /カット/ })).toBeInTheDocument());
++    await userEvent.click(screen.getByRole("radio", { name: /カット/ }));
+     await userEvent.click(screen.getByRole("button", { name: "次へ" }));
+ 
+     // staff step is skipped (getStaff returned []) — straight to date/time
+@@ -68,8 +68,8 @@ describe("ReservationWizard", () => {
+     });
+     render(<ReservationWizard minDate="2026-09-02" maxDate="2026-11-01" />);
+ 
+-    await waitFor(() => expect(screen.getByRole("radio", { name: /まつげパーマ/ })).toBeInTheDocument());
+-    await userEvent.click(screen.getByRole("radio", { name: /まつげパーマ/ }));
++    await waitFor(() => expect(screen.getByRole("radio", { name: /カット/ })).toBeInTheDocument());
++    await userEvent.click(screen.getByRole("radio", { name: /カット/ }));
+     await userEvent.click(screen.getByRole("button", { name: "次へ" }));
+     await userEvent.type(await screen.findByLabelText("日付"), "2026-09-10");
+     await waitFor(() => expect(screen.getByRole("button", { name: "10:00" })).toBeInTheDocument());
+@@ -90,8 +90,8 @@ describe("ReservationWizard", () => {
+     (reservationClient.submitReservation as jest.Mock).mockReturnValue(new Promise((resolve) => { resolveSubmit = resolve; }));
+     render(<ReservationWizard minDate="2026-09-02" maxDate="2026-11-01" />);
+ 
+-    await waitFor(() => expect(screen.getByRole("radio", { name: /まつげパーマ/ })).toBeInTheDocument());
+-    await userEvent.click(screen.getByRole("radio", { name: /まつげパーマ/ }));
++    await waitFor(() => expect(screen.getByRole("radio", { name: /カット/ })).toBeInTheDocument());
++    await userEvent.click(screen.getByRole("radio", { name: /カット/ }));
+     await userEvent.click(screen.getByRole("button", { name: "次へ" }));
+     await userEvent.type(await screen.findByLabelText("日付"), "2026-09-10");
+     await waitFor(() => expect(screen.getByRole("button", { name: "10:00" })).toBeInTheDocument());
+diff --git a/apps/hair-salon-portfolio/web/components/reservation/ServiceSelection.test.tsx b/apps/hair-salon-portfolio/web/components/reservation/ServiceSelection.test.tsx
+index 7359c15..e1f8910 100644
+--- a/apps/hair-salon-portfolio/web/components/reservation/ServiceSelection.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/reservation/ServiceSelection.test.tsx
+@@ -3,28 +3,28 @@ import userEvent from "@testing-library/user-event";
+ import { ServiceSelection } from "./ServiceSelection";
+ 
+ const services = [
+-  { serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 },
+-  { serviceId: "SV002", name: "ジェルネイル", durationMinutes: 90, price: 8800, displayOrder: 2 },
++  { serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 },
++  { serviceId: "SV002", name: "カラー", durationMinutes: 90, price: 8800, displayOrder: 2 },
+ ];
+ 
+ describe("ServiceSelection", () => {
+   it("renders each service as a selectable option with duration and price", () => {
+     render(<ServiceSelection services={services} selectedServiceId={null} onSelect={jest.fn()} />);
+-    expect(screen.getByRole("radio", { name: /まつげパーマ/ })).toBeInTheDocument();
++    expect(screen.getByRole("radio", { name: /カット/ })).toBeInTheDocument();
+     expect(screen.getByText("60分")).toBeInTheDocument();
+     expect(screen.getByText("¥6,600")).toBeInTheDocument();
+   });
+ 
+   it("marks the selected service as checked", () => {
+     render(<ServiceSelection services={services} selectedServiceId="SV002" onSelect={jest.fn()} />);
+-    expect(screen.getByRole("radio", { name: /ジェルネイル/ })).toBeChecked();
+-    expect(screen.getByRole("radio", { name: /まつげパーマ/ })).not.toBeChecked();
++    expect(screen.getByRole("radio", { name: /カラー/ })).toBeChecked();
++    expect(screen.getByRole("radio", { name: /カット/ })).not.toBeChecked();
+   });
+ 
+   it("calls onSelect with the serviceId when chosen", async () => {
+     const onSelect = jest.fn();
+     render(<ServiceSelection services={services} selectedServiceId={null} onSelect={onSelect} />);
+-    await userEvent.click(screen.getByRole("radio", { name: /まつげパーマ/ }));
++    await userEvent.click(screen.getByRole("radio", { name: /カット/ }));
+     expect(onSelect).toHaveBeenCalledWith("SV001");
+   });
+ 
+diff --git a/apps/hair-salon-portfolio/web/components/reservation/useReservationWizard.test.ts b/apps/hair-salon-portfolio/web/components/reservation/useReservationWizard.test.ts
+index 2895c8b..6728840 100644
+--- a/apps/hair-salon-portfolio/web/components/reservation/useReservationWizard.test.ts
++++ b/apps/hair-salon-portfolio/web/components/reservation/useReservationWizard.test.ts
+@@ -5,7 +5,7 @@ import { useReservationWizard } from "./useReservationWizard";
+ import * as reservationClient from "@/lib/api/reservationClient";
+ import { ANY_STAFF } from "@/types/reservation";
+ 
+-const services = [{ serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 }];
++const services = [{ serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 }];
+ const staff = [{ staffId: "ST001", name: "鈴木", displayOrder: 1 }];
+ 
+ function mockCatalog(overrides: Partial<{ servicesOk: boolean; staffOk: boolean; staffList: typeof staff }> = {}) {
+diff --git a/apps/hair-salon-portfolio/web/components/sections/ContactSection.test.tsx b/apps/hair-salon-portfolio/web/components/sections/ContactSection.test.tsx
+index a91c12c..395d9c9 100644
+--- a/apps/hair-salon-portfolio/web/components/sections/ContactSection.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/sections/ContactSection.test.tsx
+@@ -3,9 +3,9 @@ import { ContactSection } from "./ContactSection";
+ import type { BusinessInfo } from "@/types/content";
+ 
+ const business: BusinessInfo = {
+-  name: "凛",
+-  nameLatin: "Rin",
+-  tagline: "静けさの中で。",
++  name: "アトリエ イト",
++  nameLatin: "atelier ito",
++  tagline: "髪と向き合う、静かな時間。",
+   phone: "03-1234-5678",
+   email: "info@example.com",
+   address: "東京都",
+diff --git a/apps/hair-salon-portfolio/web/components/sections/HeroSection.test.tsx b/apps/hair-salon-portfolio/web/components/sections/HeroSection.test.tsx
+index 7aad87a..111e575 100644
+--- a/apps/hair-salon-portfolio/web/components/sections/HeroSection.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/sections/HeroSection.test.tsx
+@@ -2,10 +2,10 @@ import { render, screen } from "@testing-library/react";
+ import { HeroSection } from "./HeroSection";
+ 
+ const RUNTIME_CONTENT = {
+-  headline: "静けさの中で、指先を整える時間を",
++  headline: "自然体の美しさを引き出す、静かなヘアサロン。",
+   subheadline: "テスト用の説明文です。",
+-  name: "凛 銀座店",
+-  nameLatin: "Rin Ginza",
++  name: "アトリエ イト 神宮前店",
++  nameLatin: "atelier ito Jingumae",
+ };
+ 
+ describe("HeroSection", () => {
+@@ -34,7 +34,7 @@ describe("HeroSection", () => {
+     // Exactly one h1 per variant — heading hierarchy stays valid.
+     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+     // Reservation CTA remains a real link, not a styled div.
+-    const reservationLink = screen.getByRole("link", { name: "ご予約はこちら" });
++    const reservationLink = screen.getByRole("link", { name: "予約する" });
+     expect(reservationLink).toHaveAttribute("href", "/reservation");
+   });
+ 
+@@ -66,7 +66,7 @@ describe("HeroSection", () => {
+ 
+       const link = screen.getByRole("link", { name: "参加申込み" });
+       expect(link).toHaveAttribute("href", "/reservation");
+-      expect(screen.queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
++      expect(screen.queryByRole("link", { name: "予約する" })).not.toBeInTheDocument();
+     },
+   );
+ });
+diff --git a/apps/hair-salon-portfolio/web/components/sections/MenuContent.test.tsx b/apps/hair-salon-portfolio/web/components/sections/MenuContent.test.tsx
+index ab6ea6e..a6b107d 100644
+--- a/apps/hair-salon-portfolio/web/components/sections/MenuContent.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/sections/MenuContent.test.tsx
+@@ -26,20 +26,20 @@ describe("groupServices", () => {
+ 
+   it("groups by category once there are more than 6 services with more than one category", () => {
+     const services = [
+-      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `A${i}`, category: "ジェルネイル" })),
+-      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `B${i}`, category: "まつげエクステ" })),
++      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `A${i}`, category: "カラー" })),
++      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `B${i}`, category: "パーマ" })),
+     ];
+ 
+     const groups = groupServices(services);
+ 
+-    expect(groups.map((g) => g.category)).toEqual(["ジェルネイル", "まつげエクステ"]);
++    expect(groups.map((g) => g.category)).toEqual(["カラー", "パーマ"]);
+     expect(groups[0].services).toHaveLength(4);
+     expect(groups[1].services).toHaveLength(4);
+   });
+ 
+   it("does not group when every service shares the same single category, even above the threshold", () => {
+     const services = Array.from({ length: 8 }, (_, i) =>
+-      makeService({ serviceId: `SV${i}`, category: "ジェルネイル" }),
++      makeService({ serviceId: `SV${i}`, category: "カラー" }),
+     );
+ 
+     const groups = groupServices(services);
+diff --git a/apps/hair-salon-portfolio/web/components/sections/MenuSection.test.tsx b/apps/hair-salon-portfolio/web/components/sections/MenuSection.test.tsx
+index 2ec02ba..43262a5 100644
+--- a/apps/hair-salon-portfolio/web/components/sections/MenuSection.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/sections/MenuSection.test.tsx
+@@ -112,17 +112,17 @@ describe("MenuSection", () => {
+   it("groups editorial-list services by category once grouping threshold is exceeded (Phase 2A §9, reused unchanged)", () => {
+     const grouped: Service[] = [
+       ...Array.from({ length: 4 }, (_, i) =>
+-        makeService({ serviceId: `A${i}`, name: `ジェルA${i}`, category: "ジェルネイル" }),
++        makeService({ serviceId: `A${i}`, name: `カットA${i}`, category: "カラー" }),
+       ),
+       ...Array.from({ length: 4 }, (_, i) =>
+-        makeService({ serviceId: `B${i}`, name: `まつげB${i}`, category: "まつげエクステ" }),
++        makeService({ serviceId: `B${i}`, name: `カラーB${i}`, category: "パーマ" }),
+       ),
+     ];
+ 
+     render(<MenuSection services={grouped} menuVariant="editorial-list" />);
+ 
+-    expect(screen.getByText("ジェルネイル")).toBeInTheDocument();
+-    expect(screen.getByText("まつげエクステ")).toBeInTheDocument();
++    expect(screen.getByText("カラー")).toBeInTheDocument();
++    expect(screen.getByText("パーマ")).toBeInTheDocument();
+   });
+ 
+   it("shows each service's category as a per-card label in card-grid, independent of the grouping threshold", () => {
+@@ -142,18 +142,18 @@ describe("MenuSection", () => {
+   it("renders minimal-price-list as a compact, distinct composition from editorial-list (no category grouping)", () => {
+     const grouped: Service[] = [
+       ...Array.from({ length: 4 }, (_, i) =>
+-        makeService({ serviceId: `A${i}`, name: `ジェルA${i}`, category: "ジェルネイル" }),
++        makeService({ serviceId: `A${i}`, name: `カットA${i}`, category: "カラー" }),
+       ),
+       ...Array.from({ length: 4 }, (_, i) =>
+-        makeService({ serviceId: `B${i}`, name: `まつげB${i}`, category: "まつげエクステ" }),
++        makeService({ serviceId: `B${i}`, name: `カラーB${i}`, category: "パーマ" }),
+       ),
+     ];
+ 
+     render(<MenuSection services={grouped} menuVariant="minimal-price-list" />);
+ 
+     // Every service name/price still renders...
+-    expect(screen.getByText("ジェルA0")).toBeInTheDocument();
++    expect(screen.getByText("カットA0")).toBeInTheDocument();
+     // ...but minimal-price-list never renders a category-group heading, unlike editorial-list.
+-    expect(screen.queryByText("ジェルネイル")).not.toBeInTheDocument();
++    expect(screen.queryByText("カラー")).not.toBeInTheDocument();
+   });
+ });
+diff --git a/apps/hair-salon-portfolio/web/components/sections/StaffContent.test.tsx b/apps/hair-salon-portfolio/web/components/sections/StaffContent.test.tsx
+index 4fcd65c..497d21b 100644
+--- a/apps/hair-salon-portfolio/web/components/sections/StaffContent.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/sections/StaffContent.test.tsx
+@@ -29,7 +29,7 @@ describe("StaffPhotoFallback", () => {
+ 
+   it("marks the tile as decorative (aria-hidden) — the sibling name text carries the identity", () => {
+     const { container } = render(
+-      <StaffPhotoFallback initial="凛" aspectRatio="800 / 1000" textClassName="text-[56px]" />,
++      <StaffPhotoFallback initial="ア" aspectRatio="800 / 1000" textClassName="text-[56px]" />,
+     );
+     expect(container.querySelector("[aria-hidden='true']")).toBeInTheDocument();
+   });
+diff --git a/apps/hair-salon-portfolio/web/components/sections/StaffSection.test.tsx b/apps/hair-salon-portfolio/web/components/sections/StaffSection.test.tsx
+index aca5511..9627487 100644
+--- a/apps/hair-salon-portfolio/web/components/sections/StaffSection.test.tsx
++++ b/apps/hair-salon-portfolio/web/components/sections/StaffSection.test.tsx
+@@ -6,7 +6,7 @@ const staff: StaffMember[] = [
+   {
+     staffId: "ST001",
+     name: "田中 あい",
+-    role: "店長 / ネイリスト",
++    role: "オーナー / スタイリスト",
+     introduction: "丁寧なカウンセリングが得意です。",
+     photoSrc: "/images/staff-1.svg",
+     photoAlt: "スタッフ写真",
+@@ -18,7 +18,7 @@ const STAFF_VARIANTS = ["portrait-grid", "horizontal-profile"] as const;
+ describe("StaffSection", () => {
+   it("renders nothing at all when disabled (Phase 0 §K — not just visually hidden)", () => {
+     const { container } = render(
+-      <StaffSection enabled={false} staff={staff} anyAvailableOption businessNameInitial="凛" />,
++      <StaffSection enabled={false} staff={staff} anyAvailableOption businessNameInitial="ア" />,
+     );
+     expect(container).toBeEmptyDOMElement();
+   });
+@@ -29,7 +29,7 @@ describe("StaffSection", () => {
+         enabled={false}
+         staff={staff}
+         anyAvailableOption
+-        businessNameInitial="凛"
++        businessNameInitial="ア"
+         staffVariant="horizontal-profile"
+       />,
+     );
+@@ -38,7 +38,7 @@ describe("StaffSection", () => {
+ 
+   it("renders the 'any available staff' tile as part of the same list when enabled", () => {
+     render(
+-      <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" />,
++      <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="ア" />,
+     );
+     expect(screen.getByText("田中 あい")).toBeInTheDocument();
+     expect(screen.getByText("指名なし（お任せ）")).toBeInTheDocument();
+@@ -46,7 +46,7 @@ describe("StaffSection", () => {
+ 
+   it("omits the 'any available staff' tile when the config option is off", () => {
+     render(
+-      <StaffSection enabled staff={staff} anyAvailableOption={false} businessNameInitial="凛" />,
++      <StaffSection enabled staff={staff} anyAvailableOption={false} businessNameInitial="ア" />,
+     );
+     expect(screen.queryByText("指名なし（お任せ）")).not.toBeInTheDocument();
+   });
+@@ -54,7 +54,7 @@ describe("StaffSection", () => {
+   it("renders a runtime-sourced staff member with no role/introduction/photo without crashing", () => {
+     const runtimeStaff: StaffMember[] = [{ staffId: "ST002", name: "鈴木 さくら" }];
+     render(
+-      <StaffSection enabled staff={runtimeStaff} anyAvailableOption={false} businessNameInitial="凛" />,
++      <StaffSection enabled staff={runtimeStaff} anyAvailableOption={false} businessNameInitial="ア" />,
+     );
+     expect(screen.getByText("鈴木 さくら")).toBeInTheDocument();
+     // Falls back to an initial-letter tile (same convention as
+@@ -64,13 +64,13 @@ describe("StaffSection", () => {
+ 
+   it("always renders the #staff anchor section regardless of variant", () => {
+     const { container } = render(
+-      <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" staffVariant="horizontal-profile" />,
++      <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="ア" staffVariant="horizontal-profile" />,
+     );
+     expect(container.querySelector("#staff")).toBeInTheDocument();
+   });
+ 
+   it("defaults to the portrait-grid variant when staffVariant is not passed", () => {
+-    render(<StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" />);
++    render(<StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="ア" />);
+ 
+     expect(screen.getByTestId("staff-portrait-grid")).toBeInTheDocument();
+     expect(screen.queryByTestId("staff-horizontal-profile")).not.toBeInTheDocument();
+@@ -82,7 +82,7 @@ describe("StaffSection", () => {
+         enabled
+         staff={staff}
+         anyAvailableOption
+-        businessNameInitial="凛"
++        businessNameInitial="ア"
+         staffVariant={"not-a-real-variant" as never}
+       />,
+     );
+@@ -94,12 +94,12 @@ describe("StaffSection", () => {
+     "renders the %s variant with runtime staff name, role, and bio",
+     (variant) => {
+       render(
+-        <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" staffVariant={variant} />,
++        <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="ア" staffVariant={variant} />,
+       );
+ 
+       expect(screen.getByTestId(`staff-${variant}`)).toBeInTheDocument();
+       expect(screen.getByText("田中 あい")).toBeInTheDocument();
+-      expect(screen.getByText("店長 / ネイリスト")).toBeInTheDocument();
++      expect(screen.getByText("オーナー / スタイリスト")).toBeInTheDocument();
+       expect(screen.getByText("丁寧なカウンセリングが得意です。")).toBeInTheDocument();
+       // Exactly one section heading (h2) — one Staff heading regardless of variant.
+       expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
+@@ -116,14 +116,14 @@ describe("StaffSection", () => {
+           enabled
+           staff={runtimeStaff}
+           anyAvailableOption={false}
+-          businessNameInitial="凛"
++          businessNameInitial="ア"
+           staffVariant={variant}
+         />,
+       );
+ 
+       const list = screen.getByTestId(`staff-${variant}`);
+       expect(within(list).getByText("鈴木 さくら")).toBeInTheDocument();
+-      expect(within(list).queryByText(/店長|ネイリスト/)).not.toBeInTheDocument();
++      expect(within(list).queryByText(/オーナー|スタイリスト/)).not.toBeInTheDocument();
+       // Falls back to an initial-letter tile instead of a broken <img> or invented photo.
+       expect(within(list).getByText("鈴")).toBeInTheDocument();
+     },
+@@ -131,7 +131,7 @@ describe("StaffSection", () => {
+ 
+   it("shows a usable single-column staff list in horizontal-profile, distinct from portrait-grid's multi-column grid", () => {
+     render(
+-      <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" staffVariant="horizontal-profile" />,
++      <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="ア" staffVariant="horizontal-profile" />,
+     );
+ 
+     const list = screen.getByTestId("staff-horizontal-profile");
+@@ -150,7 +150,7 @@ describe("StaffSection", () => {
+           enabled
+           staff={orderedStaff}
+           anyAvailableOption={false}
+-          businessNameInitial="凛"
++          businessNameInitial="ア"
+           staffVariant={variant}
+         />,
+       );
+diff --git a/apps/hair-salon-portfolio/web/lib/api/reservationClient.test.ts b/apps/hair-salon-portfolio/web/lib/api/reservationClient.test.ts
+index 17a0289..52b17f4 100644
+--- a/apps/hair-salon-portfolio/web/lib/api/reservationClient.test.ts
++++ b/apps/hair-salon-portfolio/web/lib/api/reservationClient.test.ts
+@@ -67,7 +67,7 @@ describe("getServices", () => {
+   it("POSTs the getServices action with no payload", async () => {
+     const fetchMock = jest.fn().mockResolvedValue({
+       ok: true,
+-      json: async () => ({ ok: true, data: [{ serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 }] }),
++      json: async () => ({ ok: true, data: [{ serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 }] }),
+     });
+     global.fetch = fetchMock as unknown as typeof fetch;
+ 
+@@ -77,7 +77,7 @@ describe("getServices", () => {
+       "/api/gas",
+       expect.objectContaining({ method: "POST", body: JSON.stringify({ action: "getServices" }) }),
+     );
+-    expect(result).toEqual({ ok: true, data: [{ serviceId: "SV001", name: "まつげパーマ", durationMinutes: 60, price: 6600, displayOrder: 1 }] });
++    expect(result).toEqual({ ok: true, data: [{ serviceId: "SV001", name: "カット", durationMinutes: 60, price: 6600, displayOrder: 1 }] });
+   });
+ 
+   it("returns a controlled NETWORK_ERROR when fetch throws", async () => {
+diff --git a/apps/hair-salon-portfolio/web/lib/config/resolveCatalog.test.ts b/apps/hair-salon-portfolio/web/lib/config/resolveCatalog.test.ts
+index 4bc20c9..74cf126 100644
+--- a/apps/hair-salon-portfolio/web/lib/config/resolveCatalog.test.ts
++++ b/apps/hair-salon-portfolio/web/lib/config/resolveCatalog.test.ts
+@@ -5,24 +5,24 @@ describe("mapPublicServiceToService", () => {
+   it("carries serviceId/name/durationMinutes/price through unchanged", () => {
+     const input: PublicService = {
+       serviceId: "SV001",
+-      name: "ジェルネイル",
++      name: "カラー",
+       durationMinutes: 60,
+       price: 6000,
+       displayOrder: 1,
+     };
+     expect(mapPublicServiceToService(input)).toEqual({
+       serviceId: "SV001",
+-      name: "ジェルネイル",
++      name: "カラー",
+       durationMinutes: 60,
+       price: 6000,
+     });
+   });
+ 
+   it("passes description/category through when the wire payload has them (V1.1 Task 4)", () => {
+-    const input: PublicService = { serviceId: "SV001", name: "x", durationMinutes: 1, price: 1, displayOrder: 1, description: "説明", category: "ネイル" };
++    const input: PublicService = { serviceId: "SV001", name: "x", durationMinutes: 1, price: 1, displayOrder: 1, description: "説明", category: "カラー" };
+     const result = mapPublicServiceToService(input);
+     expect(result.description).toBe("説明");
+-    expect(result.category).toBe("ネイル");
++    expect(result.category).toBe("カラー");
+   });
+ 
+   it("leaves description/category undefined when the wire payload has none (never invents content)", () => {
+diff --git a/apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts b/apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts
+index d895895..e925a98 100644
+--- a/apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts
++++ b/apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts
+@@ -10,7 +10,7 @@ const mockedCallGasAction = callGasAction as jest.Mock;
+ const ORIGINAL_ENV = process.env;
+ 
+ const RUNTIME_SERVICES = [
+-  { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000, displayOrder: 1 },
++  { serviceId: "SV001", name: "カラー", durationMinutes: 60, price: 6000, displayOrder: 1 },
+ ];
+ const RUNTIME_STAFF = [{ staffId: "ST001", name: "田中 あい", displayOrder: 1 }];
+ 
+@@ -47,7 +47,7 @@ describe("loadRuntimeCatalog", () => {
+ 
+     expect(result.status).toBe("runtime");
+     expect(result.services).toEqual([
+-      { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000 },
++      { serviceId: "SV001", name: "カラー", durationMinutes: 60, price: 6000 },
+     ]);
+     expect(result.staff).toEqual([{ staffId: "ST001", name: "田中 あい" }]);
+   });
+diff --git a/apps/hair-salon-portfolio/web/lib/validation/catalogValidator.test.ts b/apps/hair-salon-portfolio/web/lib/validation/catalogValidator.test.ts
+index fcc3df8..2a53e82 100644
+--- a/apps/hair-salon-portfolio/web/lib/validation/catalogValidator.test.ts
++++ b/apps/hair-salon-portfolio/web/lib/validation/catalogValidator.test.ts
+@@ -3,8 +3,8 @@ import { parsePublicServices, parsePublicStaff } from "./catalogValidator";
+ describe("parsePublicServices", () => {
+   it("returns the array unchanged when every item has the expected shape", () => {
+     const input = [
+-      { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000, displayOrder: 1 },
+-      { serviceId: "SV002", name: "フットジェル", durationMinutes: 90, price: 8000, displayOrder: 2 },
++      { serviceId: "SV001", name: "カラー", durationMinutes: 60, price: 6000, displayOrder: 1 },
++      { serviceId: "SV002", name: "トリートメント", durationMinutes: 90, price: 8000, displayOrder: 2 },
+     ];
+     expect(parsePublicServices(input)).toEqual(input);
+   });
+@@ -14,11 +14,11 @@ describe("parsePublicServices", () => {
+   });
+ 
+   it("returns null when an item is missing a required field", () => {
+-    expect(parsePublicServices([{ serviceId: "SV001", name: "ジェルネイル" }])).toBeNull();
++    expect(parsePublicServices([{ serviceId: "SV001", name: "カラー" }])).toBeNull();
+   });
+ 
+   it("returns null when a numeric field has the wrong type", () => {
+-    const input = [{ serviceId: "SV001", name: "ジェルネイル", durationMinutes: "60", price: 6000, displayOrder: 1 }];
++    const input = [{ serviceId: "SV001", name: "カラー", durationMinutes: "60", price: 6000, displayOrder: 1 }];
+     expect(parsePublicServices(input)).toBeNull();
+   });
+ 
+@@ -49,7 +49,7 @@ describe("parsePublicStaff", () => {
+ describe("parsePublicServices optional presentation fields (V1.1 Task 4)", () => {
+   it("passes through description/category when present", () => {
+     const input = [
+-      { serviceId: "SV001", name: "x", durationMinutes: 60, price: 6000, displayOrder: 1, description: "説明", category: "ネイル" },
++      { serviceId: "SV001", name: "x", durationMinutes: 60, price: 6000, displayOrder: 1, description: "説明", category: "カラー" },
+     ];
+     expect(parsePublicServices(input)).toEqual(input);
+   });

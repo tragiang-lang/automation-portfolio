@@ -1,0 +1,829 @@
+
+> hair-salon-portfolio-gas@0.1.0 test
+> jest
+
+PASS tests/CatalogParser.test.ts
+PASS tests/ConfigValidator.test.ts
+PASS tests/ConfigParser.test.ts
+PASS tests/RowMapper.test.ts
+PASS tests/Validation.test.ts
+PASS tests/PublicCatalog.test.ts
+PASS tests/ReservationRepository.test.ts
+PASS tests/ReservationRules.test.ts
+PASS tests/Utils.test.ts
+PASS tests/ConfigStore.test.ts
+PASS tests/availability/ReservationAvailabilityFactory.test.ts
+PASS tests/availability/StaffAvailabilityStrategy.test.ts
+PASS tests/SlotEngine.test.ts
+PASS tests/ReservationId.test.ts
+PASS tests/ReservationMapper.test.ts
+PASS tests/availability/CalendarOverlapAvailability.test.ts
+PASS tests/Logging.test.ts
+PASS tests/InquiryValidation.test.ts
+PASS tests/ReservationErrorMapping.test.ts
+PASS tests/ReservationEmailTemplates.test.ts
+PASS tests/SheetSchemas.test.ts
+PASS tests/InquiryIdempotency.test.ts
+PASS tests/InquiryEmailTemplates.test.ts
+PASS tests/DemoSeed.test.ts
+PASS tests/availability/SharedAvailabilityStrategy.test.ts
+PASS tests/PublicConfig.test.ts
+PASS tests/availability/AvailabilityStrategy.test.ts
+PASS tests/InquiryRepository.test.ts
+PASS tests/Idempotency.test.ts
+PASS tests/ids/CancellationToken.test.ts
+PASS tests/InquiryId.test.ts
+PASS tests/Health.test.ts
+PASS tests/Calendar.test.ts
+FAIL tests/Api.test.ts
+  ● Console
+
+    console.error
+      [getConfig] CONFIG_INVALID: [{"field":"calendar.id","reason":"missing or empty string"}]
+
+    [0m [90m 113 |[39m   error[33m:[39m [33mConfigError[39m[33m,[39m
+     [90m 114 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 115 |[39m   console[33m.[39merror([32m"[getConfig] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 116 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 117 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 118 |[39m     [32m"設定情報の読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:115:11)
+      at Object.<anonymous> (tests/Api.test.ts:120:46)
+
+    console.error
+      [getConfig] SHEET_ERROR: missing headers: Key, Value
+
+    [0m [90m 130 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 131 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 132 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 133 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 134 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 135 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:132:11)
+      at Object.<anonymous> (tests/Api.test.ts:134:54)
+
+    console.error
+      [getConfig] SHEET_ERROR: missing headers: Key, Value
+
+    [0m [90m 130 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 131 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 132 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 133 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 134 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 135 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:132:11)
+      at getConfigAction (src/Api.ts:154:14)
+      at Object.<anonymous> (tests/Api.test.ts:158:37)
+
+    console.error
+      [createReservation] unexpected top-level error: TypeError: Cannot read properties of undefined (reading 'features')
+          at createReservationActionInner (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\src\Api.ts:593:15)
+          at createReservationAction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\src\Api.ts:694:12)
+          at handleApiRequest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\src\Api.ts:230:14)
+          at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\tests\Api.test.ts:205:38)
+          at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\.claude\worktrees\feature+hair-salon-portfolio\apps\hair-salon-portfolio\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 700 |[39m       [36mreturn[39m mapMissingHeadersErrorToResponse(error)[33m;[39m
+     [90m 701 |[39m     }
+    [31m[1m>[22m[39m[90m 702 |[39m     console[33m.[39merror([32m"[createReservation] unexpected top-level error:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 703 |[39m     logError({ action[33m:[39m [32m"createReservation"[39m[33m,[39m message[33m:[39m [32m"Unexpected top-level error"[39m[33m,[39m severity[33m:[39m [32m"critical"[39m })[33m;[39m
+     [90m 704 |[39m     [36mreturn[39m buildErrorResponse([33mERROR_CODES[39m[33m.[39m[33mINTERNAL_ERROR[39m[33m,[39m [32m"サーバーエラーが発生しました。"[39m)[33m;[39m
+     [90m 705 |[39m   }[0m
+
+      at createReservationAction (src/Api.ts:702:13)
+      at handleApiRequest (src/Api.ts:230:14)
+      at Object.<anonymous> (tests/Api.test.ts:205:38)
+
+    console.error
+      [getConfig] SHEET_ERROR: missing headers: ServiceID
+
+    [0m [90m 130 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 131 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 132 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 133 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 134 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 135 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:132:11)
+      at getServicesAction (src/Api.ts:180:54)
+      at Object.<anonymous> (tests/Api.test.ts:261:39)
+
+    console.error
+      [getConfig] CONFIG_INVALID: [{"field":"calendar.id","reason":"missing"}]
+
+    [0m [90m 113 |[39m   error[33m:[39m [33mConfigError[39m[33m,[39m
+     [90m 114 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 115 |[39m   console[33m.[39merror([32m"[getConfig] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 116 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 117 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 118 |[39m     [32m"設定情報の読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:115:11)
+      at createReservationAction (src/Api.ts:697:14)
+      at Object.<anonymous> (tests/Api.test.ts:666:45)
+
+    console.error
+      [createInquiry] email send failed: INQ-20260919-67N49W customer send failed
+
+    [0m [90m 757 |[39m   } [36mcatch[39m (error) {
+     [90m 758 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [33mString[39m(error)[33m;[39m
+    [31m[1m>[22m[39m[90m 759 |[39m     console[33m.[39merror([32m"[createInquiry] email send failed:"[39m[33m,[39m inquiryId[33m,[39m recipientType[33m,[39m message)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 760 |[39m     logEmail({ relatedType[33m:[39m [32m"Inquiry"[39m[33m,[39m relatedId[33m:[39m inquiryId[33m,[39m recipientType[33m,[39m recipientEmail[33m,[39m subject[33m:[39m content[33m.[39msubject[33m,[39m status[33m:[39m [32m"failed"[39m[33m,[39m errorMessage[33m:[39m message })[33m;[39m
+     [90m 761 |[39m     logError({ action[33m:[39m [32m"createInquiry"[39m[33m,[39m message[33m:[39m [32m"Email send failed"[39m[33m,[39m context[33m:[39m { inquiryId[33m,[39m recipientType }[33m,[39m severity[33m:[39m [32m"warning"[39m })[33m;[39m
+     [90m 762 |[39m     [36mreturn[39m [36mfalse[39m[33m;[39m[0m
+
+      at trySendInquiryEmailAndLog (src/Api.ts:759:13)
+      at createInquiryActionInner (src/Api.ts:809:5)
+      at createInquiryAction (src/Api.ts:824:12)
+      at Object.<anonymous> (tests/Api.test.ts:795:41)
+
+    console.error
+      [getConfig] CONFIG_INVALID: [{"field":"calendar.id","reason":"missing"}]
+
+    [0m [90m 113 |[39m   error[33m:[39m [33mConfigError[39m[33m,[39m
+     [90m 114 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 115 |[39m   console[33m.[39merror([32m"[getConfig] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 116 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 117 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 118 |[39m     [32m"設定情報の読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:115:11)
+      at createInquiryAction (src/Api.ts:827:14)
+      at Object.<anonymous> (tests/Api.test.ts:806:41)
+
+  ● getAvailabilityAction › returns available slots for a valid request, fetching busy events once
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+    [0m [90m 375 |[39m     [36mif[39m (response[33m.[39mok) {
+     [90m 376 |[39m       expect(response[33m.[39mdata[33m.[39mdate)[33m.[39mtoBe([32m"2026-09-10"[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 377 |[39m       expect(response[33m.[39mdata[33m.[39mslots[33m.[39mlength)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m     |[39m                                          [31m[1m^[22m[39m
+     [90m 378 |[39m     }
+     [90m 379 |[39m     expect([33mCalendar[39m[33m.[39mgetBusyEvents)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m
+     [90m 380 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:377:42)
+
+  ● createReservationAction › returns the cached result without touching the repository or Calendar (idempotency fast path)
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 3
+    + Received  + 4
+
+      Object {
+    -   "data": Object {
+    -     "reservationId": "RES-CACHED",
+    +   "error": Object {
+    +     "code": "VALIDATION_ERROR",
+    +     "message": "選択された日時は既に過ぎているか、受付可能な時間帯ではありません。",
+        },
+    -   "ok": true,
+    +   "ok": false,
+      }
+
+    [0m [90m 499 |[39m     ([33mIdempotency[39m[33m.[39mgetCachedReservationResult [36mas[39m jest[33m.[39m[33mMock[39m)[33m.[39mmockReturnValue({ reservationId[33m:[39m [32m"RES-CACHED"[39m })[33m;[39m
+     [90m 500 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 501 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m { reservationId[33m:[39m [32m"RES-CACHED"[39m } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 502 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 503 |[39m     expect([33mCalendar[39m[33m.[39mcreateReservationEvent)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 504 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:501:22)
+
+  ● createReservationAction › returns the Sheet-backstop result and re-populates the cache (idempotency retry after cache expiry)
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 4
+    + Received  + 4
+
+      Object {
+    -   "data": Object {
+    -     "needsConfirmation": undefined,
+    -     "reservationId": "RES-EXISTING",
+    +   "error": Object {
+    +     "code": "VALIDATION_ERROR",
+    +     "message": "選択された日時は既に過ぎているか、受付可能な時間帯ではありません。",
+        },
+    -   "ok": true,
+    +   "ok": false,
+      }
+
+    [0m [90m 510 |[39m     })[33m;[39m
+     [90m 511 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 512 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m { reservationId[33m:[39m [32m"RES-EXISTING"[39m[33m,[39m needsConfirmation[33m:[39m undefined } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 513 |[39m     expect([33mIdempotency[39m[33m.[39msetCachedReservationResult)[33m.[39mtoHaveBeenCalledWith([32m"sub-1"[39m[33m,[39m { reservationId[33m:[39m [32m"RES-EXISTING"[39m[33m,[39m needsConfirmation[33m:[39m undefined })[33m;[39m
+     [90m 514 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 515 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:512:22)
+
+  ● createReservationAction › returns SYSTEM_BUSY when the idempotency-claim lock cannot be acquired
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SYSTEM_BUSY",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 518 |[39m     lockState[33m.[39mtryLockResults [33m=[39m [[36mfalse[39m][33m;[39m
+     [90m 519 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 520 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SYSTEM_BUSY"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 521 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 522 |[39m   })[33m;[39m
+     [90m 523 |[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:520:22)
+
+  ● createReservationAction › returns SYSTEM_BUSY when the critical-section lock cannot be acquired, leaving the pending row untouched
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SYSTEM_BUSY",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 525 |[39m     lockState[33m.[39mtryLockResults [33m=[39m [[36mtrue[39m[33m,[39m [36mfalse[39m][33m;[39m
+     [90m 526 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 527 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SYSTEM_BUSY"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 528 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m
+     [90m 529 |[39m     expect([33mReservationRepository[39m[33m.[39mmarkReservationNeedsConfirmation)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 530 |[39m     expect([33mReservationRepository[39m[33m.[39mmarkReservationConfirmed)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:527:22)
+
+  ● createReservationAction › normal successful booking: confirms the row, creates the Calendar event, sends both emails
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 533 |[39m   it([32m"normal successful booking: confirms the row, creates the Calendar event, sends both emails"[39m[33m,[39m () [33m=>[39m {
+     [90m 534 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 535 |[39m     expect(response[33m.[39mok)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 536 |[39m     [36mif[39m (response[33m.[39mok) {
+     [90m 537 |[39m       expect(response[33m.[39mdata[33m.[39mreservationId)[33m.[39mtoMatch([35m/^RES-\d{8}-[A-Z0-9]{6}$/[39m)[33m;[39m
+     [90m 538 |[39m       expect(response[33m.[39mdata[33m.[39mneedsConfirmation)[33m.[39mtoBeUndefined()[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:535:25)
+
+  ● createReservationAction › slot becomes unavailable during the lock-protected re-check: SLOT_UNAVAILABLE error, row marked 要確認, no customer email
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SLOT_UNAVAILABLE",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 553 |[39m       [33m.[39mmockReturnValueOnce([{ start[33m:[39m [32m"2026-09-10T10:00"[39m[33m,[39m end[33m:[39m [32m"2026-09-10T11:00"[39m }])[33m;[39m [90m// lock-protected re-check[39m
+     [90m 554 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 555 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SLOT_UNAVAILABLE"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 556 |[39m     expect([33mReservationRepository[39m[33m.[39mmarkReservationNeedsConfirmation)[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 557 |[39m     expect([33mCalendar[39m[33m.[39mcreateReservationEvent)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 558 |[39m     expect([33mMail[39m[33m.[39msendEmail)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m [90m// owner needs-attention only[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:555:22)
+
+  ● createReservationAction › Calendar event creation fails: still ok:true with needsConfirmation, row marked 要確認, owner-only email
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 564 |[39m     })[33m;[39m
+     [90m 565 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 566 |[39m     expect(response[33m.[39mok)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 567 |[39m     [36mif[39m (response[33m.[39mok) {
+     [90m 568 |[39m       expect(response[33m.[39mdata[33m.[39mneedsConfirmation)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 569 |[39m     }[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:566:25)
+
+  ● createReservationAction › Sheet update fails after Calendar succeeds: SHEET_ERROR, CalendarEventID preserved in the ERROR_LOG context, no emails sent
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SHEET_ERROR",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 579 |[39m     })[33m;[39m
+     [90m 580 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 581 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SHEET_ERROR"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 582 |[39m     expect([33mLogging[39m[33m.[39mlogError)[33m.[39mtoHaveBeenCalledWith(
+     [90m 583 |[39m       expect[33m.[39mobjectContaining({ severity[33m:[39m [32m"critical"[39m[33m,[39m context[33m:[39m expect[33m.[39mobjectContaining({ calendarEventId[33m:[39m [32m"event-1"[39m }) })[33m,[39m
+     [90m 584 |[39m     )[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:581:22)
+
+  ● createReservationAction › email send failure after a successful reservation does not change the success response or roll back the reservation
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 591 |[39m     })[33m;[39m
+     [90m 592 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 593 |[39m     expect(response[33m.[39mok)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 594 |[39m     expect([33mReservationRepository[39m[33m.[39mupdateReservationEmailStatus)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39many([33mString[39m)[33m,[39m [32m"failed"[39m[33m,[39m expect[33m.[39many([33mDate[39m))[33m;[39m
+     [90m 595 |[39m     expect([33mLogging[39m[33m.[39mlogEmail)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({ status[33m:[39m [32m"failed"[39m }))[33m;[39m
+     [90m 596 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:593:25)
+
+  ● createReservationAction › a throw while building the email context (e.g. SITE_BASE_URL unset) after a successful reservation still returns the real success response, not a false failure
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 608 |[39m     })[33m;[39m
+     [90m 609 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 610 |[39m     expect(response[33m.[39mok)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 611 |[39m     [36mif[39m (response[33m.[39mok) {
+     [90m 612 |[39m       expect(response[33m.[39mdata[33m.[39mreservationId)[33m.[39mtoMatch([35m/^RES-\d{8}-[A-Z0-9]{6}$/[39m)[33m;[39m
+     [90m 613 |[39m     }[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:610:25)
+
+  ● createReservationAction › specific staff selection: assigns the requested staff and creates the event on that staff's calendar
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"calendarId": "cal-b"}
+
+    Number of calls: 0
+
+    [0m [90m 622 |[39m     (getConfig [36mas[39m jest[33m.[39m[33mMock[39m)[33m.[39mmockReturnValue(buildConfig({ features[33m:[39m { [33m...[39mbuildConfig()[33m.[39mfeatures[33m,[39m staffSelection[33m:[39m [36mtrue[39m } }))[33m;[39m
+     [90m 623 |[39m     createReservationAction(buildRequest({ staffId[33m:[39m [32m"ST002"[39m }))[33m;[39m
+    [31m[1m>[22m[39m[90m 624 |[39m     expect([33mCalendar[39m[33m.[39mcreateReservationEvent)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({ calendarId[33m:[39m [32m"cal-b"[39m }))[33m;[39m
+     [90m     |[39m                                             [31m[1m^[22m[39m
+     [90m 625 |[39m   })[33m;[39m
+     [90m 626 |[39m
+     [90m 627 |[39m   it([32m"ANY_STAFF selection: assigns the first free staff in DisplayOrder"[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:624:45)
+
+  ● createReservationAction › ANY_STAFF selection: assigns the first free staff in DisplayOrder
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"calendarId": "cal-b"}
+
+    Number of calls: 0
+
+    [0m [90m 631 |[39m     )[33m;[39m
+     [90m 632 |[39m     createReservationAction(buildRequest({ staffId[33m:[39m [32m"ANY"[39m }))[33m;[39m
+    [31m[1m>[22m[39m[90m 633 |[39m     expect([33mCalendar[39m[33m.[39mcreateReservationEvent)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({ calendarId[33m:[39m [32m"cal-b"[39m }))[33m;[39m
+     [90m     |[39m                                             [31m[1m^[22m[39m
+     [90m 634 |[39m   })[33m;[39m
+     [90m 635 |[39m
+     [90m 636 |[39m   it([32m"unavailable specific staff: SLOT_UNAVAILABLE before any row is written"[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:633:45)
+
+  ● createReservationAction › unavailable specific staff: SLOT_UNAVAILABLE before any row is written
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SLOT_UNAVAILABLE",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 638 |[39m     ([33mCalendar[39m[33m.[39mgetBusyEvents [36mas[39m jest[33m.[39m[33mMock[39m)[33m.[39mmockReturnValue([{ start[33m:[39m [32m"2026-09-10T10:00"[39m[33m,[39m end[33m:[39m [32m"2026-09-10T11:00"[39m }])[33m;[39m
+     [90m 639 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest({ staffId[33m:[39m [32m"ST001"[39m }))[33m;[39m
+    [31m[1m>[22m[39m[90m 640 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SLOT_UNAVAILABLE"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 641 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 642 |[39m   })[33m;[39m
+     [90m 643 |[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:640:22)
+
+  ● createReservationAction › ignores a client-supplied price/duration and uses the server-resolved service data for the created row
+
+    TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))
+
+    [0m [90m 651 |[39m   it([32m"ignores a client-supplied price/duration and uses the server-resolved service data for the created row"[39m[33m,[39m () [33m=>[39m {
+     [90m 652 |[39m     createReservationAction({ [33m...[39mbuildRequest()[33m,[39m price[33m:[39m [35m1[39m[33m,[39m durationMinutes[33m:[39m [35m1[39m } [36mas[39m unknown [36mas[39m [33mReservationRequest[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 653 |[39m     [36mconst[39m [[pendingRow]] [33m=[39m ([33mReservationRepository[39m[33m.[39mappendReservationRow [36mas[39m jest[33m.[39m[33mMock[39m)[33m.[39mmock[33m.[39mcalls[33m;[39m
+     [90m     |[39m            [31m[1m^[22m[39m
+     [90m 654 |[39m     [90m// appendReservationRow itself takes the already-built ReservationRow —[39m
+     [90m 655 |[39m     [90m// buildPendingReservationRow only ever reads price/duration from the[39m
+     [90m 656 |[39m     [90m// server-resolved NormalizedReservation, which has no pass-through[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:653:12)
+
+Summary of all failing tests
+FAIL tests/Api.test.ts
+  ● getAvailabilityAction › returns available slots for a valid request, fetching busy events once
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+    [0m [90m 375 |[39m     [36mif[39m (response[33m.[39mok) {
+     [90m 376 |[39m       expect(response[33m.[39mdata[33m.[39mdate)[33m.[39mtoBe([32m"2026-09-10"[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 377 |[39m       expect(response[33m.[39mdata[33m.[39mslots[33m.[39mlength)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m     |[39m                                          [31m[1m^[22m[39m
+     [90m 378 |[39m     }
+     [90m 379 |[39m     expect([33mCalendar[39m[33m.[39mgetBusyEvents)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m
+     [90m 380 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:377:42)
+
+  ● createReservationAction › returns the cached result without touching the repository or Calendar (idempotency fast path)
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 3
+    + Received  + 4
+
+      Object {
+    -   "data": Object {
+    -     "reservationId": "RES-CACHED",
+    +   "error": Object {
+    +     "code": "VALIDATION_ERROR",
+    +     "message": "選択された日時は既に過ぎているか、受付可能な時間帯ではありません。",
+        },
+    -   "ok": true,
+    +   "ok": false,
+      }
+
+    [0m [90m 499 |[39m     ([33mIdempotency[39m[33m.[39mgetCachedReservationResult [36mas[39m jest[33m.[39m[33mMock[39m)[33m.[39mmockReturnValue({ reservationId[33m:[39m [32m"RES-CACHED"[39m })[33m;[39m
+     [90m 500 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 501 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m { reservationId[33m:[39m [32m"RES-CACHED"[39m } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 502 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 503 |[39m     expect([33mCalendar[39m[33m.[39mcreateReservationEvent)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 504 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:501:22)
+
+  ● createReservationAction › returns the Sheet-backstop result and re-populates the cache (idempotency retry after cache expiry)
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 4
+    + Received  + 4
+
+      Object {
+    -   "data": Object {
+    -     "needsConfirmation": undefined,
+    -     "reservationId": "RES-EXISTING",
+    +   "error": Object {
+    +     "code": "VALIDATION_ERROR",
+    +     "message": "選択された日時は既に過ぎているか、受付可能な時間帯ではありません。",
+        },
+    -   "ok": true,
+    +   "ok": false,
+      }
+
+    [0m [90m 510 |[39m     })[33m;[39m
+     [90m 511 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 512 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m { reservationId[33m:[39m [32m"RES-EXISTING"[39m[33m,[39m needsConfirmation[33m:[39m undefined } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 513 |[39m     expect([33mIdempotency[39m[33m.[39msetCachedReservationResult)[33m.[39mtoHaveBeenCalledWith([32m"sub-1"[39m[33m,[39m { reservationId[33m:[39m [32m"RES-EXISTING"[39m[33m,[39m needsConfirmation[33m:[39m undefined })[33m;[39m
+     [90m 514 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 515 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:512:22)
+
+  ● createReservationAction › returns SYSTEM_BUSY when the idempotency-claim lock cannot be acquired
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SYSTEM_BUSY",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 518 |[39m     lockState[33m.[39mtryLockResults [33m=[39m [[36mfalse[39m][33m;[39m
+     [90m 519 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 520 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SYSTEM_BUSY"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 521 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 522 |[39m   })[33m;[39m
+     [90m 523 |[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:520:22)
+
+  ● createReservationAction › returns SYSTEM_BUSY when the critical-section lock cannot be acquired, leaving the pending row untouched
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SYSTEM_BUSY",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 525 |[39m     lockState[33m.[39mtryLockResults [33m=[39m [[36mtrue[39m[33m,[39m [36mfalse[39m][33m;[39m
+     [90m 526 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 527 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SYSTEM_BUSY"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 528 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m
+     [90m 529 |[39m     expect([33mReservationRepository[39m[33m.[39mmarkReservationNeedsConfirmation)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 530 |[39m     expect([33mReservationRepository[39m[33m.[39mmarkReservationConfirmed)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:527:22)
+
+  ● createReservationAction › normal successful booking: confirms the row, creates the Calendar event, sends both emails
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 533 |[39m   it([32m"normal successful booking: confirms the row, creates the Calendar event, sends both emails"[39m[33m,[39m () [33m=>[39m {
+     [90m 534 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 535 |[39m     expect(response[33m.[39mok)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 536 |[39m     [36mif[39m (response[33m.[39mok) {
+     [90m 537 |[39m       expect(response[33m.[39mdata[33m.[39mreservationId)[33m.[39mtoMatch([35m/^RES-\d{8}-[A-Z0-9]{6}$/[39m)[33m;[39m
+     [90m 538 |[39m       expect(response[33m.[39mdata[33m.[39mneedsConfirmation)[33m.[39mtoBeUndefined()[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:535:25)
+
+  ● createReservationAction › slot becomes unavailable during the lock-protected re-check: SLOT_UNAVAILABLE error, row marked 要確認, no customer email
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SLOT_UNAVAILABLE",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 553 |[39m       [33m.[39mmockReturnValueOnce([{ start[33m:[39m [32m"2026-09-10T10:00"[39m[33m,[39m end[33m:[39m [32m"2026-09-10T11:00"[39m }])[33m;[39m [90m// lock-protected re-check[39m
+     [90m 554 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 555 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SLOT_UNAVAILABLE"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 556 |[39m     expect([33mReservationRepository[39m[33m.[39mmarkReservationNeedsConfirmation)[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 557 |[39m     expect([33mCalendar[39m[33m.[39mcreateReservationEvent)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 558 |[39m     expect([33mMail[39m[33m.[39msendEmail)[33m.[39mtoHaveBeenCalledTimes([35m1[39m)[33m;[39m [90m// owner needs-attention only[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:555:22)
+
+  ● createReservationAction › Calendar event creation fails: still ok:true with needsConfirmation, row marked 要確認, owner-only email
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 564 |[39m     })[33m;[39m
+     [90m 565 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 566 |[39m     expect(response[33m.[39mok)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 567 |[39m     [36mif[39m (response[33m.[39mok) {
+     [90m 568 |[39m       expect(response[33m.[39mdata[33m.[39mneedsConfirmation)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 569 |[39m     }[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:566:25)
+
+  ● createReservationAction › Sheet update fails after Calendar succeeds: SHEET_ERROR, CalendarEventID preserved in the ERROR_LOG context, no emails sent
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SHEET_ERROR",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 579 |[39m     })[33m;[39m
+     [90m 580 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 581 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SHEET_ERROR"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 582 |[39m     expect([33mLogging[39m[33m.[39mlogError)[33m.[39mtoHaveBeenCalledWith(
+     [90m 583 |[39m       expect[33m.[39mobjectContaining({ severity[33m:[39m [32m"critical"[39m[33m,[39m context[33m:[39m expect[33m.[39mobjectContaining({ calendarEventId[33m:[39m [32m"event-1"[39m }) })[33m,[39m
+     [90m 584 |[39m     )[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:581:22)
+
+  ● createReservationAction › email send failure after a successful reservation does not change the success response or roll back the reservation
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 591 |[39m     })[33m;[39m
+     [90m 592 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 593 |[39m     expect(response[33m.[39mok)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 594 |[39m     expect([33mReservationRepository[39m[33m.[39mupdateReservationEmailStatus)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39many([33mString[39m)[33m,[39m [32m"failed"[39m[33m,[39m expect[33m.[39many([33mDate[39m))[33m;[39m
+     [90m 595 |[39m     expect([33mLogging[39m[33m.[39mlogEmail)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({ status[33m:[39m [32m"failed"[39m }))[33m;[39m
+     [90m 596 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:593:25)
+
+  ● createReservationAction › a throw while building the email context (e.g. SITE_BASE_URL unset) after a successful reservation still returns the real success response, not a false failure
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 608 |[39m     })[33m;[39m
+     [90m 609 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest())[33m;[39m
+    [31m[1m>[22m[39m[90m 610 |[39m     expect(response[33m.[39mok)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 611 |[39m     [36mif[39m (response[33m.[39mok) {
+     [90m 612 |[39m       expect(response[33m.[39mdata[33m.[39mreservationId)[33m.[39mtoMatch([35m/^RES-\d{8}-[A-Z0-9]{6}$/[39m)[33m;[39m
+     [90m 613 |[39m     }[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:610:25)
+
+  ● createReservationAction › specific staff selection: assigns the requested staff and creates the event on that staff's calendar
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"calendarId": "cal-b"}
+
+    Number of calls: 0
+
+    [0m [90m 622 |[39m     (getConfig [36mas[39m jest[33m.[39m[33mMock[39m)[33m.[39mmockReturnValue(buildConfig({ features[33m:[39m { [33m...[39mbuildConfig()[33m.[39mfeatures[33m,[39m staffSelection[33m:[39m [36mtrue[39m } }))[33m;[39m
+     [90m 623 |[39m     createReservationAction(buildRequest({ staffId[33m:[39m [32m"ST002"[39m }))[33m;[39m
+    [31m[1m>[22m[39m[90m 624 |[39m     expect([33mCalendar[39m[33m.[39mcreateReservationEvent)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({ calendarId[33m:[39m [32m"cal-b"[39m }))[33m;[39m
+     [90m     |[39m                                             [31m[1m^[22m[39m
+     [90m 625 |[39m   })[33m;[39m
+     [90m 626 |[39m
+     [90m 627 |[39m   it([32m"ANY_STAFF selection: assigns the first free staff in DisplayOrder"[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:624:45)
+
+  ● createReservationAction › ANY_STAFF selection: assigns the first free staff in DisplayOrder
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"calendarId": "cal-b"}
+
+    Number of calls: 0
+
+    [0m [90m 631 |[39m     )[33m;[39m
+     [90m 632 |[39m     createReservationAction(buildRequest({ staffId[33m:[39m [32m"ANY"[39m }))[33m;[39m
+    [31m[1m>[22m[39m[90m 633 |[39m     expect([33mCalendar[39m[33m.[39mcreateReservationEvent)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({ calendarId[33m:[39m [32m"cal-b"[39m }))[33m;[39m
+     [90m     |[39m                                             [31m[1m^[22m[39m
+     [90m 634 |[39m   })[33m;[39m
+     [90m 635 |[39m
+     [90m 636 |[39m   it([32m"unavailable specific staff: SLOT_UNAVAILABLE before any row is written"[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:633:45)
+
+  ● createReservationAction › unavailable specific staff: SLOT_UNAVAILABLE before any row is written
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "error": Object {
+    -     "code": "SLOT_UNAVAILABLE",
+    +     "code": "VALIDATION_ERROR",
+          "message": Any<String>,
+        },
+        "ok": false,
+      }
+
+    [0m [90m 638 |[39m     ([33mCalendar[39m[33m.[39mgetBusyEvents [36mas[39m jest[33m.[39m[33mMock[39m)[33m.[39mmockReturnValue([{ start[33m:[39m [32m"2026-09-10T10:00"[39m[33m,[39m end[33m:[39m [32m"2026-09-10T11:00"[39m }])[33m;[39m
+     [90m 639 |[39m     [36mconst[39m response [33m=[39m createReservationAction(buildRequest({ staffId[33m:[39m [32m"ST001"[39m }))[33m;[39m
+    [31m[1m>[22m[39m[90m 640 |[39m     expect(response)[33m.[39mtoEqual({ ok[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m { code[33m:[39m [32m"SLOT_UNAVAILABLE"[39m[33m,[39m message[33m:[39m expect[33m.[39many([33mString[39m) } })[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 641 |[39m     expect([33mReservationRepository[39m[33m.[39mappendReservationRow)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 642 |[39m   })[33m;[39m
+     [90m 643 |[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:640:22)
+
+  ● createReservationAction › ignores a client-supplied price/duration and uses the server-resolved service data for the created row
+
+    TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))
+
+    [0m [90m 651 |[39m   it([32m"ignores a client-supplied price/duration and uses the server-resolved service data for the created row"[39m[33m,[39m () [33m=>[39m {
+     [90m 652 |[39m     createReservationAction({ [33m...[39mbuildRequest()[33m,[39m price[33m:[39m [35m1[39m[33m,[39m durationMinutes[33m:[39m [35m1[39m } [36mas[39m unknown [36mas[39m [33mReservationRequest[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 653 |[39m     [36mconst[39m [[pendingRow]] [33m=[39m ([33mReservationRepository[39m[33m.[39mappendReservationRow [36mas[39m jest[33m.[39m[33mMock[39m)[33m.[39mmock[33m.[39mcalls[33m;[39m
+     [90m     |[39m            [31m[1m^[22m[39m
+     [90m 654 |[39m     [90m// appendReservationRow itself takes the already-built ReservationRow —[39m
+     [90m 655 |[39m     [90m// buildPendingReservationRow only ever reads price/duration from the[39m
+     [90m 656 |[39m     [90m// server-resolved NormalizedReservation, which has no pass-through[39m[0m
+
+      at Object.<anonymous> (tests/Api.test.ts:653:12)
+
+
+Test Suites: 1 failed, 33 passed, 34 total
+Tests:       15 failed, 295 passed, 310 total
+Snapshots:   0 total
+Time:        5.017 s, estimated 6 s
+Ran all test suites.

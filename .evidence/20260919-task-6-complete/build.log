@@ -1,0 +1,47 @@
+▲ Next.js 16.3.4 (Turbopack)
+✓ Running next.config.ts took 48ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.2s
+  Running TypeScript ...
+  Finished TypeScript in 3.9s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/12) ...
+[runtimeConfig] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeCatalog] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeConfig] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeCatalog] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeConfig] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeCatalog] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeConfig] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeCatalog] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+  Generating static pages using 11 workers (3/12) 
+  Generating static pages using 11 workers (6/12) 
+[runtimeConfig] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeCatalog] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeConfig] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeCatalog] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeConfig] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeCatalog] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeConfig] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+[runtimeCatalog] GAS_WEBAPP_URL is not configured. Refusing to silently serve demo content in production.
+  Generating static pages using 11 workers (9/12) 
+✓ Generating static pages using 11 workers (12/12) in 577ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/gas
+├ ƒ /api/health
+├ ○ /contact
+├ ○ /privacy
+├ ○ /reservation
+├ ○ /reservation/cancel
+├ ○ /terms
+└ ○ /thanks
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

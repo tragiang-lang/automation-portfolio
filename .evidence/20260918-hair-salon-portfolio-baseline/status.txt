@@ -1,0 +1,13 @@
+ M apps/hair-salon-portfolio/gas/src/DemoSeed.ts
+ M apps/hair-salon-portfolio/gas/tests/Api.test.ts
+ M apps/hair-salon-portfolio/gas/tests/CatalogParser.test.ts
+ M apps/hair-salon-portfolio/gas/tests/PublicCatalog.test.ts
+ M apps/hair-salon-portfolio/gas/tests/ReservationEmailTemplates.test.ts
+ M apps/hair-salon-portfolio/gas/tests/ReservationMapper.test.ts
+ M apps/hair-salon-portfolio/gas/tests/ReservationRepository.test.ts
+ M apps/hair-salon-portfolio/gas/tests/ReservationRules.test.ts
+?? .evidence/20260918-hair-salon-portfolio-baseline/
+?? apps/hair-salon-portfolio/gas/package-lock.json
+?? apps/hair-salon-portfolio/web/package-lock.json
+?? docs/superpowers/plans/2026-09-18-hair-salon-portfolio.md
+?? docs/superpowers/specs/

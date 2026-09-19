@@ -1,0 +1,56 @@
+=== Step 6: commit created ===
+commit 1d0f71774935e2d3f99dc5bb776aaf68f5e71a95
+Author: Giang <tragiang.cooljapan@gmail.com>
+Date:   Sat Sep 19 10:58:38 2026 +0900
+
+    fix(hair-salon): remove accidental hardcoded terminology found in reusability audit
+    
+    Task 11 hardcoding audit found gas/tests/ConfigParser.test.ts carrying the
+    reference nail-salon app's literal business.nameLatin fixture value
+    ("Rin Nail & Eyelash") verbatim, unadapted for the Hair Salon clone.
+    Replaced with the generic "Demo Salon Latin" placeholder already used
+    consistently elsewhere in the same test suite (PublicConfig.test.ts).
+    Functionally inert (parseAppConfig is content-agnostic) but corrects
+    stray reference-app branding in Hair Salon's own test fixtures.
+    
+    Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+
+ apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 1d0f71774935e2d3f99dc5bb776aaf68f5e71a95
+Author: Giang <tragiang.cooljapan@gmail.com>
+Date:   Sat Sep 19 10:58:38 2026 +0900
+
+    fix(hair-salon): remove accidental hardcoded terminology found in reusability audit
+    
+    Task 11 hardcoding audit found gas/tests/ConfigParser.test.ts carrying the
+    reference nail-salon app's literal business.nameLatin fixture value
+    ("Rin Nail & Eyelash") verbatim, unadapted for the Hair Salon clone.
+    Replaced with the generic "Demo Salon Latin" placeholder already used
+    consistently elsewhere in the same test suite (PublicConfig.test.ts).
+    Functionally inert (parseAppConfig is content-agnostic) but corrects
+    stray reference-app branding in Hair Salon's own test fixtures.
+    
+    Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+
+diff --git a/apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts b/apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts
+index edf4cba..9cf4a76 100644
+--- a/apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts
++++ b/apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts
+@@ -201,13 +201,13 @@ describe("parseAppConfig optional presentation fields (V1.1 Task 4)", () => {
+ 
+   it("parses nameLatin/tagline/postalCode when present, trimmed", () => {
+     const raw = validRawConfig();
+-    raw["business.nameLatin"] = "  Rin Nail & Eyelash  ";
++    raw["business.nameLatin"] = "  Demo Salon Latin  ";
+     raw["business.tagline"] = " 静けさの中で。 ";
+     raw["business.postalCode"] = " 〒104-0061 ";
+     const result = parseAppConfig(raw, []);
+     expect(result.ok).toBe(true);
+     if (result.ok) {
+-      expect(result.config.business.nameLatin).toBe("Rin Nail & Eyelash");
++      expect(result.config.business.nameLatin).toBe("Demo Salon Latin");
+       expect(result.config.business.tagline).toBe("静けさの中で。");
+       expect(result.config.business.postalCode).toBe("〒104-0061");
+     }
