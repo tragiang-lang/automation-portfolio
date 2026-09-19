@@ -16,6 +16,7 @@ import type {
   Service,
   SiteConfig,
   StaffMember,
+  TestimonialItem,
 } from "@/types/content";
 
 export const SITE_CONFIG: SiteConfig = {
@@ -70,6 +71,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "コンセプト", href: "#concept" },
   { label: "メニュー", href: "#menu" },
   { label: "スタッフ", href: "#staff" },
+  { label: "お客様の声", href: "#testimonials" },
   { label: "ギャラリー", href: "#gallery" },
   { label: "アクセス", href: "#access" },
   { label: "お問い合わせ", href: "#contact" },
@@ -230,6 +232,26 @@ export const FAQ_ITEMS: FaqItem[] = [
     question: "キャンセルはどうすればよいですか？",
     answer:
       "ご予約確認のメールに記載のリンクよりお手続きいただけます。恐れ入りますが、直前のキャンセルはお電話でもご連絡ください。",
+  },
+];
+
+/** Fictional demo reviews only (`TestimonialsSection`) — presentation
+ *  content, no external review integration, no real customer records. */
+export const TESTIMONIALS: TestimonialItem[] = [
+  {
+    id: "testimonial-1",
+    quote: "初めて伺いましたが、カウンセリングが丁寧で安心してお任せできました。",
+    context: "30代 / カット＋カラー",
+  },
+  {
+    id: "testimonial-2",
+    quote: "髪の悩みを細かく聞いてくださり、自宅でも扱いやすいスタイルになりました。",
+    context: "20代 / カット",
+  },
+  {
+    id: "testimonial-3",
+    quote: "落ち着いた空間でゆっくり過ごせました。仕上がりも自然で気に入っています。",
+    context: "40代 / トリートメント",
   },
 ];
 

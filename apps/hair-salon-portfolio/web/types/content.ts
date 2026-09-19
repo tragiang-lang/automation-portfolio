@@ -130,6 +130,16 @@ export interface FaqItem {
   answer: string;
 }
 
+/** One fictional demo review for `TestimonialsSection` — presentation-only
+ *  sample content, never a real customer record (no CMS/DB, no external
+ *  review integration). `context` is an age group + service, deliberately
+ *  never a full name, matching the "no real-person claims" requirement. */
+export interface TestimonialItem {
+  id: string;
+  quote: string;
+  context: string;
+}
+
 export interface TransitDirection {
   id: string;
   label: string;

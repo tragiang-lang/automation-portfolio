@@ -64,7 +64,7 @@ describe("DESIGN_PRESETS", () => {
     expect(DEFAULT_DESIGN_CONFIG.sectionVisibility.concept).toBe(true);
 
     const removedSection = DESIGN_PRESETS.noir.sectionOrder.pop();
-    expect(DESIGN_PRESETS.modern.sectionOrder.length).toBe(11);
+    expect(DESIGN_PRESETS.modern.sectionOrder.length).toBe(12);
 
     // Restore both mutations — DESIGN_PRESETS is a module-level singleton
     // shared by every test in this file (and this describe block isn't the
@@ -110,6 +110,7 @@ describe("V1.1 Task 10 — curated preset compositions", () => {
         "gallery",
         "menu",
         "staff",
+        "testimonials",
         "reservation",
         "salon-features",
         "customer-flow",
@@ -129,6 +130,7 @@ describe("V1.1 Task 10 — curated preset compositions", () => {
         "gallery",
         "menu",
         "staff",
+        "testimonials",
         "reservation",
         "salon-features",
         "customer-flow",
@@ -148,6 +150,7 @@ describe("V1.1 Task 10 — curated preset compositions", () => {
         "concept",
         "menu",
         "staff",
+        "testimonials",
         "reservation",
         "salon-features",
         "customer-flow",
@@ -174,6 +177,7 @@ describe("V1.1 Task 10 — curated preset compositions", () => {
         "menu",
         "gallery",
         "staff",
+        "testimonials",
         "reservation",
         "salon-features",
         "customer-flow",
@@ -314,6 +318,7 @@ describe("starter preset (Starter MVP reusability)", () => {
     const visibility = DESIGN_PRESETS.starter.sectionVisibility;
     expect(visibility.concept).toBe(false);
     expect(visibility.staff).toBe(false);
+    expect(visibility.testimonials).toBe(false);
     expect(visibility.gallery).toBe(false);
     expect(visibility["salon-features"]).toBe(false);
     expect(visibility["customer-flow"]).toBe(false);

@@ -12,6 +12,7 @@ export const ALL_HOME_SECTIONS: readonly HomeSection[] = [
   "concept",
   "menu",
   "staff",
+  "testimonials",
   "gallery",
   "reservation",
   "salon-features",
@@ -33,6 +34,7 @@ export const REQUIRED_HOME_SECTIONS: readonly RequiredHomeSection[] = ["hero", "
 export const DEFAULT_SECTION_VISIBILITY: SectionVisibility = {
   concept: true,
   staff: true,
+  testimonials: true,
   gallery: true,
   reservation: true,
   "salon-features": true,

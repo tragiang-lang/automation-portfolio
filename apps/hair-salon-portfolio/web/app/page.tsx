@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { ConceptSection } from "@/components/sections/ConceptSection";
 import { MenuSection } from "@/components/sections/MenuSection";
 import { StaffSection } from "@/components/sections/StaffSection";
+import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { GallerySection } from "@/components/sections/GallerySection";
 import { ReservationCtaBand } from "@/components/sections/ReservationCtaBand";
 import { SalonFeaturesSection } from "@/components/sections/SalonFeaturesSection";
@@ -16,6 +17,7 @@ import {
   FAQ_ITEMS,
   GALLERY_IMAGES,
   SALON_FEATURES,
+  TESTIMONIALS,
 } from "@/config/demo-content";
 import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
 import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
@@ -25,12 +27,13 @@ import { DEFAULT_SECTION_ORDER } from "@/lib/constants/design-sections";
 import { isValidSectionOrder } from "@/lib/validation/designConfigValidator";
 import type { HomeSection } from "@/types/design-config";
 
-// Page order matches Phase 2A §6 exactly: Header (layout) → Hero →
-// Concept → Menu → Staff → Gallery → Reservation CTA → Salon Features →
-// Customer Flow → FAQ → Access → Contact → [closing Reservation CTA] →
-// Footer (layout). Configurable sections are gated here by the resolved
-// runtime config's `features`, not by editing the section components
-// themselves.
+// Page order matches Phase 2A §6, with Testimonials added after Staff
+// (presentation-only content feature): Header (layout) → Hero → Concept →
+// Menu → Staff → Testimonials → Gallery → Reservation CTA → Salon
+// Features → Customer Flow → FAQ → Access → Contact → [closing
+// Reservation CTA] → Footer (layout). Configurable sections are gated here
+// by the resolved runtime config's `features`, not by editing the section
+// components themselves.
 //
 // GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/FAQ_ITEMS/ACCESS_INFO
 // are not part of the `getConfig` contract (no such fields in
@@ -129,6 +132,9 @@ export default async function Home() {
         staffVariant={staffVariant}
       />
     ),
+    testimonials: sectionVisibility.testimonials ? (
+      <TestimonialsSection testimonials={TESTIMONIALS} />
+    ) : null,
     gallery: sectionVisibility.gallery ? (
       <GallerySection images={GALLERY_IMAGES} galleryVariant={galleryVariant} />
     ) : null,

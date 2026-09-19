@@ -73,6 +73,7 @@ export type HomeSection =
   | "concept"
   | "menu"
   | "staff"
+  | "testimonials"
   | "gallery"
   | "reservation"
   | "salon-features"

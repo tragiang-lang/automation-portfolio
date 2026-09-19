@@ -35,12 +35,14 @@ afterEach(() => {
 });
 
 describe("Home", () => {
-  it("renders every section with the default design config, unchanged from before this task", async () => {
+  it("renders every section with the default design config, including the new Testimonials section", async () => {
     render(await Home());
 
     expect(screen.getByRole("heading", { name: "自然体の美しさを引き出す、静かなヘアサロン。" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "スタッフ紹介" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "お客様の声" })).toBeInTheDocument();
+    expect(screen.getByText("※ こちらはデモ用のサンプルレビューです。")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "ギャラリー" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "サロンについて" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "ご来店の流れ" })).toBeInTheDocument();
@@ -154,6 +156,7 @@ const SECTION_MARKERS: Record<(typeof ALL_HOME_SECTIONS)[number], string> = {
   concept: "自然体の美しさを引き出す、静かなヘアサロン。",
   menu: "メニュー",
   staff: "スタッフ紹介",
+  testimonials: "お客様の声",
   gallery: "ギャラリー",
   reservation: "スタイルのイメージが決まったら",
   "salon-features": "サロンについて",
@@ -216,6 +219,7 @@ describe("Home — section ordering (V1.1 Task 9)", () => {
       "concept",
       "menu",
       "staff",
+      "testimonials",
       "reservation",
       "salon-features",
       "customer-flow",

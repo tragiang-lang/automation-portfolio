@@ -139,7 +139,7 @@ describe("isValidSectionOrder", () => {
   });
 
   it("rejects an unknown section name", () => {
-    const withUnknown = [...ALL_HOME_SECTIONS.slice(0, -1), "testimonials"];
+    const withUnknown = [...ALL_HOME_SECTIONS.slice(0, -1), "not-a-real-section"];
     expect(isValidSectionOrder(withUnknown)).toBe(false);
   });
 

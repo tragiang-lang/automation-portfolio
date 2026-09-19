@@ -39,6 +39,7 @@ export const DEFAULT_DESIGN_CONFIG: DesignConfig = {
     "concept",
     "menu",
     "staff",
+    "testimonials",
     "gallery",
     "reservation",
     "salon-features",
@@ -98,6 +99,7 @@ const PRESET_COMPOSITIONS: Record<Exclude<DesignPreset, "kinari" | "starter">, P
       "gallery",
       "menu",
       "staff",
+      "testimonials",
       "reservation",
       "salon-features",
       "customer-flow",
@@ -122,6 +124,7 @@ const PRESET_COMPOSITIONS: Record<Exclude<DesignPreset, "kinari" | "starter">, P
       "gallery",
       "menu",
       "staff",
+      "testimonials",
       "reservation",
       "salon-features",
       "customer-flow",
@@ -147,6 +150,7 @@ const PRESET_COMPOSITIONS: Record<Exclude<DesignPreset, "kinari" | "starter">, P
       "concept",
       "menu",
       "staff",
+      "testimonials",
       "reservation",
       "salon-features",
       "customer-flow",
@@ -185,6 +189,7 @@ const PRESET_COMPOSITIONS: Record<Exclude<DesignPreset, "kinari" | "starter">, P
       "menu",
       "gallery",
       "staff",
+      "testimonials",
       "reservation",
       "salon-features",
       "customer-flow",
@@ -235,8 +240,8 @@ function buildPreset(preset: Exclude<DesignPreset, "kinari" | "starter">): Desig
  * `buildPreset()`, since it has no dedicated palette of its own — this
  * preset differentiates itself purely by `sectionVisibility`. Every
  * optional section not part of the Starter MVP's 3-section scope
- * (concept/staff/gallery/salon-features/customer-flow/faq/access) is
- * hidden by default; a buyer who later wants one back can still enable it
+ * (concept/staff/testimonials/gallery/salon-features/customer-flow/faq/
+ * access) is hidden by default; a buyer who later wants one back can still enable it
  * per business feature flag + explicit design-config override, since
  * hiding here is a default, not a deletion of the section's code.
  */
@@ -252,6 +257,7 @@ const STARTER_DESIGN_CONFIG: DesignConfig = {
     ...defaultVisibility(),
     concept: false,
     staff: false,
+    testimonials: false,
     gallery: false,
     "salon-features": false,
     "customer-flow": false,
