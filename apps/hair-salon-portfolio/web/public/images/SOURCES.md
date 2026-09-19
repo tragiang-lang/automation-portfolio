@@ -5,9 +5,10 @@ real stock photograph, not the salon's own photography — placeholder/demo
 content until a real customer supplies their own images. Sourced from
 Unsplash under the [Unsplash License](https://unsplash.com/license) (free
 to use, commercial use permitted, no attribution required) and downloaded
-once at build time into this repo — there is no runtime dependency on an
-external image host. Credited below anyway, as a courtesy to the
-photographers and so a future swap knows what each file's origin was.
+once during development, then committed to this repo as binary files —
+there is no runtime or build-time fetch from an external image host.
+Credited below anyway, as a courtesy to the photographers and so a future
+swap knows what each file's origin was.
 
 Staff avatars (`public/images/staff/*.svg`) are illustrated, not
 photographic — see `config/demo-content.ts`'s comment on `STAFF` for why.

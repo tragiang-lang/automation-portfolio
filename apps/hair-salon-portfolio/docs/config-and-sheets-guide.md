@@ -50,6 +50,13 @@ placed under `apps/hair-salon-portfolio/web/public/images/staff/` (e.g.
 `/images/staff/staff-05.jpg`) — it is never an arbitrary external URL
 (`gas/src/SheetSchemas.ts:56-61`). See §3 below.
 
+Note: the demo seed (`gas/src/DemoSeed.ts`) leaves `Role`/`Bio` blank for
+ST003/ST004, so a freshly-seeded, GAS-connected deployment shows less staff
+detail for those two stylists than the offline demo/fallback content
+(`web/config/demo-content.ts`, which fills in both fields for all four) —
+fill in `Role`/`Bio` on the sheet directly if you want the seeded site to
+match the fallback.
+
 ### RESERVATIONS
 Headers (`gas/src/SheetSchemas.ts:76-93`): `ReservationID`, `SubmissionID`,
 `CreatedAt`, `UpdatedAt`, `Name`, `Email`, `Phone`, `Date`, `Time`,
