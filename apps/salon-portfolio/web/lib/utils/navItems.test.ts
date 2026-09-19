@@ -7,6 +7,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "メニュー", href: "#menu" },
   { label: "スタッフ", href: "#staff" },
   { label: "ギャラリー", href: "#gallery" },
+  { label: "お客様の声", href: "#testimonials" },
   { label: "アクセス", href: "#access" },
   { label: "お問い合わせ", href: "#contact" },
 ];
@@ -27,7 +28,16 @@ describe("filterVisibleNavItems", () => {
       access: false,
     };
     const result = filterVisibleNavItems(NAV_ITEMS, starterVisibility, allFeaturesOn);
-    expect(result.map((item) => item.href)).toEqual(["#menu", "#contact"]);
+    expect(result.map((item) => item.href)).toEqual(["#menu", "#testimonials", "#contact"]);
+  });
+
+  it("drops #testimonials when its sectionVisibility flag is off, with no business feature flag to combine it with", () => {
+    const result = filterVisibleNavItems(
+      NAV_ITEMS,
+      { ...DEFAULT_SECTION_VISIBILITY, testimonials: false },
+      allFeaturesOn,
+    );
+    expect(result.some((item) => item.href === "#testimonials")).toBe(false);
   });
 
   it("never drops #menu — the always-required section has no visibility flag to check", () => {

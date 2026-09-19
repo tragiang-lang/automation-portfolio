@@ -51,7 +51,7 @@ export function isTypographyId(value: unknown): value is TypographyId {
   return typeof value === "string" && value in TYPOGRAPHY;
 }
 
-/** True only for one of the 11 allow-listed section names — guards against
+/** True only for one of the 12 allow-listed section names — guards against
  *  an arbitrary string reaching `sectionOrder`/`sectionVisibility`. */
 export function isHomeSection(value: unknown): value is HomeSection {
   return typeof value === "string" && (ALL_HOME_SECTIONS as readonly string[]).includes(value);

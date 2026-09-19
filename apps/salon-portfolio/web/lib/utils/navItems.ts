@@ -10,6 +10,7 @@ const NAV_ITEM_SECTION: Record<string, keyof SectionVisibility | undefined> = {
   "#concept": "concept",
   "#staff": "staff",
   "#gallery": "gallery",
+  "#testimonials": "testimonials",
   "#access": "access",
   "#contact": "contact",
 };

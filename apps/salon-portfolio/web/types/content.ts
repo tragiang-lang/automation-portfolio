@@ -130,6 +130,18 @@ export interface FaqItem {
   answer: string;
 }
 
+export interface Testimonial {
+  id: string;
+  name: string;
+  comment: string;
+  /** Frontend-presentation-only, optional (Staff image demo task) — a
+   *  missing photo falls back to an initial-letter tile, never a broken
+   *  `<img>`. See `config/demo-content.ts`'s `TESTIMONIALS` doc comment for
+   *  why these are illustrated stand-ins, not real customer photos. */
+  photoSrc?: string;
+  photoAlt?: string;
+}
+
 export interface TransitDirection {
   id: string;
   label: string;
