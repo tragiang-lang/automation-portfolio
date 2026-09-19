@@ -201,13 +201,13 @@ describe("parseAppConfig optional presentation fields (V1.1 Task 4)", () => {
 
   it("parses nameLatin/tagline/postalCode when present, trimmed", () => {
     const raw = validRawConfig();
-    raw["business.nameLatin"] = "  Rin Nail & Eyelash  ";
+    raw["business.nameLatin"] = "  Demo Salon Latin  ";
     raw["business.tagline"] = " 静けさの中で。 ";
     raw["business.postalCode"] = " 〒104-0061 ";
     const result = parseAppConfig(raw, []);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.config.business.nameLatin).toBe("Rin Nail & Eyelash");
+      expect(result.config.business.nameLatin).toBe("Demo Salon Latin");
       expect(result.config.business.tagline).toBe("静けさの中で。");
       expect(result.config.business.postalCode).toBe("〒104-0061");
     }
