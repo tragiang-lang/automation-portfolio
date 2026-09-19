@@ -1,0 +1,49 @@
+diff --git a/apps/hair-salon-portfolio/docs/config-and-sheets-guide.md b/apps/hair-salon-portfolio/docs/config-and-sheets-guide.md
+index e9848da..f97b57e 100644
+--- a/apps/hair-salon-portfolio/docs/config-and-sheets-guide.md
++++ b/apps/hair-salon-portfolio/docs/config-and-sheets-guide.md
+@@ -50,6 +50,13 @@ placed under `apps/hair-salon-portfolio/web/public/images/staff/` (e.g.
+ `/images/staff/staff-05.jpg`) — it is never an arbitrary external URL
+ (`gas/src/SheetSchemas.ts:56-61`). See §3 below.
+ 
++Note: the demo seed (`gas/src/DemoSeed.ts`) leaves `Role`/`Bio` blank for
++ST003/ST004, so a freshly-seeded, GAS-connected deployment shows less staff
++detail for those two stylists than the offline demo/fallback content
++(`web/config/demo-content.ts`, which fills in both fields for all four) —
++fill in `Role`/`Bio` on the sheet directly if you want the seeded site to
++match the fallback.
++
+ ### RESERVATIONS
+ Headers (`gas/src/SheetSchemas.ts:76-93`): `ReservationID`, `SubmissionID`,
+ `CreatedAt`, `UpdatedAt`, `Name`, `Email`, `Phone`, `Date`, `Time`,
+diff --git a/apps/hair-salon-portfolio/web/public/icons/.gitkeep b/apps/hair-salon-portfolio/web/public/icons/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/apps/hair-salon-portfolio/web/public/icons/pin.svg b/apps/hair-salon-portfolio/web/public/icons/pin.svg
+new file mode 100644
+index 0000000..715f6f4
+--- /dev/null
++++ b/apps/hair-salon-portfolio/web/public/icons/pin.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
++  <path d="M12 2C7.86 2 4.5 5.36 4.5 9.5c0 5.25 6.34 11.6 6.61 11.87a1.25 1.25 0 0 0 1.78 0C13.16 21.1 19.5 14.75 19.5 9.5 19.5 5.36 16.14 2 12 2Z" fill="#9C4B3F" opacity="0.9"/>
++  <circle cx="12" cy="9.5" r="3" fill="#FAF7F2"/>
++</svg>
+diff --git a/apps/hair-salon-portfolio/web/public/images/SOURCES.md b/apps/hair-salon-portfolio/web/public/images/SOURCES.md
+index d3a32cd..b0550e5 100644
+--- a/apps/hair-salon-portfolio/web/public/images/SOURCES.md
++++ b/apps/hair-salon-portfolio/web/public/images/SOURCES.md
+@@ -5,9 +5,10 @@ real stock photograph, not the salon's own photography — placeholder/demo
+ content until a real customer supplies their own images. Sourced from
+ Unsplash under the [Unsplash License](https://unsplash.com/license) (free
+ to use, commercial use permitted, no attribution required) and downloaded
+-once at build time into this repo — there is no runtime dependency on an
+-external image host. Credited below anyway, as a courtesy to the
+-photographers and so a future swap knows what each file's origin was.
++once during development, then committed to this repo as binary files —
++there is no runtime or build-time fetch from an external image host.
++Credited below anyway, as a courtesy to the photographers and so a future
++swap knows what each file's origin was.
+ 
+ Staff avatars (`public/images/staff/*.svg`) are illustrated, not
+ photographic — see `config/demo-content.ts`'s comment on `STAFF` for why.
