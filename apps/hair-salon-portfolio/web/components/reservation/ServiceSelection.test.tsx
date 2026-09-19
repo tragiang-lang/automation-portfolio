@@ -21,6 +21,12 @@ describe("ServiceSelection", () => {
     expect(screen.getByRole("radio", { name: /カット/ })).not.toBeChecked();
   });
 
+  it("gives the selected service a visible highlighted background", () => {
+    render(<ServiceSelection services={services} selectedServiceId="SV002" onSelect={jest.fn()} />);
+    expect(screen.getByRole("radio", { name: /カラー/ }).closest("label")).toHaveClass("bg-surface-sunken");
+    expect(screen.getByRole("radio", { name: /カット/ }).closest("label")).not.toHaveClass("bg-surface-sunken");
+  });
+
   it("calls onSelect with the serviceId when chosen", async () => {
     const onSelect = jest.fn();
     render(<ServiceSelection services={services} selectedServiceId={null} onSelect={onSelect} />);

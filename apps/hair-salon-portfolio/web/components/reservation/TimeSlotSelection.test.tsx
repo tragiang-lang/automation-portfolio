@@ -40,12 +40,18 @@ describe("TimeSlotSelection", () => {
     render(
       <TimeSlotSelection
         status="ready"
-        slots={[{ time: "10:00" }]}
+        slots={[{ time: "10:00" }, { time: "10:30" }]}
         selectedTime="10:00"
         onSelect={jest.fn()}
         onRetry={jest.fn()}
       />,
     );
-    expect(screen.getByRole("button", { name: "10:00" })).toHaveAttribute("aria-pressed", "true");
+    const selected = screen.getByRole("button", { name: "10:00" });
+    expect(selected).toHaveAttribute("aria-pressed", "true");
+    expect(selected).toHaveClass("border-accent", "bg-surface-sunken", "font-medium");
+
+    const notSelected = screen.getByRole("button", { name: "10:30" });
+    expect(notSelected).toHaveAttribute("aria-pressed", "false");
+    expect(notSelected).not.toHaveClass("bg-surface-sunken");
   });
 });
