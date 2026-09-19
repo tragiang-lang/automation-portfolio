@@ -85,7 +85,7 @@ export function SiteFooter({
             {config.business.phone}
           </p>
           {config.features.reservation ? (
-            <Button href="/reservation" variant="secondary" className="mt-6 border-on-primary/40 text-on-primary hover:bg-on-primary/10">
+            <Button href="/reservation" variant="secondary" className="mt-6 border-on-primary/40! text-on-primary! hover:bg-on-primary/10!">
               {config.labels.bookingCta}
             </Button>
           ) : null}
