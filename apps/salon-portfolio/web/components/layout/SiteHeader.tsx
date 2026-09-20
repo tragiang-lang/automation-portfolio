@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { cn } from "@/lib/utils/cn";
+import { resolveNavHref } from "@/lib/utils/navItems";
 import type { BusinessInfo, NavItem } from "@/types/content";
 
 /**
@@ -91,7 +92,7 @@ export function SiteHeader({
             {navItems.map((item) => (
               <Link
                 key={item.href}
-                href={item.href}
+                href={resolveNavHref(item.href, pathname)}
                 className="underline-offset-4 hover:underline"
               >
                 {item.label}

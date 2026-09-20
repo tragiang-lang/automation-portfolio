@@ -41,3 +41,19 @@ export function filterVisibleNavItems(
     return true;
   });
 }
+
+/**
+ * Resolves a `NavItem.href` against the current pathname. Section anchors
+ * like `#menu`/`#contact` only have a matching element on `/` (the
+ * homepage renders every `HomeSection`) — on any other route the same
+ * bare `#menu` would resolve relative to *that* page (e.g.
+ * `/reservation#menu`), which has no such id and silently does nothing.
+ * Prefixing with `/` on non-home routes makes it navigate home first,
+ * where the target section exists. A non-fragment href (`/privacy`,
+ * `/terms`, an external URL, ...) is already a real destination and is
+ * returned unchanged.
+ */
+export function resolveNavHref(href: string, pathname: string): string {
+  if (!href.startsWith("#")) return href;
+  return pathname === "/" ? href : `/${href}`;
+}

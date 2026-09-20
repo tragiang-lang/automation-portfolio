@@ -1,6 +1,13 @@
 import { render, screen } from "@testing-library/react";
+import { usePathname } from "next/navigation";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import type { NavItem, SiteConfig } from "@/types/content";
+
+jest.mock("next/navigation", () => ({
+  usePathname: jest.fn(() => "/"),
+}));
+
+const mockUsePathname = usePathname as jest.Mock;
 
 const config: SiteConfig = {
   business: {
@@ -65,5 +72,36 @@ describe("SiteFooter reservation flag", () => {
       />,
     );
     expect(screen.getByRole("link", { name: "参加申込み" })).toBeInTheDocument();
+  });
+});
+
+describe("SiteFooter nav href resolution (navigation bug fix)", () => {
+  const navItemsWithContact: NavItem[] = [
+    { label: "メニュー", href: "#menu" },
+    { label: "お問い合わせ", href: "#contact" },
+  ];
+
+  afterEach(() => {
+    mockUsePathname.mockReturnValue("/");
+  });
+
+  it("keeps section-anchor hrefs unchanged on the homepage", () => {
+    render(<SiteFooter config={config} navItems={navItemsWithContact} />);
+    expect(screen.getByRole("link", { name: "メニュー" })).toHaveAttribute("href", "#menu");
+    expect(screen.getByRole("link", { name: "お問い合わせ" })).toHaveAttribute("href", "#contact");
+  });
+
+  it("prefixes section-anchor hrefs with / when rendered on /reservation", () => {
+    mockUsePathname.mockReturnValue("/reservation");
+    render(<SiteFooter config={config} navItems={navItemsWithContact} />);
+    expect(screen.getByRole("link", { name: "メニュー" })).toHaveAttribute("href", "/#menu");
+    expect(screen.getByRole("link", { name: "お問い合わせ" })).toHaveAttribute("href", "/#contact");
+  });
+
+  it("leaves the non-fragment /privacy and /terms links unchanged regardless of pathname", () => {
+    mockUsePathname.mockReturnValue("/reservation");
+    render(<SiteFooter config={config} navItems={navItemsWithContact} />);
+    expect(screen.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
   });
 });
