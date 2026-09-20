@@ -20,7 +20,7 @@ export function StaffSelection({
       <label
         className={cn(
           "flex cursor-pointer items-center gap-4 rounded-sm border border-border bg-surface px-5 py-4 transition-colors",
-          selectedStaffId === ANY_STAFF && "border-accent",
+          selectedStaffId === ANY_STAFF && "border-accent bg-surface-sunken",
         )}
       >
         <input
@@ -43,7 +43,7 @@ export function StaffSelection({
             key={member.staffId}
             className={cn(
               "flex cursor-pointer items-center gap-4 rounded-sm border border-border bg-surface px-5 py-4 transition-colors",
-              checked && "border-accent",
+              checked && "border-accent bg-surface-sunken",
             )}
           >
             <input

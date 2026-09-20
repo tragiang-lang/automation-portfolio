@@ -36,7 +36,7 @@ export function ServiceSelection({
             key={service.serviceId}
             className={cn(
               "flex cursor-pointer items-center justify-between gap-4 rounded-sm border border-border bg-surface px-5 py-4 transition-colors",
-              checked && "border-accent",
+              checked && "border-accent bg-surface-sunken",
             )}
           >
             <input
