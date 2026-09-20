@@ -1,0 +1,36 @@
+ .../diff-stat.txt                                  |     9 +
+ .../diff.patch                                     |   339 +
+ .../gas-test-after-task3.log                       |   829 +
+ .../status.txt                                     |    13 +
+ .../web-test-after-task7.log                       |    10 +
+ .../gas-build.log                                  |     4 +
+ .../gas-test-after-fix.log                         |   829 +
+ .../gas-test.log                                   |   829 +
+ .../gas-typecheck.log                              |     4 +
+ .../step2-reusability-diff.log                     |    11 +
+ .../step3-hardcoding-grep.log                      |   116 +
+ .../step4-security-audit.log                       |    88 +
+ .../step5-regression-check.log                     |    15 +
+ .../step6-fix-commit.log                           |    56 +
+ .../web-build.log                                  |    47 +
+ .../web-lint.log                                   |     0
+ .../web-test.log                                   |    10 +
+ .../web-typecheck.log                              |     0
+ .evidence/20260919-task-6-complete/build.log       |    47 +
+ .evidence/20260919-task-6-complete/diff.patch      |   313 +
+ .evidence/20260919-task-6-complete/typecheck.log   |     0
+ .evidence/20260919-task7-fixtures/diff.patch       |   654 +
+ .evidence/20260919-task7-fixtures/eslint.log       |     0
+ .evidence/20260919-task7-fixtures/status.txt       |    35 +
+ .evidence/20260919-task7-fixtures/tsc.log          |     0
+ .../20260919-task7-fixtures/web-test-before.log    | 17010 +++++++++++++++++++
+ .evidence/20260919-task9-sources/build.log         |    47 +
+ .evidence/20260919-task9-sources/status.txt        |    12 +
+ .evidence/20260919-task9-sources/test.log          |     9 +
+ .../docs/config-and-sheets-guide.md                |     7 +
+ .../hair-salon-portfolio/web/public/icons/.gitkeep |     0
+ apps/hair-salon-portfolio/web/public/icons/pin.svg |     4 +
+ .../web/public/images/SOURCES.md                   |     7 +-
+ .../plans/2026-09-18-hair-salon-portfolio.md       |  1119 ++
+ .../2026-09-18-hair-salon-portfolio-design.md      |   280 +
+ 35 files changed, 22750 insertions(+), 3 deletions(-)

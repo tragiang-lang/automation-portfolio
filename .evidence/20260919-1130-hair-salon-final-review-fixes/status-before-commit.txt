@@ -1,0 +1,11 @@
+ M apps/hair-salon-portfolio/docs/config-and-sheets-guide.md
+ M apps/hair-salon-portfolio/web/public/images/SOURCES.md
+?? .evidence/20260918-hair-salon-portfolio-baseline/
+?? .evidence/20260919-1130-hair-salon-final-review-fixes/
+?? .evidence/20260919-hair-salon-portfolio-final/
+?? .evidence/20260919-task-6-complete/
+?? .evidence/20260919-task7-fixtures/
+?? .evidence/20260919-task9-sources/
+?? apps/hair-salon-portfolio/web/public/icons/
+?? docs/superpowers/plans/2026-09-18-hair-salon-portfolio.md
+?? docs/superpowers/specs/

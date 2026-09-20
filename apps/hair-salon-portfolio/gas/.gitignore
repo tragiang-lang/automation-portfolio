@@ -1,0 +1,15 @@
+# dependencies
+/node_modules
+
+# esbuild output — bundled fresh from src/ before every clasp push
+/build
+
+# contains a real Apps Script project id (per-environment secret, never shared)
+.clasp.json
+
+# clasp's own OAuth credentials, if ever run with a local (non-global) login
+.clasprc.json
+
+# misc
+*.tsbuildinfo
+.DS_Store

@@ -1,0 +1,11 @@
+=== Step 2: gas/src diff (filtered) ===
+Files apps/hair-salon-portfolio/gas/src/DemoSeed.ts and apps/salon-portfolio/gas/src/DemoSeed.ts differ
+Files apps/hair-salon-portfolio/gas/src/Health.ts and apps/salon-portfolio/gas/src/Health.ts differ
+
+=== Step 2: web/lib diff (full, unfiltered) ===
+Files apps/hair-salon-portfolio/web/lib/api/reservationClient.test.ts and apps/salon-portfolio/web/lib/api/reservationClient.test.ts differ
+Files apps/hair-salon-portfolio/web/lib/config/resolveCatalog.test.ts and apps/salon-portfolio/web/lib/config/resolveCatalog.test.ts differ
+Files apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts and apps/salon-portfolio/web/lib/config/runtimeCatalog.test.ts differ
+Files apps/hair-salon-portfolio/web/lib/utils/health.test.ts and apps/salon-portfolio/web/lib/utils/health.test.ts differ
+Files apps/hair-salon-portfolio/web/lib/utils/health.ts and apps/salon-portfolio/web/lib/utils/health.ts differ
+Files apps/hair-salon-portfolio/web/lib/validation/catalogValidator.test.ts and apps/salon-portfolio/web/lib/validation/catalogValidator.test.ts differ

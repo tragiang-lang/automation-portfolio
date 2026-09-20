@@ -1,0 +1,15 @@
+=== Step 5: worktree-internal regression check ===
+--- git merge-base master HEAD ---
+dbed655c326ea366f6aa32a4ea5cbf5fe4edc5e1
+--- git diff master -- apps/salon-portfolio | wc -l (includes unrelated prior starter-mvp lineage work, NOT hair-salon-portfolio scope) ---
+9214
+--- identifying the correct branch-point base: last commit before first hair-salon-portfolio commit ---
+35dd830 fix(salon-portfolio): hide nav links to sections the Starter preset disables
+cf76789 docs(salon-portfolio): add owner guide and deployment quick reference
+8d3b616 feat(salon-portfolio): add additive Starter design preset
+--- git diff 35dd830..HEAD -- apps/salon-portfolio (isolates ONLY hair-salon-portfolio branch's own commits) ---
+(above: empty = no diff)
+--- git log 35dd830..HEAD --oneline -- apps/salon-portfolio ---
+(above: empty = no commit touched apps/salon-portfolio)
+--- working tree status for apps/salon-portfolio ---
+(above: empty = clean)

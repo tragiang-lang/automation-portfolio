@@ -1,0 +1,35 @@
+On branch feature/hair-salon-portfolio
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   apps/hair-salon-portfolio/web/app/page.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/layout/SiteFooter.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/layout/SiteHeader.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/reservation/ReservationSummary.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/reservation/ReservationWizard.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/reservation/ServiceSelection.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/reservation/useReservationWizard.test.ts
+	modified:   apps/hair-salon-portfolio/web/components/sections/ContactSection.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/sections/HeroSection.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/sections/MenuContent.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/sections/MenuSection.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/sections/StaffContent.test.tsx
+	modified:   apps/hair-salon-portfolio/web/components/sections/StaffSection.test.tsx
+	modified:   apps/hair-salon-portfolio/web/lib/api/reservationClient.test.ts
+	modified:   apps/hair-salon-portfolio/web/lib/config/resolveCatalog.test.ts
+	modified:   apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts
+	modified:   apps/hair-salon-portfolio/web/lib/validation/catalogValidator.test.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.evidence/20260918-hair-salon-portfolio-baseline/
+	.evidence/20260919-task-6-complete/
+	.evidence/20260919-task7-fixtures/
+	apps/hair-salon-portfolio/gas/package-lock.json
+	apps/hair-salon-portfolio/web/app/api/gas/route.test.ts
+	apps/hair-salon-portfolio/web/app/api/health/route.test.ts
+	apps/hair-salon-portfolio/web/package-lock.json
+	docs/superpowers/plans/2026-09-18-hair-salon-portfolio.md
+	docs/superpowers/specs/
+
+no changes added to commit (use "git add" and/or "git commit -a")

@@ -1,0 +1,54 @@
+import { SITE_CONFIG } from "@/config/demo-content";
+import type { SiteConfig } from "@/types/content";
+import type { PublicRuntimeConfig } from "@/types/runtime-config";
+
+/**
+ * Merges runtime business data (Phase 3A `getConfig`) with the
+ * presentation fields `nameLatin`/`tagline`/`postalCode`/`socialLinks`
+ * (V1.1 Task 4: optional CONFIG keys `business.nameLatin`/`tagline`/
+ * `postalCode`/`social.*`). Each falls back independently to the
+ * frontend-owned demo value only when the runtime config doesn't carry
+ * it — a CONFIG sheet from before this task (none of these keys set)
+ * renders exactly as it did before; a buyer who fills in the new keys
+ * gets their own value instead of the demo salon's. Produces the same
+ * `SiteConfig` shape every Phase 2 component already consumes, so no
+ * component signature changes.
+ */
+export function resolveSiteConfig(runtime: PublicRuntimeConfig): SiteConfig {
+  return {
+    business: {
+      name: runtime.business.name,
+      nameLatin: runtime.business.nameLatin ?? SITE_CONFIG.business.nameLatin,
+      tagline: runtime.business.tagline ?? SITE_CONFIG.business.tagline,
+      phone: runtime.business.phone,
+      email: runtime.business.email,
+      address: runtime.business.address,
+      postalCode: runtime.business.postalCode ?? SITE_CONFIG.business.postalCode,
+    },
+    hours: runtime.hours,
+    features: {
+      contactForm: runtime.features.contactForm,
+      reservation: runtime.features.reservation,
+      staffSelection: runtime.features.staffSelection,
+    },
+    staffAnyAvailableOption: runtime.staffAnyAvailableOption,
+    socialLinks: runtime.socialLinks ?? SITE_CONFIG.socialLinks,
+    labels: {
+      service: runtime.labels?.service ?? SITE_CONFIG.labels.service,
+      bookingCta: runtime.labels?.bookingCta ?? SITE_CONFIG.labels.bookingCta,
+      inquiryMessage: runtime.labels?.inquiryMessage ?? SITE_CONFIG.labels.inquiryMessage,
+    },
+    content: {
+      heroSubheadline: runtime.content?.heroSubheadline ?? SITE_CONFIG.content.heroSubheadline,
+      conceptEyebrow: runtime.content?.conceptEyebrow ?? SITE_CONFIG.content.conceptEyebrow,
+      conceptTitle: runtime.content?.conceptTitle ?? SITE_CONFIG.content.conceptTitle,
+      conceptParagraph1: runtime.content?.conceptParagraph1 ?? SITE_CONFIG.content.conceptParagraph1,
+      conceptParagraph2: runtime.content?.conceptParagraph2 ?? SITE_CONFIG.content.conceptParagraph2,
+      serviceSubtitle: runtime.content?.serviceSubtitle ?? SITE_CONFIG.content.serviceSubtitle,
+      ctaHeading: runtime.content?.ctaHeading ?? SITE_CONFIG.content.ctaHeading,
+      ctaMessage: runtime.content?.ctaMessage ?? SITE_CONFIG.content.ctaMessage,
+      ctaClosingHeading: runtime.content?.ctaClosingHeading ?? SITE_CONFIG.content.ctaClosingHeading,
+      ctaClosingMessage: runtime.content?.ctaClosingMessage ?? SITE_CONFIG.content.ctaClosingMessage,
+    },
+  };
+}

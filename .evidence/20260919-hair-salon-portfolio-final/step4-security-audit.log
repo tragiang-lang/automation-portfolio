@@ -1,0 +1,88 @@
+=== Step 4: security audit ===
+--- real GAS URL check ---
+apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts:39:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts:56:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts:70:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts:83:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts:96:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts:109:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts:133:      process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeCatalog.test.ts:147:      process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeConfig.test.ts:33:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeConfig.test.ts:42:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeConfig.test.ts:54:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeConfig.test.ts:63:    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeConfig.test.ts:89:      process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+apps/hair-salon-portfolio/web/lib/config/runtimeConfig.test.ts:99:      process.env.GAS_WEBAPP_URL = "https://example.com/exec";
+--- NEXT_PUBLIC_ check ---
+apps/hair-salon-portfolio/web/.env.example:5:# Never prefix this with NEXT_PUBLIC_ -- it must stay server-only. It is
+apps/hair-salon-portfolio/web/.env.example:11:# this with NEXT_PUBLIC_ -- it is read only by
+apps/hair-salon-portfolio/web/lib/config/designConfig.ts:6: * only env var — never prefix with `NEXT_PUBLIC_`, matching
+--- .gitignore web ---
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+/.swc/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+--- .gitignore gas ---
+# dependencies
+/node_modules
+
+# esbuild output — bundled fresh from src/ before every clasp push
+/build
+
+# contains a real Apps Script project id (per-environment secret, never shared)
+.clasp.json
+
+# clasp's own OAuth credentials, if ever run with a local (non-global) login
+.clasprc.json
+
+# misc
+*.tsbuildinfo
+.DS_Store
+--- git status ---
+?? apps/hair-salon-portfolio/gas/package-lock.json
+?? apps/hair-salon-portfolio/web/package-lock.json
+--- git check-ignore ---
+apps/hair-salon-portfolio/web/.gitignore:35:.env*	apps/hair-salon-portfolio/web/.env.local
+apps/hair-salon-portfolio/gas/.gitignore:8:.clasp.json	apps/hair-salon-portfolio/gas/.clasp.json
+--- tracked secret-shaped files ---
+apps/hair-salon-portfolio/gas/.clasp.json.example

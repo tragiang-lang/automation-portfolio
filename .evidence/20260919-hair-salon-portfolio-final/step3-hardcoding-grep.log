@@ -1,0 +1,116 @@
+=== Step 3: grep hits (node_modules excluded) ===
+apps/hair-salon-portfolio/gas/src/ConfigParser.ts:132: *  individual fields with its own `?? "salon default"` fallback. */
+apps/hair-salon-portfolio/gas/src/Health.ts:9:    service: "hair-salon-portfolio-gas",
+apps/hair-salon-portfolio/gas/src/ids/ReservationId.ts:12: *  (collision probability is negligible against a single salon's daily
+apps/hair-salon-portfolio/gas/src/InquiryValidation.ts:6: * normalize/validate split for reservations. Contains no salon-specific
+apps/hair-salon-portfolio/gas/src/models/Config.ts:53: *  a nail/hair salon's "メニュー", without any component or email template
+apps/hair-salon-portfolio/gas/src/models/Config.ts:54: *  hard-coding salon-specific wording. Every field falls back to the
+apps/hair-salon-portfolio/gas/src/models/Config.ts:55: *  current salon copy at its point of use when undefined, so a CONFIG
+apps/hair-salon-portfolio/gas/src/models/Config.ts:68: *  salon copy at its point of use when undefined. */
+apps/hair-salon-portfolio/gas/src/ReservationEmailTemplates.ts:22:   *  CONFIG key `labels.service`) — "メニュー" for a nails/hair salon,
+apps/hair-salon-portfolio/gas/src/ReservationRules.ts:18: * Salon-specific reservation rules — resolving the client's `serviceId`/
+apps/hair-salon-portfolio/gas/src/SheetSchemas.ts:18:/** SERVICES: salon menu/service catalog (Phase 0 §C). */
+apps/hair-salon-portfolio/gas/src/SheetSchemas.ts:47:/** STAFF: salon stylist catalog (Phase 0 §C). */
+apps/hair-salon-portfolio/gas/src/Validation.ts:7: * length caps. Contains no salon-specific knowledge (menu/staff/business
+apps/hair-salon-portfolio/gas/src/Validation.ts:8: * hours) so a future non-salon vertical can reuse it unchanged (Phase 3C
+apps/hair-salon-portfolio/gas/src/Validation.ts:9: * §45/§79). Salon-specific rules live in `ReservationRules.ts`.
+apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts:13:      { Key: " business.name ", Value: "Demo Salon" },
+apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts:17:      "business.name": "Demo Salon",
+apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts:76:    expect(parseNonEmptyString("  Demo Salon  ")).toBe("Demo Salon");
+apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts:103:    "business.name": "Demo Salon",
+apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts:126:    "email.fromName": "Demo Salon",
+apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts:135:      expect(result.config.business.name).toBe("Demo Salon");
+apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts:204:    raw["business.nameLatin"] = "  Demo Salon Latin  ";
+apps/hair-salon-portfolio/gas/tests/ConfigParser.test.ts:210:      expect(result.config.business.nameLatin).toBe("Demo Salon Latin");
+apps/hair-salon-portfolio/gas/tests/ConfigStore.test.ts:10:    { Key: "business.name", Value: "Demo Salon", Description: "店舗名" },
+apps/hair-salon-portfolio/gas/tests/ConfigStore.test.ts:33:    { Key: "email.fromName", Value: "Demo Salon", Description: "" },
+apps/hair-salon-portfolio/gas/tests/ConfigStore.test.ts:64:    expect(config.business.name).toBe("Demo Salon");
+apps/hair-salon-portfolio/gas/tests/ConfigValidator.test.ts:7:      name: "Demo Salon",
+apps/hair-salon-portfolio/gas/tests/ConfigValidator.test.ts:40:    emailFromName: "Demo Salon",
+apps/hair-salon-portfolio/gas/tests/Health.test.ts:8:    expect(result.service).toBe("hair-salon-portfolio-gas");
+apps/hair-salon-portfolio/gas/tests/PublicConfig.test.ts:7:      name: "Demo Salon",
+apps/hair-salon-portfolio/gas/tests/PublicConfig.test.ts:40:    emailFromName: "Demo Salon",
+apps/hair-salon-portfolio/gas/tests/PublicConfig.test.ts:47:    expect(result.business.name).toBe("Demo Salon");
+apps/hair-salon-portfolio/gas/tests/PublicConfig.test.ts:68:    config.business.nameLatin = "Demo Salon Latin";
+apps/hair-salon-portfolio/gas/tests/PublicConfig.test.ts:73:    expect(result.business.nameLatin).toBe("Demo Salon Latin");
+apps/hair-salon-portfolio/gas/tests/ReservationEmailTemplates.test.ts:52:  it("uses ctx.serviceLabel as the line label instead of a hard-coded term, so a non-salon business can say Workshop/Class instead of メニュー", () => {
+apps/hair-salon-portfolio/gas/tests/ReservationRules.test.ts:187:  business: { name: "Salon", phone: "03-0000-0000", email: "owner@example.com", address: "Tokyo" },
+apps/hair-salon-portfolio/gas/tests/ReservationRules.test.ts:197:  emailFromName: "Salon",
+apps/hair-salon-portfolio/gas/tests/ReservationRules.test.ts:428:  it("returns an empty slot list (not an error) for a day the salon is closed", () => {
+apps/hair-salon-portfolio/web/app/page.test.tsx:159:  "salon-features": "サロンについて",
+apps/hair-salon-portfolio/web/app/page.test.tsx:220:      "salon-features",
+apps/hair-salon-portfolio/web/app/page.tsx:8:import { SalonFeaturesSection } from "@/components/sections/SalonFeaturesSection";
+apps/hair-salon-portfolio/web/app/page.tsx:18:  SALON_FEATURES,
+apps/hair-salon-portfolio/web/app/page.tsx:29:// Concept → Menu → Staff → Gallery → Reservation CTA → Salon Features →
+apps/hair-salon-portfolio/web/app/page.tsx:35:// GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/FAQ_ITEMS/ACCESS_INFO
+apps/hair-salon-portfolio/web/app/page.tsx:142:    "salon-features": sectionVisibility["salon-features"] ? (
+apps/hair-salon-portfolio/web/app/page.tsx:143:      <SalonFeaturesSection features={SALON_FEATURES} />
+apps/hair-salon-portfolio/web/components/sections/ConceptSection.tsx:7: * Concept (Phase 2A §6/§9-adjacent) — the salon's philosophy/story.
+apps/hair-salon-portfolio/web/components/sections/ConceptSection.tsx:38:              src="/images/salon/salon-reception-light.jpg"
+apps/hair-salon-portfolio/web/components/sections/HeroSection.test.tsx:41:  it("shows the runtime salon name/nameLatin in the split variant", () => {
+apps/hair-salon-portfolio/web/components/sections/HeroSection.test.tsx:48:  it("shows the runtime salon name/nameLatin in the editorial variant", () => {
+apps/hair-salon-portfolio/web/components/sections/HeroSplit.tsx:16: * `SalonFeatures` sections already use — no bespoke breakpoint logic.
+apps/hair-salon-portfolio/web/components/sections/MenuCardGrid.tsx:5: * Menu — "card-grid" variant (V1.1 Task 6). Modern commercial salon
+apps/hair-salon-portfolio/web/components/sections/MenuEditorialList.tsx:7: * legacy layout). Elegant Japanese salon / editorial menu: strong
+apps/hair-salon-portfolio/web/components/sections/MenuSection.test.tsx:97:  it("uses title/subtitle/ctaLabel props instead of hard-coded salon terminology when provided (Starter MVP reusability)", () => {
+apps/hair-salon-portfolio/web/components/sections/MenuSection.tsx:57:   *  Each defaults to the current salon copy so every existing call site
+apps/hair-salon-portfolio/web/components/sections/ReservationCtaBand.tsx:21:   *  `siteConfig.labels.bookingCta`). Defaults to the current salon term
+apps/hair-salon-portfolio/web/components/sections/SalonFeaturesSection.tsx:5:import type { SalonFeature } from "@/types/content";
+apps/hair-salon-portfolio/web/components/sections/SalonFeaturesSection.tsx:8: * Salon Features (Phase 2A §6/§8 anti-pattern list) — practical
+apps/hair-salon-portfolio/web/components/sections/SalonFeaturesSection.tsx:13:export function SalonFeaturesSection({ features }: { features: SalonFeature[] }) {
+apps/hair-salon-portfolio/web/components/sections/SalonFeaturesSection.tsx:20:              src="/images/salon/salon-treatment-room.jpg"
+apps/hair-salon-portfolio/web/components/sections/StaffContent.tsx:20: * both already happen server-side (`apps/salon-portfolio/gas/src/
+apps/hair-salon-portfolio/web/components/sections/StaffPortraitGrid.tsx:7: * legacy layout). Classic premium salon team presentation: portrait-
+apps/hair-salon-portfolio/web/components/sections/StaffSection.tsx:27: * Phase 0 §K: a shared-calendar salon has no staff-selection concept in
+apps/hair-salon-portfolio/web/components/ui/PlaceholderImage.tsx:11: * `public/images/{hero,gallery,salon}` or an illustrated stand-in
+apps/hair-salon-portfolio/web/config/demo-content.ts:2: * Business content for atelier ito (Hair Salon demo). Same role as the
+apps/hair-salon-portfolio/web/config/demo-content.ts:15:  SalonFeature,
+apps/hair-salon-portfolio/web/config/demo-content.ts:171:  { id: "g4", src: "/images/gallery/gallery-salon-interior-chair.jpg", alt: "落ち着いた雰囲気のスタイリングチェアとサロン内観", width: 1200, height: 800 },
+apps/hair-salon-portfolio/web/config/demo-content.ts:172:  { id: "g5", src: "/images/gallery/gallery-salon-interior-lounge.jpg", alt: "窓から光が差し込む、静かな店内スペースの様子", width: 1200, height: 633 },
+apps/hair-salon-portfolio/web/config/demo-content.ts:176:export const SALON_FEATURES: SalonFeature[] = [
+apps/hair-salon-portfolio/web/config/design-presets.test.ts:114:        "salon-features",
+apps/hair-salon-portfolio/web/config/design-presets.test.ts:133:        "salon-features",
+apps/hair-salon-portfolio/web/config/design-presets.test.ts:152:        "salon-features",
+apps/hair-salon-portfolio/web/config/design-presets.test.ts:178:        "salon-features",
+apps/hair-salon-portfolio/web/config/design-presets.test.ts:313:  it("hides every salon-flavored extra section by default", () => {
+apps/hair-salon-portfolio/web/config/design-presets.test.ts:318:    expect(visibility["salon-features"]).toBe(false);
+apps/hair-salon-portfolio/web/config/design-presets.ts:3: * Nothing salon-specific (business copy, prices, staff, hours) belongs
+apps/hair-salon-portfolio/web/config/design-presets.ts:44:    "salon-features",
+apps/hair-salon-portfolio/web/config/design-presets.ts:86:  // Femme — soft feminine beauty-salon composition: a two-column split
+apps/hair-salon-portfolio/web/config/design-presets.ts:102:      "salon-features",
+apps/hair-salon-portfolio/web/config/design-presets.ts:126:      "salon-features",
+apps/hair-salon-portfolio/web/config/design-presets.ts:151:      "salon-features",
+apps/hair-salon-portfolio/web/config/design-presets.ts:189:      "salon-features",
+apps/hair-salon-portfolio/web/config/design-presets.ts:238: * (concept/staff/gallery/salon-features/customer-flow/faq/access) is
+apps/hair-salon-portfolio/web/config/design-presets.ts:256:    "salon-features": false,
+apps/hair-salon-portfolio/web/config/theme.ts:3: * the CSS custom properties in `app/globals.css`. Nothing salon-specific
+apps/hair-salon-portfolio/web/lib/config/designConfig.test.ts:15:  it("returns the default config when SALON_DESIGN_PRESET is unset", () => {
+apps/hair-salon-portfolio/web/lib/config/designConfig.test.ts:16:    delete process.env.SALON_DESIGN_PRESET;
+apps/hair-salon-portfolio/web/lib/config/designConfig.test.ts:20:  it("resolves a valid SALON_DESIGN_PRESET value", () => {
+apps/hair-salon-portfolio/web/lib/config/designConfig.test.ts:21:    process.env.SALON_DESIGN_PRESET = "editorial";
+apps/hair-salon-portfolio/web/lib/config/designConfig.test.ts:25:  it("falls back to the default for an invalid SALON_DESIGN_PRESET value", () => {
+apps/hair-salon-portfolio/web/lib/config/designConfig.test.ts:26:    process.env.SALON_DESIGN_PRESET = "bogus-preset";
+apps/hair-salon-portfolio/web/lib/config/designConfig.ts:5: * Reads the deployment's chosen preset from `SALON_DESIGN_PRESET` (server-
+apps/hair-salon-portfolio/web/lib/config/designConfig.ts:14:  return resolveDesignConfig(process.env.SALON_DESIGN_PRESET);
+apps/hair-salon-portfolio/web/lib/config/resolveDesignConfig.ts:97: * current Kinari look), so a malformed `SALON_DESIGN_PRESET` value can
+apps/hair-salon-portfolio/web/lib/config/resolveDesignConfig.ts:104: *   `process.env.SALON_DESIGN_PRESET`.
+apps/hair-salon-portfolio/web/lib/config/resolveSiteConfig.test.ts:56:      business: { ...runtime.business, nameLatin: "Real Salon Latin", tagline: "本物のタグライン", postalCode: "〒999-9999" },
+apps/hair-salon-portfolio/web/lib/config/resolveSiteConfig.test.ts:57:      socialLinks: [{ label: "Instagram", href: "https://instagram.com/real-salon" }],
+apps/hair-salon-portfolio/web/lib/config/resolveSiteConfig.test.ts:60:    expect(siteConfig.business.nameLatin).toBe("Real Salon Latin");
+apps/hair-salon-portfolio/web/lib/config/resolveSiteConfig.test.ts:63:    expect(siteConfig.socialLinks).toEqual([{ label: "Instagram", href: "https://instagram.com/real-salon" }]);
+apps/hair-salon-portfolio/web/lib/config/resolveSiteConfig.ts:13: * gets their own value instead of the demo salon's. Produces the same
+apps/hair-salon-portfolio/web/lib/config/runtimeConfig.test.ts:73:  // production safety guard for Salon runtime configuration").
+apps/hair-salon-portfolio/web/lib/constants/design-sections.test.ts:17:      "salon-features",
+apps/hair-salon-portfolio/web/lib/constants/design-sections.ts:17:  "salon-features",
+apps/hair-salon-portfolio/web/lib/constants/design-sections.ts:38:  "salon-features": true,
+apps/hair-salon-portfolio/web/lib/utils/health.test.ts:8:    expect(result.service).toBe("hair-salon-portfolio-web");
+apps/hair-salon-portfolio/web/lib/utils/health.ts:5:    service: "hair-salon-portfolio-web",
+apps/hair-salon-portfolio/web/lib/validation/designConfigValidator.ts:26: * (today: `SALON_DESIGN_PRESET`; potentially a future CONFIG-sheet field).
+apps/hair-salon-portfolio/web/lib/validation/runtimeConfigValidator.test.ts:7:      name: "Demo Salon",
+apps/hair-salon-portfolio/web/lib/validation/runtimeConfigValidator.test.ts:125:      business: { ...validConfig().business, nameLatin: "Demo Salon Latin", tagline: "タグライン", postalCode: "〒100-0001" },
+apps/hair-salon-portfolio/web/lib/validation/runtimeConfigValidator.test.ts:130:    expect(result?.business.nameLatin).toBe("Demo Salon Latin");
+apps/hair-salon-portfolio/web/types/content.ts:98:   *  STAFF sheet (apps/salon-portfolio/gas/src/SheetSchemas.ts), so a
+apps/hair-salon-portfolio/web/types/content.ts:115:export interface SalonFeature {
+apps/hair-salon-portfolio/web/types/design-config.ts:78:  | "salon-features"
+apps/hair-salon-portfolio/web/types/runtime-config.ts:3: * apps/salon-portfolio/gas/src/models/Config.ts `PublicConfig`,
+apps/hair-salon-portfolio/web/types/runtime-config.ts:4: * apps/salon-portfolio/gas/src/PublicConfig.ts `buildPublicConfig`).

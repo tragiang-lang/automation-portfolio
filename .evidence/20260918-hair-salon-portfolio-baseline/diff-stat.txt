@@ -1,0 +1,9 @@
+ apps/hair-salon-portfolio/gas/src/DemoSeed.ts      | 37 ++++++++++++----------
+ apps/hair-salon-portfolio/gas/tests/Api.test.ts    | 12 +++----
+ .../gas/tests/CatalogParser.test.ts                | 18 +++++------
+ .../gas/tests/PublicCatalog.test.ts                | 14 ++++----
+ .../gas/tests/ReservationEmailTemplates.test.ts    |  6 ++--
+ .../gas/tests/ReservationMapper.test.ts            |  4 +--
+ .../gas/tests/ReservationRepository.test.ts        |  2 +-
+ .../gas/tests/ReservationRules.test.ts             |  6 ++--
+ 8 files changed, 51 insertions(+), 48 deletions(-)

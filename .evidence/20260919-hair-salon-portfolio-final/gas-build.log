@@ -1,0 +1,4 @@
+
+> hair-salon-portfolio-gas@0.1.0 build
+> node esbuild.config.js
+
