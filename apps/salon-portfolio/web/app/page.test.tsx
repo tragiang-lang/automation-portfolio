@@ -42,6 +42,7 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "スタッフ紹介" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "ギャラリー" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "お客様の声" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "サロンについて" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "ご来店の流れ" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "よくあるご質問" })).toBeInTheDocument();
@@ -155,6 +156,7 @@ const SECTION_MARKERS: Record<(typeof ALL_HOME_SECTIONS)[number], string> = {
   menu: "メニュー",
   staff: "スタッフ紹介",
   gallery: "ギャラリー",
+  testimonials: "お客様の声",
   reservation: "仕上がりを見て、気持ちが決まったら",
   "salon-features": "サロンについて",
   "customer-flow": "ご来店の流れ",
@@ -216,6 +218,7 @@ describe("Home — section ordering (V1.1 Task 9)", () => {
       "concept",
       "menu",
       "staff",
+      "testimonials",
       "reservation",
       "salon-features",
       "customer-flow",

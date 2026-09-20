@@ -1,0 +1,658 @@
+diff --git a/apps/salon-portfolio/web/app/layout.tsx b/apps/salon-portfolio/web/app/layout.tsx
+index 855aed0..273a043 100644
+--- a/apps/salon-portfolio/web/app/layout.tsx
++++ b/apps/salon-portfolio/web/app/layout.tsx
+@@ -10,6 +10,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
+ import { RuntimeConfigNotice } from "@/components/layout/RuntimeConfigNotice";
+ import { NAV_ITEMS } from "@/config/demo-content";
+ import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
++import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
+ import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
+ import "./globals.css";
+ 
+@@ -61,8 +62,16 @@ export async function generateMetadata(): Promise<Metadata> {
+ }
+ 
+ export default async function RootLayout({ children }: LayoutProps<"/">) {
+-  const { status, config } = await getRuntimeConfig();
++  const [{ status, config }, { status: catalogStatus }] = await Promise.all([
++    getRuntimeConfig(),
++    getRuntimeCatalog(),
++  ]);
+   const siteConfig = resolveSiteConfig(config);
++  // A configured-but-failing GAS backend must never be silently
++  // indistinguishable from demo mode — this now covers both the
++  // business-config call and the Menu/Staff catalog call (Phase 5.1),
++  // reusing the same notice rather than inventing a second one.
++  const showRuntimeNotice = status === "runtime-error" || catalogStatus === "runtime-error";
+ 
+   return (
+     <html
+@@ -70,7 +79,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
+       className={`${shipporiMincho.variable} ${cormorantGaramond.variable} ${notoSansJP.variable} ${inter.variable} h-full antialiased`}
+     >
+       <body className="min-h-full flex flex-col bg-background text-text">
+-        <RuntimeConfigNotice show={status === "runtime-error"} />
++        <RuntimeConfigNotice show={showRuntimeNotice} />
+         <SiteHeader
+           business={siteConfig.business}
+           navItems={NAV_ITEMS}
+diff --git a/apps/salon-portfolio/web/app/page.tsx b/apps/salon-portfolio/web/app/page.tsx
+index ad94187..ea9b6f0 100644
+--- a/apps/salon-portfolio/web/app/page.tsx
++++ b/apps/salon-portfolio/web/app/page.tsx
+@@ -15,10 +15,9 @@ import {
+   FAQ_ITEMS,
+   GALLERY_IMAGES,
+   SALON_FEATURES,
+-  SERVICES,
+-  STAFF,
+ } from "@/config/demo-content";
+ import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
++import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
+ import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
+ 
+ // Page order matches Phase 2A §6 exactly: Header (layout) → Hero →
+@@ -27,13 +26,16 @@ import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
+ // sections are gated here by the resolved runtime config's `features`,
+ // not by editing the section components themselves.
+ //
+-// SERVICES/STAFF/GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/
+-// FAQ_ITEMS/ACCESS_INFO are not part of the Phase 3A `getConfig` contract
+-// (no `services`/`staff` fields in `PublicConfig`) and stay on
+-// `config/demo-content.ts` — see docs/runtime-config-guide.md for the
+-// Phase 4 plan to move SERVICES/STAFF onto `getServices`/`getStaff`.
++// GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/FAQ_ITEMS/ACCESS_INFO
++// are not part of the `getConfig` contract (no such fields in
++// `PublicConfig`) and stay frontend-owned on `config/demo-content.ts`.
++// SERVICES/STAFF moved onto `getServices`/`getStaff` in Phase 5.1
++// (lib/config/runtimeCatalog.ts) — see docs/runtime-config-guide.md.
+ export default async function Home() {
+-  const { config } = await getRuntimeConfig();
++  const [{ config }, { services, staff }] = await Promise.all([
++    getRuntimeConfig(),
++    getRuntimeCatalog(),
++  ]);
+   const siteConfig = resolveSiteConfig(config);
+ 
+   return (
+@@ -52,11 +54,11 @@ export default async function Home() {
+         ]}
+       />
+ 
+-      <MenuSection services={SERVICES} />
++      <MenuSection services={services} />
+ 
+       <StaffSection
+         enabled={siteConfig.features.staffSelection}
+-        staff={STAFF}
++        staff={staff}
+         anyAvailableOption={siteConfig.staffAnyAvailableOption}
+         businessNameInitial={siteConfig.business.name}
+       />
+diff --git a/apps/salon-portfolio/web/components/sections/StaffCard.tsx b/apps/salon-portfolio/web/components/sections/StaffCard.tsx
+index 445b6e1..7a64df4 100644
+--- a/apps/salon-portfolio/web/components/sections/StaffCard.tsx
++++ b/apps/salon-portfolio/web/components/sections/StaffCard.tsx
+@@ -2,21 +2,40 @@ import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
+ import type { StaffMember } from "@/types/content";
+ 
+ /** Staff portrait card (Phase 2A §10) — consistent 4:5 photo aspect ratio
+- * across all staff so the grid stays even. No rating widgets/fake numbers. */
++ * across all staff so the grid stays even. No rating widgets/fake numbers.
++ * `role`/`introduction`/`photoSrc`/`photoAlt` are optional (Phase 5.1) —
++ * a runtime-sourced staff member (getStaff) never carries them, since the
++ * STAFF sheet has no columns for them. When the photo is missing, this
++ * falls back to the same initial-letter tile treatment
++ * `AnyAvailableStaffCard` already uses, so the grid never shows a broken
++ * image. */
+ export function StaffCard({ staff }: { staff: StaffMember }) {
+   return (
+     <div>
+-      <PlaceholderImage
+-        src={staff.photoSrc}
+-        alt={staff.photoAlt}
+-        width={800}
+-        height={1000}
+-        sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 25vw"
+-        className="rounded-sm"
+-      />
++      {staff.photoSrc ? (
++        <PlaceholderImage
++          src={staff.photoSrc}
++          alt={staff.photoAlt ?? staff.name}
++          width={800}
++          height={1000}
++          sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 25vw"
++          className="rounded-sm"
++        />
++      ) : (
++        <div
++          className="flex items-center justify-center rounded-sm bg-surface-sunken"
++          style={{ aspectRatio: "800 / 1000" }}
++        >
++          <span className="text-[56px] font-medium text-accent/70" aria-hidden="true">
++            {staff.name.slice(0, 1)}
++          </span>
++        </div>
++      )}
+       <p className="mt-4 text-[20px] leading-[1.4] font-medium text-primary">{staff.name}</p>
+-      <p className="text-[14px] text-accent">{staff.role}</p>
+-      <p className="mt-1 text-[14px] leading-[1.43] text-muted">{staff.introduction}</p>
++      {staff.role ? <p className="text-[14px] text-accent">{staff.role}</p> : null}
++      {staff.introduction ? (
++        <p className="mt-1 text-[14px] leading-[1.43] text-muted">{staff.introduction}</p>
++      ) : null}
+     </div>
+   );
+ }
+diff --git a/apps/salon-portfolio/web/components/sections/StaffSection.test.tsx b/apps/salon-portfolio/web/components/sections/StaffSection.test.tsx
+index 9d8ae39..e2e40fb 100644
+--- a/apps/salon-portfolio/web/components/sections/StaffSection.test.tsx
++++ b/apps/salon-portfolio/web/components/sections/StaffSection.test.tsx
+@@ -35,4 +35,15 @@ describe("StaffSection", () => {
+     );
+     expect(screen.queryByText("指名なし（お任せ）")).not.toBeInTheDocument();
+   });
++
++  it("renders a runtime-sourced staff member with no role/introduction/photo without crashing", () => {
++    const runtimeStaff: StaffMember[] = [{ staffId: "ST002", name: "鈴木 さくら" }];
++    render(
++      <StaffSection enabled staff={runtimeStaff} anyAvailableOption={false} businessNameInitial="凛" />,
++    );
++    expect(screen.getByText("鈴木 さくら")).toBeInTheDocument();
++    // Falls back to an initial-letter tile (same convention as
++    // AnyAvailableStaffCard) instead of rendering a broken <img>.
++    expect(screen.getByText("鈴")).toBeInTheDocument();
++  });
+ });
+diff --git a/apps/salon-portfolio/web/lib/config/resolveCatalog.test.ts b/apps/salon-portfolio/web/lib/config/resolveCatalog.test.ts
+new file mode 100644
+index 0000000..015c09b
+--- /dev/null
++++ b/apps/salon-portfolio/web/lib/config/resolveCatalog.test.ts
+@@ -0,0 +1,43 @@
++import { mapPublicServiceToService, mapPublicStaffToStaffMember } from "./resolveCatalog";
++import type { PublicService, PublicStaff } from "@/types/reservation";
++
++describe("mapPublicServiceToService", () => {
++  it("carries serviceId/name/durationMinutes/price through unchanged", () => {
++    const input: PublicService = {
++      serviceId: "SV001",
++      name: "ジェルネイル",
++      durationMinutes: 60,
++      price: 6000,
++      displayOrder: 1,
++    };
++    expect(mapPublicServiceToService(input)).toEqual({
++      serviceId: "SV001",
++      name: "ジェルネイル",
++      durationMinutes: 60,
++      price: 6000,
++    });
++  });
++
++  it("does not invent a description or category", () => {
++    const input: PublicService = { serviceId: "SV001", name: "x", durationMinutes: 1, price: 1, displayOrder: 1 };
++    const result = mapPublicServiceToService(input);
++    expect(result.description).toBeUndefined();
++    expect(result.category).toBeUndefined();
++  });
++});
++
++describe("mapPublicStaffToStaffMember", () => {
++  it("carries staffId/name through unchanged", () => {
++    const input: PublicStaff = { staffId: "ST001", name: "田中 あい", displayOrder: 1 };
++    expect(mapPublicStaffToStaffMember(input)).toEqual({ staffId: "ST001", name: "田中 あい" });
++  });
++
++  it("does not invent role/introduction/photo fields", () => {
++    const input: PublicStaff = { staffId: "ST001", name: "x", displayOrder: 1 };
++    const result = mapPublicStaffToStaffMember(input);
++    expect(result.role).toBeUndefined();
++    expect(result.introduction).toBeUndefined();
++    expect(result.photoSrc).toBeUndefined();
++    expect(result.photoAlt).toBeUndefined();
++  });
++});
+diff --git a/apps/salon-portfolio/web/lib/config/resolveCatalog.ts b/apps/salon-portfolio/web/lib/config/resolveCatalog.ts
+new file mode 100644
+index 0000000..ead3110
+--- /dev/null
++++ b/apps/salon-portfolio/web/lib/config/resolveCatalog.ts
+@@ -0,0 +1,29 @@
++/**
++ * Maps the canonical GAS-backed catalog wire types — the same
++ * `PublicService`/`PublicStaff` the Reservation Wizard already consumes
++ * (`lib/api/reservationClient.ts`) — onto the homepage's presentation
++ * types (`types/content.ts`). `description`/`category` (Service) and
++ * `role`/`introduction`/`photoSrc`/`photoAlt` (StaffMember) have no
++ * equivalent column in the SERVICES/STAFF sheets
++ * (`apps/salon-portfolio/gas/src/SheetSchemas.ts`), so they are left
++ * `undefined` here rather than invented — `MenuRow`/`StaffCard` already
++ * render those fields conditionally (see their own files).
++ */
++import type { PublicService, PublicStaff } from "@/types/reservation";
++import type { Service, StaffMember } from "@/types/content";
++
++export function mapPublicServiceToService(service: PublicService): Service {
++  return {
++    serviceId: service.serviceId,
++    name: service.name,
++    durationMinutes: service.durationMinutes,
++    price: service.price,
++  };
++}
++
++export function mapPublicStaffToStaffMember(staff: PublicStaff): StaffMember {
++  return {
++    staffId: staff.staffId,
++    name: staff.name,
++  };
++}
+diff --git a/apps/salon-portfolio/web/lib/config/runtimeCatalog.test.ts b/apps/salon-portfolio/web/lib/config/runtimeCatalog.test.ts
+new file mode 100644
+index 0000000..77df4b0
+--- /dev/null
++++ b/apps/salon-portfolio/web/lib/config/runtimeCatalog.test.ts
+@@ -0,0 +1,116 @@
++jest.mock("../api/gasClient", () => ({
++  callGasAction: jest.fn(),
++}));
++
++import { callGasAction } from "@/lib/api/gasClient";
++import { loadRuntimeCatalog } from "./runtimeCatalog";
++import { SERVICES, STAFF } from "@/config/demo-content";
++
++const mockedCallGasAction = callGasAction as jest.Mock;
++const ORIGINAL_ENV = process.env;
++
++const RUNTIME_SERVICES = [
++  { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000, displayOrder: 1 },
++];
++const RUNTIME_STAFF = [{ staffId: "ST001", name: "田中 あい", displayOrder: 1 }];
++
++beforeEach(() => {
++  process.env = { ...ORIGINAL_ENV };
++  mockedCallGasAction.mockReset();
++  jest.spyOn(console, "error").mockImplementation(() => {});
++});
++
++afterEach(() => {
++  process.env = ORIGINAL_ENV;
++  jest.restoreAllMocks();
++});
++
++describe("loadRuntimeCatalog", () => {
++  it("returns demo-fallback with the demo SERVICES/STAFF when GAS_WEBAPP_URL is not set", async () => {
++    delete process.env.GAS_WEBAPP_URL;
++
++    const result = await loadRuntimeCatalog();
++
++    expect(result).toEqual({ status: "demo-fallback", services: SERVICES, staff: STAFF });
++    expect(mockedCallGasAction).not.toHaveBeenCalled();
++  });
++
++  it("returns runtime with mapped services/staff on success", async () => {
++    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
++    mockedCallGasAction.mockImplementation((action: string) =>
++      action === "getServices"
++        ? Promise.resolve({ ok: true, data: RUNTIME_SERVICES })
++        : Promise.resolve({ ok: true, data: RUNTIME_STAFF }),
++    );
++
++    const result = await loadRuntimeCatalog();
++
++    expect(result.status).toBe("runtime");
++    expect(result.services).toEqual([
++      { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000 },
++    ]);
++    expect(result.staff).toEqual([{ staffId: "ST001", name: "田中 あい" }]);
++  });
++
++  it("returns runtime with an empty staff list when staffSelection is off upstream (not an error)", async () => {
++    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
++    mockedCallGasAction.mockImplementation((action: string) =>
++      action === "getServices"
++        ? Promise.resolve({ ok: true, data: RUNTIME_SERVICES })
++        : Promise.resolve({ ok: true, data: [] }),
++    );
++
++    const result = await loadRuntimeCatalog();
++
++    expect(result.status).toBe("runtime");
++    expect(result.staff).toEqual([]);
++  });
++
++  it("falls back to demo-content for both when getServices reports ok:false", async () => {
++    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
++    mockedCallGasAction.mockImplementation((action: string) =>
++      action === "getServices"
++        ? Promise.resolve({ ok: false, error: { code: "SHEET_ERROR", message: "x" } })
++        : Promise.resolve({ ok: true, data: RUNTIME_STAFF }),
++    );
++
++    const result = await loadRuntimeCatalog();
++
++    expect(result).toEqual({ status: "runtime-error", services: SERVICES, staff: STAFF });
++  });
++
++  it("falls back to demo-content for both when getStaff reports ok:false", async () => {
++    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
++    mockedCallGasAction.mockImplementation((action: string) =>
++      action === "getServices"
++        ? Promise.resolve({ ok: true, data: RUNTIME_SERVICES })
++        : Promise.resolve({ ok: false, error: { code: "SHEET_ERROR", message: "x" } }),
++    );
++
++    const result = await loadRuntimeCatalog();
++
++    expect(result).toEqual({ status: "runtime-error", services: SERVICES, staff: STAFF });
++  });
++
++  it("falls back to demo-content when a response fails shape validation", async () => {
++    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
++    mockedCallGasAction.mockImplementation((action: string) =>
++      action === "getServices"
++        ? Promise.resolve({ ok: true, data: { nonsense: true } })
++        : Promise.resolve({ ok: true, data: RUNTIME_STAFF }),
++    );
++
++    const result = await loadRuntimeCatalog();
++
++    expect(result).toEqual({ status: "runtime-error", services: SERVICES, staff: STAFF });
++  });
++
++  it("falls back to demo-content when callGasAction throws", async () => {
++    process.env.GAS_WEBAPP_URL = "https://example.com/exec";
++    mockedCallGasAction.mockRejectedValue(new Error("network down"));
++
++    const result = await loadRuntimeCatalog();
++
++    expect(result).toEqual({ status: "runtime-error", services: SERVICES, staff: STAFF });
++  });
++});
+diff --git a/apps/salon-portfolio/web/lib/config/runtimeCatalog.ts b/apps/salon-portfolio/web/lib/config/runtimeCatalog.ts
+new file mode 100644
+index 0000000..24ab12c
+--- /dev/null
++++ b/apps/salon-portfolio/web/lib/config/runtimeCatalog.ts
+@@ -0,0 +1,77 @@
++import { cache } from "react";
++import { callGasAction } from "@/lib/api/gasClient";
++import { parsePublicServices, parsePublicStaff } from "@/lib/validation/catalogValidator";
++import { mapPublicServiceToService, mapPublicStaffToStaffMember } from "@/lib/config/resolveCatalog";
++import { SERVICES, STAFF } from "@/config/demo-content";
++import type { RuntimeConfigStatus } from "@/types/runtime-config";
++import type { Service, StaffMember } from "@/types/content";
++
++export interface RuntimeCatalogResult {
++  status: RuntimeConfigStatus;
++  services: Service[];
++  staff: StaffMember[];
++}
++
++/** Same demo-fallback rationale as `runtimeConfig.ts::DEMO_RUNTIME_CONFIG` —
++ *  reuses the exact `SERVICES`/`STAFF` every other demo-mode section still
++ *  renders from, unchanged (they already match `Service[]`/`StaffMember[]`
++ *  with description/category/role/introduction/photo intact). */
++const DEMO_CATALOG = { services: SERVICES, staff: STAFF };
++
++/**
++ * Uncached core — mirrors `lib/config/runtimeConfig.ts::loadRuntimeConfig`
++ * exactly: same `demo-fallback`/`runtime`/`runtime-error` status
++ * vocabulary, same "any failure anywhere falls back to demo, all or
++ * nothing" behavior (never mixes a real service list with demo staff or
++ * vice versa — one `status` describes both). `getRuntimeCatalog` (the
++ * `cache()`-wrapped export below) is what `app/page.tsx`/`app/layout.tsx`
++ * actually call.
++ */
++export async function loadRuntimeCatalog(): Promise<RuntimeCatalogResult> {
++  const url = process.env.GAS_WEBAPP_URL;
++  if (!url || url.trim().length === 0) {
++    return { status: "demo-fallback", ...DEMO_CATALOG };
++  }
++
++  try {
++    const [servicesResult, staffResult] = await Promise.all([
++      callGasAction<unknown>("getServices", {}),
++      callGasAction<unknown>("getStaff", {}),
++    ]);
++
++    if (!servicesResult.ok) {
++      console.error(
++        `[runtimeCatalog] getServices failed: ${servicesResult.error.code} ${servicesResult.error.message}`,
++      );
++      return { status: "runtime-error", ...DEMO_CATALOG };
++    }
++    if (!staffResult.ok) {
++      console.error(
++        `[runtimeCatalog] getStaff failed: ${staffResult.error.code} ${staffResult.error.message}`,
++      );
++      return { status: "runtime-error", ...DEMO_CATALOG };
++    }
++
++    const parsedServices = parsePublicServices(servicesResult.data);
++    if (!parsedServices) {
++      console.error("[runtimeCatalog] getServices returned a malformed shape.");
++      return { status: "runtime-error", ...DEMO_CATALOG };
++    }
++    const parsedStaff = parsePublicStaff(staffResult.data);
++    if (!parsedStaff) {
++      console.error("[runtimeCatalog] getStaff returned a malformed shape.");
++      return { status: "runtime-error", ...DEMO_CATALOG };
++    }
++
++    return {
++      status: "runtime",
++      services: parsedServices.map(mapPublicServiceToService),
++      staff: parsedStaff.map(mapPublicStaffToStaffMember),
++    };
++  } catch (error) {
++    console.error("[runtimeCatalog] unexpected error calling getServices/getStaff:", error);
++    return { status: "runtime-error", ...DEMO_CATALOG };
++  }
++}
++
++export const getRuntimeCatalog = cache(loadRuntimeCatalog);
+diff --git a/apps/salon-portfolio/web/lib/validation/catalogValidator.test.ts b/apps/salon-portfolio/web/lib/validation/catalogValidator.test.ts
+new file mode 100644
+index 0000000..0e52d32
+--- /dev/null
++++ b/apps/salon-portfolio/web/lib/validation/catalogValidator.test.ts
+@@ -0,0 +1,47 @@
++import { parsePublicServices, parsePublicStaff } from "./catalogValidator";
++
++describe("parsePublicServices", () => {
++  it("returns the array unchanged when every item has the expected shape", () => {
++    const input = [
++      { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000, displayOrder: 1 },
++      { serviceId: "SV002", name: "フットジェル", durationMinutes: 90, price: 8000, displayOrder: 2 },
++    ];
++    expect(parsePublicServices(input)).toEqual(input);
++  });
++
++  it("returns null when the value is not an array", () => {
++    expect(parsePublicServices({ not: "an array" })).toBeNull();
++  });
++
++  it("returns null when an item is missing a required field", () => {
++    expect(parsePublicServices([{ serviceId: "SV001", name: "ジェルネイル" }])).toBeNull();
++  });
++
++  it("returns null when a numeric field has the wrong type", () => {
++    const input = [{ serviceId: "SV001", name: "ジェルネイル", durationMinutes: "60", price: 6000, displayOrder: 1 }];
++    expect(parsePublicServices(input)).toBeNull();
++  });
++
++  it("returns an empty array unchanged (valid empty catalog)", () => {
++    expect(parsePublicServices([])).toEqual([]);
++  });
++});
++
++describe("parsePublicStaff", () => {
++  it("returns the array unchanged when every item has the expected shape", () => {
++    const input = [{ staffId: "ST001", name: "田中 あい", displayOrder: 1 }];
++    expect(parsePublicStaff(input)).toEqual(input);
++  });
++
++  it("returns null when the value is not an array", () => {
++    expect(parsePublicStaff("nope")).toBeNull();
++  });
++
++  it("returns null when an item is missing a required field", () => {
++    expect(parsePublicStaff([{ staffId: "ST001" }])).toBeNull();
++  });
++
++  it("returns an empty array unchanged (staffSelection disabled upstream)", () => {
++    expect(parsePublicStaff([])).toEqual([]);
++  });
++});
+diff --git a/apps/salon-portfolio/web/lib/validation/catalogValidator.ts b/apps/salon-portfolio/web/lib/validation/catalogValidator.ts
+new file mode 100644
+index 0000000..67cb9cc
+--- /dev/null
++++ b/apps/salon-portfolio/web/lib/validation/catalogValidator.ts
+@@ -0,0 +1,66 @@
++/**
++ * Structural validation for `getServices`/`getStaff` GAS responses —
++ * mirrors `lib/validation/runtimeConfigValidator.ts::parsePublicRuntimeConfig`
++ * exactly (same "return null on any shape mismatch, let the caller fall
++ * back safely" contract). Business-rule validation (Active filtering,
++ * DisplayOrder sorting) already happened in GAS
++ * (`gas/src/PublicCatalog.ts`) before the response was ever sent —
++ * duplicating that here would be dead code.
++ */
++import type { PublicService, PublicStaff } from "@/types/reservation";
++
++function isNonEmptyString(value: unknown): value is string {
++  return typeof value === "string" && value.trim().length > 0;
++}
++
++function isFiniteNumber(value: unknown): value is number {
++  return typeof value === "number" && Number.isFinite(value);
++}
++
++export function parsePublicServices(value: unknown): PublicService[] | null {
++  if (!Array.isArray(value)) return null;
++  const services: PublicService[] = [];
++  for (const item of value) {
++    if (typeof item !== "object" || item === null) return null;
++    const record = item as Record<string, unknown>;
++    if (
++      !isNonEmptyString(record.serviceId) ||
++      !isNonEmptyString(record.name) ||
++      !isFiniteNumber(record.durationMinutes) ||
++      !isFiniteNumber(record.price) ||
++      !isFiniteNumber(record.displayOrder)
++    ) {
++      return null;
++    }
++    services.push({
++      serviceId: record.serviceId,
++      name: record.name,
++      durationMinutes: record.durationMinutes,
++      price: record.price,
++      displayOrder: record.displayOrder,
++    });
++  }
++  return services;
++}
++
++export function parsePublicStaff(value: unknown): PublicStaff[] | null {
++  if (!Array.isArray(value)) return null;
++  const staff: PublicStaff[] = [];
++  for (const item of value) {
++    if (typeof item !== "object" || item === null) return null;
++    const record = item as Record<string, unknown>;
++    if (
++      !isNonEmptyString(record.staffId) ||
++      !isNonEmptyString(record.name) ||
++      !isFiniteNumber(record.displayOrder)
++    ) {
++      return null;
++    }
++    staff.push({
++      staffId: record.staffId,
++      name: record.name,
++      displayOrder: record.displayOrder,
++    });
++  }
++  return staff;
++}
+diff --git a/apps/salon-portfolio/web/types/content.ts b/apps/salon-portfolio/web/types/content.ts
+index 1584ae7..d3df290 100644
+--- a/apps/salon-portfolio/web/types/content.ts
++++ b/apps/salon-portfolio/web/types/content.ts
+@@ -67,10 +67,14 @@ export interface Service {
+ export interface StaffMember {
+   staffId: string;
+   name: string;
+-  role: string;
+-  introduction: string;
+-  photoSrc: string;
+-  photoAlt: string;
++  /** Frontend-presentation-only fields — no equivalent column in the
++   *  STAFF sheet (apps/salon-portfolio/gas/src/SheetSchemas.ts), so a
++   *  runtime-sourced staff member (lib/config/runtimeCatalog.ts) never
++   *  has these. `config/demo-content.ts`'s STAFF still sets all four. */
++  role?: string;
++  introduction?: string;
++  photoSrc?: string;
++  photoAlt?: string;
+ }
+ 
+ export interface GalleryImageItem {
+diff --git a/docs/runtime-config-guide.md b/docs/runtime-config-guide.md
+index a449ab3..de20706 100644
+--- a/docs/runtime-config-guide.md
++++ b/docs/runtime-config-guide.md
+@@ -55,10 +55,10 @@ core both paths use.
+ 
+ **Frontend owns** (stays in `config/demo-content.ts`, never sent by GAS):
+ `business.nameLatin`, `business.tagline`, `business.postalCode`,
+-`socialLinks`, all of `SERVICES`, `STAFF`, `GALLERY_IMAGES`,
+-`SALON_FEATURES`, `CUSTOMER_FLOW_STEPS`, `FAQ_ITEMS`, `ACCESS_INFO`
+-(transit directions), and every visual/typography/spacing/layout
+-decision.
++`socialLinks`, `GALLERY_IMAGES`, `SALON_FEATURES`, `CUSTOMER_FLOW_STEPS`,
++`FAQ_ITEMS`, `ACCESS_INFO` (transit directions), and every
++visual/typography/spacing/layout decision. `config/demo-content.ts`'s
++`SERVICES`/`STAFF` remain the demo-fallback catalog only (see below).
+ 
+ `holidays` is fetched and validated but has no UI consumer yet — no
+ existing section displays it (Phase 2A never specified one, and adding
+@@ -66,10 +66,18 @@ one would be a new visual section, out of Phase 3B's scope). A future
+ phase can surface it in `AccessSection` once that's an approved design
+ change.
+ 
+-`SERVICES`/`STAFF` are not part of the Phase 3A `PublicConfig` contract
+-at all (verified in `gas/src/models/Config.ts`) — per `docs/roadmap.md`,
+-`getServices`/`getStaff` are Phase 4 work. Phase 3B does not invent a
+-second API to fetch them early.
++`SERVICES`/`STAFF` moved onto `getServices`/`getStaff` in Phase 5.1
++(`lib/config/runtimeCatalog.ts`), following the exact same
++fetch/validate/fallback shape as `getConfig` above. The one difference:
++`Service`/`StaffMember`'s presentation-only fields
++(`description`/`category`/`role`/`introduction`/`photoSrc`/`photoAlt`)
++have no equivalent column in the `SERVICES`/`STAFF` sheets
++(`gas/src/SheetSchemas.ts`), so a runtime-sourced Menu/Staff entry never
++carries them — `lib/config/resolveCatalog.ts`'s mappers leave them
++`undefined`, and `MenuRow`/`StaffCard` render them conditionally. The
++demo-fallback branch is unaffected: it still reuses `SERVICES`/`STAFF`
++from `config/demo-content.ts` directly, with all presentation fields
++intact.
+ 
+ ## Fallback / error behavior
+ 
+@@ -79,6 +87,10 @@ second API to fetch them early.
+ | set | success, valid shape | `runtime` | Real business values from GAS. |
+ | set | `ok:false`, network error, or malformed shape | `runtime-error` | Same demo-derived values as a safe placeholder, **plus** a calm Japanese notice banner (`components/layout/RuntimeConfigNotice.tsx`) above the header, so a real backend failure is never silently indistinguishable from demo mode. The specific error is logged server-side via `console.error` only — never sent to the browser. |
+ 
++`lib/config/runtimeCatalog.ts` (Menu/Staff) follows this exact same table —
++same three statuses, same all-or-nothing fallback (a `getServices` failure
++falls back Menu *and* Staff together, never a mix of real and demo data).
++
+ This distinguishes "no backend configured yet" (expected during
+ development and for the current portfolio deployment, since Phase 3B
+ does not include a production GAS deployment) from "a configured backend

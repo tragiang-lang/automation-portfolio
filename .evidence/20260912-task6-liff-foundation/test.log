@@ -1,0 +1,9 @@
+
+> site-report-web@0.1.0 test
+> jest --silent
+
+
+Test Suites: 4 passed, 4 total
+Tests:       25 passed, 25 total
+Snapshots:   0 total
+Time:        1.278 s

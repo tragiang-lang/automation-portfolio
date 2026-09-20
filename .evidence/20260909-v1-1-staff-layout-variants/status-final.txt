@@ -1,0 +1,63 @@
+ M apps/salon-portfolio/web/app/page.tsx
+ M apps/salon-portfolio/web/components/sections/AnyAvailableStaffCard.tsx
+ M apps/salon-portfolio/web/components/sections/StaffCard.tsx
+ M apps/salon-portfolio/web/components/sections/StaffSection.test.tsx
+ M apps/salon-portfolio/web/components/sections/StaffSection.tsx
+ M apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+ M apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+ M docs/presentation-config-architecture.md
+?? .evidence/20260907-2322-productization-coconala-2500/
+?? .evidence/20260908-phase5-1-homepage-runtime-data/
+?? .evidence/20260908-phase5-1-scope-review/
+?? .evidence/20260908-theme-presets/
+?? .evidence/20260908-v1-1-presentation-config-layer/
+?? .evidence/20260909-v1-1-hero-layout-variants/
+?? .evidence/20260909-v1-1-menu-layout-variants/
+?? .evidence/20260909-v1-1-runtime-content-schema/
+?? .evidence/20260909-v1-1-staff-layout-variants/
+?? PLAN_PHASE5_1_V1_1_LP_DESIGN_CUSTOMIZATION.md
+?? apps/salon-portfolio/web/components/sections/StaffContent.test.tsx
+?? apps/salon-portfolio/web/components/sections/StaffContent.tsx
+?? apps/salon-portfolio/web/components/sections/StaffHorizontalProfile.tsx
+?? apps/salon-portfolio/web/components/sections/StaffPortraitGrid.tsx
+?? apps/salon-portfolio/web/lib/constants/staff-variants.ts
+?? docs/design-customization-audit.md
+?? docs/superpowers/plans/2026-09-07-coconala-productization.md
+?? docs/superpowers/plans/2026-09-08-phase5-1-homepage-runtime-data.md
+?? docs/superpowers/plans/2026-09-08-v1-1-presentation-config-layer.md
+?? product/coconala-listing-draft-ja.md
+?? product/coconala-salon-template/01_WEB_TEMPLATE/
+?? product/coconala-salon-template/02_GAS/
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/CANCELLATION_REQUESTS.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/EMAIL_LOG.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/ERROR_LOG.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/HOLIDAYS.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/INQUIRIES.csv
+?? product/coconala-salon-template/03_GOOGLE_SHEETS/templates/RESERVATIONS.csv
+?? product/coconala-salon-template/04_SETUP_GUIDE/CALENDAR_SETUP_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/GAS_SETUP_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/SHEETS_SETUP_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/START_HERE_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/VERCEL_DEPLOY_JA.md
+?? product/coconala-salon-template/04_SETUP_GUIDE/WEB_SETUP_JA.md
+?? product/coconala-salon-template/05_CUSTOMIZATION/CONTENT_CUSTOMIZATION_JA.md
+?? product/coconala-salon-template/05_CUSTOMIZATION/DESIGN_CUSTOMIZATION_JA.md
+?? product/coconala-salon-template/06_TROUBLESHOOTING/
+?? product/coconala-salon-template/07_LICENSE/
+?? product/coconala-salon-template/MANIFEST.md
+?? product/coconala-salon-template/README_JA.md
+?? product/coconala-salon-template/VERSION.txt
+?? product/releases/
+ M apps/salon-portfolio/web/app/page.tsx
+ M apps/salon-portfolio/web/components/sections/AnyAvailableStaffCard.tsx
+ M apps/salon-portfolio/web/components/sections/StaffCard.tsx
+ M apps/salon-portfolio/web/components/sections/StaffSection.test.tsx
+ M apps/salon-portfolio/web/components/sections/StaffSection.tsx
+ M apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+ M apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+ M docs/presentation-config-architecture.md
+?? apps/salon-portfolio/web/components/sections/StaffContent.test.tsx
+?? apps/salon-portfolio/web/components/sections/StaffContent.tsx
+?? apps/salon-portfolio/web/components/sections/StaffHorizontalProfile.tsx
+?? apps/salon-portfolio/web/components/sections/StaffPortraitGrid.tsx
+?? apps/salon-portfolio/web/lib/constants/staff-variants.ts

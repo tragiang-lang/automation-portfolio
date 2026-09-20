@@ -1,0 +1,28 @@
+warning: in the working copy of 'apps/site-report/gas/src/Api.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/SheetStore.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/models/Site.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/models/Worker.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/tests/models.test.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/app/globals.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/app/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/jest.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/web/package.json', LF will be replaced by CRLF the next time Git touches it
+README.md
+apps/site-report/gas/src/Api.ts
+apps/site-report/gas/src/RowMapper.ts
+apps/site-report/gas/src/SheetStore.ts
+apps/site-report/gas/src/index.ts
+apps/site-report/gas/src/models/Site.ts
+apps/site-report/gas/src/models/Worker.ts
+apps/site-report/gas/tests/RowMapper.test.ts
+apps/site-report/gas/tests/models.test.ts
+apps/site-report/web/app/globals.css
+apps/site-report/web/app/layout.tsx
+apps/site-report/web/app/page.tsx
+apps/site-report/web/jest.config.ts
+apps/site-report/web/package-lock.json
+apps/site-report/web/package.json
+docs/site-report-architecture-overview.md

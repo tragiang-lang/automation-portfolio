@@ -1,0 +1,37 @@
+feat(web): add portrait-grid/horizontal-profile Staff layout variants (V1.1 Task 7)
+
+Turns StaffSection into a variant router (mirrors MenuSection's V1.1 Task 6
+pattern): DesignConfig.staffVariant selects among portrait-grid (today's
+pre-Task-7 look, unchanged, moved to StaffPortraitGrid) and
+horizontal-profile (a single-column list of editorial profile rows: square
+photo region + name/role/bio text region, divided by hairline rules).
+Missing/invalid staffVariant falls back to DEFAULT_STAFF_VARIANT
+(portrait-grid) via the new isStaffVariant validator, mirroring
+isHeroVariant/isMenuVariant. StaffVariant/DesignConfig.staffVariant already
+existed from Task 1 — this task adds the registry, validator, and the two
+real components.
+
+Like Menu, the #staff id, "スタッフ紹介" heading, and the enabled gate (Phase
+0 §K: renders nothing at all, not just visually hidden, when
+CONFIG.features.staffSelection is off) live once in StaffSection.tsx rather
+than being duplicated per variant; only the staff-list body differs. Both
+variants share one StaffMember[] data model (StaffContentProps) and shared
+helpers (staffPhotoAlt, the StaffPhotoFallback initial-letter tile,
+STAFF_ANY_AVAILABLE copy) in the new StaffContent.tsx, so alt-text/missing-
+photo/"no preference" copy can never drift between variants — StaffCard and
+AnyAvailableStaffCard were refactored (not visually changed) to reuse them.
+No new staff model was introduced, and Active-filtering/DisplayOrder-
+ordering remain entirely server-side (PublicCatalog.ts's buildPublicStaff);
+neither variant re-filters or re-sorts staff, and no backend-only
+identifier (CalendarID, displayOrder) reaches the UI. Reservation staff
+selection/eligibility/Calendar logic is untouched — this is presentation-
+only, and no GAS files changed.
+
+Visually verified both variants at 1440px (and a ~544px narrow width, this
+sandbox's practical minimum below Tailwind's 640px sm: breakpoint, in place
+of a literal 390px window which the browser tool could not reach here)
+under kinari (light) and noir (dark) themes. Web tests 355 -> 380 (+25),
+GAS unchanged at 277.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01RnyveiwpV1JhoNpTXpWsdy

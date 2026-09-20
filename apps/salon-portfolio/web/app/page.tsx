@@ -4,6 +4,7 @@ import { ConceptSection } from "@/components/sections/ConceptSection";
 import { MenuSection } from "@/components/sections/MenuSection";
 import { StaffSection } from "@/components/sections/StaffSection";
 import { GallerySection } from "@/components/sections/GallerySection";
+import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { ReservationCtaBand } from "@/components/sections/ReservationCtaBand";
 import { SalonFeaturesSection } from "@/components/sections/SalonFeaturesSection";
 import { CustomerFlowSection } from "@/components/sections/CustomerFlowSection";
@@ -16,6 +17,7 @@ import {
   FAQ_ITEMS,
   GALLERY_IMAGES,
   SALON_FEATURES,
+  TESTIMONIALS,
 } from "@/config/demo-content";
 import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
 import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
@@ -25,15 +27,16 @@ import { DEFAULT_SECTION_ORDER } from "@/lib/constants/design-sections";
 import { isValidSectionOrder } from "@/lib/validation/designConfigValidator";
 import type { HomeSection } from "@/types/design-config";
 
-// Page order matches Phase 2A §6 exactly: Header (layout) → Hero →
-// Concept → Menu → Staff → Gallery → Reservation CTA → Salon Features →
-// Customer Flow → FAQ → Access → Contact → [closing Reservation CTA] →
-// Footer (layout). Configurable sections are gated here by the resolved
-// runtime config's `features`, not by editing the section components
-// themselves.
+// Page order matches Phase 2A §6 (plus the Testimonials image demo task,
+// inserted between Gallery and Reservation as social proof right before the
+// booking CTA): Header (layout) → Hero → Concept → Menu → Staff → Gallery →
+// Testimonials → Reservation CTA → Salon Features → Customer Flow → FAQ →
+// Access → Contact → [closing Reservation CTA] → Footer (layout).
+// Configurable sections are gated here by the resolved runtime config's
+// `features`, not by editing the section components themselves.
 //
-// GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/FAQ_ITEMS/ACCESS_INFO
-// are not part of the `getConfig` contract (no such fields in
+// GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/FAQ_ITEMS/ACCESS_INFO/
+// TESTIMONIALS are not part of the `getConfig` contract (no such fields in
 // `PublicConfig`) and stay frontend-owned on `config/demo-content.ts`.
 // SERVICES/STAFF moved onto `getServices`/`getStaff` in Phase 5.1
 // (lib/config/runtimeCatalog.ts) — see docs/runtime-config-guide.md.
@@ -56,7 +59,7 @@ import type { HomeSection } from "@/types/design-config";
 //
 // V1.1 Task 9 (Section Ordering — see
 // docs/presentation-config-architecture.md) reads `sectionOrder` and
-// renders the 11 allow-listed `HomeSection`s (`SECTIONS` below) in that
+// renders the 12 allow-listed `HomeSection`s (`SECTIONS` below) in that
 // order instead of the previous literal JSX sequence. This is
 // deliberately still not a page builder: `SECTIONS` is a fixed,
 // exhaustively-typed `Record<HomeSection, ReactNode>` built from the same
@@ -131,6 +134,9 @@ export default async function Home() {
     ),
     gallery: sectionVisibility.gallery ? (
       <GallerySection images={GALLERY_IMAGES} galleryVariant={galleryVariant} />
+    ) : null,
+    testimonials: sectionVisibility.testimonials ? (
+      <TestimonialsSection testimonials={TESTIMONIALS} />
     ) : null,
     reservation: reservationEnabled ? (
       <ReservationCtaBand

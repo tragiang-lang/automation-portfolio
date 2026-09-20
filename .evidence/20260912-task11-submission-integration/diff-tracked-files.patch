@@ -1,0 +1,215 @@
+diff --git a/docs/site-report-architecture-overview.md b/docs/site-report-architecture-overview.md
+index 3247ebe..a54f9e6 100644
+--- a/docs/site-report-architecture-overview.md
++++ b/docs/site-report-architecture-overview.md
+@@ -1,11 +1,11 @@
+ # site-report Architecture Overview
+ 
+-Status: Task 10 (client-side photo pipeline). Server-side LINE
+-authentication/authorization still does not exist. `apps/site-report/web`'s
+-report-entry screen has a real form (work type/report date/comment, Task 9)
+-and a real photo add/preview/remove pipeline (Task 10) — but nothing is
+-submitted yet: `SUBMIT_REPORT`/`submitReport()` are still not called from
+-anywhere.
++Status: Task 11 (submission integration) — the app's core MVP loop is now
++complete end to end: LIFF login → site selection → report form + photos →
++real `SUBMIT_REPORT` submission → success/error feedback. Server-side LINE
++authentication/authorization still does not exist, and nothing is
++persisted client-side (no draft/offline queue) — see this file's Task 11
++section for what remains intentionally out of scope.
+ 
+ ## Purpose
+ 
+@@ -702,3 +702,192 @@ convention to build on). No new runtime dependency was added — the file
+ input is a native `<input type="file" accept="..." multiple>`, and
+ compression uses only `FileReader`/`Image`/`<canvas>`, already-native
+ browser APIs.
++
++## Submission integration (Task 11)
++
++```text
++LIFF profile.userId
++        +
++selectedSite.siteId
++        +
++ReportDraft (workerName/workType/reportDate/comment)
++        +
++ReportDraft.photos
++        ↓
++buildSubmitReportInput()        (submitReportMapper.ts, pure)
++        ↓
++submitReportDraft()             (submission.ts — guard, mapper, workflow
++        ↓                        call, result → SubmissionState)
++lib/api/siteReportWorkflows.submitReport()   (Task 7, unchanged)
++        ↓
++GAS SUBMIT_REPORT
++        ↓
++SubmissionState { idle | submitting | success | error }
++        ↓
++ReportEntryShell (submit button + error/success UI)
++```
++
++**Contract re-confirmation (Task 11 §1-3) — re-read, not assumed from
++Task 9/10's notes.** `apps/site-report/gas/src/models/SubmitReportInput.ts`,
++`SubmitReportService.parseSubmitReportInput`, and `Api.ts`'s
++`SubmitReportResponseData`/`mapSubmitReportOutcomeToResponse` were read
++again directly for this task:
++
++- `SubmitReportInput`/`SubmitReportPhotoInput` are unchanged from Task 10's
++  findings — `types/api.ts`'s mirror still matches exactly. **No
++  discrepancy.**
++- `SubmitReportResponseData` is exactly `{ reportId: string; photoCount:
++  number; notificationSent: boolean }` (`Api.ts`) — `types/api.ts`'s copy
++  matches exactly. **No discrepancy.** No `submittedAt`/`driveUrl`/
++  `receiptUrl` exists anywhere in the contract, so none is shown.
++- `lib/api/siteReportWorkflows.ts`'s `submitReport(input)` returns
++  `Promise<SiteReportClientResult<SubmitReportResponseData>>` —
++  `{ ok: true; data } | { ok: false; error: { code, message } }`; it does
++  **not** throw for a business/API error (only `ok: false`), but
++  `callSiteReportAction`'s own `fetch`/`GAS_WEBAPP_URL`-missing/JSON-parse
++  failures still reject the promise — both paths are handled (see
++  `submission.ts` below).
++
++**Mapper** (`components/site-report/submitReportMapper.ts`,
++`buildSubmitReportInput({ site, profile, draft })`): pure, synchronous,
++no API calls/React state/validation/navigation. Maps `site.siteId` →
++`siteId`, `profile.userId` → `lineUserId`, the four `ReportDraft` text
++fields straight across, and `draft.photos.map(...)` → `photos` picking
++only `fileName`/`mimeType`/`base64Data` per photo (dropping the UI-only
++`id`/`size`/`previewUrl`) — in the same order `draft.photos` is in,
++never re-sorted. `workerId` is omitted from the result entirely (not set
++to `undefined`) — `ReportDraft` has never collected one (Task 9's own
++contract inspection: it only exists once an admin links a Worker record,
++which this app has no flow for), and no worker lookup was added. `comment`
++is passed through unchanged, including an empty string — GAS's own
++`parseSubmitReportInput` already treats `""` identically to `undefined`,
++so duplicating that normalization client-side would be redundant, not
++more correct. Never mutates `site`/`profile`/`draft`/`draft.photos`
++(tested directly: object/array identity and contents are asserted
++unchanged after a call).
++
++**Submission orchestration** (`components/site-report/submission.ts`):
++adds one layer beyond the mapper, `submitReportDraft({ site, profile,
++draft, submit? })`, so the async "call the workflow and turn the result
++into UI state" logic is unit-testable without rendering React at all —
++Task 11 §26's "mapper tests → payload correctness, screen tests →
++orchestration correctness" split, extended with a third layer for the
++result-mapping logic in between. `submit` defaults to the real
++`lib/api/siteReportWorkflows.submitReport`, injectable only for tests —
++the real call path from a render is still exactly `SiteReportScreen →
++submitReportDraft → lib/api/siteReportWorkflows.submitReport →
++siteReportClient.callSiteReportAction → fetch`, never a direct `fetch`/
++`callSiteReportAction` from a component. Behavior:
++  - Missing `site` or `profile` → `{ status: "error" }`, `submit` never
++    called (Task 11 §24). **Currently unreachable through
++    `SiteReportScreen`'s own state machine** — its `report-entry` variant's
++    types already guarantee both are present — so this is an invariant
++    guard for any future direct caller of `submitReportDraft`, not a
++    replacement for that type guarantee; it is still exercised directly
++    by `submission.test.ts` since `submitReportDraft` accepts
++    `Site | null | undefined`/`SiteReportLiffUser | null | undefined`.
++  - `submit` resolves `{ ok: true, data }` → `{ status: "success", result:
++    data }`.
++  - `submit` resolves `{ ok: false, error }` → `{ status: "error",
++    message: error.message }` — the same server-provided message
++    `sites-error` already shows verbatim elsewhere in this app (Task 8),
++    not re-worded.
++  - `submit` rejects (network failure, `GAS_WEBAPP_URL` missing, etc.) →
++    a fixed, generic Japanese message — the raw error/stack is never
++    shown to the user.
++
++**`SubmissionState`** (`submission.ts`): `{ status: "idle" } | { status:
++"submitting" } | { status: "success"; result: SubmitReportResponseData }
++| { status: "error"; message: string }` — one discriminated union, not
++`isSubmitting`/`isSuccess`/`hasError` booleans that could contradict each
++other.
++
++**`SiteReportScreen`** owns `submission: SubmissionState` and
++`submitAttempted: boolean` inside its `report-entry` state variant
++(reset to idle/`false` whenever a new site is selected — a fresh draft
++gets a fresh submission state). `handleSubmit`:
++  1. Guards against a second concurrent submit: if `submission.status` is
++     already `"submitting"`, returns immediately.
++  2. Sets `submitAttempted: true` (so `ReportForm` starts showing every
++     invalid field's error, not just already-blurred ones) — this always
++     happens, valid or not.
++  3. Runs the existing `validateReportDraft(draft)` (Task 9) — no second
++     validation system. Invalid → returns; `submitReportDraft`/
++     `submitReport` is never called.
++  4. Sets `submission: { status: "submitting" }` **synchronously, before
++     `await`ing** `submitReportDraft(...)` — the UI enters the submitting
++     state immediately on click, not only once the network call starts
++     resolving.
++  5. Awaits `submitReportDraft({ site: selectedSite, profile, draft })`
++     and writes the resulting `SubmissionState` back once it settles.
++  **Double-submit guard is a plain state check** (`submission.status ===
++  "submitting"`), not a `ref` — `handleSubmit` is `useCallback`'d against
++  `[state]`, so it is recreated with the latest `state` on every render;
++  this relies on React 18 flushing the synchronous "submitting" state
++  update (step 4, set before the `await`) for one discrete click event
++  before the next discrete click event's handler runs, which is what
++  React's automatic-batching/sync-lane handling of discrete user input
++  (click) does. Verified directly, not just assumed: `SiteReportScreen.
++  test.tsx`'s "calls submitReport only once for two rapid submit clicks"
++  test fires two `fireEvent.click`s with no `await` in between and asserts
++  `submitReport` was called exactly once. (An earlier `useRef`-based guard
++  was tried first and reverted — it triggered `eslint-plugin-react-hooks`'s
++  `react-hooks/refs` rule, which flags a ref read appearing anywhere in a
++  render-scoped closure that is later passed as a prop, even inside an
++  otherwise-correct event handler; the state-based guard has identical
++  behavior, verified by the same test, without that lint conflict.)
++
++**`ReportForm`'s `showAllErrors` prop** (Task 11 §13): defaults `false`
++(Task 9's original per-field-blur behavior, unchanged). When `true`
++(`SiteReportScreen` passes `submitAttempted`), every field's
++`validateReportDraft` error shows regardless of whether that specific
++field has been blurred — reuses the exact same validation result, no
++second validation system, no new error message.
++
++**Submit button** (`ReportEntryShell.tsx`): enabled while idle/error/
++success, `disabled` only while `submission.status === "submitting"`
++(label switches to "送信中..."). This is a deliberate reading of two
++task requirements in tension: §12 describes the button as "enabled when
++the report is valid," but §13 requires a click on an *invalid* draft to
++run validation and reveal field errors — which is only possible if the
++button can be clicked at all. Disabling it whenever the draft is invalid
++would make §13's flow (and the "does not call submitReport and shows
++validation errors for an invalid draft" test) unreachable, and is also
++weaker accessibility practice (a disabled control gives no indication of
++*why* it's disabled). The button therefore stays clickable except while
++a submission is actually in flight.
++
++**Success/error UI**: an error renders the server-provided (or generic
++fallback) message in a `role="alert"` box; a success renders a fixed
++Japanese message plus `受付番号: {reportId}` — the one field from
++`SubmitReportResponseData` that is actually meaningful to show a user;
++`photoCount`/`notificationSent` are not surfaced in the UI (nothing in
++the task or contract calls for showing them). The draft is never cleared
++and the screen never auto-navigates after success or auto-retries after
++failure — the same submit button remains available for another attempt
++either way, and editing any field or the photo list at any point (before
++or after a submit attempt, success, or failure) never resets `submission`
++or `submitAttempted` on its own; only a fresh `handleSubmit` call
++overwrites `submission`.
++
++**Explicitly out of scope for Task 11** (unchanged from the task brief):
++draft/localStorage/IndexedDB persistence, an offline/background/auto-retry
++submission queue, server-side idempotency or double-submit prevention (the
++double-submit guard above is a client-side UI convenience only — it does
++nothing to stop two different browser tabs, or a client retry after a
++timed-out-but-actually-successful request, from both reaching GAS; Task 5
++already documented server-side idempotency as a known, deferred
++limitation, and this task does not change that), any GAS action/schema
++change, camera/native media APIs, and post-success navigation (left as an
++explicit future UX decision — see below). No new dependency was added.
++
++**Regression**: Tasks 6-10's own test suites are unchanged in behavior —
++`ReportEntryShell.test.tsx`'s render calls gained three new required props
++(`submission`/`submitAttempted`/`onSubmit`) since the submit control is no
++longer a permanently-`disabled` placeholder, and its "renders a genuinely
++disabled submit control" test was replaced with "renders an enabled submit
++control while idle" (Task 11 makes the button real, so a test asserting it
++stays disabled forever is no longer describing this app's actual
++behavior) — every other Task 8/9/10 assertion (LIFF states, `GET_SITES`
++orchestration, site selection, report field editing/validation, the photo
++pipeline) is unchanged.

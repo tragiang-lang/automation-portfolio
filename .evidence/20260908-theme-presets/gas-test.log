@@ -1,0 +1,219 @@
+
+> salon-portfolio-gas@0.1.0 test
+> jest
+
+PASS tests/SheetSchemas.test.ts
+PASS tests/ConfigValidator.test.ts
+PASS tests/ConfigParser.test.ts
+PASS tests/DemoSeed.test.ts
+PASS tests/Utils.test.ts
+PASS tests/ReservationRules.test.ts
+PASS tests/ConfigStore.test.ts
+PASS tests/Validation.test.ts
+PASS tests/PublicConfig.test.ts
+PASS tests/ReservationMapper.test.ts
+PASS tests/ReservationRepository.test.ts
+PASS tests/RowMapper.test.ts
+PASS tests/Health.test.ts
+PASS tests/Idempotency.test.ts
+PASS tests/PublicCatalog.test.ts
+PASS tests/availability/ReservationAvailabilityFactory.test.ts
+PASS tests/Logging.test.ts
+PASS tests/availability/SharedAvailabilityStrategy.test.ts
+PASS tests/CatalogParser.test.ts
+PASS tests/availability/CalendarOverlapAvailability.test.ts
+PASS tests/ReservationErrorMapping.test.ts
+PASS tests/ReservationEmailTemplates.test.ts
+PASS tests/SlotEngine.test.ts
+PASS tests/ids/CancellationToken.test.ts
+PASS tests/availability/AvailabilityStrategy.test.ts
+PASS tests/availability/StaffAvailabilityStrategy.test.ts
+PASS tests/Calendar.test.ts
+PASS tests/ReservationId.test.ts
+PASS tests/Api.test.ts
+  ● Console
+
+    console.error
+      [getConfig] CONFIG_INVALID: [{"field":"calendar.id","reason":"missing or empty string"}]
+
+    [0m [90m  98 |[39m   error[33m:[39m [33mConfigError[39m[33m,[39m
+     [90m  99 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 100 |[39m   console[33m.[39merror([32m"[getConfig] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 101 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 102 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 103 |[39m     [32m"設定情報の読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:100:11)
+      at Object.<anonymous> (tests/Api.test.ts:104:46)
+
+    console.error
+      [getConfig] SHEET_ERROR: missing headers: Key, Value
+
+    [0m [90m 115 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 116 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 117 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 118 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 119 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 120 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:117:11)
+      at Object.<anonymous> (tests/Api.test.ts:118:54)
+
+    console.error
+      [getConfig] SHEET_ERROR: missing headers: Key, Value
+
+    [0m [90m 115 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 116 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 117 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 118 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 119 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 120 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:117:11)
+      at getConfigAction (src/Api.ts:139:14)
+      at Object.<anonymous> (tests/Api.test.ts:142:37)
+
+    console.error
+      [createReservation] unexpected top-level error: TypeError: Cannot read properties of undefined (reading 'features')
+          at createReservationActionInner (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\src\Api.ts:575:15)
+          at createReservationAction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\src\Api.ts:676:12)
+          at handleApiRequest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\src\Api.ts:215:14)
+          at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\tests\Api.test.ts:189:38)
+          at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 682 |[39m       [36mreturn[39m mapMissingHeadersErrorToResponse(error)[33m;[39m
+     [90m 683 |[39m     }
+    [31m[1m>[22m[39m[90m 684 |[39m     console[33m.[39merror([32m"[createReservation] unexpected top-level error:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 685 |[39m     logError({ action[33m:[39m [32m"createReservation"[39m[33m,[39m message[33m:[39m [32m"Unexpected top-level error"[39m[33m,[39m severity[33m:[39m [32m"critical"[39m })[33m;[39m
+     [90m 686 |[39m     [36mreturn[39m buildErrorResponse([33mERROR_CODES[39m[33m.[39m[33mINTERNAL_ERROR[39m[33m,[39m [32m"サーバーエラーが発生しました。"[39m)[33m;[39m
+     [90m 687 |[39m   }[0m
+
+      at createReservationAction (src/Api.ts:684:13)
+      at handleApiRequest (src/Api.ts:215:14)
+      at Object.<anonymous> (tests/Api.test.ts:189:38)
+
+    console.error
+      [getConfig] SHEET_ERROR: missing headers: ServiceID
+
+    [0m [90m 115 |[39m   error[33m:[39m [33mMissingHeadersError[39m[33m,[39m
+     [90m 116 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 117 |[39m   console[33m.[39merror([32m"[getConfig] SHEET_ERROR: missing headers:"[39m[33m,[39m error[33m.[39mmissing[33m.[39mjoin([32m", "[39m))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 118 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 119 |[39m     [33mERROR_CODES[39m[33m.[39m[33mSHEET_ERROR[39m[33m,[39m
+     [90m 120 |[39m     [32m"スプレッドシートの読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapMissingHeadersErrorToResponse (src/Api.ts:117:11)
+      at getServicesAction (src/Api.ts:165:54)
+      at Object.<anonymous> (tests/Api.test.ts:245:39)
+
+    console.error
+      [createReservation] email send failed: RES-20260908-1D1B3G customer Gmail quota exceeded
+
+    [0m [90m 484 |[39m   } [36mcatch[39m (error) {
+     [90m 485 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [33mString[39m(error)[33m;[39m
+    [31m[1m>[22m[39m[90m 486 |[39m     console[33m.[39merror([32m"[createReservation] email send failed:"[39m[33m,[39m reservationId[33m,[39m recipientType[33m,[39m message)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 487 |[39m     logEmail({ relatedType[33m:[39m [32m"Reservation"[39m[33m,[39m relatedId[33m:[39m reservationId[33m,[39m recipientType[33m,[39m recipientEmail[33m,[39m subject[33m:[39m content[33m.[39msubject[33m,[39m status[33m:[39m [32m"failed"[39m[33m,[39m errorMessage[33m:[39m message })[33m;[39m
+     [90m 488 |[39m     logError({ action[33m:[39m [32m"createReservation"[39m[33m,[39m message[33m:[39m [32m"Email send failed"[39m[33m,[39m context[33m:[39m { reservationId[33m,[39m recipientType }[33m,[39m severity[33m:[39m [32m"warning"[39m })[33m;[39m
+     [90m 489 |[39m     [36mreturn[39m [36mfalse[39m[33m;[39m[0m
+
+      at trySendAndLog (src/Api.ts:486:13)
+      at sendReservationEmailsForOutcome (src/Api.ts:517:24)
+      at createReservationActionInner (src/Api.ts:655:5)
+      at createReservationAction (src/Api.ts:676:12)
+      at Object.<anonymous> (tests/Api.test.ts:572:45)
+
+    console.error
+      [createReservation] email send failed: RES-20260908-1D1B3G owner Gmail quota exceeded
+
+    [0m [90m 484 |[39m   } [36mcatch[39m (error) {
+     [90m 485 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [33mString[39m(error)[33m;[39m
+    [31m[1m>[22m[39m[90m 486 |[39m     console[33m.[39merror([32m"[createReservation] email send failed:"[39m[33m,[39m reservationId[33m,[39m recipientType[33m,[39m message)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 487 |[39m     logEmail({ relatedType[33m:[39m [32m"Reservation"[39m[33m,[39m relatedId[33m:[39m reservationId[33m,[39m recipientType[33m,[39m recipientEmail[33m,[39m subject[33m:[39m content[33m.[39msubject[33m,[39m status[33m:[39m [32m"failed"[39m[33m,[39m errorMessage[33m:[39m message })[33m;[39m
+     [90m 488 |[39m     logError({ action[33m:[39m [32m"createReservation"[39m[33m,[39m message[33m:[39m [32m"Email send failed"[39m[33m,[39m context[33m:[39m { reservationId[33m,[39m recipientType }[33m,[39m severity[33m:[39m [32m"warning"[39m })[33m;[39m
+     [90m 489 |[39m     [36mreturn[39m [36mfalse[39m[33m;[39m[0m
+
+      at trySendAndLog (src/Api.ts:486:13)
+      at sendReservationEmailsForOutcome (src/Api.ts:518:21)
+      at createReservationActionInner (src/Api.ts:655:5)
+      at createReservationAction (src/Api.ts:676:12)
+      at Object.<anonymous> (tests/Api.test.ts:572:45)
+
+    console.error
+      [createReservation] sendReservationEmailsForOutcome threw: RES-20260908-7GPC80 Error: Script Property "SITE_BASE_URL" is not set.
+          at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\tests\Api.test.ts:587:13
+          at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-mock\build\index.js:397:39
+          at D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-mock\build\index.js:404:13
+          at mockConstructor (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-mock\build\index.js:148:19)
+          at buildCancellationUrl (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\src\Api.ts:463:30)
+          at sendReservationEmailsForOutcome (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\src\Api.ts:511:22)
+          at createReservationActionInner (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\src\Api.ts:655:5)
+          at createReservationAction (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\src\Api.ts:676:12)
+          at Object.<anonymous> (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\tests\Api.test.ts:589:45)
+          at Promise.then.completed (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\ClaudeCodeProjects\GAS-Project\Coconala-Web-Services\apps\salon-portfolio\gas\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 655 |[39m     sendReservationEmailsForOutcome(result[33m,[39m reservation[33m,[39m config[33m,[39m cancellationToken)[33m;[39m
+     [90m 656 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 657 |[39m     console[33m.[39merror([32m"[createReservation] sendReservationEmailsForOutcome threw:"[39m[33m,[39m reservation[33m.[39mreservationId[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 658 |[39m     logError({
+     [90m 659 |[39m       action[33m:[39m [32m"createReservation"[39m[33m,[39m
+     [90m 660 |[39m       message[33m:[39m [32m"Unexpected error while sending post-reservation emails"[39m[33m,[39m[0m
+
+      at createReservationActionInner (src/Api.ts:657:13)
+      at createReservationAction (src/Api.ts:676:12)
+      at Object.<anonymous> (tests/Api.test.ts:589:45)
+
+    console.error
+      [getConfig] CONFIG_INVALID: [{"field":"calendar.id","reason":"missing"}]
+
+    [0m [90m  98 |[39m   error[33m:[39m [33mConfigError[39m[33m,[39m
+     [90m  99 |[39m )[33m:[39m [33mApiResponse[39m[33m<[39m[33mnever[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 100 |[39m   console[33m.[39merror([32m"[getConfig] CONFIG_INVALID:"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(error[33m.[39missues))[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 101 |[39m   [36mreturn[39m buildErrorResponse(
+     [90m 102 |[39m     [33mERROR_CODES[39m[33m.[39m[33mCONFIG_INVALID[39m[33m,[39m
+     [90m 103 |[39m     [32m"設定情報の読み込みに失敗しました。管理者にお問い合わせください。"[39m[33m,[39m[0m
+
+      at mapConfigErrorToResponse (src/Api.ts:100:11)
+      at createReservationAction (src/Api.ts:679:14)
+      at Object.<anonymous> (tests/Api.test.ts:646:45)
+
+
+Test Suites: 29 passed, 29 total
+Tests:       256 passed, 256 total
+Snapshots:   0 total
+Time:        4.974 s, estimated 5 s
+Ran all test suites.

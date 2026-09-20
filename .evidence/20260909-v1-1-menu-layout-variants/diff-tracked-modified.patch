@@ -1,0 +1,567 @@
+warning: in the working copy of 'apps/salon-portfolio/web/components/sections/MenuRow.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/components/sections/MenuSection.test.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/components/sections/MenuSection.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/salon-portfolio/web/lib/validation/designConfigValidator.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/presentation-config-architecture.md', LF will be replaced by CRLF the next time Git touches it
+diff --git a/apps/salon-portfolio/web/app/page.tsx b/apps/salon-portfolio/web/app/page.tsx
+index e35d159..771e172 100644
+--- a/apps/salon-portfolio/web/app/page.tsx
++++ b/apps/salon-portfolio/web/app/page.tsx
+@@ -49,13 +49,20 @@ import { getDesignConfig } from "@/lib/config/designConfig";
+ // `HeroSection`, which owns the fullscreen/split/editorial component
+ // selection itself — this file only supplies the (variant-independent)
+ // runtime content, same as it already did for every other section.
++//
++// V1.1 Task 6 (Menu Layout Variants) adds `menuVariant` the same way —
++// passed straight through to `MenuSection`, which owns the editorial-
++// list/card-grid/minimal-price-list component selection itself. This
++// file still only supplies `services` (the existing runtime
++// `getRuntimeCatalog` → `getServices` → `Service[]` flow), never a
++// variant-specific content shape.
+ export default async function Home() {
+   const [{ config }, { services, staff }] = await Promise.all([
+     getRuntimeConfig(),
+     getRuntimeCatalog(),
+   ]);
+   const siteConfig = resolveSiteConfig(config);
+-  const { sectionVisibility, heroVariant } = getDesignConfig();
++  const { sectionVisibility, heroVariant, menuVariant } = getDesignConfig();
+ 
+   return (
+     <main className="flex flex-1 flex-col">
+@@ -78,7 +85,7 @@ export default async function Home() {
+         />
+       ) : null}
+ 
+-      <MenuSection services={services} />
++      <MenuSection services={services} menuVariant={menuVariant} />
+ 
+       <StaffSection
+         enabled={siteConfig.features.staffSelection && sectionVisibility.staff}
+diff --git a/apps/salon-portfolio/web/components/sections/MenuRow.tsx b/apps/salon-portfolio/web/components/sections/MenuRow.tsx
+index 7e89525..28d9880 100644
+--- a/apps/salon-portfolio/web/components/sections/MenuRow.tsx
++++ b/apps/salon-portfolio/web/components/sections/MenuRow.tsx
+@@ -1,13 +1,13 @@
++import { formatMenuDuration, formatMenuPrice } from "@/components/sections/MenuContent";
+ import type { Service } from "@/types/content";
+ 
+-function formatPrice(price: number): string {
+-  return `¥${price.toLocaleString("ja-JP")}`;
+-}
+-
+ /**
+  * One menu line (Phase 2A §9) — not an independently clickable "card",
+  * just a row in a printed-menu-style list. Price wraps under the name on
+- * mobile, sits right-aligned on desktop.
++ * mobile, sits right-aligned on desktop. `editorial-list`'s own row
++ * component (V1.1 Task 6); `MenuCardGrid`/`MenuMinimalPriceList` render
++ * their own markup, but all three share `formatMenuPrice`/
++ * `formatMenuDuration` from `MenuContent.tsx`.
+  */
+ export function MenuRow({ service }: { service: Service }) {
+   return (
+@@ -21,8 +21,8 @@ export function MenuRow({ service }: { service: Service }) {
+         ) : null}
+       </div>
+       <div className="flex items-baseline justify-between gap-4 text-[16px] text-secondary sm:flex-col sm:items-end sm:text-right">
+-        <span>{service.durationMinutes}分</span>
+-        <span className="text-[20px] font-medium text-primary">{formatPrice(service.price)}</span>
++        <span>{formatMenuDuration(service.durationMinutes)}</span>
++        <span className="text-[20px] font-medium text-primary">{formatMenuPrice(service.price)}</span>
+       </div>
+     </li>
+   );
+diff --git a/apps/salon-portfolio/web/components/sections/MenuSection.test.tsx b/apps/salon-portfolio/web/components/sections/MenuSection.test.tsx
+index 1816d2a..684de30 100644
+--- a/apps/salon-portfolio/web/components/sections/MenuSection.test.tsx
++++ b/apps/salon-portfolio/web/components/sections/MenuSection.test.tsx
+@@ -1,5 +1,5 @@
+-import { render, screen } from "@testing-library/react";
+-import { groupServices, MenuSection } from "@/components/sections/MenuSection";
++import { render, screen, within } from "@testing-library/react";
++import { MenuSection } from "./MenuSection";
+ import type { Service } from "@/types/content";
+ 
+ function makeService(overrides: Partial<Service>): Service {
+@@ -12,58 +12,133 @@ function makeService(overrides: Partial<Service>): Service {
+   };
+ }
+ 
+-describe("groupServices", () => {
+-  it("does not group when there are 6 or fewer services (Phase 2A §9)", () => {
+-    const services = Array.from({ length: 6 }, (_, i) =>
+-      makeService({ serviceId: `SV00${i}`, category: i < 3 ? "A" : "B" }),
+-    );
++const RUNTIME_SERVICES: Service[] = [
++  makeService({
++    serviceId: "SV001",
++    name: "カット",
++    price: 5500,
++    durationMinutes: 60,
++    description: "丁寧なカウンセリングから仕上げまで。",
++    category: "ヘアケア",
++  }),
++  makeService({
++    serviceId: "SV002",
++    name: "カラー",
++    price: 7700,
++    durationMinutes: 90,
++    // No description — must not be invented (Task 6 §2/§15).
++  }),
++  makeService({
++    serviceId: "SV003",
++    name: "ヘッドスパ",
++    price: 3300,
++    durationMinutes: 30,
++    // No category — must not be invented.
++  }),
++];
++
++const MENU_VARIANTS = ["editorial-list", "card-grid", "minimal-price-list"] as const;
+ 
+-    const groups = groupServices(services);
++describe("MenuSection", () => {
++  it("defaults to the editorial-list variant when menuVariant is not passed", () => {
++    render(<MenuSection services={RUNTIME_SERVICES} />);
+ 
+-    expect(groups).toHaveLength(1);
+-    expect(groups[0].category).toBeUndefined();
+-    expect(groups[0].services).toHaveLength(6);
++    expect(screen.getByTestId("menu-editorial-list")).toBeInTheDocument();
++    expect(screen.queryByTestId("menu-card-grid")).not.toBeInTheDocument();
++    expect(screen.queryByTestId("menu-minimal-price-list")).not.toBeInTheDocument();
+   });
+ 
+-  it("groups by category once there are more than 6 services with more than one category", () => {
+-    const services = [
+-      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `A${i}`, category: "ジェルネイル" })),
+-      ...Array.from({ length: 4 }, (_, i) => makeService({ serviceId: `B${i}`, category: "まつげエクステ" })),
+-    ];
++  it("falls back to editorial-list for an invalid menuVariant value instead of crashing", () => {
++    render(<MenuSection services={RUNTIME_SERVICES} menuVariant={"not-a-real-variant" as never} />);
+ 
+-    const groups = groupServices(services);
++    expect(screen.getByTestId("menu-editorial-list")).toBeInTheDocument();
++  });
++
++  it("always renders the #menu anchor section regardless of variant (Hero's secondary CTA and site nav both link to #menu)", () => {
++    const { container } = render(<MenuSection services={RUNTIME_SERVICES} menuVariant="card-grid" />);
+ 
+-    expect(groups.map((g) => g.category)).toEqual(["ジェルネイル", "まつげエクステ"]);
+-    expect(groups[0].services).toHaveLength(4);
+-    expect(groups[1].services).toHaveLength(4);
++    expect(container.querySelector("#menu")).toBeInTheDocument();
+   });
+ 
+-  it("does not group when every service shares the same single category, even above the threshold", () => {
+-    const services = Array.from({ length: 8 }, (_, i) =>
+-      makeService({ serviceId: `SV${i}`, category: "ジェルネイル" }),
+-    );
++  it.each(MENU_VARIANTS)("renders the %s variant with runtime service name, price, and duration", (variant) => {
++    render(<MenuSection services={RUNTIME_SERVICES} menuVariant={variant} />);
+ 
+-    const groups = groupServices(services);
++    expect(screen.getByTestId(`menu-${variant}`)).toBeInTheDocument();
++    expect(screen.getByText("カット")).toBeInTheDocument();
++    expect(screen.getByText("¥5,500")).toBeInTheDocument();
++    expect(screen.getByText("カラー")).toBeInTheDocument();
++    expect(screen.getByText("¥7,700")).toBeInTheDocument();
++    // Exactly one section heading (h2) — one Menu heading regardless of variant.
++    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
++    expect(screen.getByRole("heading", { level: 2, name: "メニュー" })).toBeInTheDocument();
++    // Reservation CTA remains a real link, not a styled div, in every variant.
++    const reservationLink = screen.getByRole("link", { name: "ご予約はこちら" });
++    expect(reservationLink).toHaveAttribute("href", "/reservation");
++  });
+ 
+-    expect(groups).toHaveLength(1);
+-    expect(groups[0].category).toBeUndefined();
++  it.each(["editorial-list", "card-grid"] as const)(
++    "shows the description in %s when present, and omits it (no invented copy) when absent",
++    (variant) => {
++      render(<MenuSection services={RUNTIME_SERVICES} menuVariant={variant} />);
++
++      // SV001 has a real description.
++      expect(screen.getByText("丁寧なカウンセリングから仕上げまで。")).toBeInTheDocument();
++      // SV002/SV003 have no description — nothing invented in their place.
++      expect(screen.queryByText(/This is our/)).not.toBeInTheDocument();
++    },
++  );
++
++  it("never renders a description in minimal-price-list, by design (Task 6 §8: description must not dominate this variant)", () => {
++    render(<MenuSection services={RUNTIME_SERVICES} menuVariant="minimal-price-list" />);
++
++    expect(screen.queryByText("丁寧なカウンセリングから仕上げまで。")).not.toBeInTheDocument();
+   });
+-});
+ 
+-describe("MenuSection", () => {
+-  it("renders every service name and price", () => {
+-    render(
+-      <MenuSection
+-        services={[
+-          makeService({ serviceId: "SV001", name: "ジェルネイル", price: 6000 }),
+-          makeService({ serviceId: "SV002", name: "フットジェル", price: 8000 }),
+-        ]}
+-      />,
+-    );
++  it("groups editorial-list services by category once grouping threshold is exceeded (Phase 2A §9, reused unchanged)", () => {
++    const grouped: Service[] = [
++      ...Array.from({ length: 4 }, (_, i) =>
++        makeService({ serviceId: `A${i}`, name: `ジェルA${i}`, category: "ジェルネイル" }),
++      ),
++      ...Array.from({ length: 4 }, (_, i) =>
++        makeService({ serviceId: `B${i}`, name: `まつげB${i}`, category: "まつげエクステ" }),
++      ),
++    ];
++
++    render(<MenuSection services={grouped} menuVariant="editorial-list" />);
+ 
+     expect(screen.getByText("ジェルネイル")).toBeInTheDocument();
+-    expect(screen.getByText("フットジェル")).toBeInTheDocument();
+-    expect(screen.getByText("¥6,000")).toBeInTheDocument();
+-    expect(screen.getByText("¥8,000")).toBeInTheDocument();
++    expect(screen.getByText("まつげエクステ")).toBeInTheDocument();
++  });
++
++  it("shows each service's category as a per-card label in card-grid, independent of the grouping threshold", () => {
++    render(<MenuSection services={RUNTIME_SERVICES} menuVariant="card-grid" />);
++
++    const card = screen.getByTestId("menu-card-grid");
++    expect(within(card).getByText("カット")).toBeInTheDocument();
++  });
++
++  it("renders a usable single-column list in card-grid on narrow viewports without a dedicated media query test (class-driven responsive grid)", () => {
++    render(<MenuSection services={RUNTIME_SERVICES} menuVariant="card-grid" />);
++
++    const grid = screen.getByTestId("menu-card-grid");
++    expect(grid.className).toMatch(/grid-cols-1/);
++  });
++
++  it("renders minimal-price-list as a compact, distinct composition from editorial-list (no category grouping)", () => {
++    const grouped: Service[] = [
++      ...Array.from({ length: 4 }, (_, i) =>
++        makeService({ serviceId: `A${i}`, name: `ジェルA${i}`, category: "ジェルネイル" }),
++      ),
++      ...Array.from({ length: 4 }, (_, i) =>
++        makeService({ serviceId: `B${i}`, name: `まつげB${i}`, category: "まつげエクステ" }),
++      ),
++    ];
++
++    render(<MenuSection services={grouped} menuVariant="minimal-price-list" />);
++
++    // Every service name/price still renders...
++    expect(screen.getByText("ジェルA0")).toBeInTheDocument();
++    // ...but minimal-price-list never renders a category-group heading, unlike editorial-list.
++    expect(screen.queryByText("ジェルネイル")).not.toBeInTheDocument();
+   });
+ });
+diff --git a/apps/salon-portfolio/web/components/sections/MenuSection.tsx b/apps/salon-portfolio/web/components/sections/MenuSection.tsx
+index 8f4f76d..c674770 100644
+--- a/apps/salon-portfolio/web/components/sections/MenuSection.tsx
++++ b/apps/salon-portfolio/web/components/sections/MenuSection.tsx
+@@ -1,45 +1,57 @@
++import type { ComponentType } from "react";
+ import { Container } from "@/components/ui/Container";
+ import { SectionHeading } from "@/components/ui/SectionHeading";
+ import { Button } from "@/components/ui/Button";
+ import { Reveal } from "@/components/ui/Reveal";
+-import { MenuCategory } from "@/components/sections/MenuCategory";
+-import type { Service } from "@/types/content";
+-
+-const GROUPING_THRESHOLD = 6;
++import { isMenuVariant } from "@/lib/validation/designConfigValidator";
++import { DEFAULT_MENU_VARIANT } from "@/lib/constants/menu-variants";
++import type { MenuVariant } from "@/types/design-config";
++import { MENU_CTA } from "@/components/sections/MenuContent";
++import type { MenuContentProps } from "@/components/sections/MenuContent";
++import { MenuEditorialList } from "@/components/sections/MenuEditorialList";
++import { MenuCardGrid } from "@/components/sections/MenuCardGrid";
++import { MenuMinimalPriceList } from "@/components/sections/MenuMinimalPriceList";
+ 
+ /**
+- * Groups services by category, but only when there are enough services to
+- * warrant it (Phase 2A §9: "grouping UI is simply not rendered when
+- * there's only one implicit category"). Grouping is data-driven off
+- * `service.category`, never a hard-coded category list.
++ * Menu (V1.1 Task 6 — Menu Layout Variants). Thin router, mirroring
++ * `HeroSection.tsx`'s pattern: normalizes whatever `menuVariant` it
++ * receives and delegates the service list to the matching layout
++ * component. `DesignConfig.menuVariant` (`types/design-config.ts`)
++ * selects the component, nothing else decides.
++ *
++ * Unlike Hero (where each variant owns its whole `<section>`), the
++ * section chrome here — the `#menu` anchor id (linked to by
++ * `HeroContent.tsx`'s `HERO_CTA_SECONDARY` and the site nav,
++ * `config/demo-content.ts`), the "メニュー" heading, and the reservation
++ * CTA — is identical across all three variants, so it lives once in this
++ * router instead of being duplicated three times. Only the service list
++ * body genuinely differs per variant, which is what the task's "genuinely
++ * different compositions" requirement is actually about.
++ *
++ * `MENU_VARIANT_COMPONENTS` being a `Record<MenuVariant, ...>` makes the
++ * mapping exhaustive at the type level: adding a 4th `MenuVariant` without
++ * a matching entry here is a compile error, not a silent runtime gap.
+  */
+-export function groupServices(
+-  services: Service[],
+-): Array<{ category?: string; services: Service[] }> {
+-  if (services.length <= GROUPING_THRESHOLD) {
+-    return [{ services }];
+-  }
+-
+-  const order: string[] = [];
+-  const byCategory = new Map<string, Service[]>();
+-  for (const service of services) {
+-    const key = service.category ?? "その他";
+-    if (!byCategory.has(key)) {
+-      order.push(key);
+-      byCategory.set(key, []);
+-    }
+-    byCategory.get(key)!.push(service);
+-  }
+-
+-  if (order.length <= 1) {
+-    return [{ services }];
+-  }
+-
+-  return order.map((category) => ({ category, services: byCategory.get(category)! }));
+-}
++const MENU_VARIANT_COMPONENTS: Record<MenuVariant, ComponentType<MenuContentProps>> = {
++  "editorial-list": MenuEditorialList,
++  "card-grid": MenuCardGrid,
++  "minimal-price-list": MenuMinimalPriceList,
++};
+ 
+-export function MenuSection({ services }: { services: Service[] }) {
+-  const groups = groupServices(services);
++export function MenuSection({
++  services,
++  menuVariant,
++}: MenuContentProps & {
++  /**
++   * Optional and validated here (not trusted from the caller) so a
++   * missing or invalid value can never crash or blank the Menu — falls
++   * back to `DEFAULT_MENU_VARIANT` ("editorial-list"), preserving every
++   * existing deployment's current appearance (§13 backward compatibility).
++   */
++  menuVariant?: MenuVariant;
++}) {
++  const resolvedVariant = isMenuVariant(menuVariant) ? menuVariant : DEFAULT_MENU_VARIANT;
++  const MenuVariantComponent = MENU_VARIANT_COMPONENTS[resolvedVariant];
+ 
+   return (
+     <section id="menu" className="bg-surface py-16 lg:py-24">
+@@ -52,18 +64,10 @@ export function MenuSection({ services }: { services: Service[] }) {
+           />
+         </Reveal>
+         <Reveal delayMs={120} className="mt-12">
+-          <div>
+-            {groups.map((group, index) => (
+-              <MenuCategory
+-                key={group.category ?? index}
+-                category={group.category}
+-                services={group.services}
+-              />
+-            ))}
+-          </div>
++          <MenuVariantComponent services={services} />
+         </Reveal>
+         <div className="mt-12 flex justify-center">
+-          <Button href="/reservation">ご予約はこちら</Button>
++          <Button href={MENU_CTA.href}>{MENU_CTA.label}</Button>
+         </div>
+       </Container>
+     </section>
+diff --git a/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts b/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+index 793df15..92c4dbb 100644
+--- a/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
++++ b/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+@@ -1,6 +1,13 @@
+-import { isHeroVariant, isHomeSection, isValidSectionOrder, parseDesignPresetId } from "./designConfigValidator";
++import {
++  isHeroVariant,
++  isHomeSection,
++  isMenuVariant,
++  isValidSectionOrder,
++  parseDesignPresetId,
++} from "./designConfigValidator";
+ import { ALL_HOME_SECTIONS } from "@/lib/constants/design-sections";
+ import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
++import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
+ 
+ describe("parseDesignPresetId", () => {
+   it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])(
+@@ -42,6 +49,19 @@ describe("isHeroVariant", () => {
+   );
+ });
+ 
++describe("isMenuVariant", () => {
++  it.each(MENU_VARIANTS)("accepts the registered menu variant %s", (variant) => {
++    expect(isMenuVariant(variant)).toBe(true);
++  });
++
++  it.each([undefined, null, "", "   ", "not-a-variant", "editorial-list ", 42, {}])(
++    "rejects %p",
++    (value) => {
++      expect(isMenuVariant(value)).toBe(false);
++    },
++  );
++});
++
+ describe("isValidSectionOrder", () => {
+   it("accepts a full permutation of ALL_HOME_SECTIONS", () => {
+     const reordered = [...ALL_HOME_SECTIONS].reverse();
+diff --git a/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts b/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+index 2e8af19..6deaece 100644
+--- a/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
++++ b/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+@@ -1,7 +1,8 @@
+ import { DESIGN_PRESETS } from "@/config/design-presets";
+ import { ALL_HOME_SECTIONS, REQUIRED_HOME_SECTIONS } from "@/lib/constants/design-sections";
+ import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
+-import type { DesignPreset, HeroVariant, HomeSection } from "@/types/design-config";
++import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
++import type { DesignPreset, HeroVariant, HomeSection, MenuVariant } from "@/types/design-config";
+ 
+ function isNonEmptyString(value: unknown): value is string {
+   return typeof value === "string" && value.trim().length > 0;
+@@ -38,6 +39,18 @@ export function isHeroVariant(value: unknown): value is HeroVariant {
+   return typeof value === "string" && (HERO_VARIANTS as readonly string[]).includes(value);
+ }
+ 
++/**
++ * True only for one of the 3 registered `MenuVariant` ids (V1.1 Task 6).
++ * `components/sections/MenuSection.tsx` uses this to normalize whatever
++ * `menuVariant` it receives — an invalid or missing value falls back to
++ * `DEFAULT_MENU_VARIANT` ("editorial-list") rather than crashing or
++ * rendering nothing, the same parse-or-fallback discipline `isHeroVariant`
++ * above already follows.
++ */
++export function isMenuVariant(value: unknown): value is MenuVariant {
++  return typeof value === "string" && (MENU_VARIANTS as readonly string[]).includes(value);
++}
++
+ /**
+  * A valid section order is exactly one permutation of `ALL_HOME_SECTIONS`
+  * — every allow-listed section present once, no unknown strings, no
+diff --git a/docs/presentation-config-architecture.md b/docs/presentation-config-architecture.md
+index 72ba9e3..3b5192e 100644
+--- a/docs/presentation-config-architecture.md
++++ b/docs/presentation-config-architecture.md
+@@ -48,8 +48,8 @@ layout variant, or a section's visibility.
+ | `preset` | `DesignPreset` (6 values) | All 6 registered; only `kinari` differs from the others (identically for now) |
+ | `theme` | `ThemeId` | Only `"kinari"` exists — a later task adds curated palettes |
+ | `typography` | `TypographyId` (6 values) | All 6 registered with curated heading-font pairings (Typography Presets task); body typography is shared across all 6 |
+-| `heroVariant` | `HeroVariant` (3 values) | Only `"fullscreen"` has a real component |
+-| `menuVariant` | `MenuVariant` (3 values) | Only `"editorial-list"` has a real component |
++| `heroVariant` | `HeroVariant` (3 values) | All 3 registered — `fullscreen`/`split`/`editorial` (Hero Layout Variants task) |
++| `menuVariant` | `MenuVariant` (3 values) | All 3 registered — `editorial-list`/`card-grid`/`minimal-price-list` (Menu Layout Variants task) |
+ | `staffVariant` | `StaffVariant` (2 values) | Only `"portrait-grid"` has a real component |
+ | `galleryVariant` | `GalleryVariant` (3 values) | Only `"masonry"` has a real component |
+ | `sectionVisibility` | `Record<OptionalHomeSection, boolean>` | Fully wired into `app/page.tsx`; every default is `true` |
+@@ -422,11 +422,99 @@ other section already uses, so all six `ThemeId`s and all six
+ `TypographyId`s render correctly under every Hero variant with zero
+ variant-specific styling logic.
+ 
++## Menu layout variants (V1.1 Task 6)
++
++Task 1 left `MenuVariant` a 3-value union with only `"editorial-list"` wired
++to a real component. This task builds the other two and turns `MenuSection`
++into a router — the same shape as Hero's (§ above), with one structural
++difference explained below:
++
++```text
++DesignConfig.menuVariant (MenuVariant)
++        |
++        v
++lib/validation/designConfigValidator.ts — isMenuVariant()
++        |            (invalid/missing → DEFAULT_MENU_VARIANT "editorial-list")
++        v
++components/sections/MenuSection.tsx
++        — owns the #menu anchor, "メニュー" heading, and reservation CTA
++        — MENU_VARIANT_COMPONENTS: Record<MenuVariant, ComponentType<...>>
++        |
++        +-- "editorial-list"    -> MenuEditorialList   (today's pre-Task-6 look, unchanged)
++        +-- "card-grid"         -> MenuCardGrid         (bordered card grid)
++        +-- "minimal-price-list" -> MenuMinimalPriceList (compact, undecorated list)
++```
++
++**What each variant is for:**
++
++- `editorial-list` — the shipped default: services grouped by category
++  (once `groupServices` decides there's more than one implicit category,
++  Phase 2A §9, unchanged), hairline dividers between rows, name/price
++  carrying the visual weight, description as quiet supporting copy.
++- `card-grid` — each service is its own bordered card (`bg-background` +
++  `border-border`, no shadow) in a responsive grid (`grid-cols-1
++  sm:grid-cols-2`); category becomes a small per-card label instead of a
++  section heading, and every card's price/duration row is pinned to the
++  bottom (`mt-auto`) so cards stay visually balanced whether or not a
++  description is present.
++- `minimal-price-list` — no category grouping, no per-row dividers, no
++  description: tightly packed (`py-2`) name/price rows closed by a single
++  hairline rule under the whole list. Deliberately not editorial-list with
++  description/borders stripped — the composition (no grouping, no per-row
++  separators) differs, not just the decoration.
++
++**One Menu data model:** all three variants take the same
++`MenuContentProps` (`components/sections/MenuContent.tsx`) — `services:
++Service[]` — sourced in `app/page.tsx` entirely from the existing
++`getRuntimeCatalog()` → `getServices` → `Service[]` flow (Phase 5.1/Task 4).
++No variant introduces its own service model, and none can become a source
++of truth for reservation price/duration — the Reservation Wizard still
++resolves those server-side, independently of anything under
++`components/sections/Menu*.tsx` (see "Why reservation/GAS code stays
++design-agnostic" above). `formatMenuPrice`/`formatMenuDuration`/
++`groupServices`/`MENU_CTA` also live in `MenuContent.tsx`, shared by all
++three variants so formatting/grouping/the reservation CTA can never drift
++between them.
++
++**Section chrome lives once, not three times:** unlike Hero (where each
++variant owns its whole `<section>`, because the three layouts' backgrounds/
++padding genuinely differ), Menu's `#menu` anchor id — linked to by
++`HeroContent.tsx`'s `HERO_CTA_SECONDARY` and the site nav
++(`config/demo-content.ts`) — plus its "メニュー" heading and reservation CTA
++are identical across all three variants, so `MenuSection.tsx` renders them
++once and only swaps the inner service-list component. This still satisfies
++the "genuinely different compositions" requirement: the differentiation
++that matters is the service list body, not whether a page heading is
++duplicated three times.
++
++**Selecting a variant:** `DesignConfig.menuVariant`, same as every other
++design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
++it straight to `MenuSection`. This task does **not** set any
++`DESIGN_PRESETS` entry to `card-grid`/`minimal-price-list` — every preset
++still resolves `menuVariant: "editorial-list"` (§J's "don't ship curated
++multi-field presets yet"); the other two are reachable today only by
++constructing a `DesignConfig` directly (as the tests do).
++
++**Backward compatibility:** `isMenuVariant` (mirrors `isHeroVariant`) makes
++`MenuSection` normalize whatever `menuVariant` it receives — missing or
++invalid falls back to `DEFAULT_MENU_VARIANT` (`"editorial-list"`,
++`lib/constants/menu-variants.ts`), so an existing deployment's Menu can
++never silently change appearance. `editorial-list` is the pre-Task-6 Menu
++body, moved unchanged into `MenuEditorialList.tsx`.
++
++**Presentation-only, still:** no variant reads or writes reservation state,
++invents a price/duration/description, or touches `app/globals.css`'s theme/
++typography tokens directly — every color/font comes from the same semantic
++Tailwind utilities every other section already uses, so all six `ThemeId`s
++and all six `TypographyId`s render correctly under every Menu variant
++(visually spot-checked under `kinari`/`noir`) with zero variant-specific
++styling logic.
++
+ ## Not yet implemented (tracked for later V1.1 work)
+ 
+-- Menu/Staff/Gallery variant components — real alternate layouts for
+-  `MenuVariant`/`StaffVariant`/`GalleryVariant` values other than today's
+-  default (Hero's are now implemented — see above).
++- Staff/Gallery variant components — real alternate layouts for
++  `StaffVariant`/`GalleryVariant` values other than today's default
++  (Hero's and Menu's are now implemented — see above).
+ - Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
+   instead of its literal JSX sequence.
+ - Curated multi-field presets — the five non-`kinari` registry entries

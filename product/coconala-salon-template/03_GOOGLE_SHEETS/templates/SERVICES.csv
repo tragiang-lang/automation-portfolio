@@ -1,0 +1,4 @@
+ServiceID,Name,DurationMinutes,Price,Active,StaffRequired,DisplayOrder,Description,Category
+SV001,ハンド | ジェルネイル,60,6000,true,true,1,指先に一色をまとわせる、定番の仕上がりです。,ハンド
+SV002,フット | ジェルペディキュア,90,8000,true,true,2,一年を通して整えたい足先に。,フット
+SV003,その他 | パラフィンパック,20,1500,true,false,3,乾燥が気になる季節におすすめです。,その他

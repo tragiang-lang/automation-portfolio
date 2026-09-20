@@ -1,0 +1,559 @@
+diff --git a/apps/salon-portfolio/web/app/page.tsx b/apps/salon-portfolio/web/app/page.tsx
+index 771e172..306c14c 100644
+--- a/apps/salon-portfolio/web/app/page.tsx
++++ b/apps/salon-portfolio/web/app/page.tsx
+@@ -56,13 +56,19 @@ import { getDesignConfig } from "@/lib/config/designConfig";
+ // file still only supplies `services` (the existing runtime
+ // `getRuntimeCatalog` → `getServices` → `Service[]` flow), never a
+ // variant-specific content shape.
++//
++// V1.1 Task 7 (Staff Layout Variants) adds `staffVariant` the same way —
++// passed straight through to `StaffSection`, which owns the portrait-grid/
++// horizontal-profile component selection itself. This file still only
++// supplies `staff` (the existing runtime `getRuntimeCatalog` → `getStaff`
++// → `StaffMember[]` flow), never a variant-specific content shape.
+ export default async function Home() {
+   const [{ config }, { services, staff }] = await Promise.all([
+     getRuntimeConfig(),
+     getRuntimeCatalog(),
+   ]);
+   const siteConfig = resolveSiteConfig(config);
+-  const { sectionVisibility, heroVariant, menuVariant } = getDesignConfig();
++  const { sectionVisibility, heroVariant, menuVariant, staffVariant } = getDesignConfig();
+ 
+   return (
+     <main className="flex flex-1 flex-col">
+@@ -92,6 +98,7 @@ export default async function Home() {
+         staff={staff}
+         anyAvailableOption={siteConfig.staffAnyAvailableOption}
+         businessNameInitial={siteConfig.business.name}
++        staffVariant={staffVariant}
+       />
+ 
+       {sectionVisibility.gallery ? <GallerySection images={GALLERY_IMAGES} /> : null}
+diff --git a/apps/salon-portfolio/web/components/sections/AnyAvailableStaffCard.tsx b/apps/salon-portfolio/web/components/sections/AnyAvailableStaffCard.tsx
+index 925debf..38acc20 100644
+--- a/apps/salon-portfolio/web/components/sections/AnyAvailableStaffCard.tsx
++++ b/apps/salon-portfolio/web/components/sections/AnyAvailableStaffCard.tsx
+@@ -1,25 +1,20 @@
++import { STAFF_ANY_AVAILABLE, StaffPhotoFallback } from "@/components/sections/StaffContent";
+ import type { BusinessInfo } from "@/types/content";
+ 
+ /**
+- * The "お任せ" (any available staff) tile (Phase 2A §10) — same card size
+- * and photo-frame proportions as a real staff card, rendered as a
+- * first-class option in the same grid, not a separate "or skip" link.
++ * The "お任せ" (any available staff) tile (Phase 2A §10; V1.1 Task 7's
++ * `portrait-grid` variant) — same card size and photo-frame proportions as
++ * a real staff card, rendered as a first-class option in the same grid,
++ * not a separate "or skip" link. Copy is shared via `StaffContent.tsx`'s
++ * `STAFF_ANY_AVAILABLE` so `horizontal-profile`'s equivalent row can never
++ * drift onto different wording.
+  */
+ export function AnyAvailableStaffCard({ initial }: { initial: BusinessInfo["name"] }) {
+   return (
+     <div>
+-      <div
+-        className="flex items-center justify-center rounded-sm bg-surface-sunken"
+-        style={{ aspectRatio: "800 / 1000" }}
+-      >
+-        <span className="text-[56px] font-medium text-accent/70" aria-hidden="true">
+-          {initial.slice(0, 1)}
+-        </span>
+-      </div>
+-      <p className="mt-4 text-[20px] leading-[1.4] font-medium text-primary">指名なし（お任せ）</p>
+-      <p className="mt-1 text-[14px] leading-[1.43] text-muted">
+-        空いているスタッフが対応いたします。
+-      </p>
++      <StaffPhotoFallback initial={initial} aspectRatio="800 / 1000" textClassName="text-[56px]" />
++      <p className="mt-4 text-[20px] leading-[1.4] font-medium text-primary">{STAFF_ANY_AVAILABLE.label}</p>
++      <p className="mt-1 text-[14px] leading-[1.43] text-muted">{STAFF_ANY_AVAILABLE.description}</p>
+     </div>
+   );
+ }
+diff --git a/apps/salon-portfolio/web/components/sections/StaffCard.tsx b/apps/salon-portfolio/web/components/sections/StaffCard.tsx
+index 7a64df4..b6a5adc 100644
+--- a/apps/salon-portfolio/web/components/sections/StaffCard.tsx
++++ b/apps/salon-portfolio/web/components/sections/StaffCard.tsx
+@@ -1,35 +1,30 @@
+ import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
++import { StaffPhotoFallback, staffPhotoAlt } from "@/components/sections/StaffContent";
+ import type { StaffMember } from "@/types/content";
+ 
+-/** Staff portrait card (Phase 2A §10) — consistent 4:5 photo aspect ratio
+- * across all staff so the grid stays even. No rating widgets/fake numbers.
+- * `role`/`introduction`/`photoSrc`/`photoAlt` are optional (Phase 5.1) —
+- * a runtime-sourced staff member (getStaff) never carries them, since the
+- * STAFF sheet has no columns for them. When the photo is missing, this
+- * falls back to the same initial-letter tile treatment
+- * `AnyAvailableStaffCard` already uses, so the grid never shows a broken
+- * image. */
++/** Staff portrait card (Phase 2A §10; V1.1 Task 7's `portrait-grid`
++ * variant). Consistent 4:5 photo aspect ratio across all staff so the grid
++ * stays even. No rating widgets/fake numbers. `role`/`introduction`/
++ * `photoSrc`/`photoAlt` are optional (Phase 5.1) — a runtime-sourced staff
++ * member (getStaff) never carries `photoAlt`, since the STAFF sheet has no
++ * column for it. When the photo is missing, this falls back to the same
++ * initial-letter tile treatment `AnyAvailableStaffCard` uses
++ * (`StaffContent.tsx`'s shared `StaffPhotoFallback`), so the grid never
++ * shows a broken image. */
+ export function StaffCard({ staff }: { staff: StaffMember }) {
+   return (
+     <div>
+       {staff.photoSrc ? (
+         <PlaceholderImage
+           src={staff.photoSrc}
+-          alt={staff.photoAlt ?? staff.name}
++          alt={staffPhotoAlt(staff)}
+           width={800}
+           height={1000}
+           sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 25vw"
+           className="rounded-sm"
+         />
+       ) : (
+-        <div
+-          className="flex items-center justify-center rounded-sm bg-surface-sunken"
+-          style={{ aspectRatio: "800 / 1000" }}
+-        >
+-          <span className="text-[56px] font-medium text-accent/70" aria-hidden="true">
+-            {staff.name.slice(0, 1)}
+-          </span>
+-        </div>
++        <StaffPhotoFallback initial={staff.name} aspectRatio="800 / 1000" textClassName="text-[56px]" />
+       )}
+       <p className="mt-4 text-[20px] leading-[1.4] font-medium text-primary">{staff.name}</p>
+       {staff.role ? <p className="text-[14px] text-accent">{staff.role}</p> : null}
+diff --git a/apps/salon-portfolio/web/components/sections/StaffSection.test.tsx b/apps/salon-portfolio/web/components/sections/StaffSection.test.tsx
+index e2e40fb..aca5511 100644
+--- a/apps/salon-portfolio/web/components/sections/StaffSection.test.tsx
++++ b/apps/salon-portfolio/web/components/sections/StaffSection.test.tsx
+@@ -1,4 +1,4 @@
+-import { render, screen } from "@testing-library/react";
++import { render, screen, within } from "@testing-library/react";
+ import { StaffSection } from "@/components/sections/StaffSection";
+ import type { StaffMember } from "@/types/content";
+ 
+@@ -13,6 +13,8 @@ const staff: StaffMember[] = [
+   },
+ ];
+ 
++const STAFF_VARIANTS = ["portrait-grid", "horizontal-profile"] as const;
++
+ describe("StaffSection", () => {
+   it("renders nothing at all when disabled (Phase 0 §K — not just visually hidden)", () => {
+     const { container } = render(
+@@ -21,7 +23,20 @@ describe("StaffSection", () => {
+     expect(container).toBeEmptyDOMElement();
+   });
+ 
+-  it("renders the 'any available staff' tile as part of the same grid when enabled", () => {
++  it("renders nothing at all when disabled, even with an explicit staffVariant", () => {
++    const { container } = render(
++      <StaffSection
++        enabled={false}
++        staff={staff}
++        anyAvailableOption
++        businessNameInitial="凛"
++        staffVariant="horizontal-profile"
++      />,
++    );
++    expect(container).toBeEmptyDOMElement();
++  });
++
++  it("renders the 'any available staff' tile as part of the same list when enabled", () => {
+     render(
+       <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" />,
+     );
+@@ -46,4 +61,105 @@ describe("StaffSection", () => {
+     // AnyAvailableStaffCard) instead of rendering a broken <img>.
+     expect(screen.getByText("鈴")).toBeInTheDocument();
+   });
++
++  it("always renders the #staff anchor section regardless of variant", () => {
++    const { container } = render(
++      <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" staffVariant="horizontal-profile" />,
++    );
++    expect(container.querySelector("#staff")).toBeInTheDocument();
++  });
++
++  it("defaults to the portrait-grid variant when staffVariant is not passed", () => {
++    render(<StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" />);
++
++    expect(screen.getByTestId("staff-portrait-grid")).toBeInTheDocument();
++    expect(screen.queryByTestId("staff-horizontal-profile")).not.toBeInTheDocument();
++  });
++
++  it("falls back to portrait-grid for an invalid staffVariant value instead of crashing", () => {
++    render(
++      <StaffSection
++        enabled
++        staff={staff}
++        anyAvailableOption
++        businessNameInitial="凛"
++        staffVariant={"not-a-real-variant" as never}
++      />,
++    );
++
++    expect(screen.getByTestId("staff-portrait-grid")).toBeInTheDocument();
++  });
++
++  it.each(STAFF_VARIANTS)(
++    "renders the %s variant with runtime staff name, role, and bio",
++    (variant) => {
++      render(
++        <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" staffVariant={variant} />,
++      );
++
++      expect(screen.getByTestId(`staff-${variant}`)).toBeInTheDocument();
++      expect(screen.getByText("田中 あい")).toBeInTheDocument();
++      expect(screen.getByText("店長 / ネイリスト")).toBeInTheDocument();
++      expect(screen.getByText("丁寧なカウンセリングが得意です。")).toBeInTheDocument();
++      // Exactly one section heading (h2) — one Staff heading regardless of variant.
++      expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
++      expect(screen.getByRole("heading", { level: 2, name: "スタッフ紹介" })).toBeInTheDocument();
++    },
++  );
++
++  it.each(STAFF_VARIANTS)(
++    "omits role/bio (no invented copy) for a runtime staff member missing them, in %s",
++    (variant) => {
++      const runtimeStaff: StaffMember[] = [{ staffId: "ST002", name: "鈴木 さくら" }];
++      render(
++        <StaffSection
++          enabled
++          staff={runtimeStaff}
++          anyAvailableOption={false}
++          businessNameInitial="凛"
++          staffVariant={variant}
++        />,
++      );
++
++      const list = screen.getByTestId(`staff-${variant}`);
++      expect(within(list).getByText("鈴木 さくら")).toBeInTheDocument();
++      expect(within(list).queryByText(/店長|ネイリスト/)).not.toBeInTheDocument();
++      // Falls back to an initial-letter tile instead of a broken <img> or invented photo.
++      expect(within(list).getByText("鈴")).toBeInTheDocument();
++    },
++  );
++
++  it("shows a usable single-column staff list in horizontal-profile, distinct from portrait-grid's multi-column grid", () => {
++    render(
++      <StaffSection enabled staff={staff} anyAvailableOption businessNameInitial="凛" staffVariant="horizontal-profile" />,
++    );
++
++    const list = screen.getByTestId("staff-horizontal-profile");
++    expect(list.className).not.toMatch(/grid-cols-2/);
++  });
++
++  it("preserves runtime staff order (no re-sorting) in every variant", () => {
++    const orderedStaff: StaffMember[] = [
++      { staffId: "ST010", name: "第一 スタッフ" },
++      { staffId: "ST011", name: "第二 スタッフ" },
++    ];
++
++    for (const variant of STAFF_VARIANTS) {
++      const { unmount } = render(
++        <StaffSection
++          enabled
++          staff={orderedStaff}
++          anyAvailableOption={false}
++          businessNameInitial="凛"
++          staffVariant={variant}
++        />,
++      );
++      const list = screen.getByTestId(`staff-${variant}`);
++      const names = within(list)
++        .getAllByText(/第一 スタッフ|第二 スタッフ/)
++        .map((el) => el.textContent);
++      expect(names).toEqual(["第一 スタッフ", "第二 スタッフ"]);
++      unmount();
++    }
++  });
+ });
+diff --git a/apps/salon-portfolio/web/components/sections/StaffSection.tsx b/apps/salon-portfolio/web/components/sections/StaffSection.tsx
+index c573823..787e0e4 100644
+--- a/apps/salon-portfolio/web/components/sections/StaffSection.tsx
++++ b/apps/salon-portfolio/web/components/sections/StaffSection.tsx
+@@ -1,48 +1,76 @@
++import type { ComponentType } from "react";
+ import { Container } from "@/components/ui/Container";
+ import { SectionHeading } from "@/components/ui/SectionHeading";
+ import { Reveal } from "@/components/ui/Reveal";
+-import { StaffCard } from "@/components/sections/StaffCard";
+-import { AnyAvailableStaffCard } from "@/components/sections/AnyAvailableStaffCard";
+-import type { StaffMember } from "@/types/content";
++import { isStaffVariant } from "@/lib/validation/designConfigValidator";
++import { DEFAULT_STAFF_VARIANT } from "@/lib/constants/staff-variants";
++import type { StaffVariant } from "@/types/design-config";
++import type { StaffContentProps } from "@/components/sections/StaffContent";
++import { StaffPortraitGrid } from "@/components/sections/StaffPortraitGrid";
++import { StaffHorizontalProfile } from "@/components/sections/StaffHorizontalProfile";
+ 
+ /**
+- * Staff grid (Phase 2A §6/§10). `enabled` mirrors
+- * `CONFIG.features.staffSelection` — when false this section renders
+- * nothing at all (not just visually hidden), matching Phase 0 §K: a
+- * shared-calendar salon has no staff-selection concept in the DOM.
++ * Staff (V1.1 Task 7 — Staff Layout Variants). Thin router, mirroring
++ * `MenuSection.tsx`'s pattern: normalizes whatever `staffVariant` it
++ * receives and delegates the staff list to the matching layout component.
++ * `DesignConfig.staffVariant` (`types/design-config.ts`) selects the
++ * component, nothing else decides.
++ *
++ * Like Menu (and unlike Hero, where each variant owns its whole
++ * `<section>`), the section chrome here — the `#staff` id, the "スタッフ紹介"
++ * heading, and the `enabled` gate — is identical across both variants, so
++ * it lives once in this router instead of being duplicated twice. Only the
++ * staff list body genuinely differs per variant.
++ *
++ * `enabled` mirrors `CONFIG.features.staffSelection` — when false this
++ * section renders nothing at all (not just visually hidden), matching
++ * Phase 0 §K: a shared-calendar salon has no staff-selection concept in
++ * the DOM. This is checked before any variant resolution, so an invalid
++ * `staffVariant` on a disabled section still renders nothing.
++ *
++ * `STAFF_VARIANT_COMPONENTS` being a `Record<StaffVariant, ...>` makes the
++ * mapping exhaustive at the type level: adding a 3rd `StaffVariant` without
++ * a matching entry here is a compile error, not a silent runtime gap.
+  */
++const STAFF_VARIANT_COMPONENTS: Record<StaffVariant, ComponentType<StaffContentProps>> = {
++  "portrait-grid": StaffPortraitGrid,
++  "horizontal-profile": StaffHorizontalProfile,
++};
++
+ export function StaffSection({
+   enabled,
+   staff,
+   anyAvailableOption,
+   businessNameInitial,
+-}: {
++  staffVariant,
++}: StaffContentProps & {
+   enabled: boolean;
+-  staff: StaffMember[];
+-  anyAvailableOption: boolean;
+-  businessNameInitial: string;
++  /**
++   * Optional and validated here (not trusted from the caller) so a
++   * missing or invalid value can never crash or blank the Staff section —
++   * falls back to `DEFAULT_STAFF_VARIANT` ("portrait-grid"), preserving
++   * every existing deployment's current appearance (§16 backward
++   * compatibility).
++   */
++  staffVariant?: StaffVariant;
+ }) {
+   if (!enabled) return null;
+ 
++  const resolvedVariant = isStaffVariant(staffVariant) ? staffVariant : DEFAULT_STAFF_VARIANT;
++  const StaffVariantComponent = STAFF_VARIANT_COMPONENTS[resolvedVariant];
++
+   return (
+     <section id="staff" className="bg-background py-16 lg:py-24">
+       <Container>
+         <Reveal>
+           <SectionHeading eyebrow="Staff" title="スタッフ紹介" />
+         </Reveal>
+-        <Reveal delayMs={120}>
+-          <ul className="mt-12 grid grid-cols-2 gap-6 lg:grid-cols-4">
+-            {staff.map((member) => (
+-              <li key={member.staffId}>
+-                <StaffCard staff={member} />
+-              </li>
+-            ))}
+-            {anyAvailableOption ? (
+-              <li>
+-                <AnyAvailableStaffCard initial={businessNameInitial} />
+-              </li>
+-            ) : null}
+-          </ul>
++        <Reveal delayMs={120} className="mt-12">
++          <StaffVariantComponent
++            staff={staff}
++            anyAvailableOption={anyAvailableOption}
++            businessNameInitial={businessNameInitial}
++          />
+         </Reveal>
+       </Container>
+     </section>
+diff --git a/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts b/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+index 92c4dbb..5dc218e 100644
+--- a/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
++++ b/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+@@ -2,12 +2,14 @@ import {
+   isHeroVariant,
+   isHomeSection,
+   isMenuVariant,
++  isStaffVariant,
+   isValidSectionOrder,
+   parseDesignPresetId,
+ } from "./designConfigValidator";
+ import { ALL_HOME_SECTIONS } from "@/lib/constants/design-sections";
+ import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
+ import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
++import { STAFF_VARIANTS } from "@/lib/constants/staff-variants";
+ 
+ describe("parseDesignPresetId", () => {
+   it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])(
+@@ -62,6 +64,19 @@ describe("isMenuVariant", () => {
+   );
+ });
+ 
++describe("isStaffVariant", () => {
++  it.each(STAFF_VARIANTS)("accepts the registered staff variant %s", (variant) => {
++    expect(isStaffVariant(variant)).toBe(true);
++  });
++
++  it.each([undefined, null, "", "   ", "not-a-variant", "portrait-grid ", 42, {}])(
++    "rejects %p",
++    (value) => {
++      expect(isStaffVariant(value)).toBe(false);
++    },
++  );
++});
++
+ describe("isValidSectionOrder", () => {
+   it("accepts a full permutation of ALL_HOME_SECTIONS", () => {
+     const reordered = [...ALL_HOME_SECTIONS].reverse();
+diff --git a/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts b/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+index 6deaece..24e4d1f 100644
+--- a/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
++++ b/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+@@ -2,7 +2,8 @@ import { DESIGN_PRESETS } from "@/config/design-presets";
+ import { ALL_HOME_SECTIONS, REQUIRED_HOME_SECTIONS } from "@/lib/constants/design-sections";
+ import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
+ import { MENU_VARIANTS } from "@/lib/constants/menu-variants";
+-import type { DesignPreset, HeroVariant, HomeSection, MenuVariant } from "@/types/design-config";
++import { STAFF_VARIANTS } from "@/lib/constants/staff-variants";
++import type { DesignPreset, HeroVariant, HomeSection, MenuVariant, StaffVariant } from "@/types/design-config";
+ 
+ function isNonEmptyString(value: unknown): value is string {
+   return typeof value === "string" && value.trim().length > 0;
+@@ -51,6 +52,18 @@ export function isMenuVariant(value: unknown): value is MenuVariant {
+   return typeof value === "string" && (MENU_VARIANTS as readonly string[]).includes(value);
+ }
+ 
++/**
++ * True only for one of the 2 registered `StaffVariant` ids (V1.1 Task 7).
++ * `components/sections/StaffSection.tsx` uses this to normalize whatever
++ * `staffVariant` it receives — an invalid or missing value falls back to
++ * `DEFAULT_STAFF_VARIANT` ("portrait-grid") rather than crashing or
++ * rendering nothing, the same parse-or-fallback discipline `isHeroVariant`/
++ * `isMenuVariant` above already follow.
++ */
++export function isStaffVariant(value: unknown): value is StaffVariant {
++  return typeof value === "string" && (STAFF_VARIANTS as readonly string[]).includes(value);
++}
++
+ /**
+  * A valid section order is exactly one permutation of `ALL_HOME_SECTIONS`
+  * — every allow-listed section present once, no unknown strings, no
+diff --git a/docs/presentation-config-architecture.md b/docs/presentation-config-architecture.md
+index 3b5192e..55e0480 100644
+--- a/docs/presentation-config-architecture.md
++++ b/docs/presentation-config-architecture.md
+@@ -50,7 +50,7 @@ layout variant, or a section's visibility.
+ | `typography` | `TypographyId` (6 values) | All 6 registered with curated heading-font pairings (Typography Presets task); body typography is shared across all 6 |
+ | `heroVariant` | `HeroVariant` (3 values) | All 3 registered — `fullscreen`/`split`/`editorial` (Hero Layout Variants task) |
+ | `menuVariant` | `MenuVariant` (3 values) | All 3 registered — `editorial-list`/`card-grid`/`minimal-price-list` (Menu Layout Variants task) |
+-| `staffVariant` | `StaffVariant` (2 values) | Only `"portrait-grid"` has a real component |
++| `staffVariant` | `StaffVariant` (2 values) | All 2 registered — `portrait-grid`/`horizontal-profile` (Staff Layout Variants task) |
+ | `galleryVariant` | `GalleryVariant` (3 values) | Only `"masonry"` has a real component |
+ | `sectionVisibility` | `Record<OptionalHomeSection, boolean>` | Fully wired into `app/page.tsx`; every default is `true` |
+ | `sectionOrder` | `HomeSection[]` | Typed, defaulted, and validated (`isValidSectionOrder`); **not yet** read by `app/page.tsx` |
+@@ -510,11 +510,93 @@ and all six `TypographyId`s render correctly under every Menu variant
+ (visually spot-checked under `kinari`/`noir`) with zero variant-specific
+ styling logic.
+ 
++## Staff layout variants (V1.1 Task 7)
++
++Task 1 left `StaffVariant` a 2-value union with only `"portrait-grid"` wired
++to a real component. This task builds the alternate and turns `StaffSection`
++into a router — the same shape as Menu's (§ above):
++
++```text
++DesignConfig.staffVariant (StaffVariant)
++        |
++        v
++lib/validation/designConfigValidator.ts — isStaffVariant()
++        |            (invalid/missing → DEFAULT_STAFF_VARIANT "portrait-grid")
++        v
++components/sections/StaffSection.tsx
++        — owns the #staff id, "スタッフ紹介" heading, and the enabled gate
++        — STAFF_VARIANT_COMPONENTS: Record<StaffVariant, ComponentType<...>>
++        |
++        +-- "portrait-grid"      -> StaffPortraitGrid      (today's pre-Task-7 look, unchanged)
++        +-- "horizontal-profile" -> StaffHorizontalProfile (editorial profile rows)
++```
++
++**What each variant is for:**
++
++- `portrait-grid` — the shipped default: portrait-oriented (4:5) staff
++  photos in a responsive grid (`grid-cols-2 lg:grid-cols-4`), name carrying
++  the visual weight, role secondary, bio (`introduction`) as supporting
++  copy when present. Byte-identical to the pre-Task-7 `StaffSection` body,
++  moved unchanged into `StaffPortraitGrid.tsx`.
++- `horizontal-profile` — a single-column list of profile rows: a square
++  (1:1) photo region alongside a separate text region carrying a clear
++  name → role → bio hierarchy, divided by hairline rules. Genuinely
++  different composition from `portrait-grid` (square crop vs. portrait
++  crop, one column of rows vs. a multi-column grid), not a `flex-row`
++  recolor of the same cards.
++
++**One Staff data model:** both variants take the same `StaffContentProps`
++(`components/sections/StaffContent.tsx`) — `staff: StaffMember[]`,
++`anyAvailableOption: boolean`, `businessNameInitial: string` — sourced in
++`app/page.tsx` entirely from the existing `getRuntimeCatalog()` →
++`getStaff` → `StaffMember[]` flow (Phase 5.1/Task 4). No variant introduces
++its own staff model. `STAFF_ANY_AVAILABLE` (the "指名なし（お任せ）" copy),
++`staffPhotoAlt`, and the `StaffPhotoFallback` initial-letter tile also live
++in `StaffContent.tsx`, shared by `StaffCard`/`AnyAvailableStaffCard`
++(portrait-grid) and `StaffHorizontalProfile` so the fallback/alt-text
++behavior can never drift between them.
++
++**Filtering/ordering stays server-side:** `Active` filtering and
++`DisplayOrder` sorting both already happen in
++`apps/salon-portfolio/gas/src/PublicCatalog.ts`'s `buildPublicStaff` before
++`staff` ever reaches the frontend — neither variant re-filters or re-sorts
++it, and `CalendarID`/`displayOrder` are never carried into the frontend
++`StaffMember` view type (`types/content.ts`) in the first place, so no
++backend-only identifier reaches the UI.
++
++**Section chrome lives once, not twice:** like Menu (and unlike Hero,
++where each variant owns its whole `<section>`), the `#staff` id, the
++"スタッフ紹介" heading, and the `enabled` gate (`CONFIG.features.staffSelection
++&& sectionVisibility.staff` — Phase 0 §K: renders nothing at all, not just
++visually hidden, when off) are identical across both variants, so
++`StaffSection.tsx` renders them once and only swaps the inner staff-list
++component.
++
++**Selecting a variant:** `DesignConfig.staffVariant`, same as every other
++design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
++it straight to `StaffSection`. This task does **not** set any
++`DESIGN_PRESETS` entry to `horizontal-profile` — every preset still
++resolves `staffVariant: "portrait-grid"`; the alternate is reachable today
++only by constructing a `DesignConfig` directly (as the tests do).
++
++**Backward compatibility:** `isStaffVariant` (mirrors `isHeroVariant`/
++`isMenuVariant`) makes `StaffSection` normalize whatever `staffVariant` it
++receives — missing or invalid falls back to `DEFAULT_STAFF_VARIANT`
++(`"portrait-grid"`, `lib/constants/staff-variants.ts`), so an existing
++deployment's Staff section can never silently change appearance.
++
++**Presentation-only, still:** no variant reads or writes reservation state,
++staff eligibility, or `CalendarID`, and no color/font is hard-coded — every
++value comes from the same semantic Tailwind utilities every other section
++already uses, so all six `ThemeId`s and all six `TypographyId`s render
++correctly under every Staff variant (visually spot-checked under
++`kinari`/`noir`) with zero variant-specific styling logic.
++
+ ## Not yet implemented (tracked for later V1.1 work)
+ 
+-- Staff/Gallery variant components — real alternate layouts for
+-  `StaffVariant`/`GalleryVariant` values other than today's default
+-  (Hero's and Menu's are now implemented — see above).
++- Gallery variant components — real alternate layouts for `GalleryVariant`
++  values other than today's default (Hero's, Menu's, and Staff's are now
++  implemented — see above).
+ - Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
+   instead of its literal JSX sequence.
+ - Curated multi-field presets — the five non-`kinari` registry entries

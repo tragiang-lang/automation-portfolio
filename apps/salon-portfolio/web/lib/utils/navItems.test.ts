@@ -1,4 +1,4 @@
-import { filterVisibleNavItems } from "./navItems";
+import { filterVisibleNavItems, resolveNavHref } from "./navItems";
 import type { NavItem, FeatureFlags } from "@/types/content";
 import { DEFAULT_SECTION_VISIBILITY } from "@/lib/constants/design-sections";
 
@@ -7,6 +7,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "メニュー", href: "#menu" },
   { label: "スタッフ", href: "#staff" },
   { label: "ギャラリー", href: "#gallery" },
+  { label: "お客様の声", href: "#testimonials" },
   { label: "アクセス", href: "#access" },
   { label: "お問い合わせ", href: "#contact" },
 ];
@@ -27,7 +28,16 @@ describe("filterVisibleNavItems", () => {
       access: false,
     };
     const result = filterVisibleNavItems(NAV_ITEMS, starterVisibility, allFeaturesOn);
-    expect(result.map((item) => item.href)).toEqual(["#menu", "#contact"]);
+    expect(result.map((item) => item.href)).toEqual(["#menu", "#testimonials", "#contact"]);
+  });
+
+  it("drops #testimonials when its sectionVisibility flag is off, with no business feature flag to combine it with", () => {
+    const result = filterVisibleNavItems(
+      NAV_ITEMS,
+      { ...DEFAULT_SECTION_VISIBILITY, testimonials: false },
+      allFeaturesOn,
+    );
+    expect(result.some((item) => item.href === "#testimonials")).toBe(false);
   });
 
   it("never drops #menu — the always-required section has no visibility flag to check", () => {
@@ -54,5 +64,25 @@ describe("filterVisibleNavItems", () => {
   it("keeps an item whose href has no known matching section (defensive: never silently drops unrecognized nav entries)", () => {
     const customNav: NavItem[] = [{ label: "その他", href: "#other" }];
     expect(filterVisibleNavItems(customNav, DEFAULT_SECTION_VISIBILITY, allFeaturesOn)).toEqual(customNav);
+  });
+});
+
+describe("resolveNavHref", () => {
+  it("keeps a section-anchor href unchanged on the homepage", () => {
+    expect(resolveNavHref("#menu", "/")).toBe("#menu");
+    expect(resolveNavHref("#contact", "/")).toBe("#contact");
+  });
+
+  it("prefixes a section-anchor href with / when not on the homepage, so it navigates home first", () => {
+    expect(resolveNavHref("#menu", "/reservation")).toBe("/#menu");
+    expect(resolveNavHref("#contact", "/reservation")).toBe("/#contact");
+    expect(resolveNavHref("#menu", "/contact")).toBe("/#menu");
+    expect(resolveNavHref("#contact", "/contact")).toBe("/#contact");
+  });
+
+  it("leaves a non-fragment path href unchanged regardless of the current pathname", () => {
+    expect(resolveNavHref("/privacy", "/")).toBe("/privacy");
+    expect(resolveNavHref("/privacy", "/reservation")).toBe("/privacy");
+    expect(resolveNavHref("/terms", "/reservation")).toBe("/terms");
   });
 });

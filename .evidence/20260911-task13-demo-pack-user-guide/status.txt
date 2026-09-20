@@ -1,0 +1,27 @@
+ M product/coconala-salon-template/MANIFEST.md
+ M product/coconala-salon-template/README_JA.md
+ M product/releases/coconala-salon-template-v1.1.0.zip
+?? .evidence/20260907-2322-productization-coconala-2500/
+?? .evidence/20260908-phase5-1-homepage-runtime-data/
+?? .evidence/20260908-phase5-1-scope-review/
+?? .evidence/20260908-theme-presets/
+?? .evidence/20260908-v1-1-presentation-config-layer/
+?? .evidence/20260909-task9-section-ordering/
+?? .evidence/20260909-v1-1-gallery-layout-variants/
+?? .evidence/20260909-v1-1-hero-layout-variants/
+?? .evidence/20260909-v1-1-menu-layout-variants/
+?? .evidence/20260909-v1-1-runtime-content-schema/
+?? .evidence/20260910-task10-design-presets/
+?? .evidence/20260910-task11-customer-customization-docs/
+?? .evidence/20260910-task12-final-validation-package-sync/
+?? .evidence/20260911-task13-demo-pack-user-guide/
+?? PLAN_PHASE5_1_V1_1_LP_DESIGN_CUSTOMIZATION.md
+?? docs/design-customization-audit.md
+?? docs/superpowers/plans/2026-09-07-coconala-productization.md
+?? docs/superpowers/plans/2026-09-08-phase5-1-homepage-runtime-data.md
+?? docs/superpowers/plans/2026-09-08-v1-1-presentation-config-layer.md
+?? product/coconala-listing-draft-ja.md
+?? product/coconala-salon-template/08_DEMO/
+?? product/coconala-salon-template/DESIGN_CUSTOMIZATION_MAP_JA.md
+?? product/coconala-salon-template/WHAT_YOU_GET_JA.md
+?? product/releases/coconala-salon-template-v1.0.0.zip

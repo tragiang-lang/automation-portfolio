@@ -1,0 +1,6 @@
+1e21b12 docs: add Presentation Configuration Layer architecture note
+a10ee18 feat(web): wire design config section visibility into the homepage
+d1c8965 feat(web): add design config resolver and SALON_DESIGN_PRESET accessor
+6ed4879 feat(web): add design config validator with safe parse-or-null fallback
+6317abc feat(web): add default design config and preset registry
+73a7e2e feat(web): add design config types and section allow-list constants

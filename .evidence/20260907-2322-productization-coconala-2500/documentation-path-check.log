@@ -1,0 +1,60 @@
+Documentation path/consistency check — product/coconala-salon-template/
+
+=== Relative markdown/txt links found across all guides + README/MANIFEST ===
+04_SETUP_GUIDE/CALENDAR_SETUP_JA.md -> ../06_TROUBLESHOOTING/TROUBLESHOOTING_JA.md : FOUND
+04_SETUP_GUIDE/SHEETS_SETUP_JA.md -> ../03_GOOGLE_SHEETS/SHEET_SETUP_GUIDE_JA.md : FOUND
+04_SETUP_GUIDE/SHEETS_SETUP_JA.md -> GAS_SETUP_JA.md : FOUND
+04_SETUP_GUIDE/START_HERE_JA.md -> ../03_GOOGLE_SHEETS/SHEET_SETUP_GUIDE_JA.md : FOUND
+04_SETUP_GUIDE/START_HERE_JA.md -> ../05_CUSTOMIZATION/ (dir) : FOUND
+04_SETUP_GUIDE/START_HERE_JA.md -> ../06_TROUBLESHOOTING/TROUBLESHOOTING_JA.md : FOUND
+04_SETUP_GUIDE/START_HERE_JA.md -> CALENDAR_SETUP_JA.md : FOUND
+04_SETUP_GUIDE/START_HERE_JA.md -> CONFIG_SETUP_JA.md : FOUND
+04_SETUP_GUIDE/START_HERE_JA.md -> GAS_SETUP_JA.md : FOUND
+04_SETUP_GUIDE/START_HERE_JA.md -> VERCEL_DEPLOY_JA.md : FOUND
+04_SETUP_GUIDE/START_HERE_JA.md -> WEB_SETUP_JA.md : FOUND
+05_CUSTOMIZATION/CONTENT_CUSTOMIZATION_JA.md -> ../04_SETUP_GUIDE/CONFIG_SETUP_JA.md : FOUND
+05_CUSTOMIZATION/CONTENT_CUSTOMIZATION_JA.md -> DESIGN_CUSTOMIZATION_JA.md : FOUND
+05_CUSTOMIZATION/CONTENT_CUSTOMIZATION_JA.md -> IMAGE_CUSTOMIZATION_JA.md : FOUND
+05_CUSTOMIZATION/CONTENT_CUSTOMIZATION_JA.md -> MENU_CUSTOMIZATION_JA.md : FOUND
+05_CUSTOMIZATION/CONTENT_CUSTOMIZATION_JA.md -> STAFF_CUSTOMIZATION_JA.md : FOUND
+05_CUSTOMIZATION/STAFF_CUSTOMIZATION_JA.md -> ../04_SETUP_GUIDE/CALENDAR_SETUP_JA.md : FOUND
+05_CUSTOMIZATION/STAFF_CUSTOMIZATION_JA.md -> IMAGE_CUSTOMIZATION_JA.md : FOUND
+README_JA.md -> 04_SETUP_GUIDE/START_HERE_JA.md : FOUND
+README_JA.md -> 05_CUSTOMIZATION/ (dir) : FOUND
+README_JA.md -> 06_TROUBLESHOOTING/TROUBLESHOOTING_JA.md : FOUND
+README_JA.md -> 07_LICENSE/LICENSE_JA.txt : FOUND
+README_JA.md -> MANIFEST.md : FOUND
+
+Result: 0 broken links.
+
+=== CSV filenames referenced in SHEET_SETUP_GUIDE_JA.md vs actual templates/ dir ===
+Referenced by exact filename: CONFIG.csv -> present.
+All 9 sheet names named in the guide's schema table (CONFIG, HOLIDAYS,
+SERVICES, STAFF, RESERVATIONS, CANCELLATION_REQUESTS, INQUIRIES,
+EMAIL_LOG, ERROR_LOG) have a matching CSV file in templates/.
+
+=== npm script names quoted in guides vs actual package.json scripts ===
+Web (01_WEB_TEMPLATE/salon-website/package.json scripts): dev, build,
+  start, lint, test, typecheck — all commands quoted in WEB_SETUP_JA.md
+  ("npm run dev", "npm run build", "npm start", "npm run typecheck",
+  "npm test", "npm run lint") match exactly.
+GAS (02_GAS/salon-reservation-gas/package.json scripts): build, test,
+  typecheck, push — all commands quoted in GAS_SETUP_JA.md
+  ("npm run build", "npm run push", "npm run typecheck", "npm test")
+  match exactly.
+
+=== Script Property names quoted vs source ===
+SPREADSHEET_ID (src/Sheets.ts), SITE_BASE_URL (src/RuntimeProperties.ts)
+— both quoted consistently across GAS_SETUP_JA.md, SHEETS_SETUP_JA.md,
+CALENDAR_SETUP_JA.md, VERCEL_DEPLOY_JA.md; no other property name invented.
+
+=== CONFIG keys quoted in CONFIG_SETUP_JA.md vs src/ConfigParser.ts / docs/config-and-sheets-guide.md ===
+All keys (business.*, hours.*, reservation.*, features.*,
+staff.anyAvailableOption, calendar.id, email.*) match the authoritative
+list gathered from source; no invented key found.
+
+=== Sheet schema quoted across guides vs src/SheetSchemas.ts (packaged copy) ===
+All 9 sheet names and their column lists in SHEET_SETUP_GUIDE_JA.md,
+MENU_CUSTOMIZATION_JA.md, STAFF_CUSTOMIZATION_JA.md match
+02_GAS/salon-reservation-gas/src/SheetSchemas.ts verbatim (spot-checked
+against the packaged copy, not just the original source tree).

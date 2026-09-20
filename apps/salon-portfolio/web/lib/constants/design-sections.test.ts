@@ -6,13 +6,14 @@ import {
 } from "./design-sections";
 
 describe("ALL_HOME_SECTIONS", () => {
-  it("lists all 11 sections exactly once, in the current app/page.tsx order", () => {
+  it("lists all 12 sections exactly once, in the current app/page.tsx order", () => {
     expect(ALL_HOME_SECTIONS).toEqual([
       "hero",
       "concept",
       "menu",
       "staff",
       "gallery",
+      "testimonials",
       "reservation",
       "salon-features",
       "customer-flow",

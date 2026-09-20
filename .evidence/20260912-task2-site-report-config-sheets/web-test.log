@@ -1,0 +1,10 @@
+
+> site-report-web@0.1.0 test
+> jest
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.423 s, estimated 1 s
+Ran all test suites.
+web test exit: 0

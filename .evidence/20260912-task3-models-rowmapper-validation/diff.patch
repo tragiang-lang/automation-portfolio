@@ -1,0 +1,863 @@
+diff --git a/apps/site-report/gas/src/RowMapper.ts b/apps/site-report/gas/src/RowMapper.ts
+index 319a03b..48e79db 100644
+--- a/apps/site-report/gas/src/RowMapper.ts
++++ b/apps/site-report/gas/src/RowMapper.ts
+@@ -1,7 +1,25 @@
++import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow } from "./SheetSchemas";
++import { Site } from "./models/Site";
++import { Worker } from "./models/Worker";
++import { SiteReport } from "./models/Report";
++import { ReportPhoto } from "./models/ReportPhoto";
++
+ /**
+  * Pure header-mapping and row<->object helpers shared by every sheet
+  * repository. Never touches SpreadsheetApp — fed plain arrays so it is
+  * fully Jest-testable (Phase 0 §Q, Phase 3A §15/§16).
++ *
++ * The row->domain-model mapping functions further down (mapSiteRow etc.,
++ * Task 3) are the second, entity-specific stage of the pipeline: raw
++ * sheet arrays become a generic *Row object via rowsToObjects above, then
++ * one of these functions turns that *Row into the typed domain model
++ * (Site/Worker/SiteReport/ReportPhoto) a caller actually works with.
++ * Business-rule validation (required fields, allowed relationships) is a
++ * separate, independent layer — see Validation.ts — deliberately not
++ * duplicated here; these mappers only do structural type coercion
++ * (trimming, empty-cell -> undefined, Date -> ISO string, numeric
++ * parsing) and reject values that cannot be coerced at all rather than
++ * silently producing a valid-looking object from malformed input.
+  */
+ 
+ export class MissingHeadersError extends Error {
+@@ -11,6 +29,17 @@ export class MissingHeadersError extends Error {
+   }
+ }
+ 
++/** Thrown by the row->domain mappers below when a cell's value cannot be
++ *  coerced into the type the domain model requires at all (not merely
++ *  "missing" — an empty required field is a Validation.ts concern, this
++ *  is for a value that is present but the wrong shape/kind). */
++export class MalformedRowValueError extends Error {
++  constructor(public readonly field: string, public readonly reason: string) {
++    super(`Malformed value for "${field}": ${reason}`);
++    this.name = "MalformedRowValueError";
++  }
++}
++
+ /** Maps header name -> zero-based column index, from a raw header row. */
+ export function buildHeaderMap(headerRow: unknown[]): Record<string, number> {
+   const map: Record<string, number> = {};
+@@ -108,3 +137,136 @@ export function findRowIndexByColumnValue(
+   const index = dataRows.findIndex((row) => String(row[columnIndex] ?? "") === value);
+   return index === -1 ? null : index;
+ }
++
++// --- Row -> domain model mapping (Task 3). Centralized coercion helpers
++// below are shared by every mapXRow function so each cell type (text,
++// optional text, timestamp, enum, count) is handled exactly one way
++// across all four Site Report entities. ---
++
++/** Coerces a cell value to plain text: strings are trimmed, numbers and
++ *  booleans are stringified (spreadsheets commonly store text-looking IDs
++ *  as numbers), a missing cell becomes "". Anything else (an object, a
++ *  Date in a text column) is not a text value at all and is rejected. */
++function toTrimmedString(value: unknown, field: string): string {
++  if (value === undefined || value === null || value === "") {
++    return "";
++  }
++  if (typeof value === "string") {
++    return value.trim();
++  }
++  if (typeof value === "number" || typeof value === "boolean") {
++    return String(value);
++  }
++  throw new MalformedRowValueError(field, `expected a text value, got ${typeof value}`);
++}
++
++/** Same as toTrimmedString, but an empty result becomes undefined — for
++ *  fields the domain model declares optional. */
++function toOptionalString(value: unknown, field: string): string | undefined {
++  const trimmed = toTrimmedString(value, field);
++  return trimmed.length > 0 ? trimmed : undefined;
++}
++
++/** Coerces a date/timestamp cell to an ISO 8601 string. Google Sheets
++ *  returns a JS Date object for date-formatted cells, so that is the one
++ *  extra shape accepted beyond a plain string; a missing cell becomes ""
++ *  (Validation.ts's concern, not this function's) and anything else
++ *  (number, boolean, object) is rejected outright. */
++function toTimestamp(value: unknown, field: string): string {
++  if (value === undefined || value === null || value === "") {
++    return "";
++  }
++  if (value instanceof Date) {
++    return value.toISOString();
++  }
++  if (typeof value === "string") {
++    return value.trim();
++  }
++  throw new MalformedRowValueError(field, `expected a date/timestamp value, got ${typeof value}`);
++}
++
++/** Coerces a cell to one of a fixed set of literal string values —
++ *  the runtime guard a status/enum-typed domain field needs, since the
++ *  raw cell is an arbitrary string as far as the type system is
++ *  concerned. Rejects anything outside `allowed`, including "". */
++function toEnum<T extends string>(value: unknown, field: string, allowed: readonly T[]): T {
++  const raw = toTrimmedString(value, field);
++  if (!(allowed as readonly string[]).includes(raw)) {
++    throw new MalformedRowValueError(field, `expected one of ${allowed.join(", ")}, got "${raw}"`);
++  }
++  return raw as T;
++}
++
++/** Coerces a cell to a non-negative integer. Accepts a real number or a
++ *  numeric string; rejects an empty cell, a non-numeric string, or a
++ *  negative/non-integer value — a required count field silently becoming
++ *  0 from a blank cell would be exactly the "malformed value converted
++ *  into a valid-looking object" case Task 3 forbids. */
++function toNonNegativeInteger(value: unknown, field: string): number {
++  const num = typeof value === "number" ? value : Number(String(value ?? "").trim());
++  if (String(value ?? "").trim().length > 0 && Number.isInteger(num) && num >= 0) {
++    return num;
++  }
++  throw new MalformedRowValueError(field, `expected a non-negative integer, got "${value}"`);
++}
++
++/** Maps a SITES data row to a Site. */
++export function mapSiteRow(row: SiteRow): Site {
++  return {
++    siteId: toTrimmedString(row.siteId, "siteId"),
++    siteCode: toTrimmedString(row.siteCode, "siteCode"),
++    name: toTrimmedString(row.name, "name"),
++    address: toOptionalString(row.address, "address"),
++    clientName: toOptionalString(row.clientName, "clientName"),
++    status: toEnum(row.status, "status", ["ACTIVE", "INACTIVE"] as const),
++    startDate: toOptionalString(row.startDate, "startDate"),
++    endDate: toOptionalString(row.endDate, "endDate"),
++    createdAt: toTimestamp(row.createdAt, "createdAt"),
++    updatedAt: toTimestamp(row.updatedAt, "updatedAt"),
++  };
++}
++
++/** Maps a WORKERS data row to a Worker. */
++export function mapWorkerRow(row: WorkerRow): Worker {
++  return {
++    workerId: toTrimmedString(row.workerId, "workerId"),
++    lineUserId: toTrimmedString(row.lineUserId, "lineUserId"),
++    displayName: toTrimmedString(row.displayName, "displayName"),
++    email: toOptionalString(row.email, "email"),
++    role: toOptionalString(row.role, "role"),
++    status: toEnum(row.status, "status", ["ACTIVE", "INACTIVE"] as const),
++    createdAt: toTimestamp(row.createdAt, "createdAt"),
++    updatedAt: toTimestamp(row.updatedAt, "updatedAt"),
++  };
++}
++
++/** Maps a REPORTS data row to a SiteReport. */
++export function mapReportRow(row: ReportRow): SiteReport {
++  return {
++    reportId: toTrimmedString(row.reportId, "reportId"),
++    siteId: toTrimmedString(row.siteId, "siteId"),
++    workerId: toOptionalString(row.workerId, "workerId"),
++    lineUserId: toTrimmedString(row.lineUserId, "lineUserId"),
++    workerName: toTrimmedString(row.workerName, "workerName"),
++    reportDate: toTimestamp(row.reportDate, "reportDate"),
++    workType: toTrimmedString(row.workType, "workType"),
++    comment: toOptionalString(row.comment, "comment"),
++    photoCount: toNonNegativeInteger(row.photoCount, "photoCount"),
++    status: toEnum(row.status, "status", ["SUBMITTED"] as const),
++    createdAt: toTimestamp(row.createdAt, "createdAt"),
++    updatedAt: toTimestamp(row.updatedAt, "updatedAt"),
++  };
++}
++
++/** Maps a REPORT_PHOTOS data row to a ReportPhoto. */
++export function mapReportPhotoRow(row: ReportPhotoRow): ReportPhoto {
++  return {
++    photoId: toTrimmedString(row.photoId, "photoId"),
++    reportId: toTrimmedString(row.reportId, "reportId"),
++    fileId: toTrimmedString(row.fileId, "fileId"),
++    fileUrl: toTrimmedString(row.fileUrl, "fileUrl"),
++    fileName: toTrimmedString(row.fileName, "fileName"),
++    mimeType: toTrimmedString(row.mimeType, "mimeType"),
++    createdAt: toTimestamp(row.createdAt, "createdAt"),
++  };
++}
+diff --git a/apps/site-report/gas/src/models/Site.ts b/apps/site-report/gas/src/models/Site.ts
+index 16b726a..85b3143 100644
+--- a/apps/site-report/gas/src/models/Site.ts
++++ b/apps/site-report/gas/src/models/Site.ts
+@@ -7,4 +7,12 @@ export interface Site {
+   address?: string;
+   clientName?: string;
+   status: "ACTIVE" | "INACTIVE";
++  /** Optional project schedule bounds — legitimately empty for a site with
++   *  no fixed start/end (e.g. ongoing maintenance contract). */
++  startDate?: string;
++  endDate?: string;
++  /** Application-generated audit timestamps (ISO 8601), set on
++   *  create/update — always present once persisted. */
++  createdAt: string;
++  updatedAt: string;
+ }
+diff --git a/apps/site-report/gas/src/models/Worker.ts b/apps/site-report/gas/src/models/Worker.ts
+index 68f96bb..a93cdbd 100644
+--- a/apps/site-report/gas/src/models/Worker.ts
++++ b/apps/site-report/gas/src/models/Worker.ts
+@@ -7,4 +7,8 @@ export interface Worker {
+   email?: string;
+   role?: string;
+   status: "ACTIVE" | "INACTIVE";
++  /** Application-generated audit timestamps (ISO 8601), set on
++   *  create/update — always present once persisted. */
++  createdAt: string;
++  updatedAt: string;
+ }
+diff --git a/apps/site-report/gas/tests/RowMapper.test.ts b/apps/site-report/gas/tests/RowMapper.test.ts
+index b7a4076..caf1aa1 100644
+--- a/apps/site-report/gas/tests/RowMapper.test.ts
++++ b/apps/site-report/gas/tests/RowMapper.test.ts
+@@ -2,10 +2,16 @@ import {
+   assertRequiredHeaders,
+   buildHeaderMap,
+   findRowIndexByColumnValue,
++  mapReportPhotoRow,
++  mapReportRow,
++  mapSiteRow,
++  mapWorkerRow,
++  MalformedRowValueError,
+   MissingHeadersError,
+   objectToRow,
+   rowsToObjects,
+ } from "../src/RowMapper";
++import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow } from "../src/SheetSchemas";
+ 
+ describe("buildHeaderMap", () => {
+   it("maps header names to their column index", () => {
+@@ -148,3 +154,192 @@ describe("findRowIndexByColumnValue", () => {
+     expect(findRowIndexByColumnValue(numericHeaderMap, [[42]], "Code", "42")).toBe(0);
+   });
+ });
++
++describe("mapSiteRow", () => {
++  const validRow: SiteRow = {
++    siteId: "STE-1",
++    siteCode: "S001",
++    name: "Site A",
++    address: "Tokyo",
++    clientName: "Acme",
++    status: "ACTIVE",
++    startDate: "2026-01-01",
++    endDate: "2026-12-31",
++    createdAt: "2026-09-12T00:00:00.000Z",
++    updatedAt: "2026-09-12T00:00:00.000Z",
++  };
++
++  it("maps a valid row to a Site", () => {
++    expect(mapSiteRow(validRow)).toEqual({
++      siteId: "STE-1",
++      siteCode: "S001",
++      name: "Site A",
++      address: "Tokyo",
++      clientName: "Acme",
++      status: "ACTIVE",
++      startDate: "2026-01-01",
++      endDate: "2026-12-31",
++      createdAt: "2026-09-12T00:00:00.000Z",
++      updatedAt: "2026-09-12T00:00:00.000Z",
++    });
++  });
++
++  it("converts an empty optional cell to undefined", () => {
++    const site = mapSiteRow({ ...validRow, address: "", clientName: "", startDate: "", endDate: "" });
++    expect(site.address).toBeUndefined();
++    expect(site.clientName).toBeUndefined();
++    expect(site.startDate).toBeUndefined();
++    expect(site.endDate).toBeUndefined();
++  });
++
++  it("preserves an empty required cell as an empty string rather than inventing a value", () => {
++    const site = mapSiteRow({ ...validRow, siteId: "" });
++    expect(site.siteId).toBe("");
++  });
++
++  it("converts a Date timestamp cell to an ISO string", () => {
++    const date = new Date("2026-09-12T03:04:05.000Z");
++    const site = mapSiteRow({ ...validRow, createdAt: date as unknown as string });
++    expect(site.createdAt).toBe("2026-09-12T03:04:05.000Z");
++  });
++
++  it("preserves IDs as strings", () => {
++    expect(typeof mapSiteRow(validRow).siteId).toBe("string");
++  });
++
++  it("rejects a status value outside the allowed set", () => {
++    expect(() => mapSiteRow({ ...validRow, status: "PENDING" })).toThrow(MalformedRowValueError);
++  });
++});
++
++describe("mapWorkerRow", () => {
++  const validRow: WorkerRow = {
++    workerId: "WRK-1",
++    lineUserId: "U123",
++    displayName: "Taro",
++    email: "t@example.com",
++    role: "foreman",
++    status: "ACTIVE",
++    createdAt: "2026-09-12T00:00:00.000Z",
++    updatedAt: "2026-09-12T00:00:00.000Z",
++  };
++
++  it("maps a valid row to a Worker", () => {
++    expect(mapWorkerRow(validRow)).toEqual({
++      workerId: "WRK-1",
++      lineUserId: "U123",
++      displayName: "Taro",
++      email: "t@example.com",
++      role: "foreman",
++      status: "ACTIVE",
++      createdAt: "2026-09-12T00:00:00.000Z",
++      updatedAt: "2026-09-12T00:00:00.000Z",
++    });
++  });
++
++  it("converts an empty optional cell to undefined", () => {
++    const worker = mapWorkerRow({ ...validRow, email: "", role: "" });
++    expect(worker.email).toBeUndefined();
++    expect(worker.role).toBeUndefined();
++  });
++
++  it("rejects a status value outside the allowed set", () => {
++    expect(() => mapWorkerRow({ ...validRow, status: "ON_LEAVE" })).toThrow(MalformedRowValueError);
++  });
++});
++
++describe("mapReportRow", () => {
++  const validRow: ReportRow = {
++    reportId: "RPT-1",
++    siteId: "STE-1",
++    workerId: "WRK-1",
++    lineUserId: "U123",
++    workerName: "Taro",
++    reportDate: "2026-09-12",
++    workType: "wiring",
++    comment: "done",
++    photoCount: 3,
++    status: "SUBMITTED",
++    createdAt: "2026-09-12T00:00:00.000Z",
++    updatedAt: "2026-09-12T00:00:00.000Z",
++  };
++
++  it("maps a valid row to a SiteReport", () => {
++    expect(mapReportRow(validRow)).toEqual({
++      reportId: "RPT-1",
++      siteId: "STE-1",
++      workerId: "WRK-1",
++      lineUserId: "U123",
++      workerName: "Taro",
++      reportDate: "2026-09-12",
++      workType: "wiring",
++      comment: "done",
++      photoCount: 3,
++      status: "SUBMITTED",
++      createdAt: "2026-09-12T00:00:00.000Z",
++      updatedAt: "2026-09-12T00:00:00.000Z",
++    });
++  });
++
++  it("converts an empty optional cell to undefined", () => {
++    const report = mapReportRow({ ...validRow, workerId: "", comment: "" });
++    expect(report.workerId).toBeUndefined();
++    expect(report.comment).toBeUndefined();
++  });
++
++  it("coerces a numeric-string photoCount cell to a number", () => {
++    const report = mapReportRow({ ...validRow, photoCount: "3" as unknown as number });
++    expect(report.photoCount).toBe(3);
++  });
++
++  it("rejects a non-numeric photoCount cell instead of silently defaulting it", () => {
++    expect(() => mapReportRow({ ...validRow, photoCount: "not-a-number" as unknown as number })).toThrow(
++      MalformedRowValueError,
++    );
++  });
++
++  it("rejects an empty required photoCount cell instead of silently defaulting to zero", () => {
++    expect(() => mapReportRow({ ...validRow, photoCount: "" as unknown as number })).toThrow(
++      MalformedRowValueError,
++    );
++  });
++
++  it("rejects a status value other than SUBMITTED", () => {
++    expect(() => mapReportRow({ ...validRow, status: "DRAFT" })).toThrow(MalformedRowValueError);
++  });
++});
++
++describe("mapReportPhotoRow", () => {
++  const validRow: ReportPhotoRow = {
++    photoId: "PHO-1",
++    reportId: "RPT-1",
++    fileId: "F1",
++    fileUrl: "https://drive.google.com/x",
++    fileName: "photo.jpg",
++    mimeType: "image/jpeg",
++    createdAt: "2026-09-12T00:00:00.000Z",
++  };
++
++  it("maps a valid row to a ReportPhoto", () => {
++    expect(mapReportPhotoRow(validRow)).toEqual({
++      photoId: "PHO-1",
++      reportId: "RPT-1",
++      fileId: "F1",
++      fileUrl: "https://drive.google.com/x",
++      fileName: "photo.jpg",
++      mimeType: "image/jpeg",
++      createdAt: "2026-09-12T00:00:00.000Z",
++    });
++  });
++
++  it("preserves an empty required cell as an empty string rather than inventing a value", () => {
++    const photo = mapReportPhotoRow({ ...validRow, reportId: "" });
++    expect(photo.reportId).toBe("");
++  });
++
++  it("converts a Date timestamp cell to an ISO string", () => {
++    const date = new Date("2026-09-12T03:04:05.000Z");
++    const photo = mapReportPhotoRow({ ...validRow, createdAt: date as unknown as string });
++    expect(photo.createdAt).toBe("2026-09-12T03:04:05.000Z");
++  });
++});
+diff --git a/apps/site-report/gas/tests/models.test.ts b/apps/site-report/gas/tests/models.test.ts
+index 0150be1..53effb3 100644
+--- a/apps/site-report/gas/tests/models.test.ts
++++ b/apps/site-report/gas/tests/models.test.ts
+@@ -9,7 +9,14 @@ import { ReportPhoto } from "../src/models/ReportPhoto";
+ // time before Jest even runs.
+ describe("construction domain model shapes", () => {
+   it("accepts a minimal Site and a fully-populated Site", () => {
+-    const minimal: Site = { siteId: "STE-1", siteCode: "S001", name: "Site A", status: "ACTIVE" };
++    const minimal: Site = {
++      siteId: "STE-1",
++      siteCode: "S001",
++      name: "Site A",
++      status: "ACTIVE",
++      createdAt: "2026-09-12T00:00:00.000Z",
++      updatedAt: "2026-09-12T00:00:00.000Z",
++    };
+     const full: Site = {
+       siteId: "STE-1",
+       siteCode: "S001",
+@@ -17,13 +24,25 @@ describe("construction domain model shapes", () => {
+       address: "Tokyo",
+       clientName: "Acme",
+       status: "INACTIVE",
++      startDate: "2026-01-01",
++      endDate: "2026-12-31",
++      createdAt: "2026-09-12T00:00:00.000Z",
++      updatedAt: "2026-09-12T00:00:00.000Z",
+     };
+     expect(minimal.status).toBe("ACTIVE");
+     expect(full.clientName).toBe("Acme");
++    expect(full.endDate).toBe("2026-12-31");
+   });
+ 
+   it("accepts a minimal Worker and a fully-populated Worker", () => {
+-    const minimal: Worker = { workerId: "WRK-1", lineUserId: "U123", displayName: "Taro", status: "ACTIVE" };
++    const minimal: Worker = {
++      workerId: "WRK-1",
++      lineUserId: "U123",
++      displayName: "Taro",
++      status: "ACTIVE",
++      createdAt: "2026-09-12T00:00:00.000Z",
++      updatedAt: "2026-09-12T00:00:00.000Z",
++    };
+     const full: Worker = {
+       workerId: "WRK-1",
+       lineUserId: "U123",
+@@ -31,6 +50,8 @@ describe("construction domain model shapes", () => {
+       email: "t@example.com",
+       role: "foreman",
+       status: "ACTIVE",
++      createdAt: "2026-09-12T00:00:00.000Z",
++      updatedAt: "2026-09-12T00:00:00.000Z",
+     };
+     expect(minimal.status).toBe("ACTIVE");
+     expect(full.role).toBe("foreman");
+--- New file: apps/site-report/gas/src/Validation.ts ---
+diff --git a/apps/site-report/gas/src/Validation.ts b/apps/site-report/gas/src/Validation.ts
+new file mode 100644
+index 0000000..bc56c0a
+--- /dev/null
++++ b/apps/site-report/gas/src/Validation.ts
+@@ -0,0 +1,158 @@
++import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow } from "./SheetSchemas";
++
++/**
++ * Pure business/domain validation for Site Report rows (Task 3). Operates
++ * on the *Row shapes RowMapper.ts's rowsToObjects produces — i.e. mapped
++ * sheet data, before RowMapper.ts's mapXRow functions narrow it into the
++ * final domain model (Site/Worker/SiteReport/ReportPhoto). Never touches
++ * SpreadsheetApp, so every function here is directly Jest-testable.
++ *
++ * Deliberately separate from RowMapper.ts's mapXRow functions (Phase 3A
++ * §5 "Separation of responsibilities"): those reject values that cannot
++ * be *coerced* into the right shape at all (a non-numeric photoCount, an
++ * unparseable timestamp type); this file only ever reports business-rule
++ * issues (required-but-empty, disallowed value, unparseable date/number
++ * format) as data — it never throws.
++ *
++ * One issue = one field + one human-readable reason (same {field, reason}
++ * shape as ConfigParser.ts's ConfigFieldIssue — the project's existing
++ * convention), so a caller can always say which field failed and why,
++ * per Task 3 §6.
++ */
++export interface ValidationIssue {
++  field: string;
++  reason: string;
++}
++
++const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
++
++/** True only for a string that is both YYYY-MM-DD shaped and a real
++ *  calendar date (rejects e.g. "2026-13-40", which the regex alone would
++ *  accept). Local to this file — duplicated in spirit from, but not
++ *  imported from, apps/salon-portfolio/gas/src/Utils.ts's identical
++ *  helper, since the two apps must not share code. */
++function isValidCalendarDateString(value: string): boolean {
++  if (!DATE_ONLY_PATTERN.test(value)) {
++    return false;
++  }
++  const [year, month, day] = value.split("-").map(Number);
++  const date = new Date(Date.UTC(year, month - 1, day));
++  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
++}
++
++function requireNonEmptyString(value: string, field: string, issues: ValidationIssue[]): void {
++  if (value.trim().length === 0) {
++    issues.push({ field, reason: "is required" });
++  }
++}
++
++/** Validates a required calendar-date-only field (e.g. reportDate) —
++ *  missing is reported the same way as any other required field, and a
++ *  present-but-malformed value is reported distinctly. */
++function requireValidDate(value: string, field: string, issues: ValidationIssue[]): void {
++  const trimmed = value.trim();
++  if (trimmed.length === 0) {
++    issues.push({ field, reason: "is required" });
++    return;
++  }
++  if (!isValidCalendarDateString(trimmed)) {
++    issues.push({ field, reason: "must be a valid calendar date in YYYY-MM-DD format" });
++  }
++}
++
++/** Validates an optional calendar-date-only field (e.g. Site.startDate) —
++ *  an empty value is not an issue at all, only a present-but-malformed
++ *  one is. */
++function validateOptionalDate(value: string | undefined, field: string, issues: ValidationIssue[]): void {
++  if (value === undefined || value.trim().length === 0) {
++    return;
++  }
++  if (!isValidCalendarDateString(value.trim())) {
++    issues.push({ field, reason: "must be a valid calendar date in YYYY-MM-DD format" });
++  }
++}
++
++/** Validates a required ISO 8601 timestamp field (createdAt/updatedAt). */
++function requireValidTimestamp(value: string, field: string, issues: ValidationIssue[]): void {
++  const trimmed = value.trim();
++  if (trimmed.length === 0) {
++    issues.push({ field, reason: "is required" });
++    return;
++  }
++  if (Number.isNaN(Date.parse(trimmed))) {
++    issues.push({ field, reason: "must be a valid ISO 8601 timestamp" });
++  }
++}
++
++function requireStatus<T extends string>(
++  value: string,
++  field: string,
++  allowed: readonly T[],
++  issues: ValidationIssue[],
++): void {
++  if (!(allowed as readonly string[]).includes(value)) {
++    const expected = allowed.length === 1 ? `"${allowed[0]}"` : allowed.map((v) => `"${v}"`).join(" or ");
++    issues.push({ field, reason: `must be ${expected}, got "${value}"` });
++  }
++}
++
++/** Validates a SITES row. */
++export function validateSiteRow(row: SiteRow): ValidationIssue[] {
++  const issues: ValidationIssue[] = [];
++  requireNonEmptyString(row.siteId, "siteId", issues);
++  requireNonEmptyString(row.siteCode, "siteCode", issues);
++  requireNonEmptyString(row.name, "name", issues);
++  requireStatus(row.status, "status", ["ACTIVE", "INACTIVE"] as const, issues);
++  validateOptionalDate(row.startDate, "startDate", issues);
++  validateOptionalDate(row.endDate, "endDate", issues);
++  requireValidTimestamp(row.createdAt, "createdAt", issues);
++  requireValidTimestamp(row.updatedAt, "updatedAt", issues);
++  return issues;
++}
++
++/** Validates a WORKERS row. */
++export function validateWorkerRow(row: WorkerRow): ValidationIssue[] {
++  const issues: ValidationIssue[] = [];
++  requireNonEmptyString(row.workerId, "workerId", issues);
++  requireNonEmptyString(row.lineUserId, "lineUserId", issues);
++  requireNonEmptyString(row.displayName, "displayName", issues);
++  requireStatus(row.status, "status", ["ACTIVE", "INACTIVE"] as const, issues);
++  requireValidTimestamp(row.createdAt, "createdAt", issues);
++  requireValidTimestamp(row.updatedAt, "updatedAt", issues);
++  return issues;
++}
++
++/** Validates a REPORTS row. `siteId` is the required report/site
++ *  relationship; `workerId` stays optional (a report may be submitted
++ *  before a worker record is linked) so it is deliberately not checked
++ *  here. */
++export function validateReportRow(row: ReportRow): ValidationIssue[] {
++  const issues: ValidationIssue[] = [];
++  requireNonEmptyString(row.reportId, "reportId", issues);
++  requireNonEmptyString(row.siteId, "siteId", issues);
++  requireNonEmptyString(row.lineUserId, "lineUserId", issues);
++  requireNonEmptyString(row.workerName, "workerName", issues);
++  requireValidDate(row.reportDate, "reportDate", issues);
++  requireNonEmptyString(row.workType, "workType", issues);
++  requireStatus(row.status, "status", ["SUBMITTED"] as const, issues);
++  if (typeof row.photoCount !== "number" || !Number.isInteger(row.photoCount) || row.photoCount < 0) {
++    issues.push({ field: "photoCount", reason: "must be a non-negative integer" });
++  }
++  requireValidTimestamp(row.createdAt, "createdAt", issues);
++  requireValidTimestamp(row.updatedAt, "updatedAt", issues);
++  return issues;
++}
++
++/** Validates a REPORT_PHOTOS row. `reportId` is the required
++ *  photo/report relationship. */
++export function validateReportPhotoRow(row: ReportPhotoRow): ValidationIssue[] {
++  const issues: ValidationIssue[] = [];
++  requireNonEmptyString(row.photoId, "photoId", issues);
++  requireNonEmptyString(row.reportId, "reportId", issues);
++  requireNonEmptyString(row.fileId, "fileId", issues);
++  requireNonEmptyString(row.fileUrl, "fileUrl", issues);
++  requireNonEmptyString(row.fileName, "fileName", issues);
++  requireNonEmptyString(row.mimeType, "mimeType", issues);
++  requireValidTimestamp(row.createdAt, "createdAt", issues);
++  return issues;
++}
+--- New file: apps/site-report/gas/tests/Validation.test.ts ---
+diff --git a/apps/site-report/gas/tests/Validation.test.ts b/apps/site-report/gas/tests/Validation.test.ts
+new file mode 100644
+index 0000000..62f7d91
+--- /dev/null
++++ b/apps/site-report/gas/tests/Validation.test.ts
+@@ -0,0 +1,206 @@
++import {
++  validateReportPhotoRow,
++  validateReportRow,
++  validateSiteRow,
++  validateWorkerRow,
++} from "../src/Validation";
++import { ReportPhotoRow, ReportRow, SiteRow, WorkerRow } from "../src/SheetSchemas";
++
++describe("validateSiteRow", () => {
++  const validRow: SiteRow = {
++    siteId: "STE-1",
++    siteCode: "S001",
++    name: "Site A",
++    address: "Tokyo",
++    clientName: "Acme",
++    status: "ACTIVE",
++    startDate: "2026-01-01",
++    endDate: "2026-12-31",
++    createdAt: "2026-09-12T00:00:00.000Z",
++    updatedAt: "2026-09-12T00:00:00.000Z",
++  };
++
++  it("returns no issues for a valid row", () => {
++    expect(validateSiteRow(validRow)).toEqual([]);
++  });
++
++  it("reports a missing required ID", () => {
++    const issues = validateSiteRow({ ...validRow, siteId: "" });
++    expect(issues).toContainEqual({ field: "siteId", reason: "is required" });
++  });
++
++  it("reports a missing required text field", () => {
++    const issues = validateSiteRow({ ...validRow, name: "" });
++    expect(issues).toContainEqual({ field: "name", reason: "is required" });
++  });
++
++  it("reports an invalid status value", () => {
++    const issues = validateSiteRow({ ...validRow, status: "PENDING" });
++    expect(issues).toContainEqual({
++      field: "status",
++      reason: 'must be "ACTIVE" or "INACTIVE", got "PENDING"',
++    });
++  });
++
++  it("reports an invalid timestamp", () => {
++    const issues = validateSiteRow({ ...validRow, createdAt: "not-a-date" });
++    expect(issues).toContainEqual({ field: "createdAt", reason: "must be a valid ISO 8601 timestamp" });
++  });
++
++  it("reports an invalid optional date without requiring it", () => {
++    const missing = validateSiteRow({ ...validRow, startDate: "" });
++    expect(missing).toEqual([]);
++    const malformed = validateSiteRow({ ...validRow, startDate: "2026-13-40" });
++    expect(malformed).toContainEqual({
++      field: "startDate",
++      reason: "must be a valid calendar date in YYYY-MM-DD format",
++    });
++  });
++
++  it("accumulates every issue in one pass rather than stopping at the first", () => {
++    const issues = validateSiteRow({ ...validRow, siteId: "", name: "", status: "BAD" });
++    expect(issues).toHaveLength(3);
++  });
++});
++
++describe("validateWorkerRow", () => {
++  const validRow: WorkerRow = {
++    workerId: "WRK-1",
++    lineUserId: "U123",
++    displayName: "Taro",
++    email: "t@example.com",
++    role: "foreman",
++    status: "ACTIVE",
++    createdAt: "2026-09-12T00:00:00.000Z",
++    updatedAt: "2026-09-12T00:00:00.000Z",
++  };
++
++  it("returns no issues for a valid row", () => {
++    expect(validateWorkerRow(validRow)).toEqual([]);
++  });
++
++  it("reports a missing required ID", () => {
++    expect(validateWorkerRow({ ...validRow, workerId: "" })).toContainEqual({
++      field: "workerId",
++      reason: "is required",
++    });
++  });
++
++  it("reports a missing required text field", () => {
++    expect(validateWorkerRow({ ...validRow, displayName: "" })).toContainEqual({
++      field: "displayName",
++      reason: "is required",
++    });
++  });
++
++  it("reports an invalid status value", () => {
++    expect(validateWorkerRow({ ...validRow, status: "ON_LEAVE" })).toContainEqual({
++      field: "status",
++      reason: 'must be "ACTIVE" or "INACTIVE", got "ON_LEAVE"',
++    });
++  });
++});
++
++describe("validateReportRow", () => {
++  const validRow: ReportRow = {
++    reportId: "RPT-1",
++    siteId: "STE-1",
++    workerId: "WRK-1",
++    lineUserId: "U123",
++    workerName: "Taro",
++    reportDate: "2026-09-12",
++    workType: "wiring",
++    comment: "done",
++    photoCount: 3,
++    status: "SUBMITTED",
++    createdAt: "2026-09-12T00:00:00.000Z",
++    updatedAt: "2026-09-12T00:00:00.000Z",
++  };
++
++  it("returns no issues for a valid row", () => {
++    expect(validateReportRow(validRow)).toEqual([]);
++  });
++
++  it("reports the missing report/site relationship", () => {
++    expect(validateReportRow({ ...validRow, siteId: "" })).toContainEqual({
++      field: "siteId",
++      reason: "is required",
++    });
++  });
++
++  it("reports a missing required text field", () => {
++    expect(validateReportRow({ ...validRow, workerName: "" })).toContainEqual({
++      field: "workerName",
++      reason: "is required",
++    });
++  });
++
++  it("reports an invalid status value", () => {
++    expect(validateReportRow({ ...validRow, status: "DRAFT" })).toContainEqual({
++      field: "status",
++      reason: 'must be "SUBMITTED", got "DRAFT"',
++    });
++  });
++
++  it("reports an invalid report date", () => {
++    expect(validateReportRow({ ...validRow, reportDate: "2026/09/12" })).toContainEqual({
++      field: "reportDate",
++      reason: "must be a valid calendar date in YYYY-MM-DD format",
++    });
++  });
++
++  it("reports an invalid timestamp", () => {
++    expect(validateReportRow({ ...validRow, updatedAt: "not-a-date" })).toContainEqual({
++      field: "updatedAt",
++      reason: "must be a valid ISO 8601 timestamp",
++    });
++  });
++
++  it("reports a malformed photoCount without treating it as valid", () => {
++    expect(validateReportRow({ ...validRow, photoCount: -1 })).toContainEqual({
++      field: "photoCount",
++      reason: "must be a non-negative integer",
++    });
++  });
++
++  it("does not require the optional workerId relationship", () => {
++    expect(validateReportRow({ ...validRow, workerId: "" })).toEqual([]);
++  });
++});
++
++describe("validateReportPhotoRow", () => {
++  const validRow: ReportPhotoRow = {
++    photoId: "PHO-1",
++    reportId: "RPT-1",
++    fileId: "F1",
++    fileUrl: "https://drive.google.com/x",
++    fileName: "photo.jpg",
++    mimeType: "image/jpeg",
++    createdAt: "2026-09-12T00:00:00.000Z",
++  };
++
++  it("returns no issues for a valid row", () => {
++    expect(validateReportPhotoRow(validRow)).toEqual([]);
++  });
++
++  it("reports the missing photo/report relationship", () => {
++    expect(validateReportPhotoRow({ ...validRow, reportId: "" })).toContainEqual({
++      field: "reportId",
++      reason: "is required",
++    });
++  });
++
++  it("reports a missing required text field", () => {
++    expect(validateReportPhotoRow({ ...validRow, fileName: "" })).toContainEqual({
++      field: "fileName",
++      reason: "is required",
++    });
++  });
++
++  it("reports an invalid timestamp", () => {
++    expect(validateReportPhotoRow({ ...validRow, createdAt: "not-a-date" })).toContainEqual({
++      field: "createdAt",
++      reason: "must be a valid ISO 8601 timestamp",
++    });
++  });
++});

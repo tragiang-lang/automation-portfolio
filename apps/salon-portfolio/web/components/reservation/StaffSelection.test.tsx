@@ -34,4 +34,22 @@ describe("StaffSelection", () => {
     render(<StaffSelection staff={staff} selectedStaffId={null} onSelect={jest.fn()} />);
     expect(screen.queryByText("ST001")).not.toBeInTheDocument();
   });
+
+  it("marks the selected staff member as checked with a visible highlighted background", () => {
+    render(<StaffSelection staff={staff} selectedStaffId="ST002" onSelect={jest.fn()} />);
+    const selected = screen.getByRole("radio", { name: /佐藤/ });
+    expect(selected).toBeChecked();
+    expect(selected.closest("label")).toHaveClass("bg-surface-sunken");
+
+    const notSelected = screen.getByRole("radio", { name: /鈴木/ });
+    expect(notSelected).not.toBeChecked();
+    expect(notSelected.closest("label")).not.toHaveClass("bg-surface-sunken");
+  });
+
+  it("marks the 指名なし option as checked with a visible highlighted background when selected", () => {
+    render(<StaffSelection staff={staff} selectedStaffId={ANY_STAFF} onSelect={jest.fn()} />);
+    const selected = screen.getByRole("radio", { name: /指名なし/ });
+    expect(selected).toBeChecked();
+    expect(selected.closest("label")).toHaveClass("bg-surface-sunken");
+  });
 });

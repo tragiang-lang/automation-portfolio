@@ -2,7 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { resolveNavHref } from "@/lib/utils/navItems";
 import type { NavItem } from "@/types/content";
 
 /**
@@ -24,6 +26,7 @@ export function MobileNav({
   reservationEnabled?: boolean;
 }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!open) return;
@@ -74,7 +77,7 @@ export function MobileNav({
           {navItems.map((item) => (
             <li key={item.href}>
               <Link
-                href={item.href}
+                href={resolveNavHref(item.href, pathname)}
                 onClick={onClose}
                 className="block py-4 text-[20px] font-medium text-primary"
               >

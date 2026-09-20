@@ -1,0 +1,26 @@
+  console.error
+    [liff] LIFF_INIT_FAILED: Failed to initialize the LINE app. (cause: network down)
+
+      at error (lib/D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/apps/site-report/web/lib/liff.ts:41:13)
+      at createLiffError (lib/D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/apps/site-report/web/lib/liff.ts:113:14)
+      at Object.<anonymous> (lib/D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/apps/site-report/web/lib/liff.test.ts:94:19)
+
+  console.error
+    [liff] LIFF_LOGIN_STATUS_FAILED: Failed to determine the LINE login status. (cause: cannot determine login state)
+
+      at error (lib/D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/apps/site-report/web/lib/liff.ts:41:13)
+      at createLiffError (lib/D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/apps/site-report/web/lib/liff.ts:123:14)
+      at Object.<anonymous> (lib/D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/apps/site-report/web/lib/liff.test.ts:121:19)
+
+  console.error
+    [liff] LIFF_PROFILE_FAILED: Failed to retrieve the LINE profile. (cause: boom)
+
+      at error (lib/D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/apps/site-report/web/lib/liff.ts:41:13)
+      at createLiffError (lib/D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/apps/site-report/web/lib/liff.ts:141:14)
+      at Object.<anonymous> (lib/D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/apps/site-report/web/lib/liff.test.ts:136:19)
+
+Test Suites: 18 passed, 18 total
+Tests:       172 passed, 172 total
+Snapshots:   0 total
+Time:        4.912 s
+Ran all test suites.

@@ -1,0 +1,12 @@
+ apps/site-report/gas/src/Api.ts              |  270 ++++++-
+ apps/site-report/gas/src/RowMapper.ts        |  162 ++++
+ apps/site-report/gas/src/SheetStore.ts       |    9 +
+ apps/site-report/gas/src/index.ts            |   28 +-
+ apps/site-report/gas/src/models/Site.ts      |    8 +
+ apps/site-report/gas/src/models/Worker.ts    |    4 +
+ apps/site-report/gas/tests/RowMapper.test.ts |  195 +++++
+ apps/site-report/gas/tests/models.test.ts    |   25 +-
+ apps/site-report/web/package-lock.json       | 1083 +++++++++++++++++++++++++-
+ apps/site-report/web/package.json            |    1 +
+ docs/site-report-architecture-overview.md    |  224 +++++-
+ 11 files changed, 1959 insertions(+), 50 deletions(-)

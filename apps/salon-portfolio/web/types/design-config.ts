@@ -74,6 +74,7 @@ export type HomeSection =
   | "menu"
   | "staff"
   | "gallery"
+  | "testimonials"
   | "reservation"
   | "salon-features"
   | "customer-flow"

@@ -1,0 +1,372 @@
+warning: in the working copy of 'apps/site-report/gas/src/Api.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/site-report/gas/src/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/site-report-architecture-overview.md', LF will be replaced by CRLF the next time Git touches it
+diff --git a/apps/site-report/gas/src/Api.ts b/apps/site-report/gas/src/Api.ts
+index 8b983fb..471f15c 100644
+--- a/apps/site-report/gas/src/Api.ts
++++ b/apps/site-report/gas/src/Api.ts
+@@ -1,9 +1,14 @@
+-/** Shared request/response envelope for every future action (same shape
+- *  as apps/salon-portfolio/gas/src/models/Api.ts's ApiRequest/ApiResponse
+- *  — generic, no salon coupling). No action is implemented against this
+- *  envelope yet; a later task adds handleApiRequest + real action
+- *  handlers (GET_SITES/SUBMIT_REPORT), same as salon's Api.ts grew
+- *  action-by-action across several phases. */
++import { getSiteReportConfig, SiteReportConfigError } from "./ConfigStore";
++import { getSiteRows } from "./SitesRepository";
++import { MalformedRowValueError, mapSiteRow, MissingHeadersError } from "./RowMapper";
++import { validateSiteRow, ValidationIssue } from "./Validation";
++import { SiteRow } from "./SheetSchemas";
++import { Site } from "./models/Site";
++
++/** Shared request/response envelope for every action — same shape as
++ *  apps/salon-portfolio/gas/src/models/Api.ts's ApiRequest/ApiResponse
++ *  (generic, no salon coupling). Task 4 wires the first real action
++ *  (GET_SITES) against this envelope; SUBMIT_REPORT is a later task. */
+ export interface ApiRequest {
+   action: string;
+   payload?: unknown;
+@@ -11,4 +16,195 @@ export interface ApiRequest {
+ 
+ export type ApiResponse<T = unknown> =
+   | { ok: true; data: T }
+-  | { ok: false; error: { code: string; message: string } };
++  | { ok: false; error: { code: ErrorCode; message: string } };
++
++/** Application-level API error codes (Task 4) — every code maps to a
++ *  fixed, safe-to-show message in this file, never a raw exception
++ *  message (same boundary rule as salon's ERROR_CODES/Api.ts). Minimal
++ *  set: only what GET_SITES actually needs. */
++export const ERROR_CODES = {
++  VALIDATION_ERROR: "VALIDATION_ERROR",
++  CONFIG_INVALID: "CONFIG_INVALID",
++  SHEET_ERROR: "SHEET_ERROR",
++  DATA_INVALID: "DATA_INVALID",
++  INTERNAL_ERROR: "INTERNAL_ERROR",
++} as const;
++
++export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
++
++/** Parses and shape-checks the raw POST body. Pure — never touches GAS
++ *  globals — so dispatch logic is Jest-testable independent of Sheets
++ *  access (same convention as salon's Api.ts parseApiRequest). */
++export function parseApiRequest(
++  rawBody: string | undefined,
++): { ok: true; request: ApiRequest } | { ok: false; message: string } {
++  if (!rawBody || rawBody.trim().length === 0) {
++    return { ok: false, message: "Request body is empty." };
++  }
++  let parsed: unknown;
++  try {
++    parsed = JSON.parse(rawBody);
++  } catch {
++    return { ok: false, message: "Request body is not valid JSON." };
++  }
++  if (
++    typeof parsed !== "object" ||
++    parsed === null ||
++    Array.isArray(parsed) ||
++    typeof (parsed as { action?: unknown }).action !== "string" ||
++    (parsed as { action: string }).action.trim().length === 0
++  ) {
++    return { ok: false, message: 'Request body must include a non-empty "action" field.' };
++  }
++  return { ok: true, request: parsed as ApiRequest };
++}
++
++export function buildSuccessResponse<T>(data: T): ApiResponse<T> {
++  return { ok: true, data };
++}
++
++export function buildErrorResponse(code: ErrorCode, message: string): ApiResponse<never> {
++  return { ok: false, error: { code, message } };
++}
++
++/** Maps a caught SiteReportConfigError to the stable public error
++ *  contract — never forwards `issues` (server-side diagnostic detail
++ *  only) to the caller. The issues are logged to the execution
++ *  transcript for the developer to inspect manually (same convention as
++ *  salon's mapConfigErrorToResponse). */
++export function mapConfigErrorToResponse(error: SiteReportConfigError): ApiResponse<never> {
++  console.error("[GET_SITES] CONFIG_INVALID:", JSON.stringify(error.issues));
++  return buildErrorResponse(
++    ERROR_CODES.CONFIG_INVALID,
++    "Site Report configuration could not be loaded. Please contact the administrator.",
++  );
++}
++
++/** Maps a caught MissingHeadersError (RowMapper.ts — a required sheet
++ *  column is missing/renamed) to the stable public error contract. The
++ *  specific missing header names are logged server-side only and never
++ *  included in the client-facing message (same convention as salon's
++ *  mapMissingHeadersErrorToResponse). */
++export function mapMissingHeadersErrorToResponse(error: MissingHeadersError): ApiResponse<never> {
++  console.error("[GET_SITES] SHEET_ERROR: missing headers:", error.missing.join(", "));
++  return buildErrorResponse(
++    ERROR_CODES.SHEET_ERROR,
++    "The Sites sheet could not be read. Please contact the administrator.",
++  );
++}
++
++/** Outcome of mapping+validating every SITES row (Task 4). Deliberately
++ *  preserves Task 3's mapping/validation split: a "malformed" result
++ *  comes from mapSiteRow's structural coercion rejecting a value outright
++ *  (RowMapper.MalformedRowValueError); an "invalid" result comes from
++ *  validateSiteRow reporting a business-rule issue (required field
++ *  empty, disallowed status, bad date format) on an otherwise
++ *  well-shaped row. Either way, the whole GET_SITES call fails rather
++ *  than silently dropping/defaulting the bad row (Task 4 §11). */
++export type SitesResult =
++  | { ok: true; sites: Site[] }
++  | { ok: false; kind: "malformed"; index: number; field: string; reason: string }
++  | { ok: false; kind: "invalid"; index: number; issues: ValidationIssue[] };
++
++/** Pure core of GET_SITES: given already-read raw SITES rows (in
++ *  Spreadsheet order), maps and validates each one. Never touches
++ *  SpreadsheetApp — fed plain arrays in tests, same split as
++ *  ConfigStore.buildSiteReportConfigFromRawRows. For each row, mapSiteRow
++ *  runs first (it throws for a value that cannot be coerced into a Site
++ *  field at all, e.g. a status outside ACTIVE/INACTIVE — a strict subset
++ *  of what validateSiteRow itself would flag as a business-rule issue
++ *  for that same field), then validateSiteRow runs on the same raw row
++ *  to catch business-rule problems mapSiteRow tolerates (e.g. an empty
++ *  required siteId, which mapSiteRow preserves as "" rather than
++ *  inventing a value for). Row order is preserved — no sorting. */
++export function buildSitesResult(rows: SiteRow[]): SitesResult {
++  const sites: Site[] = [];
++  for (let index = 0; index < rows.length; index++) {
++    const row = rows[index];
++    let site: Site;
++    try {
++      site = mapSiteRow(row);
++    } catch (error) {
++      if (error instanceof MalformedRowValueError) {
++        return { ok: false, kind: "malformed", index, field: error.field, reason: error.reason };
++      }
++      throw error;
++    }
++    const issues = validateSiteRow(row);
++    if (issues.length > 0) {
++      return { ok: false, kind: "invalid", index, issues };
++    }
++    sites.push(site);
++  }
++  return { ok: true, sites };
++}
++
++export interface GetSitesResponseData {
++  sites: Site[];
++}
++
++function getSitesActionInner(): ApiResponse<GetSitesResponseData> {
++  // Task 4 §8: GET_SITES must not bypass Task 2's CONFIG validation, even
++  // though SiteReportConfig itself carries no per-sheet toggle — an
++  // invalid CONFIG means the whole app is unhealthy, so every action
++  // refuses the same way (same "read config first" shape as salon's
++  // action handlers).
++  getSiteReportConfig();
++
++  const rows = getSiteRows();
++  const result = buildSitesResult(rows);
++  if (!result.ok) {
++    if (result.kind === "malformed") {
++      console.error(
++        `[GET_SITES] malformed row at index ${result.index}, field "${result.field}": ${result.reason}`,
++      );
++    } else {
++      console.error(`[GET_SITES] invalid row at index ${result.index}:`, JSON.stringify(result.issues));
++    }
++    return buildErrorResponse(
++      ERROR_CODES.DATA_INVALID,
++      "Site data failed validation. Please contact the administrator.",
++    );
++  }
++  return buildSuccessResponse({ sites: result.sites });
++}
++
++/** `GET_SITES` action handler (Task 4). Thin: reads the real SITES sheet
++ *  via SitesRepository.getSiteRows, maps+validates through
++ *  buildSitesResult, and translates any thrown infrastructure error into
++ *  the stable error envelope. Not unit tested directly with a real
++ *  spreadsheet — getSiteReportConfig/getSiteRows are mocked in Api.test.ts
++ *  the same way salon's Api.test.ts mocks getConfig/Catalog; buildSitesResult
++ *  above and Validation.ts/RowMapper.ts carry the tested row-level logic. */
++export function getSitesAction(): ApiResponse<GetSitesResponseData> {
++  try {
++    return getSitesActionInner();
++  } catch (error) {
++    if (error instanceof SiteReportConfigError) {
++      return mapConfigErrorToResponse(error);
++    }
++    if (error instanceof MissingHeadersError) {
++      return mapMissingHeadersErrorToResponse(error);
++    }
++    console.error("[GET_SITES] unexpected error:", error);
++    return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "An unexpected server error occurred.");
++  }
++}
++
++/** Single POST entrypoint's dispatch logic (same "all actions share one
++ *  endpoint, routed by an `action` field" shape as salon's
++ *  handleApiRequest). Only `GET_SITES` is implemented per Task 4 scope —
++ *  every other action name is rejected as a validation error; there is
++ *  nothing else to route to yet (SUBMIT_REPORT is a later task). */
++export function handleApiRequest(rawBody: string | undefined): ApiResponse {
++  const parsed = parseApiRequest(rawBody);
++  if (!parsed.ok) {
++    return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, parsed.message);
++  }
++  switch (parsed.request.action) {
++    case "GET_SITES":
++      return getSitesAction();
++    default:
++      return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, `Unsupported action: "${parsed.request.action}".`);
++  }
++}
+diff --git a/apps/site-report/gas/src/index.ts b/apps/site-report/gas/src/index.ts
+index ffc4f2d..2b799f3 100644
+--- a/apps/site-report/gas/src/index.ts
++++ b/apps/site-report/gas/src/index.ts
+@@ -1,11 +1,12 @@
+ import { getHealthStatus } from "./Health";
++import { handleApiRequest } from "./Api";
+ 
+ /**
+- * doGet liveness entrypoint only (Task 1 foundation). No doPost/action
+- * dispatch yet — Api.ts's ApiRequest/ApiResponse envelope exists but has
+- * no action handler wired to it until a later task implements
+- * GET_SITES/SUBMIT_REPORT. Mirrors apps/salon-portfolio/gas/src/Code.ts's
+- * Phase-1-era doGet-only shape.
++ * doGet/doPost entrypoints only — Api.ts owns all action dispatch/business
++ * logic (Task 4 adds the first real action, GET_SITES; SUBMIT_REPORT is a
++ * later task). Mirrors apps/salon-portfolio/gas/src/Code.ts's module
++ * boundary: this file must never contain routing, validation, or business
++ * logic itself.
+  */
+ function doGet(): GoogleAppsScript.Content.TextOutput {
+   return ContentService.createTextOutput(
+@@ -13,7 +14,22 @@ function doGet(): GoogleAppsScript.Content.TextOutput {
+   ).setMimeType(ContentService.MimeType.JSON);
+ }
+ 
++function doPost(
++  e: GoogleAppsScript.Events.DoPost,
++): GoogleAppsScript.Content.TextOutput {
++  const rawBody = e?.postData?.contents;
++  const response = handleApiRequest(rawBody);
++  return ContentService.createTextOutput(
++    JSON.stringify(response),
++  ).setMimeType(ContentService.MimeType.JSON);
++}
++
+ // esbuild bundles this file into an IIFE, so top-level function
+ // declarations are not visible to the Apps Script trigger runtime unless
+ // explicitly attached to the real global object (same as salon's Code.ts).
+-(globalThis as unknown as { doGet: typeof doGet }).doGet = doGet;
++(
++  globalThis as unknown as { doGet: typeof doGet; doPost: typeof doPost }
++).doGet = doGet;
++(
++  globalThis as unknown as { doGet: typeof doGet; doPost: typeof doPost }
++).doPost = doPost;
+diff --git a/docs/site-report-architecture-overview.md b/docs/site-report-architecture-overview.md
+index db18c0b..75d1132 100644
+--- a/docs/site-report-architecture-overview.md
++++ b/docs/site-report-architecture-overview.md
+@@ -1,7 +1,7 @@
+ # site-report Architecture Overview
+ 
+-Status: Task 2 (CONFIG + Sheets schema foundation). No `GET_SITES`,
+-`SUBMIT_REPORT`, LIFF auth, or any report-flow business logic exists yet.
++Status: Task 4 (`GET_SITES` read-only API). `SUBMIT_REPORT`, LIFF auth, and
++any write-side report-flow business logic do not exist yet.
+ 
+ ## Purpose
+ 
+@@ -55,11 +55,13 @@ apps/site-report/web/   Next.js (LIFF host), calls the gas backend over
+ apps/site-report/gas/    Google Apps Script backend, construction domain.
+ ```
+ 
+-As of Task 2: `web` is unchanged from Task 1 (placeholder home page,
+-`GET /api/health`); `gas` has a `doGet` liveness entrypoint
+-(`src/index.ts`), domain model types (`src/models/`), the Sheet
+-schema/config/API-envelope foundation from Task 1, and now a working
+-CONFIG-reading configuration layer — still no `doPost`/action dispatch.
++As of Task 4: `web` is unchanged from Task 1 (placeholder home page,
++`GET /api/health`); `gas` has a `doGet` liveness entrypoint plus a `doPost`
++action dispatcher (`src/index.ts` → `Api.ts`'s `handleApiRequest`), domain
++model types (`src/models/`), the Sheet schema/config/API-envelope
++foundation from Task 1, a working CONFIG-reading configuration layer
++(Task 2), Task 3's RowMapper/Validation layer, and now the first real
++action, `GET_SITES` (Task 4).
+ 
+ ## CONFIG + Sheets Schema Foundation (Task 2)
+ 
+@@ -101,17 +103,56 @@ checks `SheetSchemas.REQUIRED_HEADERS[name]` for all five sheets
+ unrecognized columns are always accepted (only presence of the required
+ set is checked) — same tolerance as the CONFIG key policy above.
+ 
+-**What this still does not do:** no `Api.ts` wiring (`getSiteReportConfig`
+-is not called from anywhere yet — no action dispatcher exists);
+-no CRUD for SITES/WORKERS/REPORTS/REPORT_PHOTOS; no semantic/format
+-validation beyond non-empty; no `GET_SITES`/`SUBMIT_REPORT`.
++**What Task 2 still did not do:** no `Api.ts` wiring, no CRUD for
++SITES/WORKERS/REPORTS/REPORT_PHOTOS, no semantic/format validation beyond
++non-empty.
++
++## Domain models, RowMapper, Validation (Task 3)
++
++`src/models/{Site,Worker,Report,ReportPhoto}.ts` — plain domain types
++structurally mirroring their Task 1 `*Row` schema. `RowMapper.ts` adds
++`mapSiteRow`/`mapWorkerRow`/`mapReportRow`/`mapReportPhotoRow`: pure
++structural coercion (trim text, empty-cell → `undefined` for optional
++fields, `Date` → ISO string, numeric parsing) from a `*Row` to its domain
++model, throwing `MalformedRowValueError` for a value that cannot be
++coerced into the field's type at all (never silently producing a
++valid-looking object from bad input). `Validation.ts` adds
++`validateSiteRow`/`validateWorkerRow`/`validateReportRow`/
++`validateReportPhotoRow`: pure business-rule checks (required-but-empty,
++disallowed status, malformed date/timestamp format) over the *same* raw
++`*Row` shape, returning a `ValidationIssue[]` (`{ field, reason }`) rather
++than throwing. Deliberately two independent passes over the same input,
++not a pipeline — a bad status value, for example, is rejected by
++`mapSiteRow` (`MalformedRowValueError`) before `validateSiteRow` would
++otherwise also flag it as a business-rule issue.
++
++## `GET_SITES` (Task 4)
++
++The first real `Api.ts` action, wired into `doPost` via
++`handleApiRequest(rawBody)` (`src/index.ts`), same
++`{ action, payload? }` request / `{ ok, data | error }` response envelope
++Task 1 defined. `getSitesAction()` calls `getSiteReportConfig()` first —
++an invalid CONFIG fails the whole action, since every action must respect
++Task 2's config validation even where GET_SITES itself has no per-sheet
++config key — then `SitesRepository.getSiteRows()`, the thin,
++not-unit-tested Sheets read (`getConfiguredSpreadsheet` →
++`getRequiredSheet(SITES)` → `requireHeaders` → `readRawRows` →
++`rowsToObjects` into `SiteRow[]`, preserving Spreadsheet row order).
++`Api.ts`'s `buildSitesResult(rows)` is
++the pure, Jest-tested core: for each row, `mapSiteRow` then
++`validateSiteRow`; the first row either function rejects fails the whole
++result (`kind: "malformed"` or `kind: "invalid"`) rather than dropping or
++silently defaulting that one row. Error mapping mirrors salon's `Api.ts`:
++`SiteReportConfigError` → `CONFIG_INVALID`, `MissingHeadersError` →
++`SHEET_ERROR`, a failed `buildSitesResult` → `DATA_INVALID`, anything else
++→ `INTERNAL_ERROR` — no raw issues/exception details ever reach the
++client.
+ 
+ ## Future API/workflow direction
+ 
+-A later task wires `getSiteReportConfig()` into an `Api.ts` action
+-dispatcher, adds `GET_SITES`, then `SUBMIT_REPORT` (validation → Drive
+-photo upload → REPORTS/REPORT_PHOTOS row writes → admin email notification
+-via `MailNotifier.ts`), each following the same thin-action/pure-domain
+-split `apps/salon-portfolio/gas`'s `Api.ts` uses. LIFF initialization and
+-LINE profile retrieval land in `apps/site-report/web/lib/liff.ts` alongside
+-the first screen that needs a logged-in LINE user.
++A later task adds `SUBMIT_REPORT` (validation → Drive photo upload →
++REPORTS/REPORT_PHOTOS row writes → admin email notification via
++`MailNotifier.ts`), following the same thin-action/pure-domain split. LIFF
++initialization and LINE profile retrieval land in
++`apps/site-report/web/lib/liff.ts` alongside the first screen that needs a
++logged-in LINE user.

@@ -1,0 +1,421 @@
+diff --git a/apps/salon-portfolio/web/app/layout.tsx b/apps/salon-portfolio/web/app/layout.tsx
+index 97de85d..fa396b8 100644
+--- a/apps/salon-portfolio/web/app/layout.tsx
++++ b/apps/salon-portfolio/web/app/layout.tsx
+@@ -109,6 +109,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
+           business={siteConfig.business}
+           navItems={NAV_ITEMS}
+           reservationEnabled={siteConfig.features.reservation}
++          overDarkHeroImage={designConfig.heroVariant === "fullscreen"}
+         />
+         <div className="flex flex-1 flex-col">{children}</div>
+         <SiteFooter config={siteConfig} navItems={NAV_ITEMS} />
+diff --git a/apps/salon-portfolio/web/app/page.tsx b/apps/salon-portfolio/web/app/page.tsx
+index a8ffc9f..e35d159 100644
+--- a/apps/salon-portfolio/web/app/page.tsx
++++ b/apps/salon-portfolio/web/app/page.tsx
+@@ -43,19 +43,28 @@ import { getDesignConfig } from "@/lib/config/designConfig";
+ // existing business feature flag — `feature && sectionVisibility.x` — so
+ // a design preset can only ever hide a section a feature flag already
+ // allows, never show one the business disabled.
++//
++// V1.1 Task 5 (Hero Layout Variants) adds `heroVariant`, read from the
++// same `getDesignConfig()` call and passed straight through to
++// `HeroSection`, which owns the fullscreen/split/editorial component
++// selection itself — this file only supplies the (variant-independent)
++// runtime content, same as it already did for every other section.
+ export default async function Home() {
+   const [{ config }, { services, staff }] = await Promise.all([
+     getRuntimeConfig(),
+     getRuntimeCatalog(),
+   ]);
+   const siteConfig = resolveSiteConfig(config);
+-  const { sectionVisibility } = getDesignConfig();
++  const { sectionVisibility, heroVariant } = getDesignConfig();
+ 
+   return (
+     <main className="flex flex-1 flex-col">
+       <HeroSection
+         headline={siteConfig.business.tagline}
+         subheadline="銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。"
++        name={siteConfig.business.name}
++        nameLatin={siteConfig.business.nameLatin}
++        heroVariant={heroVariant}
+       />
+ 
+       {sectionVisibility.concept ? (
+diff --git a/apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx b/apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx
+index 8b3134b..4f6ec5f 100644
+--- a/apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx
++++ b/apps/salon-portfolio/web/components/layout/SiteHeader.test.tsx
+@@ -83,3 +83,21 @@ describe("SiteHeader reservation flag", () => {
+     expect(within(dialog).queryByRole("link", { name: "ご予約はこちら" })).not.toBeInTheDocument();
+   });
+ });
++
++describe("SiteHeader overDarkHeroImage (V1.1 Task 5 — Hero Layout Variants)", () => {
++  it("renders transparent/text-on-primary over the homepage by default (HeroFullscreen's dark photo)", () => {
++    render(<SiteHeader business={business} navItems={navItems} />);
++
++    expect(screen.getByRole("banner")).toHaveClass("bg-transparent");
++    expect(screen.getByRole("navigation", { name: "メインナビゲーション" })).toHaveClass("text-on-primary");
++  });
++
++  it("renders a solid, text-primary header on the homepage when overDarkHeroImage is false (HeroSplit/HeroEditorial's light top section)", () => {
++    render(<SiteHeader business={business} navItems={navItems} overDarkHeroImage={false} />);
++
++    const header = screen.getByRole("banner");
++    expect(header).not.toHaveClass("bg-transparent");
++    expect(header).toHaveClass("bg-background/95");
++    expect(screen.getByRole("navigation", { name: "メインナビゲーション" })).toHaveClass("text-primary");
++  });
++});
+diff --git a/apps/salon-portfolio/web/components/layout/SiteHeader.tsx b/apps/salon-portfolio/web/components/layout/SiteHeader.tsx
+index 07cff2f..c531d05 100644
+--- a/apps/salon-portfolio/web/components/layout/SiteHeader.tsx
++++ b/apps/salon-portfolio/web/components/layout/SiteHeader.tsx
+@@ -22,10 +22,23 @@ export function SiteHeader({
+   business,
+   navItems,
+   reservationEnabled = true,
++  overDarkHeroImage = true,
+ }: {
+   business: BusinessInfo;
+   navItems: NavItem[];
+   reservationEnabled?: boolean;
++  /**
++   * True only when the homepage's top is `HeroFullscreen` — the one Hero
++   * variant (V1.1 Task 5) that is a full-bleed dark photo with a legibility
++   * scrim, which this transparent/`text-on-primary` header state was built
++   * to float over (§8). `HeroSplit`/`HeroEditorial` start with an ordinary
++   * light section background, so floating white nav text over it would be
++   * unreadable — `app/layout.tsx` passes
++   * `designConfig.heroVariant === "fullscreen"` here. Defaults to `true` so
++   * every non-homepage route (where `isHome` already makes this a no-op)
++   * and every existing test call site keep today's behavior unchanged.
++   */
++  overDarkHeroImage?: boolean;
+ }) {
+   const pathname = usePathname();
+   const isHome = pathname === "/";
+@@ -42,7 +55,7 @@ export function SiteHeader({
+     return () => window.removeEventListener("scroll", handleScroll);
+   }, []);
+ 
+-  const transparent = isHome && !scrolled && !mobileOpen;
++  const transparent = isHome && overDarkHeroImage && !scrolled && !mobileOpen;
+ 
+   return (
+     <>
+diff --git a/apps/salon-portfolio/web/components/sections/HeroSection.tsx b/apps/salon-portfolio/web/components/sections/HeroSection.tsx
+index a1749d0..4d5cb03 100644
+--- a/apps/salon-portfolio/web/components/sections/HeroSection.tsx
++++ b/apps/salon-portfolio/web/components/sections/HeroSection.tsx
+@@ -1,110 +1,45 @@
+-import { Button } from "@/components/ui/Button";
+-import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
++import type { ComponentType } from "react";
++import { isHeroVariant } from "@/lib/validation/designConfigValidator";
++import { DEFAULT_HERO_VARIANT } from "@/lib/constants/hero-variants";
++import type { HeroVariant } from "@/types/design-config";
++import type { HeroContentProps } from "./HeroContent";
++import { HeroFullscreen } from "./HeroFullscreen";
++import { HeroSplit } from "./HeroSplit";
++import { HeroEditorial } from "./HeroEditorial";
+ 
+ /**
+- * At narrow widths the default CJK line-break behavior (a break opportunity
+- * between almost any two characters, since Japanese has no spaces) was
+- * splitting the word "まなざし" mid-word: "...指先とまなざ / しを整える。".
+- * Two generic CSS-only fixes were tried and both verified worse or
+- * ineffective: `word-break: keep-all` on the whole headline stops ANY break
+- * within the longer clause between the sentence's one comma and its
+- * period, which doesn't fit this component's width at either breakpoint —
+- * it just relocated the awkward break onto "整える" instead. `word-break:
+- * auto-phrase` (Chrome's dictionary-based phrase segmentation) didn't move
+- * the break point at all here. So this wraps only the specific word in a
+- * non-breaking span — the rendered characters are byte-identical to
+- * `headline`, this only removes the one bad break opportunity inside them.
+- * If a future headline doesn't contain the phrase, this is a no-op and the
+- * string renders exactly as passed in.
++ * Hero (V1.1 Task 5 — Hero Layout Variants). Thin router: normalizes
++ * whatever `heroVariant` it receives and delegates to the matching layout
++ * component. Holds no markup of its own — `DesignConfig.heroVariant`
++ * (`types/design-config.ts`) selects the component, nothing else decides.
++ *
++ * `HERO_VARIANT_COMPONENTS` being a `Record<HeroVariant, ...>` makes the
++ * mapping exhaustive at the type level: adding a 4th `HeroVariant` without
++ * a matching entry here is a compile error, not a silent runtime gap.
+  */
+-const HERO_NO_BREAK_PHRASE = "まなざし";
++const HERO_VARIANT_COMPONENTS: Record<HeroVariant, ComponentType<HeroContentProps>> = {
++  fullscreen: HeroFullscreen,
++  split: HeroSplit,
++  editorial: HeroEditorial,
++};
+ 
+-function renderHeroHeadline(headline: string) {
+-  const index = headline.indexOf(HERO_NO_BREAK_PHRASE);
+-  if (index === -1) return headline;
+-
+-  return (
+-    <>
+-      {headline.slice(0, index)}
+-      <span style={{ whiteSpace: "nowrap" }}>{HERO_NO_BREAK_PHRASE}</span>
+-      {headline.slice(index + HERO_NO_BREAK_PHRASE.length)}
+-    </>
+-  );
+-}
+-
+-/**
+- * Hero (Phase 2A §8) — full-bleed photograph, headline/subhead/CTAs in the
+- * lower-left third, dark-to-transparent scrim for legibility (not a
+- * decorative gradient). ~90vh desktop, ~100vh minus header on mobile.
+- */
+ export function HeroSection({
+   headline,
+   subheadline,
+-}: {
+-  headline: string;
+-  subheadline: string;
++  name,
++  nameLatin,
++  heroVariant,
++}: HeroContentProps & {
++  /**
++   * Optional and validated here (not trusted from the caller) so a
++   * missing or invalid value can never crash or blank the Hero — falls
++   * back to `DEFAULT_HERO_VARIANT` ("fullscreen"), preserving every
++   * existing deployment's current appearance (§10 backward compatibility).
++   */
++  heroVariant?: HeroVariant;
+ }) {
+-  return (
+-    <section className="relative flex min-h-[calc(100vh-56px)] items-end overflow-hidden lg:min-h-[90vh]">
+-      <div className="absolute inset-0">
+-        {/* Same photograph on both breakpoints, art-directed with a
+-            different container ratio + focal point per breakpoint rather
+-            than one blind object-fit crop (Phase 2A §8/§22: "do not simply
+-            use the exact same crop on mobile"). The mobile portrait crop
+-            only has room for ~half the frame's width, so its focal point
+-            shifts right to keep the hands/treatment detail in view instead
+-            of the empty wall on the left; the desktop crop barely trims
+-            top/bottom and stays centered. */}
+-        <PlaceholderImage
+-          src="/images/hero/hero-nail-treatment.jpg"
+-          alt="ジェルネイルを丁寧に施術するスタッフの手元"
+-          width={900}
+-          height={1200}
+-          priority
+-          sizes="100vw"
+-          objectPosition="65% 50%"
+-          className="h-full sm:hidden"
+-        />
+-        <PlaceholderImage
+-          src="/images/hero/hero-nail-treatment.jpg"
+-          alt="ジェルネイルを丁寧に施術するスタッフの手元"
+-          width={1600}
+-          height={1000}
+-          priority
+-          sizes="100vw"
+-          objectPosition="50% 40%"
+-          className="hidden h-full sm:block"
+-        />
+-        {/* Legibility scrim, not decoration (Phase 2A §8/§2) — strengthened
+-            slightly over the real photo's bright equipment/highlights
+-            versus the flat placeholder it replaces, re-verified against
+-            the on-primary text it sits under (§25 contrast spot-check). */}
+-        <div
+-          aria-hidden="true"
+-          className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/35 to-transparent"
+-        />
+-      </div>
++  const resolvedVariant = isHeroVariant(heroVariant) ? heroVariant : DEFAULT_HERO_VARIANT;
++  const HeroVariantComponent = HERO_VARIANT_COMPONENTS[resolvedVariant];
+ 
+-      <div className="animate-hero-enter relative w-full px-4 pb-16 sm:px-6 lg:px-8 lg:pb-24">
+-        <div className="mx-auto max-w-[1120px]">
+-          <div className="max-w-[560px]">
+-            <h1 className="text-[34px] leading-[1.24] font-medium tracking-[-0.01em] text-on-primary lg:text-[56px] lg:leading-[1.14]">
+-              {renderHeroHeadline(headline)}
+-            </h1>
+-            <p className="mt-6 text-[16px] leading-[1.7] text-on-primary/90 lg:text-[17px] lg:leading-[1.76]">
+-              {subheadline}
+-            </p>
+-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+-              <Button href="/reservation" fullWidth className="sm:w-auto">
+-                ご予約はこちら
+-              </Button>
+-              <Button href="#menu" variant="text" className="text-on-primary sm:w-auto">
+-                メニューを見る
+-              </Button>
+-            </div>
+-          </div>
+-        </div>
+-      </div>
+-    </section>
+-  );
++  return <HeroVariantComponent headline={headline} subheadline={subheadline} name={name} nameLatin={nameLatin} />;
+ }
+diff --git a/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts b/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+index 8a2d6fc..793df15 100644
+--- a/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
++++ b/apps/salon-portfolio/web/lib/validation/designConfigValidator.test.ts
+@@ -1,5 +1,6 @@
+-import { isHomeSection, isValidSectionOrder, parseDesignPresetId } from "./designConfigValidator";
++import { isHeroVariant, isHomeSection, isValidSectionOrder, parseDesignPresetId } from "./designConfigValidator";
+ import { ALL_HOME_SECTIONS } from "@/lib/constants/design-sections";
++import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
+ 
+ describe("parseDesignPresetId", () => {
+   it.each(["kinari", "femme", "noir", "editorial", "natural", "modern"])(
+@@ -28,6 +29,19 @@ describe("isHomeSection", () => {
+   });
+ });
+ 
++describe("isHeroVariant", () => {
++  it.each(HERO_VARIANTS)("accepts the registered hero variant %s", (variant) => {
++    expect(isHeroVariant(variant)).toBe(true);
++  });
++
++  it.each([undefined, null, "", "   ", "not-a-variant", "fullscreen ", 42, {}])(
++    "rejects %p",
++    (value) => {
++      expect(isHeroVariant(value)).toBe(false);
++    },
++  );
++});
++
+ describe("isValidSectionOrder", () => {
+   it("accepts a full permutation of ALL_HOME_SECTIONS", () => {
+     const reordered = [...ALL_HOME_SECTIONS].reverse();
+diff --git a/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts b/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+index eb0add1..2e8af19 100644
+--- a/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
++++ b/apps/salon-portfolio/web/lib/validation/designConfigValidator.ts
+@@ -1,6 +1,7 @@
+ import { DESIGN_PRESETS } from "@/config/design-presets";
+ import { ALL_HOME_SECTIONS, REQUIRED_HOME_SECTIONS } from "@/lib/constants/design-sections";
+-import type { DesignPreset, HomeSection } from "@/types/design-config";
++import { HERO_VARIANTS } from "@/lib/constants/hero-variants";
++import type { DesignPreset, HeroVariant, HomeSection } from "@/types/design-config";
+ 
+ function isNonEmptyString(value: unknown): value is string {
+   return typeof value === "string" && value.trim().length > 0;
+@@ -25,6 +26,18 @@ export function isHomeSection(value: unknown): value is HomeSection {
+   return typeof value === "string" && (ALL_HOME_SECTIONS as readonly string[]).includes(value);
+ }
+ 
++/**
++ * True only for one of the 3 registered `HeroVariant` ids (V1.1 Task 5).
++ * `components/sections/HeroSection.tsx` uses this to normalize whatever
++ * `heroVariant` it receives — an invalid or missing value falls back to
++ * `DEFAULT_HERO_VARIANT` ("fullscreen") rather than crashing or rendering
++ * nothing, the same parse-or-fallback discipline every other design-config
++ * guard in this file already follows.
++ */
++export function isHeroVariant(value: unknown): value is HeroVariant {
++  return typeof value === "string" && (HERO_VARIANTS as readonly string[]).includes(value);
++}
++
+ /**
+  * A valid section order is exactly one permutation of `ALL_HOME_SECTIONS`
+  * — every allow-listed section present once, no unknown strings, no
+diff --git a/docs/presentation-config-architecture.md b/docs/presentation-config-architecture.md
+index d3281bb..72ba9e3 100644
+--- a/docs/presentation-config-architecture.md
++++ b/docs/presentation-config-architecture.md
+@@ -343,11 +343,90 @@ preset. If the new pairing needs a font family not already loaded, add one
+ `next/font/google` loader call in `app/layout.tsx` at the single weight
+ actually needed — do not add a family "just in case."
+ 
++## Hero layout variants (V1.1 Task 5)
++
++Task 1 left `HeroVariant` a 3-value union with only `"fullscreen"` wired to
++a real component. This task builds the other two and turns `HeroSection`
++into a router:
++
++```text
++DesignConfig.heroVariant (HeroVariant)
++        |
++        v
++lib/validation/designConfigValidator.ts — isHeroVariant()
++        |            (invalid/missing → DEFAULT_HERO_VARIANT "fullscreen")
++        v
++components/sections/HeroSection.tsx
++        — HERO_VARIANT_COMPONENTS: Record<HeroVariant, ComponentType<...>>
++        |
++        +-- "fullscreen" -> HeroFullscreen  (today's pre-Task-5 look, unchanged)
++        +-- "split"      -> HeroSplit       (text column + image column)
++        +-- "editorial"  -> HeroEditorial   (centered opening, asymmetric photo/copy)
++```
++
++**What each variant is for:**
++
++- `fullscreen` — the shipped default: a full-bleed photo with a legibility
++  scrim, headline/CTA in the lower-left third. Every preset's current
++  `heroVariant` (§10 below), and the only variant that shows a dark photo
++  behind the header.
++- `split` — text and photo in separate columns (not a CSS reorder of
++  `fullscreen`): salon name/nameLatin/tagline/CTA on one side, the photo on
++  the other. Collapses to a single stacked column on mobile.
++- `editorial` — a centered name/tagline opening, a large photo offset to
++  one side, and supporting copy/CTA offset to the other — a Japanese
++  editorial composition carried by whitespace and type scale, not new
++  decoration.
++
++**One Hero data model:** all three variants take the same
++`HeroContentProps` (`components/sections/HeroContent.tsx`) —
++`headline`/`subheadline`/`name`/`nameLatin` — sourced in `app/page.tsx`
++entirely from the existing `siteConfig.business` fields (already
++runtime-resolved since Task 4). No variant introduces its own content
++shape, a second data model, or a new GAS action. The Hero photo path and
++both CTA (`href`/label`) pairs also live in `HeroContent.tsx`, shared by
++all three variants so they can never drift from each other.
++
++**Selecting a variant:** `DesignConfig.heroVariant`, same as every other
++design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
++it straight to `HeroSection`. This task does **not** set any
++`DESIGN_PRESETS` entry to `split`/`editorial` — every preset still resolves
++`heroVariant: "fullscreen"` (§J's "don't ship curated multi-field presets
++yet"); `split`/`editorial` are reachable today only by constructing a
++`DesignConfig` directly (as the tests do), which is enough to prove the
++architecture without jumping ahead to the curated-preset task.
++
++**Backward compatibility:** `isHeroVariant` (mirrors `isHomeSection`) makes
++`HeroSection` normalize whatever `heroVariant` it receives — missing or
++invalid falls back to `DEFAULT_HERO_VARIANT` (`"fullscreen"`,
++`lib/constants/hero-variants.ts`), so an existing deployment's Hero can
++never silently change appearance.
++
++**Header contrast fix required by this task:** `SiteHeader`'s transparent,
++white-text "floating over the hero" state (Phase 2A §7-8) was written
++assuming the homepage always opens on `HeroFullscreen`'s dark photo. Once
++`split`/`editorial` (ordinary light section backgrounds) became reachable,
++that assumption broke — white nav text over a light background is
++unreadable. Fixed with one new `SiteHeader` prop, `overDarkHeroImage`
++(default `true`, so every non-homepage route and every existing test call
++site keep today's behavior), which `app/layout.tsx` sets to
++`designConfig.heroVariant === "fullscreen"`. This is not a new header
++*style* — the header still has exactly one visual design — only a
++correction to when its existing transparent state applies.
++
++**Presentation-only, still:** no variant reads or writes reservation state,
++calls `getServices`/`getStaff`, or touches `app/globals.css`'s theme/
++typography tokens directly — every color/font comes from the same semantic
++Tailwind utilities (`bg-surface`, `text-primary`, `text-accent`, …) every
++other section already uses, so all six `ThemeId`s and all six
++`TypographyId`s render correctly under every Hero variant with zero
++variant-specific styling logic.
++
+ ## Not yet implemented (tracked for later V1.1 work)
+ 
+-- Hero/Menu/Staff/Gallery variant components — real alternate layouts for
+-  `HeroVariant`/`MenuVariant`/`StaffVariant`/`GalleryVariant` values other
+-  than today's default.
++- Menu/Staff/Gallery variant components — real alternate layouts for
++  `MenuVariant`/`StaffVariant`/`GalleryVariant` values other than today's
++  default (Hero's are now implemented — see above).
+ - Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
+   instead of its literal JSX sequence.
+ - Curated multi-field presets — the five non-`kinari` registry entries

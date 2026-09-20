@@ -1,0 +1,38 @@
+# 納品物一覧（MANIFEST）
+
+## 納品物
+
+1. `01_WEB_TEMPLATE/salon-website/` — Next.jsホームページ＋予約UI
+   テンプレート一式（ソースコード）
+2. `02_GAS/salon-reservation-gas/` — Google Apps Script予約バックエンド
+   一式（ソースコード）
+3. `03_GOOGLE_SHEETS/` — Google Sheetsテンプレート（CSV 9枚）＋
+   セットアップガイド
+4. `04_SETUP_GUIDE/` — セットアップガイド（7ファイル: START_HERE /
+   WEB_SETUP / GAS_SETUP / SHEETS_SETUP / CALENDAR_SETUP /
+   CONFIG_SETUP / VERCEL_DEPLOY）
+5. `05_CUSTOMIZATION/` — カスタマイズガイド（5ファイル: CONTENT /
+   MENU / STAFF / IMAGE / DESIGN）
+6. `06_TROUBLESHOOTING/` — トラブルシューティングガイド
+7. `07_LICENSE/` — 利用ライセンス
+8. `README_JA.md` — 本製品の概要
+9. `VERSION.txt` — バージョン情報
+
+## 実装されている主な機能
+
+- レスポンシブ対応のNext.js製サロンホームページ
+- 予約ウィザードUI（`/reservation`）
+- Google Apps Script API: `getConfig` / `getServices` / `getStaff` /
+  `getAvailability` / `createReservation`
+- Google Sheetsデータ層（`CONFIG` / `HOLIDAYS` / `SERVICES` / `STAFF` /
+  `RESERVATIONS` / `CANCELLATION_REQUESTS` / `INQUIRIES` / `EMAIL_LOG` /
+  `ERROR_LOG`）
+- Google Calendarとの空き状況確認・予約イベント作成
+- Gmailによる予約確認メール送信
+- 二重予約防止（LockServiceによる排他制御）・予約直前の空き状況再チェック
+
+## 秘匿情報について
+
+本製品には、開発者ご自身のGoogleアカウント情報・APIキー・スクリプト
+ID・デプロイURLなどの秘匿情報は一切含まれていません。すべて購入者
+ご自身のGoogle/GitHub/Vercelアカウントで設定していただく設計です。

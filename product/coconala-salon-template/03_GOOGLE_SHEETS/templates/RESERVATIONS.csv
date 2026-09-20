@@ -1,0 +1,1 @@
+ReservationID,SubmissionID,CreatedAt,UpdatedAt,Name,Email,Phone,Date,Time,ServiceID,StaffID,Notes,Status,CalendarEventID,EmailStatus,CancellationToken

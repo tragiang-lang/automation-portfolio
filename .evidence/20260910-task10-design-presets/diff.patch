@@ -1,0 +1,936 @@
+diff --git a/apps/salon-portfolio/web/config/design-presets.test.ts b/apps/salon-portfolio/web/config/design-presets.test.ts
+index 26ec317..d758c16 100644
+--- a/apps/salon-portfolio/web/config/design-presets.test.ts
++++ b/apps/salon-portfolio/web/config/design-presets.test.ts
+@@ -1,6 +1,14 @@
+ import { DEFAULT_DESIGN_CONFIG, DESIGN_PRESETS } from "./design-presets";
+-import { DEFAULT_SECTION_VISIBILITY } from "@/lib/constants/design-sections";
+-import type { DesignPreset } from "@/types/design-config";
++import { ALL_HOME_SECTIONS, DEFAULT_SECTION_VISIBILITY, REQUIRED_HOME_SECTIONS } from "@/lib/constants/design-sections";
++import {
++  isGalleryVariant,
++  isHeroVariant,
++  isMenuVariant,
++  isStaffVariant,
++  isValidSectionOrder,
++  parseDesignPresetId,
++} from "@/lib/validation/designConfigValidator";
++import type { DesignConfig, DesignPreset } from "@/types/design-config";
+ 
+ const ALL_PRESET_IDS: DesignPreset[] = ["kinari", "femme", "noir", "editorial", "natural", "modern"];
+ 
+@@ -50,8 +58,15 @@ describe("DESIGN_PRESETS", () => {
+     expect(DESIGN_PRESETS.noir.sectionVisibility.concept).toBe(true);
+     expect(DEFAULT_DESIGN_CONFIG.sectionVisibility.concept).toBe(true);
+ 
+-    DESIGN_PRESETS.noir.sectionOrder.pop();
++    const removedSection = DESIGN_PRESETS.noir.sectionOrder.pop();
+     expect(DESIGN_PRESETS.modern.sectionOrder.length).toBe(11);
++
++    // Restore both mutations — DESIGN_PRESETS is a module-level singleton
++    // shared by every test in this file (and this describe block isn't the
++    // last one), so leaving it mutated here would silently corrupt later
++    // tests' reads of the same objects.
++    DESIGN_PRESETS.femme.sectionVisibility.concept = true;
++    DESIGN_PRESETS.noir.sectionOrder.push(removedSection!);
+   });
+ 
+   it("does not alias DEFAULT_DESIGN_CONFIG (or DESIGN_PRESETS.kinari, the same object) to the shared DEFAULT_SECTION_VISIBILITY constant", () => {
+@@ -60,3 +75,218 @@ describe("DESIGN_PRESETS", () => {
+     expect(DESIGN_PRESETS.editorial.sectionVisibility.gallery).toBe(true);
+   });
+ });
++
++// V1.1 Task 10 — Design Presets: each preset becomes a complete, curated
++// visual composition (theme + typography + hero/menu/staff/gallery variant
++// + section order), not merely a differently-named theme. See §14 of the
++// task brief for the target matrix this section verifies.
++describe("V1.1 Task 10 — curated preset compositions", () => {
++  const TARGET_MATRIX: Record<
++    DesignPreset,
++    Pick<DesignConfig, "heroVariant" | "menuVariant" | "staffVariant" | "galleryVariant"> & {
++      sectionOrder: DesignConfig["sectionOrder"];
++    }
++  > = {
++    kinari: {
++      heroVariant: "fullscreen",
++      menuVariant: "editorial-list",
++      staffVariant: "portrait-grid",
++      galleryVariant: "grid",
++      sectionOrder: [...ALL_HOME_SECTIONS],
++    },
++    femme: {
++      heroVariant: "split",
++      menuVariant: "card-grid",
++      staffVariant: "portrait-grid",
++      galleryVariant: "masonry",
++      sectionOrder: [
++        "hero",
++        "concept",
++        "gallery",
++        "menu",
++        "staff",
++        "reservation",
++        "salon-features",
++        "customer-flow",
++        "faq",
++        "access",
++        "contact",
++      ],
++    },
++    noir: {
++      heroVariant: "fullscreen",
++      menuVariant: "minimal-price-list",
++      staffVariant: "horizontal-profile",
++      galleryVariant: "feature-editorial",
++      sectionOrder: [
++        "hero",
++        "concept",
++        "gallery",
++        "menu",
++        "staff",
++        "reservation",
++        "salon-features",
++        "customer-flow",
++        "faq",
++        "access",
++        "contact",
++      ],
++    },
++    editorial: {
++      heroVariant: "editorial",
++      menuVariant: "editorial-list",
++      staffVariant: "horizontal-profile",
++      galleryVariant: "feature-editorial",
++      sectionOrder: [
++        "hero",
++        "gallery",
++        "concept",
++        "menu",
++        "staff",
++        "reservation",
++        "salon-features",
++        "customer-flow",
++        "faq",
++        "access",
++        "contact",
++      ],
++    },
++    natural: {
++      heroVariant: "split",
++      menuVariant: "minimal-price-list",
++      staffVariant: "portrait-grid",
++      galleryVariant: "masonry",
++      sectionOrder: [...ALL_HOME_SECTIONS],
++    },
++    modern: {
++      heroVariant: "split",
++      menuVariant: "card-grid",
++      staffVariant: "horizontal-profile",
++      galleryVariant: "grid",
++      sectionOrder: [
++        "hero",
++        "concept",
++        "menu",
++        "gallery",
++        "staff",
++        "reservation",
++        "salon-features",
++        "customer-flow",
++        "faq",
++        "access",
++        "contact",
++      ],
++    },
++  };
++
++  describe("preset completeness", () => {
++    it.each(ALL_PRESET_IDS)("%s defines every required DesignConfig field", (id) => {
++      const preset = DESIGN_PRESETS[id];
++      expect(typeof preset.theme).toBe("string");
++      expect(typeof preset.typography).toBe("string");
++      expect(typeof preset.heroVariant).toBe("string");
++      expect(typeof preset.menuVariant).toBe("string");
++      expect(typeof preset.staffVariant).toBe("string");
++      expect(typeof preset.galleryVariant).toBe("string");
++      expect(Array.isArray(preset.sectionOrder)).toBe(true);
++      expect(typeof preset.sectionVisibility).toBe("object");
++    });
++  });
++
++  describe("preset validity — every field is a registered value (reuses the existing validators, no second allow-list)", () => {
++    it.each(ALL_PRESET_IDS)("%s", (id) => {
++      const preset = DESIGN_PRESETS[id];
++      expect(parseDesignPresetId(preset.theme)).not.toBeNull();
++      expect(parseDesignPresetId(preset.typography)).not.toBeNull();
++      expect(isHeroVariant(preset.heroVariant)).toBe(true);
++      expect(isMenuVariant(preset.menuVariant)).toBe(true);
++      expect(isStaffVariant(preset.staffVariant)).toBe(true);
++      expect(isGalleryVariant(preset.galleryVariant)).toBe(true);
++      expect(isValidSectionOrder(preset.sectionOrder)).toBe(true);
++    });
++  });
++
++  it("matches the target matrix exactly for every preset", () => {
++    for (const id of ALL_PRESET_IDS) {
++      const preset = DESIGN_PRESETS[id];
++      const target = TARGET_MATRIX[id];
++      expect({
++        heroVariant: preset.heroVariant,
++        menuVariant: preset.menuVariant,
++        staffVariant: preset.staffVariant,
++        galleryVariant: preset.galleryVariant,
++      }).toEqual({
++        heroVariant: target.heroVariant,
++        menuVariant: target.menuVariant,
++        staffVariant: target.staffVariant,
++        galleryVariant: target.galleryVariant,
++      });
++      expect(preset.sectionOrder).toEqual(target.sectionOrder);
++    }
++  });
++
++  describe("section order safety", () => {
++    it.each(ALL_PRESET_IDS)("%s uses only registered HomeSection values, no duplicates, no unknowns", (id) => {
++      const order = DESIGN_PRESETS[id].sectionOrder;
++      expect(order).toHaveLength(ALL_HOME_SECTIONS.length);
++      expect(new Set(order).size).toBe(order.length);
++      for (const section of order) {
++        expect(ALL_HOME_SECTIONS).toContain(section);
++      }
++    });
++
++    it.each(ALL_PRESET_IDS)("%s keeps every required section (hero, menu) present", (id) => {
++      const order = DESIGN_PRESETS[id].sectionOrder;
++      for (const required of REQUIRED_HOME_SECTIONS) {
++        expect(order).toContain(required);
++      }
++    });
++
++    it.each(ALL_PRESET_IDS)("%s never includes the fixed closing reservation CTA as a section id", (id) => {
++      // The closing "thank you" ReservationCtaBand is not a HomeSection at
++      // all (types/design-config.ts) — this just re-asserts that no preset
++      // smuggles a non-`HomeSection` string in at the value level.
++      const order = DESIGN_PRESETS[id].sectionOrder as readonly string[];
++      expect(order.every((section) => (ALL_HOME_SECTIONS as readonly string[]).includes(section))).toBe(true);
++    });
++  });
++
++  describe("visual differentiation — presets are distinguishable beyond theme alone", () => {
++    it("no two presets share the exact same (hero, menu, staff, gallery) layout tuple", () => {
++      const tuples = ALL_PRESET_IDS.map((id) => {
++        const preset = DESIGN_PRESETS[id];
++        return JSON.stringify([preset.heroVariant, preset.menuVariant, preset.staffVariant, preset.galleryVariant]);
++      });
++      expect(new Set(tuples).size).toBe(tuples.length);
++    });
++
++    it.each(ALL_PRESET_IDS.filter((id) => id !== "kinari"))(
++      "%s differs from Kinari in at least one layout dimension beyond theme/typography",
++      (id) => {
++        const kinari = DESIGN_PRESETS.kinari;
++        const preset = DESIGN_PRESETS[id];
++        const differs =
++          preset.heroVariant !== kinari.heroVariant ||
++          preset.menuVariant !== kinari.menuVariant ||
++          preset.staffVariant !== kinari.staffVariant ||
++          preset.galleryVariant !== kinari.galleryVariant ||
++          JSON.stringify(preset.sectionOrder) !== JSON.stringify(kinari.sectionOrder);
++        expect(differs).toBe(true);
++      },
++    );
++  });
++
++  describe("runtime content safety — presets carry no business data", () => {
++    it.each(ALL_PRESET_IDS)("%s has no string field containing obvious demo business content", (id) => {
++      const preset = DESIGN_PRESETS[id];
++      const serialized = JSON.stringify(preset);
++      // Presets are presentation-only: no business name, staff name, price,
++      // service name, photo path, address, or social URL may appear in a
++      // preset's own field values (spec §19). This is a light heuristic,
++      // not exhaustive validation — it only guards against the specific
++      // mistake of literally embedding demo content in a preset.
++      expect(serialized).not.toMatch(/https?:\/\//);
++      expect(serialized).not.toMatch(/¥|円/);
++    });
++  });
++});
+diff --git a/apps/salon-portfolio/web/config/design-presets.ts b/apps/salon-portfolio/web/config/design-presets.ts
+index f0e9e9b..33038f2 100644
+--- a/apps/salon-portfolio/web/config/design-presets.ts
++++ b/apps/salon-portfolio/web/config/design-presets.ts
+@@ -1,17 +1,24 @@
+ /**
+- * Canonical default design configuration + preset registry (V1.1 Task 1).
++ * Canonical default design configuration + preset registry.
+  * Nothing salon-specific (business copy, prices, staff, hours) belongs
+  * here — that lives in `config/demo-content.ts` / runtime `getConfig`.
+  * This file only holds presentation defaults, matching the ownership
+  * split `config/theme.ts` already documents for CSS-token JS mirrors.
++ *
++ * V1.1 Task 10 (Design Presets) is what turns this from "six differently
++ * named themes" into "six complete visual compositions" — see
++ * docs/presentation-config-architecture.md's "Design presets" section for
++ * the full rationale and the target matrix each entry below implements.
+  */
+-import { DEFAULT_SECTION_ORDER, DEFAULT_SECTION_VISIBILITY } from "@/lib/constants/design-sections";
+-import type { DesignConfig, DesignPreset } from "@/types/design-config";
++import { DEFAULT_SECTION_VISIBILITY } from "@/lib/constants/design-sections";
++import type { DesignConfig, DesignPreset, HomeSection } from "@/types/design-config";
+ 
+ /**
+  * The current 凛 (Kinari) — Quiet Japanese Luxury look, unchanged from
+  * what `app/page.tsx` already renders. `lib/config/resolveDesignConfig.ts`
+  * falls back to this whenever a requested preset id is missing/invalid.
++ * This is also the stable baseline every other preset is compared against
++ * — Task 10 must not change a single field here.
+  */
+ export const DEFAULT_DESIGN_CONFIG: DesignConfig = {
+   preset: "kinari",
+@@ -27,7 +34,166 @@ export const DEFAULT_DESIGN_CONFIG: DesignConfig = {
+   // configs (or a config and the shared constant it was built from) can
+   // ever alias the same object.
+   sectionVisibility: { ...DEFAULT_SECTION_VISIBILITY },
+-  sectionOrder: [...DEFAULT_SECTION_ORDER],
++  sectionOrder: [
++    "hero",
++    "concept",
++    "menu",
++    "staff",
++    "gallery",
++    "reservation",
++    "salon-features",
++    "customer-flow",
++    "faq",
++    "access",
++    "contact",
++  ],
++};
++
++/**
++ * One curated visual composition. Every non-`preset`/`theme`/`typography`
++ * field mirrors `DesignConfig` exactly — kept as a separate type (rather
++ * than reusing `Omit<DesignConfig, "preset">`) so a future field added to
++ * `DesignConfig` that a preset should *not* curate (hypothetically) has to
++ * be a deliberate decision here, not an accidental inherited requirement.
++ */
++type PresetComposition = Pick<
++  DesignConfig,
++  "heroVariant" | "menuVariant" | "staffVariant" | "galleryVariant" | "sectionOrder" | "sectionVisibility"
++>;
++
++const DEFAULT_ORDER: readonly HomeSection[] = DEFAULT_DESIGN_CONFIG.sectionOrder;
++
++/**
++ * Every optional section stays visible in every curated preset (spec §13:
++ * "Do not use section visibility as the primary way to differentiate
++ * presets" — none of the six below has a genuine design reason to hide a
++ * customer-facing section by default).
++ */
++function defaultVisibility() {
++  return { ...DEFAULT_SECTION_VISIBILITY };
++}
++
++/**
++ * Curated compositions for the five non-Kinari presets. `theme` and
++ * `typography` are not listed here — they are always the preset's own id
++ * (see `buildPreset` below), matching `app/layout.tsx`'s
++ * `data-design-preset={designConfig.preset}` CSS selector, which is what
++ * actually switches the color/font tokens (`config/theme-tokens.ts`,
++ * `config/typography-tokens.ts`). Kinari itself isn't listed either — it
++ * stays `DEFAULT_DESIGN_CONFIG` verbatim, the untouched baseline.
++ */
++const PRESET_COMPOSITIONS: Record<Exclude<DesignPreset, "kinari">, PresetComposition> = {
++  // Femme — soft feminine beauty-salon composition: a two-column split
++  // hero (photo-forward, less "banner"), bordered card-grid menu, and a
++  // masonry gallery opened right after the concept copy so the visual
++  // story leads before the price list.
++  femme: {
++    heroVariant: "split",
++    menuVariant: "card-grid",
++    staffVariant: "portrait-grid",
++    galleryVariant: "masonry",
++    sectionOrder: [
++      "hero",
++      "concept",
++      "gallery",
++      "menu",
++      "staff",
++      "reservation",
++      "salon-features",
++      "customer-flow",
++      "faq",
++      "access",
++      "contact",
++    ],
++    sectionVisibility: defaultVisibility(),
++  },
++  // Noir — dark premium/luxury composition: the full-bleed dark hero
++  // photo, a restrained undecorated price list, editorial horizontal
++  // staff profiles, and one dominant feature-editorial gallery image —
++  // every layout choice leans toward fewer, larger, more confident shapes.
++  noir: {
++    heroVariant: "fullscreen",
++    menuVariant: "minimal-price-list",
++    staffVariant: "horizontal-profile",
++    galleryVariant: "feature-editorial",
++    sectionOrder: [
++      "hero",
++      "concept",
++      "gallery",
++      "menu",
++      "staff",
++      "reservation",
++      "salon-features",
++      "customer-flow",
++      "faq",
++      "access",
++      "contact",
++    ],
++    sectionVisibility: defaultVisibility(),
++  },
++  // Editorial — magazine composition: the Gallery immediately follows the
++  // editorial Hero (a deliberate strong visual opening, spec §5.4) before
++  // any body copy, then the same horizontal-profile staff rows and
++  // feature-editorial gallery treatment as Noir, carried by Editorial's
++  // own high-contrast monochrome theme instead of Noir's dark one.
++  editorial: {
++    heroVariant: "editorial",
++    menuVariant: "editorial-list",
++    staffVariant: "horizontal-profile",
++    galleryVariant: "feature-editorial",
++    sectionOrder: [
++      "hero",
++      "gallery",
++      "concept",
++      "menu",
++      "staff",
++      "reservation",
++      "salon-features",
++      "customer-flow",
++      "faq",
++      "access",
++      "contact",
++    ],
++    sectionVisibility: defaultVisibility(),
++  },
++  // Natural — organic/botanical composition: same split hero and masonry
++  // gallery as Femme (photo-led, unhurried), but the undecorated
++  // minimal-price-list menu instead of Femme's bordered cards, and the
++  // default section order (spec §5.5: "should not make ordering different
++  // merely for the sake of being different").
++  natural: {
++    heroVariant: "split",
++    menuVariant: "minimal-price-list",
++    staffVariant: "portrait-grid",
++    galleryVariant: "masonry",
++    sectionOrder: [...DEFAULT_ORDER],
++    sectionVisibility: defaultVisibility(),
++  },
++  // Modern — contemporary/minimal composition: split hero, card-grid menu
++  // (same pairing as Femme, differentiated by Modern's cooler theme and
++  // its horizontal-profile staff/grid gallery instead of Femme's
++  // portrait-grid/masonry), and Gallery promoted ahead of Staff in the
++  // section order for a cleaner, image-led rhythm.
++  modern: {
++    heroVariant: "split",
++    menuVariant: "card-grid",
++    staffVariant: "horizontal-profile",
++    galleryVariant: "grid",
++    sectionOrder: [
++      "hero",
++      "concept",
++      "menu",
++      "gallery",
++      "staff",
++      "reservation",
++      "salon-features",
++      "customer-flow",
++      "faq",
++      "access",
++      "contact",
++    ],
++    sectionVisibility: defaultVisibility(),
++  },
+ };
+ 
+ // `ThemeId` and `TypographyId` each share their six string values with
+@@ -35,32 +201,38 @@ export const DEFAULT_DESIGN_CONFIG: DesignConfig = {
+ // identically-named theme from `config/theme-tokens.ts`'s `THEMES`
+ // registry (Theme Presets task) and the identically-named typography
+ // pairing from `config/typography-tokens.ts`'s `TYPOGRAPHY` registry
+-// (Typography Presets task).
+-function withPreset(preset: DesignPreset): DesignConfig {
++// (Typography Presets task). Task 10 only curates the *layout* fields
++// (hero/menu/staff/gallery/sectionOrder/sectionVisibility) on top of that
++// already-established theme/typography pairing — it never decouples a
++// preset's `theme`/`typography` from its own id.
++function buildPreset(preset: Exclude<DesignPreset, "kinari">): DesignConfig {
++  const composition = PRESET_COMPOSITIONS[preset];
+   return {
+-    ...DEFAULT_DESIGN_CONFIG,
+     preset,
+     theme: preset,
+     typography: preset,
+-    sectionVisibility: { ...DEFAULT_SECTION_VISIBILITY },
+-    sectionOrder: [...DEFAULT_SECTION_ORDER],
++    heroVariant: composition.heroVariant,
++    menuVariant: composition.menuVariant,
++    staffVariant: composition.staffVariant,
++    galleryVariant: composition.galleryVariant,
++    sectionVisibility: { ...composition.sectionVisibility },
++    sectionOrder: [...composition.sectionOrder],
+   };
+ }
+ 
+ /**
+- * Preset registry — one entry per `DesignPreset` value. Task 1 (this file)
+- * wires every key to the same values as `DEFAULT_DESIGN_CONFIG` except
+- * `preset` itself, so selecting any of the five not-yet-designed presets
+- * is a safe no-op today. Later tasks (theme, typography, hero/menu/staff/
+- * gallery variants, section order/visibility) differentiate one preset's
+- * fields at a time — they only ever edit a value here, never this file's
+- * shape or `lib/config/resolveDesignConfig.ts`'s logic.
++ * Preset registry — one entry per `DesignPreset` value, each a complete,
++ * coherent visual composition (V1.1 Task 10): theme + typography +
++ * hero/menu/staff/gallery layout + section order, curated together rather
++ * than six independent knobs. `docs/presentation-config-architecture.md`'s
++ * "Design presets" section documents the rationale for each preset's
++ * choices and the full target matrix.
+  */
+ export const DESIGN_PRESETS: Record<DesignPreset, DesignConfig> = {
+   kinari: DEFAULT_DESIGN_CONFIG,
+-  femme: withPreset("femme"),
+-  noir: withPreset("noir"),
+-  editorial: withPreset("editorial"),
+-  natural: withPreset("natural"),
+-  modern: withPreset("modern"),
++  femme: buildPreset("femme"),
++  noir: buildPreset("noir"),
++  editorial: buildPreset("editorial"),
++  natural: buildPreset("natural"),
++  modern: buildPreset("modern"),
+ };
+diff --git a/apps/salon-portfolio/web/lib/config/resolveDesignConfig.test.ts b/apps/salon-portfolio/web/lib/config/resolveDesignConfig.test.ts
+index 710f545..0ca6d6e 100644
+--- a/apps/salon-portfolio/web/lib/config/resolveDesignConfig.test.ts
++++ b/apps/salon-portfolio/web/lib/config/resolveDesignConfig.test.ts
+@@ -13,4 +13,66 @@ describe("resolveDesignConfig", () => {
+   it.each([undefined, null, "", 42, {}])("falls back to the default config for %p", (value) => {
+     expect(resolveDesignConfig(value)).toBe(DEFAULT_DESIGN_CONFIG);
+   });
++
++  // V1.1 Task 10 — Design Presets: `resolveDesignConfig` also accepts
++  // `{ preset, ...overrides }` so a customer can select a preset and still
++  // override individual design properties (spec §7/§8) without a second
++  // exported function or a second config-resolution codepath.
++  describe("object input — preset + overrides", () => {
++    it("resolves { preset: 'noir' } (no overrides) to the exact Noir registry entry", () => {
++      expect(resolveDesignConfig({ preset: "noir" })).toBe(DESIGN_PRESETS.noir);
++    });
++
++    it("treats an object with no preset and no overrides the same as no input", () => {
++      expect(resolveDesignConfig({})).toBe(DEFAULT_DESIGN_CONFIG);
++    });
++
++    it("falls back to the default base for an unknown preset id, before overrides apply", () => {
++      const resolved = resolveDesignConfig({ preset: "bogus-preset", heroVariant: "split" });
++      expect(resolved.theme).toBe(DEFAULT_DESIGN_CONFIG.theme);
++      expect(resolved.heroVariant).toBe("split");
++    });
++
++    it("overrides only heroVariant, leaving every other Noir field untouched", () => {
++      const resolved = resolveDesignConfig({ preset: "noir", heroVariant: "split" });
++
++      expect(resolved.theme).toBe("noir");
++      expect(resolved.typography).toBe("noir");
++      expect(resolved.heroVariant).toBe("split");
++      expect(resolved.menuVariant).toBe(DESIGN_PRESETS.noir.menuVariant);
++      expect(resolved.staffVariant).toBe(DESIGN_PRESETS.noir.staffVariant);
++      expect(resolved.galleryVariant).toBe(DESIGN_PRESETS.noir.galleryVariant);
++      expect(resolved.sectionOrder).toEqual(DESIGN_PRESETS.noir.sectionOrder);
++    });
++
++    it("overrides only galleryVariant, leaving every other Femme field untouched", () => {
++      const resolved = resolveDesignConfig({ preset: "femme", galleryVariant: "grid" });
++
++      expect(resolved.theme).toBe("femme");
++      expect(resolved.heroVariant).toBe(DESIGN_PRESETS.femme.heroVariant);
++      expect(resolved.menuVariant).toBe(DESIGN_PRESETS.femme.menuVariant);
++      expect(resolved.staffVariant).toBe(DESIGN_PRESETS.femme.staffVariant);
++      expect(resolved.galleryVariant).toBe("grid");
++      expect(resolved.sectionOrder).toEqual(DESIGN_PRESETS.femme.sectionOrder);
++    });
++
++    it("overrides sectionOrder, leaving every other Modern field untouched", () => {
++      const customOrder = [...DESIGN_PRESETS.modern.sectionOrder].reverse();
++      const resolved = resolveDesignConfig({ preset: "modern", sectionOrder: customOrder });
++
++      expect(resolved.heroVariant).toBe(DESIGN_PRESETS.modern.heroVariant);
++      expect(resolved.menuVariant).toBe(DESIGN_PRESETS.modern.menuVariant);
++      expect(resolved.sectionOrder).toEqual(customOrder);
++    });
++
++    it("ignores an invalid override value and keeps the preset's own value instead", () => {
++      const resolved = resolveDesignConfig({ preset: "noir", heroVariant: "not-a-real-variant" });
++      expect(resolved.heroVariant).toBe(DESIGN_PRESETS.noir.heroVariant);
++    });
++
++    it("ignores an invalid override value for theme/typography and keeps the preset's own value", () => {
++      const resolved = resolveDesignConfig({ preset: "noir", theme: "not-a-real-theme" });
++      expect(resolved.theme).toBe("noir");
++    });
++  });
+ });
+diff --git a/apps/salon-portfolio/web/lib/config/resolveDesignConfig.ts b/apps/salon-portfolio/web/lib/config/resolveDesignConfig.ts
+index 899cb56..274fc00 100644
+--- a/apps/salon-portfolio/web/lib/config/resolveDesignConfig.ts
++++ b/apps/salon-portfolio/web/lib/config/resolveDesignConfig.ts
+@@ -1,16 +1,116 @@
+ import { DEFAULT_DESIGN_CONFIG, DESIGN_PRESETS } from "@/config/design-presets";
+-import { parseDesignPresetId } from "@/lib/validation/designConfigValidator";
++import {
++  isGalleryVariant,
++  isHeroVariant,
++  isMenuVariant,
++  isStaffVariant,
++  isValidSectionOrder,
++  parseDesignPresetId,
++} from "@/lib/validation/designConfigValidator";
+ import type { DesignConfig } from "@/types/design-config";
+ 
++function isPlainObject(value: unknown): value is Record<string, unknown> {
++  return typeof value === "object" && value !== null && !Array.isArray(value);
++}
++
+ /**
+- * Pure resolver: an untrusted preset id in, a safe `DesignConfig` out.
+- * Mirrors `lib/config/resolveSiteConfig.ts`'s "always produce a usable
+- * shape" contract. Never throws — an invalid/missing id always falls back
+- * to `DEFAULT_DESIGN_CONFIG` (the current Kinari look), so a malformed
+- * `SALON_DESIGN_PRESET` value can never crash or blank the homepage.
++ * Resolves a preset id (raw or object form, see `resolveDesignConfig`
++ * below) to its base `DesignConfig` — always a real registry entry,
++ * falling back to `DEFAULT_DESIGN_CONFIG` for a missing/invalid id.
+  */
+-export function resolveDesignConfig(rawPresetId: unknown): DesignConfig {
++function resolveBase(rawPresetId: unknown): DesignConfig {
+   const presetId = parseDesignPresetId(rawPresetId);
+-  if (!presetId) return DEFAULT_DESIGN_CONFIG;
+-  return DESIGN_PRESETS[presetId];
++  return presetId ? DESIGN_PRESETS[presetId] : DEFAULT_DESIGN_CONFIG;
++}
++
++/**
++ * Applies individually-validated field overrides on top of a base
++ * `DesignConfig` (V1.1 Task 10 §7/§8 — "preset selection establishes a
++ * base; explicit overrides win over preset defaults, only the overridden
++ * field changes"). Every candidate value is re-validated with the exact
++ * same guard its own field already uses at every other point of use
++ * (`HeroSection`'s `isHeroVariant`, etc.) — an invalid override is simply
++ * ignored (the base field wins), never thrown, mirroring this module's
++ * existing "never crash, never blank the page" contract. `theme`/
++ * `typography` share `DesignPreset`'s exact six-value union, so
++ * `parseDesignPresetId` (already the sole authority for that value set) is
++ * reused rather than adding a second `isThemeId`/`isTypographyId` guard
++ * that would just duplicate it.
++ *
++ * Returns the exact `base` object (no new object allocated) when no
++ * override actually changes a field, so `resolveDesignConfig({ preset:
++ * "noir" })` and `resolveDesignConfig("noir")` both return the identical
++ * `DESIGN_PRESETS.noir` reference — the same referential-equality
++ * guarantee the pre-Task-10 resolver already gave callers.
++ */
++function applyOverrides(base: DesignConfig, rawOverrides: Record<string, unknown>): DesignConfig {
++  const next: DesignConfig = { ...base };
++  let changed = false;
++
++  const theme = parseDesignPresetId(rawOverrides.theme);
++  if (theme !== null) {
++    next.theme = theme;
++    changed = true;
++  }
++
++  const typography = parseDesignPresetId(rawOverrides.typography);
++  if (typography !== null) {
++    next.typography = typography;
++    changed = true;
++  }
++
++  if (isHeroVariant(rawOverrides.heroVariant)) {
++    next.heroVariant = rawOverrides.heroVariant;
++    changed = true;
++  }
++
++  if (isMenuVariant(rawOverrides.menuVariant)) {
++    next.menuVariant = rawOverrides.menuVariant;
++    changed = true;
++  }
++
++  if (isStaffVariant(rawOverrides.staffVariant)) {
++    next.staffVariant = rawOverrides.staffVariant;
++    changed = true;
++  }
++
++  if (isGalleryVariant(rawOverrides.galleryVariant)) {
++    next.galleryVariant = rawOverrides.galleryVariant;
++    changed = true;
++  }
++
++  if (isValidSectionOrder(rawOverrides.sectionOrder)) {
++    next.sectionOrder = rawOverrides.sectionOrder;
++    changed = true;
++  }
++
++  return changed ? next : base;
++}
++
++/**
++ * Pure resolver: an untrusted preset id (or `{ preset, ...overrides }`)
++ * in, a safe `DesignConfig` out. Mirrors `lib/config/resolveSiteConfig.ts`'s
++ * "always produce a usable shape" contract. Never throws — an invalid/
++ * missing preset id always falls back to `DEFAULT_DESIGN_CONFIG` (the
++ * current Kinari look), so a malformed `SALON_DESIGN_PRESET` value can
++ * never crash or blank the homepage.
++ *
++ * Two accepted input shapes:
++ * - A raw preset id (`"noir"`, or anything else — invalid values fall
++ *   back), the original Task 1 contract, unchanged. `getDesignConfig()`
++ *   (`lib/config/designConfig.ts`) still calls this form with
++ *   `process.env.SALON_DESIGN_PRESET`.
++ * - `{ preset, ...overrides }` (V1.1 Task 10) — resolves `preset` to its
++ *   base `DesignConfig` exactly like the raw-id form, then layers any
++ *   individually-valid override fields on top (`applyOverrides` above).
++ *   This is what lets a preset selection remain a *starting point* rather
++ *   than a permanent lock on every other design property (spec §7).
++ */
++export function resolveDesignConfig(rawInput: unknown): DesignConfig {
++  if (!isPlainObject(rawInput)) {
++    return resolveBase(rawInput);
++  }
++
++  const base = resolveBase(rawInput.preset);
++  return applyOverrides(base, rawInput);
+ }
+diff --git a/docs/presentation-config-architecture.md b/docs/presentation-config-architecture.md
+index 792102d..5eec52f 100644
+--- a/docs/presentation-config-architecture.md
++++ b/docs/presentation-config-architecture.md
+@@ -45,7 +45,7 @@ layout variant, or a section's visibility.
+ 
+ | Field | Type | Status as of this task |
+ |---|---|---|
+-| `preset` | `DesignPreset` (6 values) | All 6 registered; only `kinari` differs from the others (identically for now) |
++| `preset` | `DesignPreset` (6 values) | All 6 registered, each a distinct curated composition (Design Presets task) |
+ | `theme` | `ThemeId` | Only `"kinari"` exists — a later task adds curated palettes |
+ | `typography` | `TypographyId` (6 values) | All 6 registered with curated heading-font pairings (Typography Presets task); body typography is shared across all 6 |
+ | `heroVariant` | `HeroVariant` (3 values) | All 3 registered — `fullscreen`/`split`/`editorial` (Hero Layout Variants task) |
+@@ -115,13 +115,14 @@ representative test orders.
+ ## Preset registry
+ 
+ `config/design-presets.ts` exports `DEFAULT_DESIGN_CONFIG` (today's
+-Kinari look) and `DESIGN_PRESETS: Record<DesignPreset, DesignConfig>`. As
+-of this task, all six registry entries are identical except `preset`
+-itself — selecting `femme`/`noir`/`editorial`/`natural`/`modern` today is
+-a safe no-op. Each future task (theme, typography, hero/menu/staff/
+-gallery variants, section order/visibility, curated multi-field presets)
+-edits one field on one or more preset entries; none of them need to touch
+-the registry's shape, the validator, or the resolver.
++Kinari look) and `DESIGN_PRESETS: Record<DesignPreset, DesignConfig>`.
++Task 1 shipped this registry with all six entries identical except
++`preset` itself; each subsequent task (theme, typography, hero/menu/staff/
++gallery variants, section order/visibility) edited one field at a time,
++and V1.1 Task 10 ("Design presets" below) is what finally curates all of
++those fields together into six distinct, coherent compositions — see that
++section for the full target matrix. None of this required changing the
++registry's shape, the validator, or the resolver's fallback contract.
+ 
+ ## Safe fallback
+ 
+@@ -416,12 +417,13 @@ all three variants so they can never drift from each other.
+ 
+ **Selecting a variant:** `DesignConfig.heroVariant`, same as every other
+ design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
+-it straight to `HeroSection`. This task does **not** set any
+-`DESIGN_PRESETS` entry to `split`/`editorial` — every preset still resolves
+-`heroVariant: "fullscreen"` (§J's "don't ship curated multi-field presets
+-yet"); `split`/`editorial` are reachable today only by constructing a
+-`DesignConfig` directly (as the tests do), which is enough to prove the
+-architecture without jumping ahead to the curated-preset task.
++it straight to `HeroSection`. This task did **not** set any
++`DESIGN_PRESETS` entry to `split`/`editorial` — every preset still resolved
++`heroVariant: "fullscreen"` at the time (§J's "don't ship curated
++multi-field presets yet"); `split`/`editorial` were reachable only by
++constructing a `DesignConfig` directly (as the tests do). The Design
++Presets task (below) is what later gave `femme`/`natural`/`modern` their
++own `split` and `editorial` its own `editorial` heroVariant.
+ 
+ **Backward compatibility:** `isHeroVariant` (mirrors `isHomeSection`) makes
+ `HeroSection` normalize whatever `heroVariant` it receives — missing or
+@@ -516,11 +518,13 @@ duplicated three times.
+ 
+ **Selecting a variant:** `DesignConfig.menuVariant`, same as every other
+ design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
+-it straight to `MenuSection`. This task does **not** set any
++it straight to `MenuSection`. This task did **not** set any
+ `DESIGN_PRESETS` entry to `card-grid`/`minimal-price-list` — every preset
+-still resolves `menuVariant: "editorial-list"` (§J's "don't ship curated
+-multi-field presets yet"); the other two are reachable today only by
+-constructing a `DesignConfig` directly (as the tests do).
++still resolved `menuVariant: "editorial-list"` at the time (§J's "don't
++ship curated multi-field presets yet"); the other two were reachable only
++by constructing a `DesignConfig` directly (as the tests do). The Design
++Presets task (below) later gave `femme`/`modern` `card-grid` and
++`noir`/`natural` `minimal-price-list`.
+ 
+ **Backward compatibility:** `isMenuVariant` (mirrors `isHeroVariant`) makes
+ `MenuSection` normalize whatever `menuVariant` it receives — missing or
+@@ -601,10 +605,12 @@ component.
+ 
+ **Selecting a variant:** `DesignConfig.staffVariant`, same as every other
+ design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
+-it straight to `StaffSection`. This task does **not** set any
++it straight to `StaffSection`. This task did **not** set any
+ `DESIGN_PRESETS` entry to `horizontal-profile` — every preset still
+-resolves `staffVariant: "portrait-grid"`; the alternate is reachable today
+-only by constructing a `DesignConfig` directly (as the tests do).
++resolved `staffVariant: "portrait-grid"` at the time; the alternate was
++reachable only by constructing a `DesignConfig` directly (as the tests
++do). The Design Presets task (below) later gave `noir`/`editorial`/
++`modern` `horizontal-profile`.
+ 
+ **Backward compatibility:** `isStaffVariant` (mirrors `isHeroVariant`/
+ `isMenuVariant`) makes `StaffSection` normalize whatever `staffVariant` it
+@@ -701,10 +707,12 @@ Gallery has no business feature flag of its own to combine with.
+ 
+ **Selecting a variant:** `DesignConfig.galleryVariant`, same as every other
+ design field — `app/page.tsx` reads it off `getDesignConfig()` and passes
+-it straight to `GallerySection`. This task does **not** set any
++it straight to `GallerySection`. This task did **not** set any
+ `DESIGN_PRESETS` entry to `masonry`/`feature-editorial` — every preset
+-still resolves `galleryVariant: "grid"`; the other two are reachable today
+-only by constructing a `DesignConfig` directly (as the tests do).
++still resolved `galleryVariant: "grid"` at the time; the other two were
++reachable only by constructing a `DesignConfig` directly (as the tests
++do). The Design Presets task (below) later gave `femme`/`natural`
++`masonry` and `noir`/`editorial` `feature-editorial`.
+ 
+ **Backward compatibility:** `isGalleryVariant` (mirrors `isHeroVariant`/
+ `isMenuVariant`/`isStaffVariant`) makes `GallerySection` normalize whatever
+@@ -720,14 +728,111 @@ section already uses, so all six `ThemeId`s render correctly under every
+ Gallery variant (visually spot-checked under `kinari`/`noir`) with zero
+ variant-specific styling logic.
+ 
++## Design presets (V1.1 Task 10)
++
++Every earlier V1.1 task built one *mechanism* (a theme axis, a typography
++axis, three independent layout-variant axes, a section-order axis) while
++leaving `DESIGN_PRESETS`' five non-`kinari` entries identical to Kinari
++except their own `theme`/`typography` id — selecting `femme`/`noir`/
++`editorial`/`natural`/`modern` was a safe no-op for every layout field.
++This task is the composition layer on top: it curates each of those
++mechanisms together into six coherent, complete visual identities, so a
++preset is genuinely "a different salon website," not just "a different
++color."
++
++**What a preset is:** a fixed bundle of `theme` + `typography` +
++`heroVariant` + `menuVariant` + `staffVariant` + `galleryVariant` +
++`sectionOrder` + `sectionVisibility` — every field `DesignConfig` has
++except `preset` itself. `config/design-presets.ts`'s `PRESET_COMPOSITIONS`
++is the single source of truth for the five curated compositions;
++`DESIGN_PRESETS` (unchanged shape, still `Record<DesignPreset,
++DesignConfig>`) builds each preset's full `DesignConfig` from it.
++`sectionVisibility` stays `DEFAULT_SECTION_VISIBILITY` (every optional
++section visible) for all six — no preset hides a section merely to look
++different (spec §13); every difference lives in *how* a section renders
++and *where* it sits, not whether it renders at all.
++
++**The six presets:**
++
++| Preset | Direction | Theme | Typography | Hero | Menu | Staff | Gallery | Section order vs. Kinari |
++|---|---|---|---|---|---|---|---|---|
++| `kinari` | Japanese natural — quiet, warm, unchanged baseline | `kinari` | `kinari` | `fullscreen` | `editorial-list` | `portrait-grid` | `grid` | default |
++| `femme` | Soft feminine beauty salon | `femme` | `femme` | `split` | `card-grid` | `portrait-grid` | `masonry` | Gallery moved right after Concept, ahead of Menu/Staff |
++| `noir` | Dark premium / luxury | `noir` | `noir` | `fullscreen` | `minimal-price-list` | `horizontal-profile` | `feature-editorial` | same reordering as Femme (Gallery early) |
++| `editorial` | Magazine / high-end | `editorial` | `editorial` | `editorial` | `editorial-list` | `horizontal-profile` | `feature-editorial` | Gallery immediately after Hero — a deliberate strong opening |
++| `natural` | Organic / botanical | `natural` | `natural` | `split` | `minimal-price-list` | `portrait-grid` | `masonry` | default (spec §5.5: don't reorder just to look different) |
++| `modern` | Contemporary / minimal | `modern` | `modern` | `split` | `card-grid` | `horizontal-profile` | `grid` | Gallery promoted ahead of Staff |
++
++Kinari's own `DEFAULT_DESIGN_CONFIG` fields are byte-for-byte unchanged by
++this task — the stable, backward-compatible baseline every other preset
++(and the resolver's fallback) still points at.
++
++**Preset selection resolves to a base, not a permanent lock (spec §7/§8):**
++`resolveDesignConfig` (`lib/config/resolveDesignConfig.ts`) now accepts two
++input shapes:
++
++```text
++resolveDesignConfig("noir")                            // unchanged Task-1 contract
++   -> DESIGN_PRESETS.noir                                  (a raw preset id)
++
++resolveDesignConfig({ preset: "noir" })                 // new, Task 10
++   -> DESIGN_PRESETS.noir                                  (same object, no overrides)
++
++resolveDesignConfig({ preset: "noir", heroVariant: "split" })
++   -> { ...DESIGN_PRESETS.noir, heroVariant: "split" }      (only heroVariant changes)
++```
++
++The object form resolves `preset` to its base `DesignConfig` exactly like
++the raw-id form (same fallback-to-`DEFAULT_DESIGN_CONFIG` behavior for a
++missing/invalid preset id), then layers any remaining, individually-valid
++override keys on top — `theme`, `typography`, `heroVariant`, `menuVariant`,
++`staffVariant`, `galleryVariant`, `sectionOrder`. Each candidate value is
++re-validated with the exact same guard already used everywhere else in the
++codebase (`isHeroVariant`, `isMenuVariant`, `isStaffVariant`,
++`isGalleryVariant`, `isValidSectionOrder`, `parseDesignPresetId` for
++`theme`/`typography` — no second allow-list was added); an invalid override
++is silently ignored and the base field wins, so a malformed override value
++can never crash or blank the page, matching every other design-config
++guard's fallback discipline. When no override actually changes a field
++(including `{}`, or an object whose only overrides are all invalid), the
++resolver returns the exact base object by reference rather than allocating
++a new one — `resolveDesignConfig({ preset: "noir" })` and
++`resolveDesignConfig("noir")` both return the identical `DESIGN_PRESETS.noir`
++object.
++
++**No new customer-facing input channel yet:** this task extends the
++*resolver's* contract, not `getDesignConfig()`'s env-var surface —
++`SALON_DESIGN_PRESET` remains the only design input a deployment sets
++today (`.env.example`). Per-field override wiring (e.g. a dedicated env var
++per field, or a future CONFIG-sheet key) is deliberately left for a later
++task if a real customer need for it emerges, rather than adding an input
++surface no current caller uses — see "Not yet implemented" below.
++
++**Presets remain presentation-only:** no preset field ever contains a
++business name, staff name, price, service name, photo path, address, or
++social URL — every preset is exclusively `theme`/`typography`/layout-
++variant/`sectionOrder`/`sectionVisibility` values, the same closed set of
++types every earlier task already established. Reservation/GAS/business
++logic (`Calendar.ts`, `LockService`, availability, price/duration
++resolution, staff eligibility, Sheets transaction semantics) is untouched
++by this task — no file under `apps/salon-portfolio/gas` was modified.
++
++**`sectionOrder` stays a closed, typed registry:** every preset's
++`sectionOrder` is still exactly a permutation of the same 11
++`ALL_HOME_SECTIONS` values (`lib/constants/design-sections.ts`) — no new
++section id was introduced, no preset's order can omit `hero`/`menu`, and
++the fixed closing `ReservationCtaBand` right before the footer is still
++entirely outside `sectionOrder` for every preset, unchanged from Task 9.
++
+ ## Not yet implemented (tracked for later V1.1 work)
+ 
+-- Section-order-driven rendering — `app/page.tsx` reading `sectionOrder`
+-  instead of its literal JSX sequence.
+-- Curated multi-field presets — the five non-`kinari` registry entries
+-  differentiated from the default.
+ - Customer-facing documentation — a buyer-facing guide for choosing a
+-  preset, separate from this architecture note.
++  preset, separate from this architecture note (V1.1 Task 12 in
++  `PLAN_PHASE5_1_V1_1_LP_DESIGN_CUSTOMIZATION.md`).
++- Per-field override input channel — `resolveDesignConfig` supports
++  layering individual overrides on top of a preset (Task 10 above), but no
++  env var or CONFIG-sheet key exposes that to a deployment yet; only the
++  whole-preset `SALON_DESIGN_PRESET` selection is wired end-to-end today.
+ 
+ See `PLAN_PHASE5_1_V1_1_LP_DESIGN_CUSTOMIZATION.md` for the full task
+ breakdown and ordering of this remaining work.

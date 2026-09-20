@@ -1,0 +1,4 @@
+StaffID,Name,Active,CalendarID,DisplayOrder,Role,Bio,ImagePath
+ST001,スタッフA,true,,1,店長,丁寧なカウンセリングを心がけています。,
+ST002,スタッフB,true,,2,スタイリスト,,
+ST003,スタッフC,true,,3,,,

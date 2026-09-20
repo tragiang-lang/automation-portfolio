@@ -1,0 +1,11 @@
+./01_WEB_TEMPLATE/salon-website/node_modules
+./02_GAS/salon-reservation-gas/node_modules
+
+NOTE: the two node_modules/ directories above were created intentionally by
+this validation task's own `npm install` runs (Task 12 Steps 2-3), to prove
+the packaged copies can install/build/test standalone. They are NOT part of
+the customer-facing package tree as authored (Tasks 2-3 excluded them from
+the copy) and Task 13's ZIP build excludes them again explicitly. No other
+development artifact (.next, coverage, .git, .claude, .superpowers,
+.evidence, CLAUDE.md, AGENTS.md, *.tsbuildinfo, test-output.log,
+typecheck-output.log) was found anywhere in the package.

@@ -1,0 +1,16 @@
+  ● Console
+  ● createReservationAction › ANY_STAFF selection: assigns the first free staff in DisplayOrder
+  ● createReservationAction › Calendar event creation fails: still ok:true with needsConfirmation, row marked 要確認, owner-only email
+  ● createReservationAction › Sheet update fails after Calendar succeeds: SHEET_ERROR, CalendarEventID preserved in the ERROR_LOG context, no emails sent
+  ● createReservationAction › a throw while building the email context (e.g. SITE_BASE_URL unset) after a successful reservation still returns the real success response, not a false failure
+  ● createReservationAction › email send failure after a successful reservation does not change the success response or roll back the reservation
+  ● createReservationAction › ignores a client-supplied price/duration and uses the server-resolved service data for the created row
+  ● createReservationAction › normal successful booking: confirms the row, creates the Calendar event, sends both emails
+  ● createReservationAction › returns SYSTEM_BUSY when the critical-section lock cannot be acquired, leaving the pending row untouched
+  ● createReservationAction › returns SYSTEM_BUSY when the idempotency-claim lock cannot be acquired
+  ● createReservationAction › returns the Sheet-backstop result and re-populates the cache (idempotency retry after cache expiry)
+  ● createReservationAction › returns the cached result without touching the repository or Calendar (idempotency fast path)
+  ● createReservationAction › slot becomes unavailable during the lock-protected re-check: SLOT_UNAVAILABLE error, row marked 要確認, no customer email
+  ● createReservationAction › specific staff selection: assigns the requested staff and creates the event on that staff's calendar
+  ● createReservationAction › unavailable specific staff: SLOT_UNAVAILABLE before any row is written
+  ● getAvailabilityAction › returns available slots for a valid request, fetching busy events once

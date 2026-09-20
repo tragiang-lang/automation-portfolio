@@ -1,0 +1,453 @@
+diff --git a/apps/salon-portfolio/web/app/page.test.tsx b/apps/salon-portfolio/web/app/page.test.tsx
+index 7ebc8ea..aa45b90 100644
+--- a/apps/salon-portfolio/web/app/page.test.tsx
++++ b/apps/salon-portfolio/web/app/page.test.tsx
+@@ -15,6 +15,7 @@ import Home from "./page";
+ import { getDesignConfig } from "@/lib/config/designConfig";
+ import { getRuntimeConfig, DEMO_RUNTIME_CONFIG } from "@/lib/config/runtimeConfig";
+ import { DEFAULT_DESIGN_CONFIG } from "@/config/design-presets";
++import { ALL_HOME_SECTIONS } from "@/lib/constants/design-sections";
+ import type { RuntimeConfigResult } from "@/types/runtime-config";
+ 
+ const mockedGetDesignConfig = getDesignConfig as jest.Mock;
+@@ -134,3 +135,130 @@ describe("Home", () => {
+     expect(screen.getByRole("heading", { name: "メニュー" })).toBeInTheDocument();
+   });
+ });
++
++/**
++ * One heading marker per `HomeSection`, used only to locate each section's
++ * element for the document-order assertions below — not a duplicate of any
++ * accessibility assertion above. Every section renders its marker as a
++ * heading, so `sectionHeadingElement` below (via `getByRole("heading", ...)`)
++ * finds exactly one element per section — critically, scoped to
++ * `role: "heading"` this cannot false-match `HERO_CTA_SECONDARY`'s
++ * "メニューを見る" button text, which contains the "menu" marker as a raw
++ * substring but is not a heading (see `components/sections/HeroContent.tsx`).
++ * `hero`'s value is documentation only (its own accessible name gets a
++ * space inserted around `renderHeroHeadline`'s `<span>` — see
++ * `sectionHeadingElement` below); lookup uses heading level 1 instead.
++ */
++const SECTION_MARKERS: Record<(typeof ALL_HOME_SECTIONS)[number], string> = {
++  hero: "静けさの中で、指先とまなざしを整える。",
++  concept: "静けさの中で、指先を整える時間を",
++  menu: "メニュー",
++  staff: "スタッフ紹介",
++  gallery: "ギャラリー",
++  reservation: "仕上がりを見て、気持ちが決まったら",
++  "salon-features": "サロンについて",
++  "customer-flow": "ご来店の流れ",
++  faq: "よくあるご質問",
++  access: "アクセス",
++  contact: "お問い合わせ",
++};
++
++const CLOSING_RESERVATION_CTA_TEXT = "最後まで読んでくださり、ありがとうございます";
++
++/** Resolves one section's heading element. Hero is matched by `level: 1`
++ *  rather than `name` — the accessible-name algorithm inserts a space
++ *  around `renderHeroHeadline`'s internal `<span>` contribution (per the
++ *  W3C accname spec's name-from-content join rule), so its computed name
++ *  doesn't literally equal `SECTION_MARKERS.hero`; `level: 1` sidesteps
++ *  that since the page has exactly one `<h1>`. */
++function sectionHeadingElement(section: (typeof ALL_HOME_SECTIONS)[number]) {
++  if (section === "hero") return screen.getByRole("heading", { level: 1 });
++  return screen.getByRole("heading", { name: SECTION_MARKERS[section] });
++}
++
++/** Index of each section's heading element within the full ordered list of
++ *  headings on the page — `getByRole` throws if a marker isn't a unique
++ *  heading, so this doubles as an every-section-rendered-exactly-once
++ *  check. */
++function headingOrderIndices(sections: readonly (typeof ALL_HOME_SECTIONS)[number][]): number[] {
++  const allHeadings = screen.getAllByRole("heading");
++  return sections.map((section) => allHeadings.indexOf(sectionHeadingElement(section)));
++}
++
++describe("Home — section ordering (V1.1 Task 9)", () => {
++  it("renders sections in DEFAULT_SECTION_ORDER by default — same heading order as the pre-Task-9 literal JSX sequence", async () => {
++    render(await Home());
++
++    const indices = headingOrderIndices(ALL_HOME_SECTIONS);
++    expect(indices.every((index) => index >= 0)).toBe(true);
++    expect(indices).toEqual([...indices].sort((a, b) => a - b));
++  });
++
++  it("re-renders sections in a custom sectionOrder, with the closing reservation CTA band still fixed after everything else", async () => {
++    const reversedOrder = [...ALL_HOME_SECTIONS].reverse();
++    mockedGetDesignConfig.mockReturnValue({ ...DEFAULT_DESIGN_CONFIG, sectionOrder: reversedOrder });
++
++    render(await Home());
++
++    const indices = headingOrderIndices(reversedOrder);
++    expect(indices.every((index) => index >= 0)).toBe(true);
++    expect(indices).toEqual([...indices].sort((a, b) => a - b));
++
++    const allHeadings = screen.getAllByRole("heading");
++    const closingIndex = allHeadings.indexOf(screen.getByRole("heading", { name: CLOSING_RESERVATION_CTA_TEXT }));
++    expect(closingIndex).toBeGreaterThan(Math.max(...indices));
++  });
++
++  it("moves gallery ahead of concept for an editorial-style order while every section still renders exactly once", async () => {
++    const editorialOrder = [
++      "hero",
++      "gallery",
++      "concept",
++      "menu",
++      "staff",
++      "reservation",
++      "salon-features",
++      "customer-flow",
++      "faq",
++      "access",
++      "contact",
++    ] as typeof ALL_HOME_SECTIONS;
++    mockedGetDesignConfig.mockReturnValue({ ...DEFAULT_DESIGN_CONFIG, sectionOrder: editorialOrder });
++
++    render(await Home());
++
++    const indices = headingOrderIndices(editorialOrder);
++    expect(indices.every((index) => index >= 0)).toBe(true);
++    expect(indices).toEqual([...indices].sort((a, b) => a - b));
++
++    const galleryIndex = screen.getAllByRole("heading").indexOf(screen.getByRole("heading", { name: SECTION_MARKERS.gallery }));
++    const conceptIndex = screen.getAllByRole("heading").indexOf(screen.getByRole("heading", { name: SECTION_MARKERS.concept }));
++    expect(galleryIndex).toBeLessThan(conceptIndex);
++  });
++
++  it("falls back to DEFAULT_SECTION_ORDER (never crashes, never drops a section) when sectionOrder is malformed", async () => {
++    mockedGetDesignConfig.mockReturnValue({
++      ...DEFAULT_DESIGN_CONFIG,
++      sectionOrder: ["hero", "menu"] as unknown as (typeof ALL_HOME_SECTIONS)[number][],
++    });
++
++    render(await Home());
++
++    for (const section of ALL_HOME_SECTIONS) {
++      expect(sectionHeadingElement(section)).toBeInTheDocument();
++    }
++  });
++
++  it("keeps both reservation CTA bands hidden together under a reordered sectionOrder when design visibility is off", async () => {
++    mockedGetDesignConfig.mockReturnValue({
++      ...DEFAULT_DESIGN_CONFIG,
++      sectionOrder: [...ALL_HOME_SECTIONS].reverse(),
++      sectionVisibility: { ...DEFAULT_DESIGN_CONFIG.sectionVisibility, reservation: false },
++    });
++
++    render(await Home());
++
++    expect(screen.queryByText("仕上がりを見て、気持ちが決まったら")).not.toBeInTheDocument();
++    expect(screen.queryByText(CLOSING_RESERVATION_CTA_TEXT)).not.toBeInTheDocument();
++  });
++});
+diff --git a/apps/salon-portfolio/web/app/page.tsx b/apps/salon-portfolio/web/app/page.tsx
+index bf3ba0b..59d5151 100644
+--- a/apps/salon-portfolio/web/app/page.tsx
++++ b/apps/salon-portfolio/web/app/page.tsx
+@@ -1,3 +1,4 @@
++import { Fragment, type ReactNode } from "react";
+ import { HeroSection } from "@/components/sections/HeroSection";
+ import { ConceptSection } from "@/components/sections/ConceptSection";
+ import { MenuSection } from "@/components/sections/MenuSection";
+@@ -20,12 +21,16 @@ import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
+ import { getRuntimeCatalog } from "@/lib/config/runtimeCatalog";
+ import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
+ import { getDesignConfig } from "@/lib/config/designConfig";
++import { DEFAULT_SECTION_ORDER } from "@/lib/constants/design-sections";
++import { isValidSectionOrder } from "@/lib/validation/designConfigValidator";
++import type { HomeSection } from "@/types/design-config";
+ 
+ // Page order matches Phase 2A §6 exactly: Header (layout) → Hero →
+ // Concept → Menu → Staff → Gallery → Reservation CTA → Salon Features →
+-// Customer Flow → FAQ → Access → Contact → Footer (layout). Configurable
+-// sections are gated here by the resolved runtime config's `features`,
+-// not by editing the section components themselves.
++// Customer Flow → FAQ → Access → Contact → [closing Reservation CTA] →
++// Footer (layout). Configurable sections are gated here by the resolved
++// runtime config's `features`, not by editing the section components
++// themselves.
+ //
+ // GALLERY_IMAGES/SALON_FEATURES/CUSTOMER_FLOW_STEPS/FAQ_ITEMS/ACCESS_INFO
+ // are not part of the `getConfig` contract (no such fields in
+@@ -36,50 +41,60 @@ import { getDesignConfig } from "@/lib/config/designConfig";
+ // V1.1 Task 1 (Presentation Configuration Layer — see
+ // docs/presentation-config-architecture.md) adds `sectionVisibility`
+ // gating for every section below that doesn't already have a business
+-// feature flag. It intentionally does NOT yet drive section *order* —
+-// this stays a literal JSX sequence until a later V1.1 task, so this file
+-// is still not a generic section-rendering engine. For staff/reservation/
+-// contact, design visibility is combined with (never overrides) the
+-// existing business feature flag — `feature && sectionVisibility.x` — so
+-// a design preset can only ever hide a section a feature flag already
+-// allows, never show one the business disabled.
++// feature flag. For staff/reservation/contact, design visibility is
++// combined with (never overrides) the existing business feature flag —
++// `feature && sectionVisibility.x` — so a design preset can only ever
++// hide a section a feature flag already allows, never show one the
++// business disabled.
+ //
+-// V1.1 Task 5 (Hero Layout Variants) adds `heroVariant`, read from the
+-// same `getDesignConfig()` call and passed straight through to
+-// `HeroSection`, which owns the fullscreen/split/editorial component
+-// selection itself — this file only supplies the (variant-independent)
+-// runtime content, same as it already did for every other section.
++// V1.1 Tasks 5-8 (Hero/Menu/Staff/Gallery Layout Variants) add
++// `heroVariant`/`menuVariant`/`staffVariant`/`galleryVariant`, each read
++// from the same `getDesignConfig()` call and passed straight through to
++// its section, which owns its own layout-component selection — this file
++// only ever supplies the (variant-independent) runtime content, same as
++// it already did before any variant existed.
+ //
+-// V1.1 Task 6 (Menu Layout Variants) adds `menuVariant` the same way —
+-// passed straight through to `MenuSection`, which owns the editorial-
+-// list/card-grid/minimal-price-list component selection itself. This
+-// file still only supplies `services` (the existing runtime
+-// `getRuntimeCatalog` → `getServices` → `Service[]` flow), never a
+-// variant-specific content shape.
++// V1.1 Task 9 (Section Ordering — see
++// docs/presentation-config-architecture.md) reads `sectionOrder` and
++// renders the 11 allow-listed `HomeSection`s (`SECTIONS` below) in that
++// order instead of the previous literal JSX sequence. This is
++// deliberately still not a page builder: `SECTIONS` is a fixed,
++// exhaustively-typed `Record<HomeSection, ReactNode>` built from the same
++// real components/props as before — `sectionOrder` only ever selects a
++// permutation of *known* keys, never a component name, prop, or arbitrary
++// content. `isValidSectionOrder` re-validates the value at this
++// composition-root boundary (the same defense-in-depth every other
++// design-config value already gets at its point of use, e.g.
++// `HeroSection`'s `isHeroVariant` guard) and falls back to
++// `DEFAULT_SECTION_ORDER` rather than crashing or dropping a section.
+ //
+-// V1.1 Task 7 (Staff Layout Variants) adds `staffVariant` the same way —
+-// passed straight through to `StaffSection`, which owns the portrait-grid/
+-// horizontal-profile component selection itself. This file still only
+-// supplies `staff` (the existing runtime `getRuntimeCatalog` → `getStaff`
+-// → `StaffMember[]` flow), never a variant-specific content shape.
+-//
+-// V1.1 Task 8 (Gallery Layout Variants) adds `galleryVariant` the same
+-// way — passed straight through to `GallerySection`, which owns the grid/
+-// masonry/feature-editorial component selection itself. This file still
+-// only supplies `images` (the existing static `GALLERY_IMAGES`,
+-// `config/demo-content.ts` — Gallery has no runtime/GAS content path,
+-// unlike Menu/Staff, and this task does not add one), and the
+-// `sectionVisibility.gallery` gate is unchanged.
++// The homepage has two `ReservationCtaBand` instances — one mid-page, one
++// as a closing "thank you for reading" band right before the footer. Only
++// the mid-page instance is part of `sectionOrder` (`reservation`); the
++// closing band is treated the same as header/footer — an always-last
++// structural element, not a reorderable section — so the default order
++// (`DEFAULT_SECTION_ORDER`) renders byte-for-byte the same page as before
++// this task, and no `sectionOrder` value can ever move or duplicate the
++// closing band. Both bands still share the same
++// `siteConfig.features.reservation && sectionVisibility.reservation` gate,
++// so hiding "reservation" hides both.
+ export default async function Home() {
+   const [{ config }, { services, staff }] = await Promise.all([
+     getRuntimeConfig(),
+     getRuntimeCatalog(),
+   ]);
+   const siteConfig = resolveSiteConfig(config);
+-  const { sectionVisibility, heroVariant, menuVariant, staffVariant, galleryVariant } = getDesignConfig();
++  const { sectionVisibility, sectionOrder, heroVariant, menuVariant, staffVariant, galleryVariant } =
++    getDesignConfig();
++  const resolvedSectionOrder = isValidSectionOrder(sectionOrder) ? sectionOrder : DEFAULT_SECTION_ORDER;
+ 
+-  return (
+-    <main className="flex flex-1 flex-col">
++  const reservationEnabled = siteConfig.features.reservation && sectionVisibility.reservation;
++
++  // Exhaustive `Record<HomeSection, ...>` — adding a 12th `HomeSection`
++  // without a matching entry here is a compile error, not a silent
++  // runtime gap (same discipline as `HERO_VARIANT_COMPONENTS` etc.).
++  const SECTIONS: Record<HomeSection, ReactNode> = {
++    hero: (
+       <HeroSection
+         headline={siteConfig.business.tagline}
+         subheadline="銀座の一角で、丁寧なネイル・まつげのお手入れをご提供しています。"
+@@ -87,20 +102,19 @@ export default async function Home() {
+         nameLatin={siteConfig.business.nameLatin}
+         heroVariant={heroVariant}
+       />
+-
+-      {sectionVisibility.concept ? (
+-        <ConceptSection
+-          eyebrow="Concept"
+-          title="静けさの中で、指先を整える時間を"
+-          paragraphs={[
+-            "流行を追いかけるより、長く付き合える美しさを。当店では、派手さよりも一つひとつの仕上がりの丁寧さを大切にしています。",
+-            "落ち着いた空間で過ごすひとときそのものも、施術と同じくらい価値のあるものだと考えています。",
+-          ]}
+-        />
+-      ) : null}
+-
+-      <MenuSection services={services} menuVariant={menuVariant} />
+-
++    ),
++    concept: sectionVisibility.concept ? (
++      <ConceptSection
++        eyebrow="Concept"
++        title="静けさの中で、指先を整える時間を"
++        paragraphs={[
++          "流行を追いかけるより、長く付き合える美しさを。当店では、派手さよりも一つひとつの仕上がりの丁寧さを大切にしています。",
++          "落ち着いた空間で過ごすひとときそのものも、施術と同じくらい価値のあるものだと考えています。",
++        ]}
++      />
++    ) : null,
++    menu: <MenuSection services={services} menuVariant={menuVariant} />,
++    staff: (
+       <StaffSection
+         enabled={siteConfig.features.staffSelection && sectionVisibility.staff}
+         staff={staff}
+@@ -108,37 +122,39 @@ export default async function Home() {
+         businessNameInitial={siteConfig.business.name}
+         staffVariant={staffVariant}
+       />
+-
+-      {sectionVisibility.gallery ? (
+-        <GallerySection images={GALLERY_IMAGES} galleryVariant={galleryVariant} />
+-      ) : null}
+-
+-      {siteConfig.features.reservation && sectionVisibility.reservation ? (
+-        <ReservationCtaBand
+-          heading="仕上がりを見て、気持ちが決まったら"
+-          message="ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。"
+-        />
+-      ) : null}
+-
+-      {sectionVisibility["salon-features"] ? (
+-        <SalonFeaturesSection features={SALON_FEATURES} />
+-      ) : null}
+-
+-      {sectionVisibility["customer-flow"] ? (
+-        <CustomerFlowSection steps={CUSTOMER_FLOW_STEPS} />
+-      ) : null}
+-
+-      {sectionVisibility.faq ? <FaqSection items={FAQ_ITEMS} /> : null}
+-
+-      {sectionVisibility.access ? (
+-        <AccessSection business={siteConfig.business} hours={siteConfig.hours} access={ACCESS_INFO} />
+-      ) : null}
+-
+-      {siteConfig.features.contactForm && sectionVisibility.contact ? (
++    ),
++    gallery: sectionVisibility.gallery ? (
++      <GallerySection images={GALLERY_IMAGES} galleryVariant={galleryVariant} />
++    ) : null,
++    reservation: reservationEnabled ? (
++      <ReservationCtaBand
++        heading="仕上がりを見て、気持ちが決まったら"
++        message="ご希望のメニューやお日にちが決まっていなくても大丈夫です。まずはお気軽にご予約ください。"
++      />
++    ) : null,
++    "salon-features": sectionVisibility["salon-features"] ? (
++      <SalonFeaturesSection features={SALON_FEATURES} />
++    ) : null,
++    "customer-flow": sectionVisibility["customer-flow"] ? (
++      <CustomerFlowSection steps={CUSTOMER_FLOW_STEPS} />
++    ) : null,
++    faq: sectionVisibility.faq ? <FaqSection items={FAQ_ITEMS} /> : null,
++    access: sectionVisibility.access ? (
++      <AccessSection business={siteConfig.business} hours={siteConfig.hours} access={ACCESS_INFO} />
++    ) : null,
++    contact:
++      siteConfig.features.contactForm && sectionVisibility.contact ? (
+         <ContactSection business={siteConfig.business} />
+-      ) : null}
++      ) : null,
++  };
++
++  return (
++    <main className="flex flex-1 flex-col">
++      {resolvedSectionOrder.map((section) => (
++        <Fragment key={section}>{SECTIONS[section]}</Fragment>
++      ))}
+ 
+-      {siteConfig.features.reservation && sectionVisibility.reservation ? (
++      {reservationEnabled ? (
+         <ReservationCtaBand
+           heading="最後まで読んでくださり、ありがとうございます"
+           message="少しでも気になることがあれば、まずはご予約からお気軽にどうぞ。"
+diff --git a/apps/salon-portfolio/web/lib/constants/design-sections.ts b/apps/salon-portfolio/web/lib/constants/design-sections.ts
+index 12367ca..69c048f 100644
+--- a/apps/salon-portfolio/web/lib/constants/design-sections.ts
++++ b/apps/salon-portfolio/web/lib/constants/design-sections.ts
+@@ -42,7 +42,14 @@ export const DEFAULT_SECTION_VISIBILITY: SectionVisibility = {
+   contact: true,
+ };
+ 
+-/** The only section order that exists today — a later task introduces
+- *  additional vetted orders; `app/page.tsx` does not yet read this (its
+- *  JSX order is still literal), see docs/presentation-config-architecture.md. */
++/**
++ * The default section order — identical to `ALL_HOME_SECTIONS`, so
++ * selecting it renders byte-for-byte the same page as the pre-V1.1-Task-9
++ * literal JSX sequence. `app/page.tsx` reads `DesignConfig.sectionOrder`
++ * (falling back to this via `isValidSectionOrder` for a malformed value)
++ * to choose the render order of its `SECTIONS` registry — see
++ * docs/presentation-config-architecture.md. A later task (curated Design
++ * Presets) picks specific alternate orders; this task only wires the
++ * mechanism, it does not curate new orders itself.
++ */
+ export const DEFAULT_SECTION_ORDER: readonly HomeSection[] = ALL_HOME_SECTIONS;
+diff --git a/docs/presentation-config-architecture.md b/docs/presentation-config-architecture.md
+index 528b60c..792102d 100644
+--- a/docs/presentation-config-architecture.md
++++ b/docs/presentation-config-architecture.md
+@@ -53,7 +53,7 @@ layout variant, or a section's visibility.
+ | `staffVariant` | `StaffVariant` (2 values) | All 2 registered — `portrait-grid`/`horizontal-profile` (Staff Layout Variants task) |
+ | `galleryVariant` | `GalleryVariant` (3 values) | All 3 registered — `grid`/`masonry`/`feature-editorial` (Gallery Layout Variants task) |
+ | `sectionVisibility` | `Record<OptionalHomeSection, boolean>` | Fully wired into `app/page.tsx`; every default is `true` |
+-| `sectionOrder` | `HomeSection[]` | Typed, defaulted, and validated (`isValidSectionOrder`); **not yet** read by `app/page.tsx` |
++| `sectionOrder` | `HomeSection[]` | Fully wired into `app/page.tsx` (Section Ordering task); typed, defaulted, and validated (`isValidSectionOrder`) both in the resolver and again at the composition-root boundary |
+ 
+ ## Section allow-list, not a page builder
+ 
+@@ -77,13 +77,40 @@ what keeps the design layer free of business logic: it never decides
+ whether reservation/staff-selection/contact-form *should* be available,
+ only whether an already-available section is visually shown.
+ 
+-There is intentionally no `sections: {id, component}[]` registry driving a
+-generic render loop — `app/page.tsx` still lists each section as its own
+-JSX element with its own real props. `sectionOrder` exists as validated,
+-typed data today so a future task has a safe foundation, but wiring it
+-into render order is deferred; building a generic section-rendering
+-engine now, before a second real order exists to justify it, would be
+-over-engineering.
++## Section Ordering (V1.1 Task 9)
++
++`app/page.tsx` builds `SECTIONS`, a `Record<HomeSection, ReactNode>` —
++still each section as its own JSX element with its own real props, same
++as before this task — then renders `sectionOrder.map(id => SECTIONS[id])`.
++This is deliberately **not** a generic page-builder: `SECTIONS`'s type
++makes it a compile error to omit or mis-key any of the 11 `HomeSection`s,
++and `sectionOrder` can only ever select a *permutation of these known
++keys* — never a component name, a prop value, or arbitrary content.
++Nothing about content, styling, or component selection is configurable
++through this mechanism, only which already-rendered section comes before
++which other one.
++
++`isValidSectionOrder` (`lib/validation/designConfigValidator.ts`)
++re-validates `sectionOrder` again at this composition-root boundary —
++the same defense-in-depth every other design-config value already gets
++at its point of use (e.g. `HeroSection`'s `isHeroVariant` guard) — and
++falls back to `DEFAULT_SECTION_ORDER` for a malformed value rather than
++crashing or dropping a section.
++
++The homepage has two `ReservationCtaBand` instances (§A of
++`docs/design-customization-audit.md`): a mid-page one and a closing
++"thank you for reading" one right before the footer. Only the mid-page
++instance is part of `sectionOrder` (the `reservation` key); the closing
++band is treated like header/footer — an always-last structural element,
++never reorderable or duplicated — so `DEFAULT_SECTION_ORDER` renders the
++same page as the pre-Task-9 literal JSX sequence, and both bands still
++share the same `siteConfig.features.reservation && sectionVisibility.reservation`
++gate (hiding "reservation" hides both).
++
++Curating specific alternate orders (e.g. an "editorial" or "menu-first"
++preset) is out of scope for this task and belongs to the later Design
++Presets task — this task only wires the mechanism and proves it with
++representative test orders.
+ 
+ ## Preset registry
+ 

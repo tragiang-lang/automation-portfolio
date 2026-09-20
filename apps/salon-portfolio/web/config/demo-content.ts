@@ -21,6 +21,7 @@ import type {
   Service,
   SiteConfig,
   StaffMember,
+  Testimonial,
 } from "@/types/content";
 
 export const SITE_CONFIG: SiteConfig = {
@@ -83,6 +84,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "メニュー", href: "#menu" },
   { label: "スタッフ", href: "#staff" },
   { label: "ギャラリー", href: "#gallery" },
+  { label: "お客様の声", href: "#testimonials" },
   { label: "アクセス", href: "#access" },
   { label: "お問い合わせ", href: "#contact" },
 ];
@@ -185,6 +187,40 @@ export const STAFF: StaffMember[] = [
     introduction: "初めてのお客様にも安心していただけるよう心がけています。",
     photoSrc: "/images/staff/staff-avatar-04.svg",
     photoAlt: "スタッフ 山本ゆいのイメージアイコン",
+  },
+];
+
+/**
+ * Testimonials ("お客様の声"). Same illustrated-stand-in decision as
+ * `STAFF` above (not real customer photos) — attaching a real stranger's
+ * face to a fabricated review would misrepresent that person even more
+ * directly than the Staff case, since it also implies they said something
+ * they never said. `photoAlt` says "イメージアイコン" for the same reason
+ * `STAFF`'s does. Names are initials + 様, matching how this business's
+ * quiet, understated voice would present a review, not a full real name.
+ */
+export const TESTIMONIALS: Testimonial[] = [
+  {
+    id: "T001",
+    name: "M.K 様",
+    comment:
+      "丁寧なカウンセリングのおかげで、仕上がりのイメージがぴったり合いました。落ち着いた空間でゆっくり過ごせるのも魅力です。",
+    photoSrc: "/images/testimonials/customer-01.svg",
+    photoAlt: "お客様のイメージアイコン",
+  },
+  {
+    id: "T002",
+    name: "S.T 様",
+    comment: "指先の仕上がりがとても自然で、普段づかいしやすいと友人にも好評でした。次回もお願いしたいと思います。",
+    photoSrc: "/images/testimonials/customer-02.svg",
+    photoAlt: "お客様のイメージアイコン",
+  },
+  {
+    id: "T003",
+    name: "Y.N 様",
+    comment: "スタッフの方の対応がとても親切で、初めてでも安心して施術を受けられました。",
+    photoSrc: "/images/testimonials/customer-03.svg",
+    photoAlt: "お客様のイメージアイコン",
   },
 ];
 
