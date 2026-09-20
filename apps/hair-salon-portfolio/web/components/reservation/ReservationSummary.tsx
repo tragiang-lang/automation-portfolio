@@ -24,6 +24,7 @@ export function ReservationSummary({
   onConfirm,
   onBack,
   confirming,
+  isDemo = false,
 }: {
   service: PublicService;
   staffName: string | null;
@@ -33,6 +34,11 @@ export function ReservationSummary({
   onConfirm: () => void;
   onBack: () => void;
   confirming: boolean;
+  /** Explicit reservation demo-mode switch (`lib/config/reservationDemoMode.ts`)
+   *  — when true, the menu/staff/availability above came from demo data,
+   *  but `onConfirm` still calls real GAS unchanged (Reservation Wizard
+   *  spec: demo mode never fakes a successful reservation). */
+  isDemo?: boolean;
 }) {
   const rows: [string, string][] = [
     ["メニュー", service.name],
@@ -56,6 +62,12 @@ export function ReservationSummary({
           </div>
         ))}
       </dl>
+      {isDemo ? (
+        <p role="note" className="rounded-sm border border-accent bg-surface-sunken px-4 py-3 text-[14px] leading-[1.7] text-secondary">
+          <span className="font-medium text-accent">デモ予約</span>
+          　空き状況はサンプルです。実際の空き状況とは異なる場合があります。
+        </p>
+      ) : null}
       <div className="flex flex-col gap-3 sm:flex-row-reverse">
         <Button type="button" fullWidth disabled={confirming} onClick={onConfirm}>
           {confirming ? "予約を受け付けています…" : "この内容で予約する"}

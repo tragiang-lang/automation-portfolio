@@ -2,8 +2,18 @@
 
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getAvailability, getServices, getStaff, submitReservation } from "@/lib/api/reservationClient";
+import { getDemoPublicServices, getDemoPublicStaff } from "@/lib/config/reservationDemoCatalog";
+import { getDemoAvailability } from "@/lib/config/demoAvailability";
 import { generateSubmissionId } from "@/lib/utils/id";
 import { ANY_STAFF, AvailableTimeSlot, PublicService, PublicStaff, ReservationSubmissionSuccess } from "@/types/reservation";
+
+/** Whether the wizard's catalog/availability came from the explicit demo
+ *  switch (`lib/config/reservationDemoMode.ts`) or a real GAS response.
+ *  Deliberately just this one flag (spec: "the Review screen only needs to
+ *  know whether the reservation is operating in demo mode") — not a
+ *  generic per-field data-source framework. Submission is never sourced
+ *  from either; it always calls real GAS regardless of this value. */
+export type ReservationDataSource = "runtime" | "demo";
 
 export type WizardStep = "service" | "staff" | "datetime" | "customer" | "review";
 
@@ -23,6 +33,10 @@ export interface ReservationWizardState {
   staff: PublicStaff[];
   staffSelectionEnabled: boolean;
   anyStaffOptionEnabled: boolean;
+  /** "demo" when this wizard's catalog/availability are the explicit demo
+   *  switch's data, "runtime" for the normal real-GAS path. Never affects
+   *  `submit` — that always calls real GAS regardless. */
+  dataSource: ReservationDataSource;
 
   steps: WizardStep[];
   currentStep: WizardStep;
@@ -63,6 +77,12 @@ export interface UseReservationWizardConfig {
   /** "YYYY-MM-DD" — latest selectable date, derived from
    *  `reservation.maxBookingDays`. */
   maxDate: string;
+  /** Explicit reservation demo-mode switch (`lib/config/reservationDemoMode.ts`),
+   *  resolved server-side by the caller (`app/reservation/page.tsx`) and
+   *  passed down the same way `minDate`/`maxDate` already are. Defaults to
+   *  `false` (existing real-GAS behavior, unchanged) when omitted. Never
+   *  bypasses `submit` — see `ReservationDataSource`. */
+  demoMode?: boolean;
 }
 
 /**
@@ -76,7 +96,8 @@ export interface UseReservationWizardConfig {
  * once and pass it to both this hook and `DateSelection`; the hook itself
  * does not validate against them.
  */
-export function useReservationWizard(_config: UseReservationWizardConfig): ReservationWizardState {
+export function useReservationWizard({ demoMode = false }: UseReservationWizardConfig): ReservationWizardState {
+  const dataSource: ReservationDataSource = demoMode ? "demo" : "runtime";
   const [catalogStatus, setCatalogStatus] = useState<"loading" | "ready" | "error">("loading");
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [services, setServices] = useState<PublicService[]>([]);
@@ -129,6 +150,16 @@ export function useReservationWizard(_config: UseReservationWizardConfig): Reser
       setCatalogStatus("loading");
       setCatalogError(null);
     });
+    if (demoMode) {
+      // Explicit demo mode: never calls getServices/getStaff — no GAS
+      // failure mode applies here at all (see ReservationDataSource).
+      startTransition(() => {
+        setServices(getDemoPublicServices());
+        setStaff(getDemoPublicStaff());
+        setCatalogStatus("ready");
+      });
+      return;
+    }
     (async () => {
       const [servicesResult, staffResult] = await Promise.all([getServices(), getStaff()]);
       if (cancelled) return;
@@ -149,7 +180,7 @@ export function useReservationWizard(_config: UseReservationWizardConfig): Reser
     return () => {
       cancelled = true;
     };
-  }, [catalogReloadToken]);
+  }, [catalogReloadToken, demoMode]);
 
   // Availability load whenever service/staff/date are all chosen (or date
   // changes) — cleared and reloaded per spec §12, never left stale.
@@ -166,6 +197,17 @@ export function useReservationWizard(_config: UseReservationWizardConfig): Reser
       setAvailabilityStatus("loading");
       setAvailabilityError(null);
     });
+    if (demoMode) {
+      // Explicit demo mode: never calls getAvailability — no real Google
+      // Calendar dependency, no GAS failure mode applies here.
+      startTransition(() => {
+        setAvailableSlots(
+          getDemoAvailability({ serviceId: selectedServiceId, staffId: selectedStaffId ?? undefined, date: selectedDate }),
+        );
+        setAvailabilityStatus("ready");
+      });
+      return;
+    }
     (async () => {
       const result = await getAvailability({
         serviceId: selectedServiceId,
@@ -187,7 +229,7 @@ export function useReservationWizard(_config: UseReservationWizardConfig): Reser
     // availabilityReloadToken is a deliberate manual-retry trigger, not a
     // data dependency the effect body reads — extra (unread) deps don't
     // trigger react-hooks/exhaustive-deps, so no disable comment is needed.
-  }, [selectedServiceId, selectedStaffId, selectedDate, availabilityReloadToken]);
+  }, [selectedServiceId, selectedStaffId, selectedDate, availabilityReloadToken, demoMode]);
 
   const retryCatalog = useCallback(() => setCatalogReloadToken((n) => n + 1), []);
   const retryAvailability = useCallback(() => setAvailabilityReloadToken((n) => n + 1), []);
@@ -288,6 +330,7 @@ export function useReservationWizard(_config: UseReservationWizardConfig): Reser
     staff,
     staffSelectionEnabled,
     anyStaffOptionEnabled,
+    dataSource,
     steps,
     currentStep,
     selectedServiceId,

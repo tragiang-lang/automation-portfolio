@@ -109,4 +109,48 @@ describe("ReservationWizard", () => {
     resolveSubmit({ ok: true, data: { reservationId: "RES-X" } });
     await waitFor(() => expect(screen.getByText("ご予約ありがとうございます")).toBeInTheDocument());
   });
+
+  it("explicit demo mode: never calls getServices/getStaff/getAvailability, shows デモ予約 at review, and still submits to real GAS", async () => {
+    (reservationClient.submitReservation as jest.Mock).mockResolvedValue({
+      ok: true,
+      data: { reservationId: "RES-DEMO-REAL-SUBMIT" },
+    });
+    render(<ReservationWizard minDate="2026-09-02" maxDate="2026-11-01" demoMode />);
+
+    // Demo catalog resolves without ever hitting the (mocked) real client.
+    await waitFor(() => expect(screen.getByRole("radiogroup", { name: "メニューを選択" })).toBeInTheDocument());
+    expect(reservationClient.getServices).not.toHaveBeenCalled();
+    expect(reservationClient.getStaff).not.toHaveBeenCalled();
+
+    const [firstServiceRadio] = screen.getAllByRole("radio");
+    await userEvent.click(firstServiceRadio);
+    await userEvent.click(screen.getByRole("button", { name: "次へ" }));
+
+    // Staff step (demo STAFF is non-empty) or straight to date/time.
+    if (screen.queryByRole("radiogroup", { name: "スタッフを選択" })) {
+      const [firstStaffRadio] = screen.getAllByRole("radio");
+      await userEvent.click(firstStaffRadio);
+      await userEvent.click(screen.getByRole("button", { name: "次へ" }));
+    }
+
+    await userEvent.type(await screen.findByLabelText("日付"), "2026-09-15"); // demo hours: Tuesday 10:00-19:00 (Monday is closed)
+    await waitFor(() => expect(reservationClient.getAvailability).not.toHaveBeenCalled());
+    const timeButton = await screen.findByRole("group", { name: "時間を選択" });
+    await userEvent.click(timeButton.querySelector("button") as HTMLButtonElement);
+    await userEvent.click(screen.getByRole("button", { name: "次へ" }));
+
+    await userEvent.type(screen.getByLabelText(/お名前/), "山田太郎");
+    await userEvent.type(screen.getByLabelText(/メールアドレス/), "yamada@example.com");
+    await userEvent.click(screen.getByRole("button", { name: "次へ" }));
+
+    expect(screen.getByText("デモ予約")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "この内容で予約する" }));
+    await waitFor(() => expect(screen.getByText("ご予約ありがとうございます")).toBeInTheDocument());
+
+    // Submit always goes through the real (mocked) reservation client — demo
+    // mode never fakes a success locally.
+    expect(reservationClient.submitReservation).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("RES-DEMO-REAL-SUBMIT")).toBeInTheDocument();
+  });
 });

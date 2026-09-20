@@ -35,6 +35,7 @@ describe("useReservationWizard — catalog loading", () => {
     expect(result.current.staff).toEqual(staff);
     expect(result.current.staffSelectionEnabled).toBe(true);
     expect(result.current.steps).toEqual(["service", "staff", "datetime", "customer", "review"]);
+    expect(result.current.dataSource).toBe("runtime");
   });
 
   it("omits the staff step when getStaff returns an empty list", async () => {
@@ -265,5 +266,73 @@ describe("useReservationWizard — submission", () => {
     act(() => result.current.resetAfterError());
     expect(result.current.submitStatus).toBe("idle");
     expect(result.current.selectedServiceId).toBe("SV001");
+  });
+});
+
+describe("useReservationWizard — explicit demo mode", () => {
+  afterEach(() => jest.resetAllMocks());
+
+  it("resolves the catalog from demo data without calling getServices/getStaff, and exposes dataSource=demo", async () => {
+    const { result } = renderHook(() => useReservationWizard({ ...wizardConfig, demoMode: true }));
+    await waitFor(() => expect(result.current.catalogStatus).toBe("ready"));
+    expect(reservationClient.getServices).not.toHaveBeenCalled();
+    expect(reservationClient.getStaff).not.toHaveBeenCalled();
+    expect(result.current.dataSource).toBe("demo");
+    expect(result.current.services.length).toBeGreaterThan(0);
+  });
+
+  it("resolves availability from the demo generator without calling getAvailability", async () => {
+    const { result } = renderHook(() => useReservationWizard({ ...wizardConfig, demoMode: true }));
+    await waitFor(() => expect(result.current.catalogStatus).toBe("ready"));
+    const demoServiceId = result.current.services[0].serviceId;
+
+    act(() => {
+      result.current.selectService(demoServiceId);
+      result.current.selectDate("2026-09-15"); // demo hours: Tuesday 10:00-19:00 (Monday is closed)
+    });
+    await waitFor(() => expect(result.current.availabilityStatus).toBe("ready"));
+
+    expect(reservationClient.getAvailability).not.toHaveBeenCalled();
+    expect(result.current.availableSlots.length).toBeGreaterThan(0);
+  });
+
+  it("still calls the real submitReservation client — demo mode never bypasses submit", async () => {
+    (reservationClient.submitReservation as jest.Mock).mockResolvedValue({
+      ok: true,
+      data: { reservationId: "RES-REAL-ID" },
+    });
+    const { result } = renderHook(() => useReservationWizard({ ...wizardConfig, demoMode: true }));
+    await waitFor(() => expect(result.current.catalogStatus).toBe("ready"));
+    const demoServiceId = result.current.services[0].serviceId;
+
+    act(() => {
+      result.current.selectService(demoServiceId);
+      result.current.selectDate("2026-09-15");
+    });
+    await waitFor(() => expect(result.current.availabilityStatus).toBe("ready"));
+    const demoTime = result.current.availableSlots[0].time;
+
+    act(() => {
+      result.current.selectTime(demoTime);
+      result.current.setCustomerField("name", "山田太郎");
+      result.current.setCustomerField("email", "yamada@example.com");
+    });
+
+    await act(async () => result.current.submit());
+
+    expect(reservationClient.submitReservation).toHaveBeenCalledTimes(1);
+    expect(reservationClient.submitReservation).toHaveBeenCalledWith(
+      expect.objectContaining({ serviceId: demoServiceId, date: "2026-09-15", time: demoTime }),
+    );
+    expect(result.current.submitStatus).toBe("success");
+    expect(result.current.submitResult).toEqual({ reservationId: "RES-REAL-ID" });
+  });
+
+  it("normal mode (demoMode omitted) still uses the real GAS path and a real GAS failure remains a real error", async () => {
+    mockCatalog({ servicesOk: false });
+    const { result } = renderHook(() => useReservationWizard(wizardConfig));
+    await waitFor(() => expect(result.current.catalogStatus).toBe("error"));
+    expect(result.current.catalogError).toBe("サーバーエラーが発生しました。");
+    expect(result.current.dataSource).toBe("runtime");
   });
 });
