@@ -42,4 +42,56 @@ describe("ReservationSummary", () => {
     await userEvent.click(screen.getByRole("button", { name: "この内容で予約する" }));
     expect(onConfirm).toHaveBeenCalled();
   });
+
+  it("shows the デモ予約 indicator when isDemo is true", () => {
+    render(
+      <ReservationSummary
+        service={service}
+        staffName={null}
+        date="2026-09-10"
+        time="14:00"
+        customer={customer}
+        onConfirm={jest.fn()}
+        onBack={jest.fn()}
+        confirming={false}
+        isDemo
+      />,
+    );
+    expect(screen.getByText("デモ予約")).toBeInTheDocument();
+  });
+
+  it("the demo notice describes sample availability without claiming submission can never become a real reservation", () => {
+    render(
+      <ReservationSummary
+        service={service}
+        staffName={null}
+        date="2026-09-10"
+        time="14:00"
+        customer={customer}
+        onConfirm={jest.fn()}
+        onBack={jest.fn()}
+        confirming={false}
+        isDemo
+      />,
+    );
+    const notice = screen.getByRole("note");
+    expect(notice).toHaveTextContent("空き状況はサンプルです。実際の空き状況とは異なる場合があります。");
+    expect(notice).not.toHaveTextContent("確定しません");
+  });
+
+  it("does not show the デモ予約 indicator in normal (non-demo) mode", () => {
+    render(
+      <ReservationSummary
+        service={service}
+        staffName={null}
+        date="2026-09-10"
+        time="14:00"
+        customer={customer}
+        onConfirm={jest.fn()}
+        onBack={jest.fn()}
+        confirming={false}
+      />,
+    );
+    expect(screen.queryByText("デモ予約")).not.toBeInTheDocument();
+  });
 });

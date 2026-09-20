@@ -4,6 +4,7 @@ import { ReservationWizard } from "@/components/reservation/ReservationWizard";
 import { ReservationDisabledNotice } from "@/components/reservation/ReservationDisabledNotice";
 import { getRuntimeConfig } from "@/lib/config/runtimeConfig";
 import { resolveSiteConfig } from "@/lib/config/resolveSiteConfig";
+import { isReservationDemoModeEnabled } from "@/lib/config/reservationDemoMode";
 
 function addDaysToDateString(date: string, days: number): string {
   const [year, month, day] = date.split("-").map(Number);
@@ -49,7 +50,7 @@ export default async function ReservationPage() {
       <Container className="py-16 lg:py-24">
         <SectionHeading eyebrow="Reservation" title="ご予約" />
         <div className="mt-10 max-w-[640px]">
-          <ReservationWizard minDate={minDate} maxDate={maxDate} />
+          <ReservationWizard minDate={minDate} maxDate={maxDate} demoMode={isReservationDemoModeEnabled()} />
         </div>
       </Container>
     </main>

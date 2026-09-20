@@ -34,3 +34,37 @@ export function mapPublicStaffToStaffMember(staff: PublicStaff): StaffMember {
     photoSrc: staff.photoSrc,
   };
 }
+
+/**
+ * Reverse direction of `mapPublicServiceToService` above — needed by the
+ * reservation demo-mode catalog (`lib/config/reservationDemoCatalog.ts`),
+ * which starts from `config/demo-content.ts`'s presentation-shaped
+ * `Service[]` and must produce the wire-shaped `PublicService[]` the
+ * Reservation Wizard consumes. `Service` has no `displayOrder` field (only
+ * the wire type does), so the caller supplies it — same convention as the
+ * GAS sheet row order `PublicService.displayOrder` normally mirrors.
+ */
+export function mapServiceToPublicService(service: Service, displayOrder: number): PublicService {
+  return {
+    serviceId: service.serviceId,
+    name: service.name,
+    durationMinutes: service.durationMinutes,
+    price: service.price,
+    displayOrder,
+    description: service.description,
+    category: service.category,
+  };
+}
+
+/** Reverse direction of `mapPublicStaffToStaffMember` above — same
+ *  `displayOrder` rationale as `mapServiceToPublicService`. */
+export function mapStaffMemberToPublicStaff(staff: StaffMember, displayOrder: number): PublicStaff {
+  return {
+    staffId: staff.staffId,
+    name: staff.name,
+    displayOrder,
+    role: staff.role,
+    introduction: staff.introduction,
+    photoSrc: staff.photoSrc,
+  };
+}

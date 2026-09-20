@@ -21,8 +21,17 @@ import { ReservationErrorNotice } from "./ReservationErrorNotice";
  * dedicated component. `app/reservation/page.tsx` only mounts this when
  * `features.reservation` is on (Global Constraints/spec §19).
  */
-export function ReservationWizard({ minDate, maxDate }: { minDate: string; maxDate: string }) {
-  const wizard = useReservationWizard({ minDate, maxDate });
+export function ReservationWizard({
+  minDate,
+  maxDate,
+  demoMode = false,
+}: {
+  minDate: string;
+  maxDate: string;
+  /** Explicit reservation demo-mode switch — see `lib/config/reservationDemoMode.ts`. */
+  demoMode?: boolean;
+}) {
+  const wizard = useReservationWizard({ minDate, maxDate, demoMode });
   const [touched, setTouched] = useState<Partial<Record<keyof CustomerFields, boolean>>>({});
 
   if (wizard.catalogStatus === "loading") {
@@ -123,6 +132,7 @@ export function ReservationWizard({ minDate, maxDate }: { minDate: string; maxDa
           onConfirm={wizard.submit}
           onBack={wizard.goBack}
           confirming={wizard.submitStatus === "submitting"}
+          isDemo={wizard.dataSource === "demo"}
         />
       ) : null}
 

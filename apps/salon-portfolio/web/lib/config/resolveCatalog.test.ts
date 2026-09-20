@@ -1,5 +1,11 @@
-import { mapPublicServiceToService, mapPublicStaffToStaffMember } from "./resolveCatalog";
+import {
+  mapPublicServiceToService,
+  mapPublicStaffToStaffMember,
+  mapServiceToPublicService,
+  mapStaffMemberToPublicStaff,
+} from "./resolveCatalog";
 import type { PublicService, PublicStaff } from "@/types/reservation";
+import type { Service, StaffMember } from "@/types/content";
 
 describe("mapPublicServiceToService", () => {
   it("carries serviceId/name/durationMinutes/price through unchanged", () => {
@@ -54,5 +60,49 @@ describe("mapPublicStaffToStaffMember", () => {
     expect(result.introduction).toBeUndefined();
     expect(result.photoSrc).toBeUndefined();
     expect(result.photoAlt).toBeUndefined();
+  });
+});
+
+describe("mapServiceToPublicService", () => {
+  it("carries serviceId/name/durationMinutes/price through and sets the given displayOrder", () => {
+    const input: Service = { serviceId: "SV001", name: "ジェルネイル", durationMinutes: 60, price: 6000 };
+    expect(mapServiceToPublicService(input, 3)).toEqual({
+      serviceId: "SV001",
+      name: "ジェルネイル",
+      durationMinutes: 60,
+      price: 6000,
+      displayOrder: 3,
+      description: undefined,
+      category: undefined,
+    });
+  });
+
+  it("passes description/category through when present", () => {
+    const input: Service = { serviceId: "SV001", name: "x", durationMinutes: 1, price: 1, description: "説明", category: "ネイル" };
+    const result = mapServiceToPublicService(input, 1);
+    expect(result.description).toBe("説明");
+    expect(result.category).toBe("ネイル");
+  });
+});
+
+describe("mapStaffMemberToPublicStaff", () => {
+  it("carries staffId/name through and sets the given displayOrder", () => {
+    const input: StaffMember = { staffId: "ST001", name: "田中 あい" };
+    expect(mapStaffMemberToPublicStaff(input, 2)).toEqual({
+      staffId: "ST001",
+      name: "田中 あい",
+      displayOrder: 2,
+      role: undefined,
+      introduction: undefined,
+      photoSrc: undefined,
+    });
+  });
+
+  it("passes role/introduction/photoSrc through when present", () => {
+    const input: StaffMember = { staffId: "ST001", name: "田中", role: "店長", introduction: "紹介文", photoSrc: "/x.svg", photoAlt: "alt" };
+    const result = mapStaffMemberToPublicStaff(input, 1);
+    expect(result.role).toBe("店長");
+    expect(result.introduction).toBe("紹介文");
+    expect(result.photoSrc).toBe("/x.svg");
   });
 });
