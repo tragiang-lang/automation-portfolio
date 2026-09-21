@@ -104,6 +104,15 @@ export function markReservationNeedsConfirmation(reservationId: string, now: Dat
   updateRow(found.sheet, found.rowNumber, toRawRow(updated));
 }
 
+export function markReservationCancelled(reservationId: string, now: Date): void {
+  const found = findReservationRow("ReservationID", reservationId);
+  if (!found) {
+    throw new Error(`Reservation "${reservationId}" was not found while marking it cancelled.`);
+  }
+  const updated: ReservationRow = { ...found.row, Status: "キャンセル済", UpdatedAt: now.toISOString() };
+  updateRow(found.sheet, found.rowNumber, toRawRow(updated));
+}
+
 /** Best-effort footnote update — never throws over an EmailStatus write
  *  failure, since the reservation itself is already final by the time
  *  this is called (Phase 0 §M: an email-log concern, not a transaction

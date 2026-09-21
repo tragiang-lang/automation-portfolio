@@ -13,7 +13,19 @@ export function isSlotFreeOfConflicts(
   candidate: AvailabilityInput,
   existingEvents: BusyInterval[],
 ): boolean {
-  return !existingEvents.some((event) =>
+  return findConflictingIntervals(candidate, existingEvents).length === 0;
+}
+
+/** Every existing event that overlaps the candidate interval — the
+ *  conflict-detail counterpart to `isSlotFreeOfConflicts` above, used to
+ *  show a customer-facing "busy 10:00-11:30" period rather than a plain
+ *  yes/no (staff-conflict display, spec §8). Same `intervalsOverlap` rule,
+ *  just not collapsed to a boolean. */
+export function findConflictingIntervals(
+  candidate: AvailabilityInput,
+  existingEvents: BusyInterval[],
+): BusyInterval[] {
+  return existingEvents.filter((event) =>
     intervalsOverlap(candidate.candidateStart, candidate.candidateEnd, event.start, event.end),
   );
 }

@@ -65,3 +65,21 @@ export function createReservationEvent(input: CreateReservationEventInput): stri
   const event = calendar.createEvent(input.title, start, end, { description: input.description });
   return event.getId();
 }
+
+/** Deletes a confirmed reservation's Calendar event on cancellation, so
+ *  the slot it held stops appearing as busy in future availability
+ *  checks. Tolerant of the calendar or event already being gone (a
+ *  missing calendar, or an event already deleted/never created) — a
+ *  cancellation must still succeed in that case, not fail with a false
+ *  "reservation not found" for the customer. */
+export function deleteReservationEvent(calendarId: string, eventId: string): void {
+  const calendar = CalendarApp.getCalendarById(calendarId);
+  if (!calendar) {
+    return;
+  }
+  const event = calendar.getEventById(eventId);
+  if (!event) {
+    return;
+  }
+  event.deleteEvent();
+}

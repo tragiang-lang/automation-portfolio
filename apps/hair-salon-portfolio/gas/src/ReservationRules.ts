@@ -1,9 +1,15 @@
 import { ServiceRow, StaffRow } from "./SheetSchemas";
 import { ANY_STAFF, ReservationRequest } from "./models/ReservationRequest";
 import { AppConfig } from "./models/Config";
-import { NormalizedReservation, StaffSelectionResolution, ValidationIssue } from "./models/ReservationDomain";
+import {
+  NormalizedReservation,
+  StaffAvailabilityEntry,
+  StaffSelectionResolution,
+  ValidationIssue,
+} from "./models/ReservationDomain";
 import {
   addDaysToTokyoDateString,
+  extractTimeFromTokyoLocalDateTimeString,
   formatDateYYYYMMDDDashedInTokyo,
   getWeekdayForDateString,
   tokyoDateTimeToInstant,
@@ -11,7 +17,8 @@ import {
 } from "./Utils";
 import { normalizeReservationRequest, validateReservationRequestShape } from "./Validation";
 import { generateCandidateSlots, SlotCandidate } from "./SlotEngine";
-import { AvailabilityStrategy } from "./availability/AvailabilityStrategy";
+import { AvailabilityStrategy, BusyInterval } from "./availability/AvailabilityStrategy";
+import { findConflictingIntervals } from "./availability/CalendarOverlapAvailability";
 import { buildNormalizedReservation } from "./ReservationMapper";
 
 /**
@@ -344,4 +351,103 @@ export function evaluateAvailableSlots(
   }
 
   return { ok: true, slots };
+}
+
+export interface EvaluateStaffAvailabilityInput {
+  serviceId: string;
+  date: string;
+  time: string;
+  services: ServiceRow[];
+  staff: StaffRow[];
+  config: AppConfig;
+  now: Date;
+  /** Busy intervals for one staff member's calendar for the requested
+   *  date, already fetched/normalized by the caller (a future Calendar
+   *  adapter, or a test fixture) — called once per active staff member.
+   *  Never fetched here (same hard rule as the rest of this file). */
+  busyIntervalsForStaff: (staff: StaffRow) => BusyInterval[];
+}
+
+export type EvaluateStaffAvailabilityResult =
+  | { ok: true; staff: StaffAvailabilityEntry[] }
+  | { ok: false; issue: ValidationIssue };
+
+/** Per-staff availability + conflict breakdown for one specific
+ *  date+time+service candidate (staff-conflict display, spec §6/§8) —
+ *  the read-only counterpart to `evaluateReservationRequest`/
+ *  `evaluateAvailableSlots` that answers "who is free at this exact
+ *  slot, and who is busy until when" instead of a single yes/no. Same
+ *  advisory caveat as its siblings: `createReservation`'s lock-protected
+ *  re-check remains authoritative. Returns `{ ok: true, staff: [] }`
+ *  without evaluating anything when `features.staffSelection` is off —
+ *  there is no staff dimension to report on, matching
+ *  `resolveStaffSelection`'s own "none" (not-an-error) treatment. */
+export function evaluateStaffAvailabilityForCandidate(
+  input: EvaluateStaffAvailabilityInput,
+): EvaluateStaffAvailabilityResult {
+  if (!input.config.features.staffSelection) {
+    return { ok: true, staff: [] };
+  }
+
+  const serviceResult = resolveService(input.services, input.serviceId);
+  if (!serviceResult.ok) {
+    return { ok: false, issue: serviceResult.issue };
+  }
+
+  const dateWindowIssue = checkDateWindow(input.date, input.time, input.config.reservation, input.now);
+  if (dateWindowIssue) {
+    return { ok: false, issue: dateWindowIssue };
+  }
+
+  const businessDay = evaluateBusinessDay(input.date, input.config);
+  if (!businessDay.open) {
+    return {
+      ok: false,
+      issue: {
+        field: "date",
+        code: businessDay.reason,
+        message: businessDay.reason === "HOLIDAY" ? "Selected date is a holiday" : "Selected date is outside business hours",
+      },
+    };
+  }
+
+  const candidates = generateCandidateSlots({
+    date: input.date,
+    businessHours: businessDay.interval,
+    durationMinutes: serviceResult.service.DurationMinutes,
+    slotIntervalMinutes: input.config.reservation.slotMinutes,
+    isHoliday: false,
+  });
+  const candidate = candidates.find((slot) => slot.startTime === input.time);
+  if (!candidate) {
+    return {
+      ok: false,
+      issue: {
+        field: "time",
+        code: "OUTSIDE_BUSINESS_HOURS",
+        message: "Selected time does not fit within business hours for the requested service",
+      },
+    };
+  }
+
+  const activeStaffInOrder = input.staff
+    .filter((member) => member.Active)
+    .slice()
+    .sort((a, b) => a.DisplayOrder - b.DisplayOrder);
+
+  const candidateInput = {
+    candidateStart: toTokyoLocalDateTimeString(candidate.date, candidate.startTime),
+    candidateEnd: toTokyoLocalDateTimeString(candidate.date, candidate.endTime),
+  };
+
+  const staff: StaffAvailabilityEntry[] = activeStaffInOrder.map((member) => {
+    const busy = input.busyIntervalsForStaff(member);
+    const conflicts = findConflictingIntervals(candidateInput, busy).map((interval) => ({
+      startTime: extractTimeFromTokyoLocalDateTimeString(interval.start),
+      endTime: extractTimeFromTokyoLocalDateTimeString(interval.end),
+    }));
+    return { staffId: member.StaffID, name: member.Name, available: conflicts.length === 0, conflicts };
+  });
+
+  return { ok: true, staff };
 }

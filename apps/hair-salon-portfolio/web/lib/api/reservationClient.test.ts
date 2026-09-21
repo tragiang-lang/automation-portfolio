@@ -1,4 +1,4 @@
-import { getAvailability, getServices, getStaff, submitReservation } from "./reservationClient";
+import { cancelReservation, getAvailability, getServices, getStaff, submitReservation } from "./reservationClient";
 import { ReservationSubmission } from "@/types/reservation";
 
 const submission: ReservationSubmission = {
@@ -131,5 +131,51 @@ describe("getAvailability", () => {
     }) as unknown as typeof fetch;
     const result = await getAvailability({ serviceId: "SV999", date: "2026-09-10" });
     expect(result).toEqual({ ok: false, error: { code: "VALIDATION_ERROR", message: "選択されたメニューが見つかりません。" } });
+  });
+
+  it("includes time in the payload when provided, for the per-staff breakdown", async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true, data: { date: "2026-09-10", slots: [{ time: "10:00" }], staff: [] } }),
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const request = { serviceId: "SV001", date: "2026-09-10", time: "10:00" };
+    await getAvailability(request);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/gas",
+      expect.objectContaining({ body: JSON.stringify({ action: "getAvailability", payload: request }) }),
+    );
+  });
+});
+
+describe("cancelReservation", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("POSTs the cancelReservation action with the request as payload", async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true, data: { reservationId: "RES-1" } }),
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const request = { reservationId: "RES-1", cancellationToken: "tok-1" };
+    const result = await cancelReservation(request);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/gas",
+      expect.objectContaining({ method: "POST", body: JSON.stringify({ action: "cancelReservation", payload: request }) }),
+    );
+    expect(result).toEqual({ ok: true, data: { reservationId: "RES-1" } });
+  });
+
+  it("forwards a GAS-originated failure envelope unchanged", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: false, error: { code: "INVALID_CANCELLATION_TOKEN", message: "予約が見つかりません。" } }),
+    }) as unknown as typeof fetch;
+    const result = await cancelReservation({ reservationId: "RES-404", cancellationToken: "tok-1" });
+    expect(result).toEqual({ ok: false, error: { code: "INVALID_CANCELLATION_TOKEN", message: "予約が見つかりません。" } });
   });
 });

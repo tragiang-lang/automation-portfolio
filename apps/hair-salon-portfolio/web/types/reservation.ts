@@ -24,6 +24,9 @@ export interface ReservationSubmission {
 export interface ReservationSubmissionSuccess {
   reservationId: string;
   needsConfirmation?: boolean;
+  /** True only for `lib/config/reservationDemoSubmission.ts`'s local
+   *  result — the real GAS `createReservation` response never sets this. */
+  isDemo?: boolean;
 }
 
 export interface ReservationSubmissionFailure {
@@ -79,13 +82,43 @@ export interface AvailableTimeSlot {
   time: string;
 }
 
+/** One staff member's availability + conflict periods for a specific
+ *  date+time+service candidate (staff-conflict display) — mirrors
+ *  `gas/src/models/ReservationDomain.ts::StaffAvailabilityEntry`. */
+export interface StaffAvailabilityConflict {
+  startTime: string;
+  endTime: string;
+}
+
+export interface StaffAvailabilityEntry {
+  staffId: string;
+  name: string;
+  available: boolean;
+  conflicts: StaffAvailabilityConflict[];
+}
+
 export interface GetAvailabilityResult {
   date: string;
   slots: AvailableTimeSlot[];
+  /** Present only when the request included `time` and staff selection is
+   *  on — see `gas/src/Api.ts::GetAvailabilityResponseData`. */
+  staff?: StaffAvailabilityEntry[];
 }
 
 export interface AvailabilityRequest {
   serviceId: string;
   staffId?: string | typeof ANY_STAFF;
   date: string;
+  /** `HH:mm` — when provided, the response includes the per-staff
+   *  availability breakdown for this exact candidate. */
+  time?: string;
+}
+
+export interface CancelReservationRequest {
+  reservationId: string;
+  cancellationToken: string;
+}
+
+export interface CancelReservationResult {
+  reservationId: string;
 }

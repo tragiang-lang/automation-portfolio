@@ -53,3 +53,54 @@ describe("StaffSelection", () => {
     expect(selected.closest("label")).toHaveClass("bg-surface-sunken");
   });
 });
+
+describe("StaffSelection — availability display", () => {
+  const availability = [
+    { staffId: "ST001", name: "鈴木", available: true, conflicts: [] },
+    { staffId: "ST002", name: "佐藤", available: false, conflicts: [{ startTime: "10:00", endTime: "11:30" }] },
+  ];
+
+  it("shows an available staff member as selectable with an 空き indicator", () => {
+    render(<StaffSelection staff={staff} selectedStaffId={null} onSelect={jest.fn()} staffAvailability={availability} />);
+    const radio = screen.getByRole("radio", { name: /鈴木/ });
+    expect(radio).not.toBeDisabled();
+    expect(screen.getByText(/空き/)).toBeInTheDocument();
+  });
+
+  it("disables an unavailable staff member and shows the conflicting time period, not just a color", () => {
+    render(<StaffSelection staff={staff} selectedStaffId={null} onSelect={jest.fn()} staffAvailability={availability} />);
+    const radio = screen.getByRole("radio", { name: /佐藤/ });
+    expect(radio).toBeDisabled();
+    expect(screen.getByText(/10:00.*11:30/)).toBeInTheDocument();
+    expect(screen.getByText(/予約あり/)).toBeInTheDocument();
+  });
+
+  it("does not call onSelect when clicking a disabled, unavailable staff member", async () => {
+    const onSelect = jest.fn();
+    render(<StaffSelection staff={staff} selectedStaffId={null} onSelect={onSelect} staffAvailability={availability} />);
+    await userEvent.click(screen.getByRole("radio", { name: /佐藤/ }));
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("still renders an unavailable staff member (not hidden)", () => {
+    render(<StaffSelection staff={staff} selectedStaffId={null} onSelect={jest.fn()} staffAvailability={availability} />);
+    expect(screen.getByRole("radio", { name: /佐藤/ })).toBeInTheDocument();
+  });
+
+  it("shows a clear message and disables 指名なし when every staff member is unavailable", () => {
+    const allBusy = [
+      { staffId: "ST001", name: "鈴木", available: false, conflicts: [{ startTime: "10:00", endTime: "11:00" }] },
+      { staffId: "ST002", name: "佐藤", available: false, conflicts: [{ startTime: "10:00", endTime: "11:00" }] },
+    ];
+    render(<StaffSelection staff={staff} selectedStaffId={null} onSelect={jest.fn()} staffAvailability={allBusy} />);
+    expect(screen.getByRole("alert")).toHaveTextContent(/空いていません/);
+    expect(screen.getByRole("radio", { name: /指名なし/ })).toBeDisabled();
+  });
+
+  it("without staffAvailability data, behaves exactly as before (everyone selectable)", () => {
+    render(<StaffSelection staff={staff} selectedStaffId={null} onSelect={jest.fn()} />);
+    expect(screen.getByRole("radio", { name: /鈴木/ })).not.toBeDisabled();
+    expect(screen.getByRole("radio", { name: /佐藤/ })).not.toBeDisabled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+});

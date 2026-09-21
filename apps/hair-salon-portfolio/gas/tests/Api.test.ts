@@ -12,6 +12,7 @@ jest.mock("../src/ReservationRepository", () => ({
   findReservationByReservationId: jest.fn(),
   markReservationConfirmed: jest.fn(),
   markReservationNeedsConfirmation: jest.fn(),
+  markReservationCancelled: jest.fn(),
   updateReservationEmailStatus: jest.fn(),
 }));
 jest.mock("../src/Idempotency", () => ({
@@ -41,6 +42,7 @@ jest.mock("../src/InquiryIdempotency", () => ({
 import {
   buildErrorResponse,
   buildSuccessResponse,
+  cancelReservationAction,
   createInquiryAction,
   createReservationAction,
   getAvailabilityAction,
@@ -68,6 +70,7 @@ import { ServiceRow, StaffRow } from "../src/SheetSchemas";
 import { AppConfig } from "../src/models/Config";
 import { ReservationRequest } from "../src/models/ReservationRequest";
 import { InquiryRequest } from "../src/models/InquiryRequest";
+import { addDaysToTokyoDateString, formatDateYYYYMMDDDashedInTokyo, getWeekdayForDateString } from "../src/Utils";
 
 describe("parseApiRequest", () => {
   it("parses a well-formed request", () => {
@@ -409,6 +412,344 @@ describe("getAvailabilityAction", () => {
 
     expect(response.ok).toBe(false);
     if (!response.ok) expect(response.error.code).toBe("VALIDATION_ERROR");
+  });
+});
+
+describe("getAvailabilityAction — staff conflict breakdown", () => {
+  afterEach(() => {
+    (getConfig as jest.Mock).mockReset();
+    (Catalog.getServiceRows as jest.Mock).mockReset();
+    (Catalog.getStaffRows as jest.Mock).mockReset();
+    (Calendar.getBusyEvents as jest.Mock).mockReset();
+  });
+
+  // getAvailabilityActionInner uses the real `new Date()` (no injection
+  // seam), so a hardcoded calendar date goes stale once real time passes
+  // it (as happened to the pre-existing "fetching busy events once" test
+  // above). Computed relative to today instead — always inside the
+  // minLeadHours/maxBookingDays window below, and nudged off Sunday
+  // (closed in availabilityConfig.hours) so it's never flaky.
+  function futureOpenDateString(): string {
+    let candidate = addDaysToTokyoDateString(formatDateYYYYMMDDDashedInTokyo(new Date()), 14);
+    while (getWeekdayForDateString(candidate) === "sunday") {
+      candidate = addDaysToTokyoDateString(candidate, 1);
+    }
+    return candidate;
+  }
+
+  const availabilityConfig: AppConfig = {
+    business: { name: "Demo", phone: "", email: "", address: "" },
+    hours: {
+      monday: "10:00-19:00",
+      tuesday: "10:00-19:00",
+      wednesday: "10:00-19:00",
+      thursday: "10:00-19:00",
+      friday: "10:00-19:00",
+      saturday: "10:00-19:00",
+      sunday: "closed",
+    },
+    holidays: [],
+    features: { contactForm: true, reservation: true, staffSelection: false, calendar: true, emailNotification: true },
+    staffAnyAvailableOption: false,
+    reservation: { timezone: "Asia/Tokyo", slotMinutes: 30, minLeadHours: 1, maxBookingDays: 60 },
+    labels: {},
+    content: {},
+    calendarId: "shared@example.com",
+    emailOwnerNotifyAddress: "owner@example.com",
+    emailFromName: "Demo",
+  };
+  const staffSelectionConfig: AppConfig = {
+    ...availabilityConfig,
+    features: { ...availabilityConfig.features, staffSelection: true },
+    staffAnyAvailableOption: true,
+  };
+  const availabilityServices: ServiceRow[] = [
+    { ServiceID: "SV001", Name: "カット", DurationMinutes: 60, Price: 6600, Active: true, StaffRequired: false, DisplayOrder: 1 },
+  ];
+  const staffA: StaffRow = { StaffID: "ST001", Name: "田中", Active: true, CalendarID: "cal-a", DisplayOrder: 1 };
+  const staffB: StaffRow = { StaffID: "ST002", Name: "鈴木", Active: true, CalendarID: "cal-b", DisplayOrder: 2 };
+
+  it("includes a per-staff availability breakdown when time is provided and staffSelection is on", () => {
+    const date = futureOpenDateString();
+    (getConfig as jest.Mock).mockReturnValue(staffSelectionConfig);
+    (Catalog.getServiceRows as jest.Mock).mockReturnValue(availabilityServices);
+    (Catalog.getStaffRows as jest.Mock).mockReturnValue([staffA, staffB]);
+    (Calendar.getBusyEvents as jest.Mock).mockImplementation((calendarId: string) =>
+      calendarId === "cal-a" ? [{ start: `${date}T10:00`, end: `${date}T11:00` }] : [],
+    );
+
+    const response = getAvailabilityAction({ serviceId: "SV001", staffId: "ANY", date, time: "10:00" });
+
+    expect(response.ok).toBe(true);
+    if (response.ok) {
+      expect(response.data.staff).toEqual([
+        { staffId: "ST001", name: "田中", available: false, conflicts: [{ startTime: "10:00", endTime: "11:00" }] },
+        { staffId: "ST002", name: "鈴木", available: true, conflicts: [] },
+      ]);
+    }
+  });
+
+  it("omits the staff breakdown when time is not provided", () => {
+    (getConfig as jest.Mock).mockReturnValue(staffSelectionConfig);
+    (Catalog.getServiceRows as jest.Mock).mockReturnValue(availabilityServices);
+    (Catalog.getStaffRows as jest.Mock).mockReturnValue([staffA, staffB]);
+    (Calendar.getBusyEvents as jest.Mock).mockReturnValue([]);
+
+    const response = getAvailabilityAction({ serviceId: "SV001", staffId: "ANY", date: futureOpenDateString() });
+
+    expect(response.ok).toBe(true);
+    if (response.ok) expect(response.data.staff).toBeUndefined();
+  });
+
+  it("omits the staff breakdown when staffSelection is off even if time is provided", () => {
+    (getConfig as jest.Mock).mockReturnValue(availabilityConfig);
+    (Catalog.getServiceRows as jest.Mock).mockReturnValue(availabilityServices);
+    (Calendar.getBusyEvents as jest.Mock).mockReturnValue([]);
+
+    const response = getAvailabilityAction({ serviceId: "SV001", date: futureOpenDateString(), time: "10:00" });
+
+    expect(response.ok).toBe(true);
+    if (response.ok) expect(response.data.staff).toBeUndefined();
+  });
+
+  it("maps an invalid candidate time for the staff breakdown to an error response", () => {
+    (getConfig as jest.Mock).mockReturnValue(staffSelectionConfig);
+    (Catalog.getServiceRows as jest.Mock).mockReturnValue(availabilityServices);
+    (Catalog.getStaffRows as jest.Mock).mockReturnValue([staffA, staffB]);
+    (Calendar.getBusyEvents as jest.Mock).mockReturnValue([]);
+
+    const response = getAvailabilityAction({ serviceId: "SV001", staffId: "ANY", date: futureOpenDateString(), time: "23:45" });
+
+    expect(response.ok).toBe(false);
+  });
+
+  it("regression: after cancelling, the previously-conflicting staff shows available again", () => {
+    (globalThis as unknown as { LockService: unknown }).LockService = {
+      getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }),
+    };
+    const date = futureOpenDateString();
+    (getConfig as jest.Mock).mockReturnValue(staffSelectionConfig);
+    (Catalog.getServiceRows as jest.Mock).mockReturnValue(availabilityServices);
+    (Catalog.getStaffRows as jest.Mock).mockReturnValue([staffA]);
+
+    // Before cancellation: staffA's calendar has a conflicting event.
+    (Calendar.getBusyEvents as jest.Mock).mockReturnValue([{ start: `${date}T10:00`, end: `${date}T11:00` }]);
+    const before = getAvailabilityAction({ serviceId: "SV001", staffId: "ST001", date, time: "10:00" });
+    expect(before.ok && before.data.staff).toEqual([
+      { staffId: "ST001", name: "田中", available: false, conflicts: [{ startTime: "10:00", endTime: "11:00" }] },
+    ]);
+
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue({
+      ReservationID: "RES-1",
+      CancellationToken: "tok-1",
+      Status: "受付済",
+      CalendarEventID: "evt-1",
+      StaffID: "ST001",
+    });
+    const cancelResponse = cancelReservationAction({ reservationId: "RES-1", cancellationToken: "tok-1" });
+    expect(cancelResponse).toEqual({ ok: true, data: { reservationId: "RES-1" } });
+    expect(Calendar.deleteReservationEvent).toHaveBeenCalledWith("cal-a", "evt-1");
+    expect(ReservationRepository.markReservationCancelled).toHaveBeenCalledWith("RES-1", expect.any(Date));
+
+    // After cancellation: the Calendar event is gone, so the staff's
+    // calendar no longer reports the busy interval.
+    (Calendar.getBusyEvents as jest.Mock).mockReturnValue([]);
+    const after = getAvailabilityAction({ serviceId: "SV001", staffId: "ST001", date, time: "10:00" });
+    expect(after.ok && after.data.staff).toEqual([{ staffId: "ST001", name: "田中", available: true, conflicts: [] }]);
+  });
+});
+
+describe("cancelReservationAction", () => {
+  let cancelLockTryLockResult = true;
+
+  beforeEach(() => {
+    cancelLockTryLockResult = true;
+    (globalThis as unknown as { LockService: unknown }).LockService = {
+      getScriptLock: () => ({
+        tryLock: () => cancelLockTryLockResult,
+        releaseLock: () => {},
+      }),
+    };
+  });
+
+  afterEach(() => {
+    (getConfig as jest.Mock).mockReset();
+    (Catalog.getStaffRows as jest.Mock).mockReset();
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReset();
+    (ReservationRepository.markReservationCancelled as jest.Mock).mockReset();
+    (Calendar.deleteReservationEvent as jest.Mock).mockReset();
+  });
+
+  const cancelConfig: AppConfig = {
+    business: { name: "Demo", phone: "", email: "", address: "" },
+    hours: {
+      monday: "10:00-19:00",
+      tuesday: "10:00-19:00",
+      wednesday: "10:00-19:00",
+      thursday: "10:00-19:00",
+      friday: "10:00-19:00",
+      saturday: "10:00-19:00",
+      sunday: "closed",
+    },
+    holidays: [],
+    features: { contactForm: true, reservation: true, staffSelection: true, calendar: true, emailNotification: true },
+    staffAnyAvailableOption: true,
+    reservation: { timezone: "Asia/Tokyo", slotMinutes: 30, minLeadHours: 1, maxBookingDays: 60 },
+    labels: {},
+    content: {},
+    calendarId: "shared@example.com",
+    emailOwnerNotifyAddress: "owner@example.com",
+    emailFromName: "Demo",
+  };
+
+  it("returns VALIDATION_ERROR for a malformed payload", () => {
+    expect(cancelReservationAction(null).ok).toBe(false);
+    expect(cancelReservationAction({ reservationId: "RES-1" }).ok).toBe(false);
+    expect(cancelReservationAction({ cancellationToken: "tok-1" }).ok).toBe(false);
+  });
+
+  it("returns INVALID_CANCELLATION_TOKEN when no reservation exists for the given id", () => {
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue(null);
+
+    const response = cancelReservationAction({ reservationId: "RES-404", cancellationToken: "tok-1" });
+
+    expect(response).toEqual({
+      ok: false,
+      error: { code: "INVALID_CANCELLATION_TOKEN", message: expect.any(String) },
+    });
+    expect(ReservationRepository.markReservationCancelled).not.toHaveBeenCalled();
+  });
+
+  it("returns INVALID_CANCELLATION_TOKEN when the token does not match the reservation's stored token", () => {
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue({
+      ReservationID: "RES-1",
+      CancellationToken: "the-real-token",
+      Status: "受付済",
+    });
+
+    const response = cancelReservationAction({ reservationId: "RES-1", cancellationToken: "wrong-token" });
+
+    expect(response.ok).toBe(false);
+    if (!response.ok) expect(response.error.code).toBe("INVALID_CANCELLATION_TOKEN");
+    expect(ReservationRepository.markReservationCancelled).not.toHaveBeenCalled();
+  });
+
+  it("idempotently returns success without touching Calendar or the lock when already キャンセル済", () => {
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue({
+      ReservationID: "RES-1",
+      CancellationToken: "tok-1",
+      Status: "キャンセル済",
+      CalendarEventID: "evt-1",
+    });
+
+    const response = cancelReservationAction({ reservationId: "RES-1", cancellationToken: "tok-1" });
+
+    expect(response).toEqual({ ok: true, data: { reservationId: "RES-1" } });
+    expect(Calendar.deleteReservationEvent).not.toHaveBeenCalled();
+    expect(ReservationRepository.markReservationCancelled).not.toHaveBeenCalled();
+  });
+
+  it("cancels a confirmed reservation: deletes the Calendar event on the assigned staff's calendar and marks the row キャンセル済", () => {
+    (getConfig as jest.Mock).mockReturnValue(cancelConfig);
+    (Catalog.getStaffRows as jest.Mock).mockReturnValue([
+      { StaffID: "ST001", Name: "田中", Active: true, CalendarID: "cal-a", DisplayOrder: 1 } as StaffRow,
+    ]);
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue({
+      ReservationID: "RES-1",
+      CancellationToken: "tok-1",
+      Status: "受付済",
+      CalendarEventID: "evt-1",
+      StaffID: "ST001",
+    });
+
+    const response = cancelReservationAction({ reservationId: "RES-1", cancellationToken: "tok-1" });
+
+    expect(response).toEqual({ ok: true, data: { reservationId: "RES-1" } });
+    expect(Calendar.deleteReservationEvent).toHaveBeenCalledWith("cal-a", "evt-1");
+    expect(ReservationRepository.markReservationCancelled).toHaveBeenCalledWith("RES-1", expect.any(Date));
+  });
+
+  it("falls back to the shared calendar when the reservation has no staff dimension", () => {
+    (getConfig as jest.Mock).mockReturnValue({ ...cancelConfig, features: { ...cancelConfig.features, staffSelection: false } });
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue({
+      ReservationID: "RES-2",
+      CancellationToken: "tok-2",
+      Status: "受付済",
+      CalendarEventID: "evt-2",
+    });
+
+    const response = cancelReservationAction({ reservationId: "RES-2", cancellationToken: "tok-2" });
+
+    expect(response).toEqual({ ok: true, data: { reservationId: "RES-2" } });
+    expect(Calendar.deleteReservationEvent).toHaveBeenCalledWith("shared@example.com", "evt-2");
+    expect(Catalog.getStaffRows).not.toHaveBeenCalled();
+  });
+
+  it("marks the reservation cancelled without touching Calendar when there is no CalendarEventID", () => {
+    (getConfig as jest.Mock).mockReturnValue(cancelConfig);
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue({
+      ReservationID: "RES-3",
+      CancellationToken: "tok-3",
+      Status: "処理中",
+    });
+
+    const response = cancelReservationAction({ reservationId: "RES-3", cancellationToken: "tok-3" });
+
+    expect(response).toEqual({ ok: true, data: { reservationId: "RES-3" } });
+    expect(Calendar.deleteReservationEvent).not.toHaveBeenCalled();
+    expect(ReservationRepository.markReservationCancelled).toHaveBeenCalledWith("RES-3", expect.any(Date));
+  });
+
+  it("still marks the reservation cancelled even if deleting the Calendar event throws", () => {
+    (getConfig as jest.Mock).mockReturnValue({ ...cancelConfig, features: { ...cancelConfig.features, staffSelection: false } });
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue({
+      ReservationID: "RES-4",
+      CancellationToken: "tok-4",
+      Status: "受付済",
+      CalendarEventID: "evt-4",
+    });
+    (Calendar.deleteReservationEvent as jest.Mock).mockImplementation(() => {
+      throw new Error("Calendar unavailable");
+    });
+
+    const response = cancelReservationAction({ reservationId: "RES-4", cancellationToken: "tok-4" });
+
+    expect(response).toEqual({ ok: true, data: { reservationId: "RES-4" } });
+    expect(ReservationRepository.markReservationCancelled).toHaveBeenCalledWith("RES-4", expect.any(Date));
+  });
+
+  it("returns SYSTEM_BUSY when the lock cannot be acquired, leaving the row unmarked", () => {
+    (getConfig as jest.Mock).mockReturnValue(cancelConfig);
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue({
+      ReservationID: "RES-5",
+      CancellationToken: "tok-5",
+      Status: "受付済",
+      CalendarEventID: "evt-5",
+    });
+    cancelLockTryLockResult = false;
+
+    const response = cancelReservationAction({ reservationId: "RES-5", cancellationToken: "tok-5" });
+
+    expect(response.ok).toBe(false);
+    if (!response.ok) expect(response.error.code).toBe("SYSTEM_BUSY");
+    expect(ReservationRepository.markReservationCancelled).not.toHaveBeenCalled();
+  });
+});
+
+describe("handleApiRequest routing for cancelReservation", () => {
+  afterEach(() => {
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReset();
+  });
+
+  it("routes cancelReservation to cancelReservationAction instead of rejecting it as unsupported", () => {
+    (ReservationRepository.findReservationByReservationId as jest.Mock).mockReturnValue(null);
+
+    const response = handleApiRequest(
+      '{"action":"cancelReservation","payload":{"reservationId":"RES-1","cancellationToken":"tok-1"}}',
+    );
+
+    expect(response.ok).toBe(false);
+    if (!response.ok) expect(response.error.code).toBe("INVALID_CANCELLATION_TOKEN");
   });
 });
 

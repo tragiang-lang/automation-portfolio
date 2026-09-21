@@ -1,6 +1,8 @@
 import {
   ApiActionResult,
   AvailabilityRequest,
+  CancelReservationRequest,
+  CancelReservationResult,
   GetAvailabilityResult,
   PublicService,
   PublicStaff,
@@ -52,4 +54,12 @@ export async function getAvailability(
   request: AvailabilityRequest,
 ): Promise<ApiActionResult<GetAvailabilityResult>> {
   return callAction<GetAvailabilityResult>("getAvailability", request);
+}
+
+/** Self-service reservation cancellation via the token carried by the
+ *  emailed cancellation link (`app/reservation/cancel/page.tsx`). */
+export async function cancelReservation(
+  request: CancelReservationRequest,
+): Promise<ApiActionResult<CancelReservationResult>> {
+  return callAction<CancelReservationResult>("cancelReservation", request);
 }

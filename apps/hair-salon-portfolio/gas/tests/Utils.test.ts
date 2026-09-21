@@ -147,3 +147,15 @@ describe("tokyoCalendarDayRange", () => {
     expect(formatInstantAsTokyoLocalDateTimeString(end)).toBe("2026-09-11T00:00");
   });
 });
+
+import { extractTimeFromTokyoLocalDateTimeString } from "../src/Utils";
+
+describe("extractTimeFromTokyoLocalDateTimeString", () => {
+  it("extracts the HH:mm portion of a Tokyo-local date-time string", () => {
+    expect(extractTimeFromTokyoLocalDateTimeString("2026-09-10T10:30")).toBe("10:30");
+  });
+
+  it("extracts midnight correctly", () => {
+    expect(extractTimeFromTokyoLocalDateTimeString("2026-09-10T00:00")).toBe("00:00");
+  });
+});

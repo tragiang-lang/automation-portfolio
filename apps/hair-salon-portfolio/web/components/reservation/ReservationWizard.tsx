@@ -13,6 +13,7 @@ import { TimeSlotSelection } from "./TimeSlotSelection";
 import { CustomerInfoForm, validateCustomerFields } from "./CustomerInfoForm";
 import { ReservationSummary } from "./ReservationSummary";
 import { ReservationSuccess } from "./ReservationSuccess";
+import { ReservationDemoSuccess } from "./ReservationDemoSuccess";
 import { ReservationErrorNotice } from "./ReservationErrorNotice";
 
 /**
@@ -21,8 +22,20 @@ import { ReservationErrorNotice } from "./ReservationErrorNotice";
  * dedicated component. `app/reservation/page.tsx` only mounts this when
  * `features.reservation` is on (Global Constraints/spec §19).
  */
-export function ReservationWizard({ minDate, maxDate }: { minDate: string; maxDate: string }) {
-  const wizard = useReservationWizard({ minDate, maxDate });
+export function ReservationWizard({
+  minDate,
+  maxDate,
+  demoMode = false,
+  submitEnabled = true,
+}: {
+  minDate: string;
+  maxDate: string;
+  /** Explicit reservation demo-mode switch — see `lib/config/reservationDemoMode.ts`. */
+  demoMode?: boolean;
+  /** Reservation Wizard SUBMIT gate — see `lib/config/reservationDemoMode.ts::isReservationSubmitEnabled`. */
+  submitEnabled?: boolean;
+}) {
+  const wizard = useReservationWizard({ minDate, maxDate, demoMode, submitEnabled });
   const [touched, setTouched] = useState<Partial<Record<keyof CustomerFields, boolean>>>({});
 
   if (wizard.catalogStatus === "loading") {
@@ -38,8 +51,25 @@ export function ReservationWizard({ minDate, maxDate }: { minDate: string; maxDa
     );
   }
 
+  const selectedService = wizard.services.find((service) => service.serviceId === wizard.selectedServiceId) ?? null;
+  const selectedStaffName =
+    wizard.selectedStaffId === null
+      ? null
+      : wizard.selectedStaffId === ANY_STAFF
+        ? "指名なし（お任せ）"
+        : (wizard.staff.find((member) => member.staffId === wizard.selectedStaffId)?.name ?? null);
+
   if (wizard.submitStatus === "success" && wizard.submitResult) {
-    return (
+    return wizard.submitResult.isDemo ? (
+      <ReservationDemoSuccess
+        reservationId={wizard.submitResult.reservationId}
+        service={selectedService}
+        staffName={selectedStaffName}
+        date={wizard.selectedDate}
+        time={wizard.selectedTime}
+        customerName={wizard.customer.name}
+      />
+    ) : (
       <ReservationSuccess
         reservationId={wizard.submitResult.reservationId}
         needsConfirmation={wizard.submitResult.needsConfirmation}
@@ -52,22 +82,14 @@ export function ReservationWizard({ minDate, maxDate }: { minDate: string; maxDa
     Object.entries(customerErrors).filter(([field]) => touched[field as keyof CustomerFields]),
   );
 
-  const selectedService = wizard.services.find((service) => service.serviceId === wizard.selectedServiceId) ?? null;
-  const selectedStaffName =
-    wizard.selectedStaffId === null
-      ? null
-      : wizard.selectedStaffId === ANY_STAFF
-        ? "指名なし（お任せ）"
-        : (wizard.staff.find((member) => member.staffId === wizard.selectedStaffId)?.name ?? null);
-
   function canGoNext(): boolean {
     switch (wizard.currentStep) {
       case "service":
         return wizard.selectedServiceId !== null;
-      case "staff":
-        return wizard.selectedStaffId !== null;
       case "datetime":
         return wizard.selectedDate !== null && wizard.selectedTime !== null;
+      case "staff":
+        return wizard.selectedStaffId !== null;
       case "customer":
         return Object.keys(customerErrors).length === 0;
       default:
@@ -87,10 +109,6 @@ export function ReservationWizard({ minDate, maxDate }: { minDate: string; maxDa
         <ServiceSelection services={wizard.services} selectedServiceId={wizard.selectedServiceId} onSelect={wizard.selectService} />
       ) : null}
 
-      {wizard.currentStep === "staff" ? (
-        <StaffSelection staff={wizard.staff} selectedStaffId={wizard.selectedStaffId} onSelect={wizard.selectStaff} />
-      ) : null}
-
       {wizard.currentStep === "datetime" ? (
         <div className="flex flex-col gap-6">
           <DateSelection value={wizard.selectedDate} minDate={minDate} maxDate={maxDate} onChange={wizard.selectDate} />
@@ -102,6 +120,26 @@ export function ReservationWizard({ minDate, maxDate }: { minDate: string; maxDa
             onRetry={wizard.retryAvailability}
           />
         </div>
+      ) : null}
+
+      {wizard.currentStep === "staff" ? (
+        wizard.staffAvailabilityStatus === "loading" ? (
+          <p role="status" aria-live="polite" className="text-[14px] text-muted">
+            空き状況を確認しています…
+          </p>
+        ) : wizard.staffAvailabilityStatus === "error" ? (
+          <ReservationErrorNotice
+            message={wizard.staffAvailabilityError ?? "サーバーエラーが発生しました。"}
+            onRetry={wizard.retryStaffAvailability}
+          />
+        ) : (
+          <StaffSelection
+            staff={wizard.staff}
+            selectedStaffId={wizard.selectedStaffId}
+            onSelect={wizard.selectStaff}
+            staffAvailability={wizard.staffAvailability}
+          />
+        )
       ) : null}
 
       {wizard.currentStep === "customer" ? (
@@ -123,6 +161,7 @@ export function ReservationWizard({ minDate, maxDate }: { minDate: string; maxDa
           onConfirm={wizard.submit}
           onBack={wizard.goBack}
           confirming={wizard.submitStatus === "submitting"}
+          isDemo={wizard.dataSource === "demo"}
         />
       ) : null}
 

@@ -49,6 +49,22 @@ export type StaffSelectionResolution =
  *  §J/§K) — this is advisory at Phase 3C's evaluation time, not a
  *  reservation guarantee (see docs/reservation-domain-architecture.md
  *  "Concurrency" section, written in Task 13). */
+/** One staff member's availability for a specific candidate date+time
+ *  (Phase: staff conflict display, spec §6/§8) — the per-staff
+ *  counterpart to the plain yes/no `AvailabilityResult`. `conflicts` is
+ *  empty exactly when `available` is true. */
+export interface StaffAvailabilityConflict {
+  startTime: string;
+  endTime: string;
+}
+
+export interface StaffAvailabilityEntry {
+  staffId: string;
+  name: string;
+  available: boolean;
+  conflicts: StaffAvailabilityConflict[];
+}
+
 export interface NormalizedReservation {
   reservationId: string;
   submissionId: string;

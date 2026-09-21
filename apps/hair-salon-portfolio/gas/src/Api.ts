@@ -4,7 +4,7 @@ import { ConfigError, getConfig } from "./ConfigStore";
 import { buildPublicConfig } from "./PublicConfig";
 import { AppConfig, PublicConfig } from "./models/Config";
 import { MissingHeadersError } from "./RowMapper";
-import { NormalizedReservation, StaffSelectionResolution } from "./models/ReservationDomain";
+import { NormalizedReservation, StaffAvailabilityEntry, StaffSelectionResolution } from "./models/ReservationDomain";
 import { ANY_STAFF, ReservationRequest } from "./models/ReservationRequest";
 import { StaffRow } from "./SheetSchemas";
 import { SlotCandidate } from "./SlotEngine";
@@ -14,7 +14,7 @@ import {
   resolveCalendarIdsForSelection,
   buildAvailabilityStrategyFromBusyByCalendarId,
 } from "./availability/ReservationAvailabilityFactory";
-import { evaluateAvailableSlots, evaluateReservationRequest } from "./ReservationRules";
+import { evaluateAvailableSlots, evaluateReservationRequest, evaluateStaffAvailabilityForCandidate } from "./ReservationRules";
 import { getServiceRows, getStaffRows } from "./Catalog";
 import { mapReservationIssueToErrorResponse } from "./ReservationErrorMapping";
 import { PublicService, PublicStaff } from "./models/Catalog";
@@ -22,7 +22,9 @@ import { buildPublicServices, buildPublicStaff } from "./PublicCatalog";
 import {
   appendReservationRow,
   buildPendingReservationRow,
+  findReservationByReservationId,
   findReservationBySubmissionId,
+  markReservationCancelled,
   markReservationConfirmed,
   markReservationNeedsConfirmation,
   updateReservationEmailStatus,
@@ -34,7 +36,7 @@ import {
   mapReservationRowToResult,
   IdempotencyResult,
 } from "./Idempotency";
-import { getBusyEvents, createReservationEvent } from "./Calendar";
+import { getBusyEvents, createReservationEvent, deleteReservationEvent } from "./Calendar";
 import { sendEmail } from "./Mail";
 import { getSiteBaseUrl } from "./RuntimeProperties";
 import { logError, logEmail } from "./Logging";
@@ -230,6 +232,8 @@ export function handleApiRequest(rawBody: string | undefined): ApiResponse {
       return createReservationAction(parsed.request.payload);
     case "getAvailability":
       return getAvailabilityAction(parsed.request.payload);
+    case "cancelReservation":
+      return cancelReservationAction(parsed.request.payload);
     case "createInquiry":
       return createInquiryAction(parsed.request.payload);
     default:
@@ -285,6 +289,31 @@ function buildAvailabilityForDate(fallbackCalendarId: string, date: string) {
 export interface GetAvailabilityResponseData {
   date: string;
   slots: { time: string }[];
+  /** Per-staff availability + conflict breakdown for `time` (staff-conflict
+   *  display, spec §6/§8) — present only when the request included `time`
+   *  and `features.staffSelection` is on; there is no staff dimension to
+   *  report on otherwise. */
+  staff?: StaffAvailabilityEntry[];
+}
+
+/** Builds a per-staff busy-interval lookup for one date (staff-conflict
+ *  display) — fetches each distinct active-staff calendar's busy events
+ *  exactly once (same one-call-per-calendar efficiency as
+ *  `buildAvailabilityForDate` above), independent of whichever staffId the
+ *  request's own slot search resolved. */
+function buildBusyIntervalsForStaffLookup(
+  fallbackCalendarId: string,
+  date: string,
+  staffList: StaffRow[],
+): (staff: StaffRow) => BusyInterval[] {
+  const activeStaff = staffList.filter((member) => member.Active);
+  const calendarIds = [...new Set(activeStaff.map((member) => resolveCalendarIdForStaff(member, fallbackCalendarId)))];
+  const { start, end } = tokyoCalendarDayRange(date);
+  const busyByCalendarId: Record<string, BusyInterval[]> = {};
+  for (const calendarId of calendarIds) {
+    busyByCalendarId[calendarId] = getBusyEvents(calendarId, start, end);
+  }
+  return (member: StaffRow) => busyByCalendarId[resolveCalendarIdForStaff(member, fallbackCalendarId)] ?? [];
 }
 
 function getAvailabilityActionInner(rawPayload: unknown): ApiResponse<GetAvailabilityResponseData> {
@@ -295,11 +324,12 @@ function getAvailabilityActionInner(rawPayload: unknown): ApiResponse<GetAvailab
   if (!rawPayload || typeof rawPayload !== "object") {
     return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, "リクエストの形式が正しくありません。");
   }
-  const payload = rawPayload as { serviceId?: unknown; staffId?: unknown; date?: unknown };
+  const payload = rawPayload as { serviceId?: unknown; staffId?: unknown; date?: unknown; time?: unknown };
   if (typeof payload.serviceId !== "string" || typeof payload.date !== "string") {
     return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, "リクエストの形式が正しくありません。");
   }
   const staffId = typeof payload.staffId === "string" ? (payload.staffId as string | typeof ANY_STAFF) : undefined;
+  const time = typeof payload.time === "string" ? payload.time : undefined;
 
   const services = getServiceRows();
   const staff = config.features.staffSelection ? getStaffRows() : [];
@@ -319,7 +349,26 @@ function getAvailabilityActionInner(rawPayload: unknown): ApiResponse<GetAvailab
     return buildErrorResponse(code, message);
   }
 
-  return buildSuccessResponse({ date: payload.date, slots: evaluation.slots });
+  let staffAvailability: StaffAvailabilityEntry[] | undefined;
+  if (config.features.staffSelection && time) {
+    const staffEvaluation = evaluateStaffAvailabilityForCandidate({
+      serviceId: payload.serviceId,
+      date: payload.date,
+      time,
+      services,
+      staff,
+      config,
+      now: new Date(),
+      busyIntervalsForStaff: buildBusyIntervalsForStaffLookup(config.calendarId, payload.date, staff),
+    });
+    if (!staffEvaluation.ok) {
+      const { code, message } = mapReservationIssueToErrorResponse(staffEvaluation.issue);
+      return buildErrorResponse(code, message);
+    }
+    staffAvailability = staffEvaluation.staff;
+  }
+
+  return buildSuccessResponse({ date: payload.date, slots: evaluation.slots, staff: staffAvailability });
 }
 
 /** `getAvailability` action handler (Phase 5) — read-only, advisory (spec
@@ -701,6 +750,103 @@ export function createReservationAction(
     }
     console.error("[createReservation] unexpected top-level error:", error);
     logError({ action: "createReservation", message: "Unexpected top-level error", severity: "critical" });
+    return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "サーバーエラーが発生しました。");
+  }
+}
+
+/** Resolves which calendar a reservation's event lives on for cancellation
+ *  purposes — mirrors `runReservationCriticalSection`'s own resolution
+ *  (assigned staff's calendar, falling back to the shared calendar), but
+ *  starting from the persisted row's `StaffID` rather than an
+ *  in-memory `NormalizedReservation`. Only reads the STAFF sheet when the
+ *  row actually names a staff member. */
+function resolveCalendarIdForCancellation(staffId: string | undefined, config: AppConfig): string {
+  if (!staffId) {
+    return config.calendarId;
+  }
+  const staff = getStaffRows().find((member) => member.StaffID === staffId);
+  return staff ? resolveCalendarIdForStaff(staff, config.calendarId) : config.calendarId;
+}
+
+function cancelReservationActionInner(rawPayload: unknown): ApiResponse<{ reservationId: string }> {
+  if (!rawPayload || typeof rawPayload !== "object") {
+    return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, "リクエストの形式が正しくありません。");
+  }
+  const payload = rawPayload as { reservationId?: unknown; cancellationToken?: unknown };
+  if (typeof payload.reservationId !== "string" || typeof payload.cancellationToken !== "string") {
+    return buildErrorResponse(ERROR_CODES.VALIDATION_ERROR, "リクエストの形式が正しくありません。");
+  }
+
+  const row = findReservationByReservationId(payload.reservationId);
+  if (!row || row.CancellationToken !== payload.cancellationToken) {
+    return buildErrorResponse(
+      ERROR_CODES.INVALID_CANCELLATION_TOKEN,
+      "予約が見つからないか、キャンセル情報が正しくありません。",
+    );
+  }
+
+  // Idempotent: a customer following an already-used cancellation link (or
+  // double-clicking) sees the same success, not an error.
+  if (row.Status === "キャンセル済") {
+    return buildSuccessResponse({ reservationId: row.ReservationID });
+  }
+
+  const lock = LockService.getScriptLock();
+  let lockAcquired = false;
+  try {
+    lockAcquired = lock.tryLock(CRITICAL_SECTION_LOCK_TIMEOUT_MS);
+  } catch {
+    lockAcquired = false;
+  }
+  if (!lockAcquired) {
+    return buildErrorResponse(ERROR_CODES.SYSTEM_BUSY, "只今混み合っております。少々時間をおいて再度お試しください。");
+  }
+
+  try {
+    if (row.CalendarEventID) {
+      const config = getConfig();
+      const calendarId = resolveCalendarIdForCancellation(row.StaffID, config);
+      try {
+        deleteReservationEvent(calendarId, row.CalendarEventID);
+      } catch (cause) {
+        // The Sheet row is the authoritative cancellation record — a
+        // Calendar failure here is an owner-fixable side effect, never a
+        // reason to refuse the customer's cancellation.
+        console.error("[cancelReservation] failed to delete Calendar event:", row.ReservationID, cause);
+        logError({
+          action: "cancelReservation",
+          message: "Failed to delete Calendar event",
+          context: { reservationId: row.ReservationID },
+          severity: "warning",
+        });
+      }
+    }
+    markReservationCancelled(row.ReservationID, new Date());
+  } finally {
+    lock.releaseLock();
+  }
+
+  return buildSuccessResponse({ reservationId: row.ReservationID });
+}
+
+/** `cancelReservation` action handler (focused self-service cancellation,
+ *  not the `CANCELLATION_REQUESTS`-sheet approval workflow) — validates
+ *  the token carried by the emailed cancellation link, then frees the
+ *  Calendar event and marks the row キャンセル済 under the same
+ *  `LockService` lock `createReservation`'s critical section uses, so a
+ *  concurrent booking attempt never reads a half-updated row. */
+export function cancelReservationAction(rawPayload: unknown): ApiResponse<{ reservationId: string }> {
+  try {
+    return cancelReservationActionInner(rawPayload);
+  } catch (error) {
+    if (error instanceof ConfigError) {
+      return mapConfigErrorToResponse(error);
+    }
+    if (error instanceof MissingHeadersError) {
+      return mapMissingHeadersErrorToResponse(error);
+    }
+    console.error("[cancelReservation] unexpected top-level error:", error);
+    logError({ action: "cancelReservation", message: "Unexpected top-level error", severity: "critical" });
     return buildErrorResponse(ERROR_CODES.INTERNAL_ERROR, "サーバーエラーが発生しました。");
   }
 }

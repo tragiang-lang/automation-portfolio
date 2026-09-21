@@ -500,3 +500,147 @@ describe("evaluateAvailableSlots", () => {
     expect(buildStrategy).toHaveBeenCalledWith({ kind: "specific", staff: staff[0] });
   });
 });
+
+import { evaluateStaffAvailabilityForCandidate } from "../src/ReservationRules";
+import { BusyInterval } from "../src/availability/AvailabilityStrategy";
+
+describe("evaluateStaffAvailabilityForCandidate", () => {
+  const staffConfig: AppConfig = {
+    ...fullConfig,
+    features: { ...fullConfig.features, staffSelection: true },
+  };
+  const inactiveStaffMember: StaffRow = { StaffID: "ST003", Name: "佐藤", Active: false, DisplayOrder: 3 };
+
+  function noBusyIntervals(): BusyInterval[] {
+    return [];
+  }
+
+  it("returns an empty staff list without evaluating anything when staffSelection is off", () => {
+    const result = evaluateStaffAvailabilityForCandidate({
+      serviceId: "SV001",
+      date: "2026-09-11",
+      time: "11:00",
+      services: [activeService],
+      staff: [staffA, staffB],
+      config: fullConfig, // staffSelection: false
+      now,
+      busyIntervalsForStaff: noBusyIntervals,
+    });
+    expect(result).toEqual({ ok: true, staff: [] });
+  });
+
+  it("reports every active staff member available when nobody has a conflicting busy interval", () => {
+    const result = evaluateStaffAvailabilityForCandidate({
+      serviceId: "SV001",
+      date: "2026-09-11",
+      time: "11:00",
+      services: [activeService],
+      staff: [staffA, staffB],
+      config: staffConfig,
+      now,
+      busyIntervalsForStaff: noBusyIntervals,
+    });
+    expect(result).toEqual({
+      ok: true,
+      staff: [
+        { staffId: "ST001", name: "田中", available: true, conflicts: [] },
+        { staffId: "ST002", name: "鈴木", available: true, conflicts: [] },
+      ],
+    });
+  });
+
+  it("reports a staff member unavailable with the conflicting time range when their calendar overlaps", () => {
+    const result = evaluateStaffAvailabilityForCandidate({
+      serviceId: "SV001",
+      date: "2026-09-11",
+      time: "11:00", // candidate: 11:00-12:00 (60min service)
+      services: [activeService],
+      staff: [staffA, staffB],
+      config: staffConfig,
+      now,
+      busyIntervalsForStaff: (member) =>
+        member.StaffID === "ST001" ? [{ start: "2026-09-11T10:30", end: "2026-09-11T11:30" }] : [],
+    });
+    expect(result).toEqual({
+      ok: true,
+      staff: [
+        { staffId: "ST001", name: "田中", available: false, conflicts: [{ startTime: "10:30", endTime: "11:30" }] },
+        { staffId: "ST002", name: "鈴木", available: true, conflicts: [] },
+      ],
+    });
+  });
+
+  it("excludes inactive staff from the result", () => {
+    const result = evaluateStaffAvailabilityForCandidate({
+      serviceId: "SV001",
+      date: "2026-09-11",
+      time: "11:00",
+      services: [activeService],
+      staff: [staffA, inactiveStaffMember],
+      config: staffConfig,
+      now,
+      busyIntervalsForStaff: noBusyIntervals,
+    });
+    expect(result.ok && result.staff.map((entry) => entry.staffId)).toEqual(["ST001"]);
+  });
+
+  it("returns MENU_NOT_FOUND when the service does not exist", () => {
+    const result = evaluateStaffAvailabilityForCandidate({
+      serviceId: "SV999",
+      date: "2026-09-11",
+      time: "11:00",
+      services: [activeService],
+      staff: [staffA],
+      config: staffConfig,
+      now,
+      busyIntervalsForStaff: noBusyIntervals,
+    });
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.issue.code).toBe("MENU_NOT_FOUND");
+  });
+
+  it("returns HOLIDAY when the date is a configured holiday", () => {
+    const result = evaluateStaffAvailabilityForCandidate({
+      serviceId: "SV001",
+      date: "2026-09-21", // configured holiday in hoursConfig/fullConfig
+      time: "11:00",
+      services: [activeService],
+      staff: [staffA],
+      config: staffConfig,
+      now,
+      busyIntervalsForStaff: noBusyIntervals,
+    });
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.issue.code).toBe("HOLIDAY");
+  });
+
+  it("returns OUTSIDE_BUSINESS_HOURS when the candidate time does not fit within business hours", () => {
+    const result = evaluateStaffAvailabilityForCandidate({
+      serviceId: "SV001",
+      date: "2026-09-11",
+      time: "23:30",
+      services: [activeService],
+      staff: [staffA],
+      config: staffConfig,
+      now,
+      busyIntervalsForStaff: noBusyIntervals,
+    });
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.issue.code).toBe("OUTSIDE_BUSINESS_HOURS");
+  });
+
+  it("returns PAST_DATE when the candidate is inside the minimum lead time", () => {
+    const result = evaluateStaffAvailabilityForCandidate({
+      serviceId: "SV001",
+      date: "2026-09-10",
+      time: "10:30",
+      services: [activeService],
+      staff: [staffA],
+      config: { ...staffConfig, reservation: { ...staffConfig.reservation, minLeadHours: 2 } },
+      now, // 2026-09-10 10:00 JST
+      busyIntervalsForStaff: noBusyIntervals,
+    });
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.issue.code).toBe("PAST_DATE");
+  });
+});

@@ -1,5 +1,6 @@
 import {
   createCalendarOverlapAvailability,
+  findConflictingIntervals,
   isSlotFreeOfConflicts,
 } from "../../src/availability/CalendarOverlapAvailability";
 import { BusyInterval } from "../../src/availability/AvailabilityStrategy";
@@ -19,6 +20,25 @@ describe("isSlotFreeOfConflicts", () => {
 
   it.each(cases)("%s -> free=%s", (_label, events, expectedFree) => {
     expect(isSlotFreeOfConflicts(candidate, events)).toBe(expectedFree);
+  });
+});
+
+describe("findConflictingIntervals", () => {
+  it("returns an empty array when no existing event overlaps", () => {
+    const events: BusyInterval[] = [{ start: "2026-09-10T09:00", end: "2026-09-10T10:00" }];
+    expect(findConflictingIntervals(candidate, events)).toEqual([]);
+  });
+
+  it("returns the one overlapping interval", () => {
+    const overlapping: BusyInterval = { start: "2026-09-10T10:30", end: "2026-09-10T11:30" };
+    expect(findConflictingIntervals(candidate, [overlapping])).toEqual([overlapping]);
+  });
+
+  it("returns every overlapping interval when more than one conflicts", () => {
+    const first: BusyInterval = { start: "2026-09-10T09:30", end: "2026-09-10T10:15" };
+    const second: BusyInterval = { start: "2026-09-10T10:45", end: "2026-09-10T11:15" };
+    const nonOverlapping: BusyInterval = { start: "2026-09-10T11:00", end: "2026-09-10T12:00" };
+    expect(findConflictingIntervals(candidate, [first, second, nonOverlapping])).toEqual([first, second]);
   });
 });
 

@@ -150,6 +150,14 @@ export function formatInstantAsTokyoLocalDateTimeString(date: Date): string {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+/** Extracts the `HH:mm` portion of a `YYYY-MM-DDTHH:mm` Tokyo-local
+ *  string (the `BusyInterval`/`SlotCandidate` representation) — used to
+ *  present a staff conflict's start/end as a display time, not a full
+ *  date-time. */
+export function extractTimeFromTokyoLocalDateTimeString(value: string): string {
+  return value.slice(11);
+}
+
 /** The `[00:00, 24:00)` Asia/Tokyo-local instant range for one calendar
  *  date — the query window `Calendar.ts::getBusyEvents` (Phase 4 Task 9)
  *  uses, matching `docs/phase0-specification.md` §J Stage 2's "[date
