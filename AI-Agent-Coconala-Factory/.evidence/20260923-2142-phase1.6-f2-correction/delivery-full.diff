@@ -1,0 +1,35 @@
+diff --git a/AI-Agent-Coconala-Factory/src/generators/delivery.ts b/AI-Agent-Coconala-Factory/src/generators/delivery.ts
+index 2174487..a3ad044 100644
+--- a/AI-Agent-Coconala-Factory/src/generators/delivery.ts
++++ b/AI-Agent-Coconala-Factory/src/generators/delivery.ts
+@@ -44,7 +44,8 @@ ${footer(trace)}`;
+ export function setupMd(input: DeliveryInputs): string {
+   const { brief, schema, plan, trace } = input;
+   const hasReservation = plan.selected.some((w) => w.id.startsWith("reservation-"));
+-  const hasServices = schema.sheets.some((s) => s.name === "SERVICES");
++  // Owner-curated data sheets have an `active` column. Wording stays domain-neutral: no sheet names, not every business has a menu.
++  const hasDataSheets = schema.sheets.some((s) => s.columns.some((c) => c.name === "active"));
+   const missingRequired = schema.configKeys.filter((k) => k.required && !(k.key in input.configSeed) && k.default === undefined).map((k) => k.key);
+   const buttons = input.menuConfig.areas.map((a) => a.action.label).join(" / ");
+ 
+@@ -97,7 +98,7 @@ Apps Script エディタ →「プロジェクトの設定」→「スクリプ
+ ## 5. 店舗情報を入力する
+ 
+ - \`CONFIG\` シートの \`value\` 列を確認・入力します。${missingRequired.length > 0 ? `\n  - **必ず入力が必要:** ${missingRequired.map((k) => `\`${k}\``).join("、")}` : ""}
+-${hasReservation ? "  - 営業時間は `hours.mon` 〜 `hours.sun` に `10:00-19:00` の形式で、定休日は `closed` と入力します。\n  - `reservation.capacity` は同じ時間に受けられる人数（席数・スタッフ数）です。\n" : ""}${hasServices ? "- `SERVICES` シートにメニューを入力します（`active` を TRUE にした行だけがお客様に表示されます）。\n" : ""}
++${hasReservation ? "  - 営業時間は `hours.mon` 〜 `hours.sun` に `10:00-19:00` の形式で、定休日は `closed` と入力します。\n  - `reservation.capacity` は同じ時間に受けられる人数（席数・スタッフ数）です。\n" : ""}${hasDataSheets ? "- 必要に応じて、各ワークフローで使用する情報を該当するシートに入力します。`active` を設定できる項目は、TRUE にした行のみが使用されます。\n" : ""}
+ ## 6. Web アプリとして公開し、LINE とつなぐ
+ 
+ 1. エディタ右上「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」。
+@@ -162,7 +163,10 @@ ${[...profile.assumptions, ...profile.risks].map((a) => `- ${a}`).join("\n")}
+ 
+ ## 今後の拡張候補
+ 
+-${plan.extensionPoints.map((p) => `- \`${p.workflow}\` / ${p.id}: ${p.description}`).join("\n")}
++${[
++  ...plan.extensionPoints.map((p) => `- \`${p.workflow}\` / ${p.id}: ${p.description}`),
++  ...(profile.extensionPoints?.planned ?? []).map((p) => `- \`${profile.industryAsset}\` / ${p.id}: ${p.description}`),
++].join("\n")}
+ ${footer(trace)}`;
+ }
+ 

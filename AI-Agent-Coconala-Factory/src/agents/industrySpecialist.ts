@@ -1,5 +1,6 @@
 import { error, Issue, warning } from "../lib/issues";
 import type { CoreAssetRegistry } from "../registry/registry";
+import type { IndustryAsset } from "../schemas/assets";
 import type { ClientBrief } from "../schemas/brief";
 
 /**
@@ -35,7 +36,10 @@ export interface IndustryProfile {
   notificationRequirements: string[];
   terminology: Record<string, string>;
   risks: string[];
+  /** The industry asset's assumptions first, then the ones found while analysing this brief. */
   assumptions: string[];
+  /** Copied from the industry asset when it declares them. */
+  extensionPoints?: IndustryAsset["extensionPoints"];
 }
 
 function matchesKeyword(line: string, keyword: string): boolean {
@@ -66,8 +70,9 @@ export function analyzeIndustry(brief: ClientBrief, registry: CoreAssetRegistry)
   };
 
   for (const id of brief.intents) addIntent(id, "explicit");
+  const keywordsFor = (intentId: string, common: string[]) => [...common, ...(industry.intentAliases?.[intentId] ?? [])];
   for (const line of brief.requirements) {
-    const hits = catalog.intents.filter((intent) => intent.keywords.some((keyword) => matchesKeyword(line, keyword)));
+    const hits = catalog.intents.filter((intent) => keywordsFor(intent.id, intent.keywords).some((keyword) => matchesKeyword(line, keyword)));
     hits.forEach((intent) => addIntent(intent.id, "requirement", line));
     if (hits.length === 0) assumptions.push(`Requirement not mapped to a Phase 1 workflow (needs manual review): "${line}"`);
   }
@@ -106,7 +111,8 @@ export function analyzeIndustry(brief: ClientBrief, registry: CoreAssetRegistry)
       notificationRequirements: industry.notificationRequirements,
       terminology: industry.terminology,
       risks: industry.risks,
-      assumptions,
+      assumptions: [...(industry.assumptions ?? []), ...assumptions],
+      extensionPoints: industry.extensionPoints,
     },
     issues,
   };

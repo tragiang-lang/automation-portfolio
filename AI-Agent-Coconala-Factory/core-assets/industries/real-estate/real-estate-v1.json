@@ -1,7 +1,7 @@
 {
   "kind": "industry",
   "id": "real-estate-v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "industry": "real_estate",
   "category": "real_estate",
   "displayName": "不動産 / Real Estate",
@@ -56,6 +56,10 @@
     "reservation.capacity counts parallel requests, not staff or vehicles; per-agent scheduling is not supported (planned: agent-assignment-v2).",
     "Property availability changes daily; no property data is stored in Phase 1, so answers about vacancies are given by staff manually via INQUIRIES."
   ],
+  "intentAliases": {
+    "book": ["内見", "内覧", "見学"],
+    "ask_question": ["空室", "物件について"]
+  },
   "assumptions": [
     "The agency already publishes its property list on its own website or a portal; the Rich Menu links to it instead of storing properties.",
     "Viewing and in-store consultation share one reservation-basic-v1 flow; staff tell them apart from the follow-up conversation.",

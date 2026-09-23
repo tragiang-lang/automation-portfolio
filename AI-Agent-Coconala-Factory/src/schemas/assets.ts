@@ -247,6 +247,15 @@ export const industryAsset = versionedIdentity({
   requiredData: z.array(z.string()),
   notificationRequirements: z.array(z.string()),
   risks: z.array(z.string()),
+  /** Extra keywords per intent id, used only when this industry is selected. Common keywords stay in the intent catalog. */
+  intentAliases: z.record(z.string(), z.array(z.string().min(1)).min(1)).optional(),
+  assumptions: z.array(z.string()).optional(),
+  extensionPoints: z
+    .object({
+      implemented: z.array(z.string()).default([]),
+      planned: z.array(z.object({ id: z.string(), description: z.string() })).default([]),
+    })
+    .optional(),
 });
 export type IndustryAsset = z.infer<typeof industryAsset>;
 

@@ -48,4 +48,8 @@ export function restaurantBrief(): ClientBrief {
   return clientBrief.parse(readJson(path.join(FACTORY_ROOT, "templates/briefs/restaurant.example.json")));
 }
 
+export function realEstateBrief(): ClientBrief {
+  return clientBrief.parse(readJson(path.join(FACTORY_ROOT, "templates/briefs/real-estate.example.json")));
+}
+
 export const realRegistry = () => CoreAssetRegistry.load();

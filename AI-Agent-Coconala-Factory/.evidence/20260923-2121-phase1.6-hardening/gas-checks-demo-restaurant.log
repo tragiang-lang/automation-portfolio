@@ -1,0 +1,14 @@
+===== typecheck =====
+
+
+===== test =====
+RUN  v5.0.1 D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/AI-Agent-Coconala-Factory/projects/2026/demo-restaurant/gas
+
+
+ Test Files  8 passed (8)
+      Tests  47 passed (47)
+   Start at  21:26:10
+   Duration  447ms (transform 63%, import 24%, tests 9%, worker 4%)
+
+===== build =====
+

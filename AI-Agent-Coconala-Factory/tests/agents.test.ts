@@ -1,10 +1,14 @@
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { designRichMenu } from "../src/agents/designAgent";
 import { analyzeIndustry } from "../src/agents/industrySpecialist";
 import { runPipeline } from "../src/agents/orchestrator";
 import { planWorkflows } from "../src/agents/workflowPlanner";
 import { contrastRatio } from "../src/lib/contrast";
-import { hairSalonBrief, realRegistry, restaurantBrief } from "./helpers";
+import { FACTORY_ROOT } from "../src/lib/fsx";
+import { validateAssets } from "../src/validation/validateAssets";
+import { editJson, hairSalonBrief, realEstateBrief, realRegistry, registryWith, restaurantBrief } from "./helpers";
 
 describe("Industry Specialist", () => {
   it("maps the hair-salon requirement lines to intents and workflows", () => {
@@ -27,6 +31,91 @@ describe("Industry Specialist", () => {
     const { profile, issues } = analyzeIndustry({ ...hairSalonBrief(), industry: "spaceport" }, realRegistry());
     expect(profile).toBeNull();
     expect(issues[0].message).toMatch(/no industry profile for "spaceport"/);
+  });
+});
+
+describe("industry-scoped intent aliases (F1)", () => {
+  const intentsFor = (brief: ReturnType<typeof hairSalonBrief>, requirements: string[], registry = realRegistry()) =>
+    analyzeIndustry({ ...brief, requirements }, registry).profile!.customerIntents.map((i) => i.id);
+
+  it("keeps matching common keywords for every industry", () => {
+    for (const brief of [hairSalonBrief(), restaurantBrief(), realEstateBrief()]) expect(intentsFor(brief, ["予約したい"])).toEqual(["book"]);
+  });
+
+  it("maps real_estate words to intents through the industry's own aliases", () => {
+    expect(intentsFor(realEstateBrief(), ["内見を申し込みたい"])).toEqual(["book"]);
+    expect(intentsFor(realEstateBrief(), ["内覧を予約したい"])).toEqual(["book"]);
+    expect(intentsFor(realEstateBrief(), ["見学を申し込みたい"])).toEqual(["book"]);
+  });
+
+  it("does not leak real_estate aliases into hair_salon or restaurant", () => {
+    for (const brief of [hairSalonBrief(), restaurantBrief()]) {
+      const { profile } = analyzeIndustry({ ...brief, requirements: ["内見を申し込みたい", "問い合わせしたい"] }, realRegistry());
+      expect(profile!.customerIntents.map((i) => i.id)).toEqual(["ask_question"]);
+      expect(profile!.assumptions.join()).toMatch(/内見を申し込みたい/);
+    }
+  });
+
+  it("behaves as before when an industry has no aliases", () => {
+    const registry = registryWith((dir) => editJson(dir, "industries/real-estate/real-estate-v1.json", (a) => delete a.intentAliases));
+    expect(intentsFor(realEstateBrief(), ["内見を申し込みたい", "問い合わせしたい"], registry)).toEqual(["ask_question"]);
+    expect(intentsFor(realEstateBrief(), ["予約したい"], registry)).toEqual(["book"]);
+  });
+
+  it("rejects aliases for an intent that is not in the catalog", () => {
+    const registry = registryWith((dir) => editJson(dir, "industries/real-estate/real-estate-v1.json", (a) => (a.intentAliases.teleport = ["転送"])));
+    const messages = validateAssets(registry).filter((i) => i.severity === "error").map((i) => i.message);
+    expect(messages).toContain("intentAliases refers to unknown intent teleport");
+  });
+});
+
+describe("generic delivery wording (F2)", () => {
+  const setupFor = (brief: ReturnType<typeof hairSalonBrief>) => runPipeline(brief, realRegistry(), { createdOn: "2026-09-23" }).files["delivery/SETUP.md"];
+
+  it("does not assume every industry has a menu / service catalog", () => {
+    for (const brief of [hairSalonBrief(), restaurantBrief(), realEstateBrief()]) {
+      const setup = setupFor(brief);
+      const line = setup.split("\n").find((l) => l.includes("各ワークフローで使用する情報"));
+      expect(line).toBe("- 必要に応じて、各ワークフローで使用する情報を該当するシートに入力します。`active` を設定できる項目は、TRUE にした行のみが使用されます。");
+      expect(setup).not.toMatch(/メニューを入力|`SERVICES` シート/);
+    }
+  });
+
+  it("keeps the delivery generator free of industry and sheet-name branches", () => {
+    const source = fs.readFileSync(path.join(FACTORY_ROOT, "src/generators/delivery.ts"), "utf8");
+    expect(source).not.toMatch(/hair_salon|restaurant|real_estate|SERVICES/);
+  });
+});
+
+describe("industry assumptions and extensionPoints (F3)", () => {
+  const source = JSON.parse(fs.readFileSync(path.join(FACTORY_ROOT, "core-assets/industries/real-estate/real-estate-v1.json"), "utf8"));
+  const generate = (brief: ReturnType<typeof hairSalonBrief>) => runPipeline(brief, realRegistry(), { createdOn: "2026-09-23" });
+
+  it("keeps both fields through load and validation", () => {
+    const asset = realRegistry().industryFor("real_estate")!;
+    expect(asset.assumptions).toEqual(source.assumptions);
+    expect(asset.extensionPoints).toEqual(source.extensionPoints);
+  });
+
+  it("copies the source values into analysis/industry-profile.json", () => {
+    const profile = JSON.parse(generate(realEstateBrief()).files["analysis/industry-profile.json"]);
+    expect(profile.assumptions.slice(0, source.assumptions.length)).toEqual(source.assumptions);
+    expect(profile.extensionPoints).toEqual(source.extensionPoints);
+  });
+
+  it("shows them in DELIVERY.md when present", () => {
+    const delivery = generate(realEstateBrief()).files["delivery/DELIVERY.md"];
+    const [assumptionsSection, extensionsSection] = [delivery.split("## 前提・注意事項")[1].split("##")[0], delivery.split("## 今後の拡張候補")[1]];
+    for (const text of source.assumptions) expect(assumptionsSection).toContain(text);
+    for (const point of source.extensionPoints.planned) expect(extensionsSection).toContain(`${point.id}: ${point.description}`);
+  });
+
+  it("does not change industries that declare neither field", () => {
+    for (const brief of [hairSalonBrief(), restaurantBrief()]) {
+      const result = generate(brief);
+      expect(result.issues.filter((i) => i.severity === "error")).toEqual([]);
+      expect(JSON.parse(result.files["analysis/industry-profile.json"])).not.toHaveProperty("extensionPoints");
+    }
   });
 });
 

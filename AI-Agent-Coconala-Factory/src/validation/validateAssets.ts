@@ -84,6 +84,8 @@ export function validateAssets(registry: CoreAssetRegistry): Issue[] {
     if (!menu) issues.push(error("RM_ACTIONS_VALID", `recommended rich menu ${asset.recommendedRichMenu} does not exist`, file));
     else if (!menu.industries.includes(asset.industry)) issues.push(warning("RM_ACTIONS_VALID", `rich menu ${menu.id} does not list industry ${asset.industry}`, file));
     for (const id of asset.recommendedDesignPresets) if (!registry.presets.has(id)) issues.push(error("DS_CONTRAST", `recommended design preset ${id} does not exist`, file));
+    const intentIds = new Set(registry.intentCatalog()?.intents.map((intent) => intent.id) ?? []);
+    for (const id of Object.keys(asset.intentAliases ?? {})) if (!intentIds.has(id)) issues.push(error("WF_EXISTS", `intentAliases refers to unknown intent ${id}`, file));
   }
 
   for (const { asset, file } of registry.intentCatalogs.values()) {

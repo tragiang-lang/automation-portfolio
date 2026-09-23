@@ -1,0 +1,543 @@
+diff --git a/AI-Agent-Coconala-Factory/core-assets/asset-lock.json b/AI-Agent-Coconala-Factory/core-assets/asset-lock.json
+index 1a7c2e7..8d184dd 100644
+--- a/AI-Agent-Coconala-Factory/core-assets/asset-lock.json
++++ b/AI-Agent-Coconala-Factory/core-assets/asset-lock.json
+@@ -191,8 +191,8 @@
+       "sha256": "06e29863faaff3eb1865f4f95f1741b3d97e577b92db6f9005ab4fcfd35311e6"
+     },
+     "industries/real-estate/real-estate-v1.json": {
+-      "version": "1.0.0",
+-      "sha256": "0fc2e02073f7225d81ad1abefbf0556d9eff07bbfb453461334452c18ff308d9"
++      "version": "1.1.0",
++      "sha256": "3dd2b16b2909a80ed151739aa733deae9d58e14e05a50d7ef45b50aeac3ee042"
+     },
+     "industries/restaurant/restaurant-v1.json": {
+       "version": "1.0.0",
+diff --git a/AI-Agent-Coconala-Factory/core-assets/industries/real-estate/real-estate-v1.json b/AI-Agent-Coconala-Factory/core-assets/industries/real-estate/real-estate-v1.json
+index 5ff64ef..d1f3c13 100644
+--- a/AI-Agent-Coconala-Factory/core-assets/industries/real-estate/real-estate-v1.json
++++ b/AI-Agent-Coconala-Factory/core-assets/industries/real-estate/real-estate-v1.json
+@@ -1,7 +1,7 @@
+ {
+   "kind": "industry",
+   "id": "real-estate-v1",
+-  "version": "1.0.0",
++  "version": "1.1.0",
+   "industry": "real_estate",
+   "category": "real_estate",
+   "displayName": "不動産 / Real Estate",
+@@ -56,6 +56,10 @@
+     "reservation.capacity counts parallel requests, not staff or vehicles; per-agent scheduling is not supported (planned: agent-assignment-v2).",
+     "Property availability changes daily; no property data is stored in Phase 1, so answers about vacancies are given by staff manually via INQUIRIES."
+   ],
++  "intentAliases": {
++    "book": ["内見", "内覧", "見学"],
++    "ask_question": ["空室", "物件について"]
++  },
+   "assumptions": [
+     "The agency already publishes its property list on its own website or a portal; the Rich Menu links to it instead of storing properties.",
+     "Viewing and in-store consultation share one reservation-basic-v1 flow; staff tell them apart from the follow-up conversation.",
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-hair-salon/delivery/SETUP.md b/AI-Agent-Coconala-Factory/projects/2026/demo-hair-salon/delivery/SETUP.md
+index cbe6c47..44e683a 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-hair-salon/delivery/SETUP.md
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-hair-salon/delivery/SETUP.md
+@@ -49,7 +49,7 @@ Apps Script エディタ →「プロジェクトの設定」→「スクリプ
+ - `CONFIG` シートの `value` 列を確認・入力します。
+   - 営業時間は `hours.mon` 〜 `hours.sun` に `10:00-19:00` の形式で、定休日は `closed` と入力します。
+   - `reservation.capacity` は同じ時間に受けられる人数（席数・スタッフ数）です。
+-- `SERVICES` シートにメニューを入力します（`active` を TRUE にした行だけがお客様に表示されます）。
++- 必要に応じて、各ワークフローで使用する情報を該当するシートに入力します。`active` を設定できる項目は、TRUE にした行のみが使用されます。
+ 
+ ## 6. Web アプリとして公開し、LINE とつなぐ
+ 
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/analysis/industry-profile.json b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/analysis/industry-profile.json
+index 541952c..ea8053a 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/analysis/industry-profile.json
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/analysis/industry-profile.json
+@@ -25,14 +25,14 @@
+       "inquiries-basic-v1": "1.0.0",
+       "inquiry-basic-v1": "1.0.0",
+       "real-estate-basic-v1": "1.0.0",
+-      "real-estate-v1": "1.0.0",
++      "real-estate-v1": "1.1.0",
+       "reservation-basic-v1": "1.0.0",
+       "reservations-basic-v1": "1.0.0",
+       "services-basic-v1": "1.0.0"
+     }
+   },
+   "industry": "real_estate",
+-  "industryAsset": "real-estate-v1@1.0.0",
++  "industryAsset": "real-estate-v1@1.1.0",
+   "displayName": "不動産 / Real Estate",
+   "businessType": "Small local real-estate agency (賃貸・売買仲介). First contact is a property or condition inquiry; the conversion goal is a viewing (内見) or in-store consultation request that staff confirm by hand.",
+   "customerIntents": [
+@@ -143,6 +143,51 @@
+     "Property availability changes daily; no property data is stored in Phase 1, so answers about vacancies are given by staff manually via INQUIRIES."
+   ],
+   "assumptions": [
++    "The agency already publishes its property list on its own website or a portal; the Rich Menu links to it instead of storing properties.",
++    "Viewing and in-store consultation share one reservation-basic-v1 flow; staff tell them apart from the follow-up conversation.",
++    "Opening hours follow the common real-estate pattern (水曜定休).",
+     "Requirement not mapped to a Phase 1 workflow (needs manual review): \"物件一覧は既存のWebサイトで見られるようにしたい\""
+-  ]
++  ],
++  "extensionPoints": {
++    "implemented": [
++      "inquiry-basic-v1: 物件・条件のお問い合わせ",
++      "reservation-basic-v1: 内見・来店相談の予約リクエスト（REQUESTED のみ）",
++      "business-info-v1: 会社・店舗情報 / アクセス / 営業時間",
++      "Rich Menu URI button to an existing property list page (links.propertySiteUrl)"
++    ],
++    "planned": [
++      {
++        "id": "property-catalog-v1",
++        "description": "PROPERTIES sheet schema (property_catalog = deferred; no current workflow reads it)."
++      },
++      {
++        "id": "property-search-v2",
++        "description": "Search/filter properties by area, rent and layout from LINE."
++      },
++      {
++        "id": "property-detail-v2",
++        "description": "Flex Message card per property with photos and conditions."
++      },
++      {
++        "id": "property-viewing-v2",
++        "description": "Viewing request tied to a specific propertyId."
++      },
++      {
++        "id": "agent-assignment-v2",
++        "description": "Assign a staff member per viewing; per-agent availability."
++      },
++      {
++        "id": "property-status-sync-v1",
++        "description": "Sync vacancy status from a portal or management system."
++      },
++      {
++        "id": "calendar-integration-v1",
++        "description": "Google Calendar busy times / events on CONFIRMED (reuses reservation-basic-v1 google-calendar extension point)."
++      },
++      {
++        "id": "customer-history-v1",
++        "description": "Past inquiries and viewings per customer for staff follow-up."
++      }
++    ]
++  }
+ }
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/delivery/DELIVERY.md b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/delivery/DELIVERY.md
+index babc257..36f8465 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/delivery/DELIVERY.md
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/delivery/DELIVERY.md
+@@ -2,7 +2,7 @@
+ 
+ ## 今回の構成
+ 
+-- 業種プロファイル: real-estate-v1@1.0.0（不動産 / Real Estate）
++- 業種プロファイル: real-estate-v1@1.1.0（不動産 / Real Estate）
+ - リッチメニュー: real-estate-basic-v1／デザインプリセット: clean-professional-v1
+ - ワークフロー:
+   - **Inquiry (basic)** (`inquiry-basic-v1@1.0.0`): intent:ask_question (requirement)
+@@ -37,6 +37,9 @@
+ 
+ ## 前提・注意事項
+ 
++- The agency already publishes its property list on its own website or a portal; the Rich Menu links to it instead of storing properties.
++- Viewing and in-store consultation share one reservation-basic-v1 flow; staff tell them apart from the follow-up conversation.
++- Opening hours follow the common real-estate pattern (水曜定休).
+ - Requirement not mapped to a Phase 1 workflow (needs manual review): "物件一覧は既存のWebサイトで見られるようにしたい"
+ - A viewing request is only a REQUESTED row. Staff must confirm the slot with the property owner/management company and set status to CONFIRMED by hand; the customer is not told it is confirmed.
+ - reservation-basic-v1 records only a date-time. The customer cannot pick which property to view from the Rich Menu, so staff must ask by LINE/phone after the request (planned: property-viewing-v2).
+@@ -58,6 +61,14 @@
+ - `reservation-basic-v1` / customer-notifications: Confirmation/reminder push via sendLineMessage@1 (planned).
+ - `reservation-basic-v1` / customer-history: Query RESERVATIONS by customerId for a 'my bookings' button.
+ - `business-info-v1` / flex-message: Replace the text reply with a Flex Message card (map thumbnail, call button).
++- `real-estate-v1@1.1.0` / property-catalog-v1: PROPERTIES sheet schema (property_catalog = deferred; no current workflow reads it).
++- `real-estate-v1@1.1.0` / property-search-v2: Search/filter properties by area, rent and layout from LINE.
++- `real-estate-v1@1.1.0` / property-detail-v2: Flex Message card per property with photos and conditions.
++- `real-estate-v1@1.1.0` / property-viewing-v2: Viewing request tied to a specific propertyId.
++- `real-estate-v1@1.1.0` / agent-assignment-v2: Assign a staff member per viewing; per-agent availability.
++- `real-estate-v1@1.1.0` / property-status-sync-v1: Sync vacancy status from a portal or management system.
++- `real-estate-v1@1.1.0` / calendar-integration-v1: Google Calendar busy times / events on CONFIRMED (reuses reservation-basic-v1 google-calendar extension point).
++- `real-estate-v1@1.1.0` / customer-history-v1: Past inquiries and viewings per customer for staff follow-up.
+ 
+ ---
+ 
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/delivery/SETUP.md b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/delivery/SETUP.md
+index 9318208..740ae00 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/delivery/SETUP.md
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/delivery/SETUP.md
+@@ -49,7 +49,7 @@ Apps Script エディタ →「プロジェクトの設定」→「スクリプ
+ - `CONFIG` シートの `value` 列を確認・入力します。
+   - 営業時間は `hours.mon` 〜 `hours.sun` に `10:00-19:00` の形式で、定休日は `closed` と入力します。
+   - `reservation.capacity` は同じ時間に受けられる人数（席数・スタッフ数）です。
+-- `SERVICES` シートにメニューを入力します（`active` を TRUE にした行だけがお客様に表示されます）。
++- 必要に応じて、各ワークフローで使用する情報を該当するシートに入力します。`active` を設定できる項目は、TRUE にした行のみが使用されます。
+ 
+ ## 6. Web アプリとして公開し、LINE とつなぐ
+ 
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/gas/src/generated/manifest.ts b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/gas/src/generated/manifest.ts
+index 991487b..a5ad742 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/gas/src/generated/manifest.ts
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/gas/src/generated/manifest.ts
+@@ -40,7 +40,7 @@ export const MANIFEST = {
+     "inquiries-basic-v1": "1.0.0",
+     "inquiry-basic-v1": "1.0.0",
+     "real-estate-basic-v1": "1.0.0",
+-    "real-estate-v1": "1.0.0",
++    "real-estate-v1": "1.1.0",
+     "reservation-basic-v1": "1.0.0",
+     "reservations-basic-v1": "1.0.0",
+     "services-basic-v1": "1.0.0"
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/gas/src/generated/richMenu.ts b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/gas/src/generated/richMenu.ts
+index 1674b48..96fa8f5 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/gas/src/generated/richMenu.ts
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/gas/src/generated/richMenu.ts
+@@ -33,7 +33,7 @@ export const RICH_MENU: LineRichMenu & Record<string, unknown> = {
+       "inquiries-basic-v1": "1.0.0",
+       "inquiry-basic-v1": "1.0.0",
+       "real-estate-basic-v1": "1.0.0",
+-      "real-estate-v1": "1.0.0",
++      "real-estate-v1": "1.1.0",
+       "reservation-basic-v1": "1.0.0",
+       "reservations-basic-v1": "1.0.0",
+       "services-basic-v1": "1.0.0"
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/project.json b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/project.json
+index ceff9a4..a93e45e 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/project.json
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/project.json
+@@ -25,7 +25,7 @@
+       "inquiries-basic-v1": "1.0.0",
+       "inquiry-basic-v1": "1.0.0",
+       "real-estate-basic-v1": "1.0.0",
+-      "real-estate-v1": "1.0.0",
++      "real-estate-v1": "1.1.0",
+       "reservation-basic-v1": "1.0.0",
+       "reservations-basic-v1": "1.0.0",
+       "services-basic-v1": "1.0.0"
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/rich-menu/design-spec.json b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/rich-menu/design-spec.json
+index 6400751..321b91d 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/rich-menu/design-spec.json
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/rich-menu/design-spec.json
+@@ -25,7 +25,7 @@
+       "inquiries-basic-v1": "1.0.0",
+       "inquiry-basic-v1": "1.0.0",
+       "real-estate-basic-v1": "1.0.0",
+-      "real-estate-v1": "1.0.0",
++      "real-estate-v1": "1.1.0",
+       "reservation-basic-v1": "1.0.0",
+       "reservations-basic-v1": "1.0.0",
+       "services-basic-v1": "1.0.0"
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/rich-menu/menu-config.json b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/rich-menu/menu-config.json
+index 415a5ad..757e851 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/rich-menu/menu-config.json
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/rich-menu/menu-config.json
+@@ -25,7 +25,7 @@
+       "inquiries-basic-v1": "1.0.0",
+       "inquiry-basic-v1": "1.0.0",
+       "real-estate-basic-v1": "1.0.0",
+-      "real-estate-v1": "1.0.0",
++      "real-estate-v1": "1.1.0",
+       "reservation-basic-v1": "1.0.0",
+       "reservations-basic-v1": "1.0.0",
+       "services-basic-v1": "1.0.0"
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/spreadsheet/config-seed.json b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/spreadsheet/config-seed.json
+index 8bcf1c0..75ae07e 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/spreadsheet/config-seed.json
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/spreadsheet/config-seed.json
+@@ -25,7 +25,7 @@
+       "inquiries-basic-v1": "1.0.0",
+       "inquiry-basic-v1": "1.0.0",
+       "real-estate-basic-v1": "1.0.0",
+-      "real-estate-v1": "1.0.0",
++      "real-estate-v1": "1.1.0",
+       "reservation-basic-v1": "1.0.0",
+       "reservations-basic-v1": "1.0.0",
+       "services-basic-v1": "1.0.0"
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/spreadsheet/schema.json b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/spreadsheet/schema.json
+index 02a5cd3..1bc73f4 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/spreadsheet/schema.json
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/spreadsheet/schema.json
+@@ -25,7 +25,7 @@
+       "inquiries-basic-v1": "1.0.0",
+       "inquiry-basic-v1": "1.0.0",
+       "real-estate-basic-v1": "1.0.0",
+-      "real-estate-v1": "1.0.0",
++      "real-estate-v1": "1.1.0",
+       "reservation-basic-v1": "1.0.0",
+       "reservations-basic-v1": "1.0.0",
+       "services-basic-v1": "1.0.0"
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/workflow/selected-workflows.json b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/workflow/selected-workflows.json
+index cba4bde..1844266 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/workflow/selected-workflows.json
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/workflow/selected-workflows.json
+@@ -25,7 +25,7 @@
+       "inquiries-basic-v1": "1.0.0",
+       "inquiry-basic-v1": "1.0.0",
+       "real-estate-basic-v1": "1.0.0",
+-      "real-estate-v1": "1.0.0",
++      "real-estate-v1": "1.1.0",
+       "reservation-basic-v1": "1.0.0",
+       "reservations-basic-v1": "1.0.0",
+       "services-basic-v1": "1.0.0"
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/workflow/workflow.json b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/workflow/workflow.json
+index e5410db..f7a3a9d 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/workflow/workflow.json
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/workflow/workflow.json
+@@ -25,7 +25,7 @@
+       "inquiries-basic-v1": "1.0.0",
+       "inquiry-basic-v1": "1.0.0",
+       "real-estate-basic-v1": "1.0.0",
+-      "real-estate-v1": "1.0.0",
++      "real-estate-v1": "1.1.0",
+       "reservation-basic-v1": "1.0.0",
+       "reservations-basic-v1": "1.0.0",
+       "services-basic-v1": "1.0.0"
+diff --git a/AI-Agent-Coconala-Factory/projects/2026/demo-restaurant/delivery/SETUP.md b/AI-Agent-Coconala-Factory/projects/2026/demo-restaurant/delivery/SETUP.md
+index 5d47c9c..4009c0b 100644
+--- a/AI-Agent-Coconala-Factory/projects/2026/demo-restaurant/delivery/SETUP.md
++++ b/AI-Agent-Coconala-Factory/projects/2026/demo-restaurant/delivery/SETUP.md
+@@ -49,7 +49,7 @@ Apps Script エディタ →「プロジェクトの設定」→「スクリプ
+ - `CONFIG` シートの `value` 列を確認・入力します。
+   - 営業時間は `hours.mon` 〜 `hours.sun` に `10:00-19:00` の形式で、定休日は `closed` と入力します。
+   - `reservation.capacity` は同じ時間に受けられる人数（席数・スタッフ数）です。
+-- `SERVICES` シートにメニューを入力します（`active` を TRUE にした行だけがお客様に表示されます）。
++- 必要に応じて、各ワークフローで使用する情報を該当するシートに入力します。`active` を設定できる項目は、TRUE にした行のみが使用されます。
+ 
+ ## 6. Web アプリとして公開し、LINE とつなぐ
+ 
+diff --git a/AI-Agent-Coconala-Factory/src/agents/industrySpecialist.ts b/AI-Agent-Coconala-Factory/src/agents/industrySpecialist.ts
+index 9f62793..98caaf3 100644
+--- a/AI-Agent-Coconala-Factory/src/agents/industrySpecialist.ts
++++ b/AI-Agent-Coconala-Factory/src/agents/industrySpecialist.ts
+@@ -1,5 +1,6 @@
+ import { error, Issue, warning } from "../lib/issues";
+ import type { CoreAssetRegistry } from "../registry/registry";
++import type { IndustryAsset } from "../schemas/assets";
+ import type { ClientBrief } from "../schemas/brief";
+ 
+ /**
+@@ -35,7 +36,10 @@ export interface IndustryProfile {
+   notificationRequirements: string[];
+   terminology: Record<string, string>;
+   risks: string[];
++  /** The industry asset's assumptions first, then the ones found while analysing this brief. */
+   assumptions: string[];
++  /** Copied from the industry asset when it declares them. */
++  extensionPoints?: IndustryAsset["extensionPoints"];
+ }
+ 
+ function matchesKeyword(line: string, keyword: string): boolean {
+@@ -66,8 +70,9 @@ export function analyzeIndustry(brief: ClientBrief, registry: CoreAssetRegistry)
+   };
+ 
+   for (const id of brief.intents) addIntent(id, "explicit");
++  const keywordsFor = (intentId: string, common: string[]) => [...common, ...(industry.intentAliases?.[intentId] ?? [])];
+   for (const line of brief.requirements) {
+-    const hits = catalog.intents.filter((intent) => intent.keywords.some((keyword) => matchesKeyword(line, keyword)));
++    const hits = catalog.intents.filter((intent) => keywordsFor(intent.id, intent.keywords).some((keyword) => matchesKeyword(line, keyword)));
+     hits.forEach((intent) => addIntent(intent.id, "requirement", line));
+     if (hits.length === 0) assumptions.push(`Requirement not mapped to a Phase 1 workflow (needs manual review): "${line}"`);
+   }
+@@ -106,7 +111,8 @@ export function analyzeIndustry(brief: ClientBrief, registry: CoreAssetRegistry)
+       notificationRequirements: industry.notificationRequirements,
+       terminology: industry.terminology,
+       risks: industry.risks,
+-      assumptions,
++      assumptions: [...(industry.assumptions ?? []), ...assumptions],
++      extensionPoints: industry.extensionPoints,
+     },
+     issues,
+   };
+diff --git a/AI-Agent-Coconala-Factory/src/generators/delivery.ts b/AI-Agent-Coconala-Factory/src/generators/delivery.ts
+index 2174487..a3ad044 100644
+--- a/AI-Agent-Coconala-Factory/src/generators/delivery.ts
++++ b/AI-Agent-Coconala-Factory/src/generators/delivery.ts
+@@ -44,7 +44,8 @@ ${footer(trace)}`;
+ export function setupMd(input: DeliveryInputs): string {
+   const { brief, schema, plan, trace } = input;
+   const hasReservation = plan.selected.some((w) => w.id.startsWith("reservation-"));
+-  const hasServices = schema.sheets.some((s) => s.name === "SERVICES");
++  // Owner-curated data sheets have an `active` column. Wording stays domain-neutral: no sheet names, not every business has a menu.
++  const hasDataSheets = schema.sheets.some((s) => s.columns.some((c) => c.name === "active"));
+   const missingRequired = schema.configKeys.filter((k) => k.required && !(k.key in input.configSeed) && k.default === undefined).map((k) => k.key);
+   const buttons = input.menuConfig.areas.map((a) => a.action.label).join(" / ");
+ 
+@@ -97,7 +98,7 @@ Apps Script エディタ →「プロジェクトの設定」→「スクリプ
+ ## 5. 店舗情報を入力する
+ 
+ - \`CONFIG\` シートの \`value\` 列を確認・入力します。${missingRequired.length > 0 ? `\n  - **必ず入力が必要:** ${missingRequired.map((k) => `\`${k}\``).join("、")}` : ""}
+-${hasReservation ? "  - 営業時間は `hours.mon` 〜 `hours.sun` に `10:00-19:00` の形式で、定休日は `closed` と入力します。\n  - `reservation.capacity` は同じ時間に受けられる人数（席数・スタッフ数）です。\n" : ""}${hasServices ? "- `SERVICES` シートにメニューを入力します（`active` を TRUE にした行だけがお客様に表示されます）。\n" : ""}
++${hasReservation ? "  - 営業時間は `hours.mon` 〜 `hours.sun` に `10:00-19:00` の形式で、定休日は `closed` と入力します。\n  - `reservation.capacity` は同じ時間に受けられる人数（席数・スタッフ数）です。\n" : ""}${hasDataSheets ? "- 必要に応じて、各ワークフローで使用する情報を該当するシートに入力します。`active` を設定できる項目は、TRUE にした行のみが使用されます。\n" : ""}
+ ## 6. Web アプリとして公開し、LINE とつなぐ
+ 
+ 1. エディタ右上「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」。
+@@ -162,7 +163,10 @@ ${[...profile.assumptions, ...profile.risks].map((a) => `- ${a}`).join("\n")}
+ 
+ ## 今後の拡張候補
+ 
+-${plan.extensionPoints.map((p) => `- \`${p.workflow}\` / ${p.id}: ${p.description}`).join("\n")}
++${[
++  ...plan.extensionPoints.map((p) => `- \`${p.workflow}\` / ${p.id}: ${p.description}`),
++  ...(profile.extensionPoints?.planned ?? []).map((p) => `- \`${profile.industryAsset}\` / ${p.id}: ${p.description}`),
++].join("\n")}
+ ${footer(trace)}`;
+ }
+ 
+diff --git a/AI-Agent-Coconala-Factory/src/schemas/assets.ts b/AI-Agent-Coconala-Factory/src/schemas/assets.ts
+index 959ae60..0587bb0 100644
+--- a/AI-Agent-Coconala-Factory/src/schemas/assets.ts
++++ b/AI-Agent-Coconala-Factory/src/schemas/assets.ts
+@@ -247,6 +247,15 @@ export const industryAsset = versionedIdentity({
+   requiredData: z.array(z.string()),
+   notificationRequirements: z.array(z.string()),
+   risks: z.array(z.string()),
++  /** Extra keywords per intent id, used only when this industry is selected. Common keywords stay in the intent catalog. */
++  intentAliases: z.record(z.string(), z.array(z.string().min(1)).min(1)).optional(),
++  assumptions: z.array(z.string()).optional(),
++  extensionPoints: z
++    .object({
++      implemented: z.array(z.string()).default([]),
++      planned: z.array(z.object({ id: z.string(), description: z.string() })).default([]),
++    })
++    .optional(),
+ });
+ export type IndustryAsset = z.infer<typeof industryAsset>;
+ 
+diff --git a/AI-Agent-Coconala-Factory/src/validation/validateAssets.ts b/AI-Agent-Coconala-Factory/src/validation/validateAssets.ts
+index 7af5ace..19ca69b 100644
+--- a/AI-Agent-Coconala-Factory/src/validation/validateAssets.ts
++++ b/AI-Agent-Coconala-Factory/src/validation/validateAssets.ts
+@@ -84,6 +84,8 @@ export function validateAssets(registry: CoreAssetRegistry): Issue[] {
+     if (!menu) issues.push(error("RM_ACTIONS_VALID", `recommended rich menu ${asset.recommendedRichMenu} does not exist`, file));
+     else if (!menu.industries.includes(asset.industry)) issues.push(warning("RM_ACTIONS_VALID", `rich menu ${menu.id} does not list industry ${asset.industry}`, file));
+     for (const id of asset.recommendedDesignPresets) if (!registry.presets.has(id)) issues.push(error("DS_CONTRAST", `recommended design preset ${id} does not exist`, file));
++    const intentIds = new Set(registry.intentCatalog()?.intents.map((intent) => intent.id) ?? []);
++    for (const id of Object.keys(asset.intentAliases ?? {})) if (!intentIds.has(id)) issues.push(error("WF_EXISTS", `intentAliases refers to unknown intent ${id}`, file));
+   }
+ 
+   for (const { asset, file } of registry.intentCatalogs.values()) {
+diff --git a/AI-Agent-Coconala-Factory/tests/agents.test.ts b/AI-Agent-Coconala-Factory/tests/agents.test.ts
+index 65d19f0..f4de23e 100644
+--- a/AI-Agent-Coconala-Factory/tests/agents.test.ts
++++ b/AI-Agent-Coconala-Factory/tests/agents.test.ts
+@@ -1,10 +1,14 @@
++import fs from "node:fs";
++import path from "node:path";
+ import { describe, expect, it } from "vitest";
+ import { designRichMenu } from "../src/agents/designAgent";
+ import { analyzeIndustry } from "../src/agents/industrySpecialist";
+ import { runPipeline } from "../src/agents/orchestrator";
+ import { planWorkflows } from "../src/agents/workflowPlanner";
+ import { contrastRatio } from "../src/lib/contrast";
+-import { hairSalonBrief, realRegistry, restaurantBrief } from "./helpers";
++import { FACTORY_ROOT } from "../src/lib/fsx";
++import { validateAssets } from "../src/validation/validateAssets";
++import { editJson, hairSalonBrief, realEstateBrief, realRegistry, registryWith, restaurantBrief } from "./helpers";
+ 
+ describe("Industry Specialist", () => {
+   it("maps the hair-salon requirement lines to intents and workflows", () => {
+@@ -30,6 +34,91 @@ describe("Industry Specialist", () => {
+   });
+ });
+ 
++describe("industry-scoped intent aliases (F1)", () => {
++  const intentsFor = (brief: ReturnType<typeof hairSalonBrief>, requirements: string[], registry = realRegistry()) =>
++    analyzeIndustry({ ...brief, requirements }, registry).profile!.customerIntents.map((i) => i.id);
++
++  it("keeps matching common keywords for every industry", () => {
++    for (const brief of [hairSalonBrief(), restaurantBrief(), realEstateBrief()]) expect(intentsFor(brief, ["予約したい"])).toEqual(["book"]);
++  });
++
++  it("maps real_estate words to intents through the industry's own aliases", () => {
++    expect(intentsFor(realEstateBrief(), ["内見を申し込みたい"])).toEqual(["book"]);
++    expect(intentsFor(realEstateBrief(), ["内覧を予約したい"])).toEqual(["book"]);
++    expect(intentsFor(realEstateBrief(), ["見学を申し込みたい"])).toEqual(["book"]);
++  });
++
++  it("does not leak real_estate aliases into hair_salon or restaurant", () => {
++    for (const brief of [hairSalonBrief(), restaurantBrief()]) {
++      const { profile } = analyzeIndustry({ ...brief, requirements: ["内見を申し込みたい", "問い合わせしたい"] }, realRegistry());
++      expect(profile!.customerIntents.map((i) => i.id)).toEqual(["ask_question"]);
++      expect(profile!.assumptions.join()).toMatch(/内見を申し込みたい/);
++    }
++  });
++
++  it("behaves as before when an industry has no aliases", () => {
++    const registry = registryWith((dir) => editJson(dir, "industries/real-estate/real-estate-v1.json", (a) => delete a.intentAliases));
++    expect(intentsFor(realEstateBrief(), ["内見を申し込みたい", "問い合わせしたい"], registry)).toEqual(["ask_question"]);
++    expect(intentsFor(realEstateBrief(), ["予約したい"], registry)).toEqual(["book"]);
++  });
++
++  it("rejects aliases for an intent that is not in the catalog", () => {
++    const registry = registryWith((dir) => editJson(dir, "industries/real-estate/real-estate-v1.json", (a) => (a.intentAliases.teleport = ["転送"])));
++    const messages = validateAssets(registry).filter((i) => i.severity === "error").map((i) => i.message);
++    expect(messages).toContain("intentAliases refers to unknown intent teleport");
++  });
++});
++
++describe("generic delivery wording (F2)", () => {
++  const setupFor = (brief: ReturnType<typeof hairSalonBrief>) => runPipeline(brief, realRegistry(), { createdOn: "2026-09-23" }).files["delivery/SETUP.md"];
++
++  it("does not assume every industry has a menu / service catalog", () => {
++    for (const brief of [hairSalonBrief(), restaurantBrief(), realEstateBrief()]) {
++      const setup = setupFor(brief);
++      const line = setup.split("\n").find((l) => l.includes("各ワークフローで使用する情報"));
++      expect(line).toBe("- 必要に応じて、各ワークフローで使用する情報を該当するシートに入力します。`active` を設定できる項目は、TRUE にした行のみが使用されます。");
++      expect(setup).not.toMatch(/メニューを入力|`SERVICES` シート/);
++    }
++  });
++
++  it("keeps the delivery generator free of industry and sheet-name branches", () => {
++    const source = fs.readFileSync(path.join(FACTORY_ROOT, "src/generators/delivery.ts"), "utf8");
++    expect(source).not.toMatch(/hair_salon|restaurant|real_estate|SERVICES/);
++  });
++});
++
++describe("industry assumptions and extensionPoints (F3)", () => {
++  const source = JSON.parse(fs.readFileSync(path.join(FACTORY_ROOT, "core-assets/industries/real-estate/real-estate-v1.json"), "utf8"));
++  const generate = (brief: ReturnType<typeof hairSalonBrief>) => runPipeline(brief, realRegistry(), { createdOn: "2026-09-23" });
++
++  it("keeps both fields through load and validation", () => {
++    const asset = realRegistry().industryFor("real_estate")!;
++    expect(asset.assumptions).toEqual(source.assumptions);
++    expect(asset.extensionPoints).toEqual(source.extensionPoints);
++  });
++
++  it("copies the source values into analysis/industry-profile.json", () => {
++    const profile = JSON.parse(generate(realEstateBrief()).files["analysis/industry-profile.json"]);
++    expect(profile.assumptions.slice(0, source.assumptions.length)).toEqual(source.assumptions);
++    expect(profile.extensionPoints).toEqual(source.extensionPoints);
++  });
++
++  it("shows them in DELIVERY.md when present", () => {
++    const delivery = generate(realEstateBrief()).files["delivery/DELIVERY.md"];
++    const [assumptionsSection, extensionsSection] = [delivery.split("## 前提・注意事項")[1].split("##")[0], delivery.split("## 今後の拡張候補")[1]];
++    for (const text of source.assumptions) expect(assumptionsSection).toContain(text);
++    for (const point of source.extensionPoints.planned) expect(extensionsSection).toContain(`${point.id}: ${point.description}`);
++  });
++
++  it("does not change industries that declare neither field", () => {
++    for (const brief of [hairSalonBrief(), restaurantBrief()]) {
++      const result = generate(brief);
++      expect(result.issues.filter((i) => i.severity === "error")).toEqual([]);
++      expect(JSON.parse(result.files["analysis/industry-profile.json"])).not.toHaveProperty("extensionPoints");
++    }
++  });
++});
++
+ describe("Workflow Planner", () => {
+   it("rejects a menu whose buttons need workflows that were not selected", () => {
+     const registry = realRegistry();
+diff --git a/AI-Agent-Coconala-Factory/tests/helpers.ts b/AI-Agent-Coconala-Factory/tests/helpers.ts
+index 1226527..f4e3e46 100644
+--- a/AI-Agent-Coconala-Factory/tests/helpers.ts
++++ b/AI-Agent-Coconala-Factory/tests/helpers.ts
+@@ -48,4 +48,8 @@ export function restaurantBrief(): ClientBrief {
+   return clientBrief.parse(readJson(path.join(FACTORY_ROOT, "templates/briefs/restaurant.example.json")));
+ }
+ 
++export function realEstateBrief(): ClientBrief {
++  return clientBrief.parse(readJson(path.join(FACTORY_ROOT, "templates/briefs/real-estate.example.json")));
++}
++
+ export const realRegistry = () => CoreAssetRegistry.load();

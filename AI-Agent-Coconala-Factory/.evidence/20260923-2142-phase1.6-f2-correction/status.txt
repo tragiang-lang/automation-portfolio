@@ -1,0 +1,130 @@
+On branch feature/starter-mvp
+Your branch is ahead of 'origin/feature/starter-mvp' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   ../.gitignore
+	modified:   core-assets/asset-lock.json
+	modified:   core-assets/industries/real-estate/real-estate-v1.json
+	modified:   projects/2026/demo-hair-salon/delivery/SETUP.md
+	modified:   projects/2026/demo-real-estate/analysis/industry-profile.json
+	modified:   projects/2026/demo-real-estate/delivery/DELIVERY.md
+	modified:   projects/2026/demo-real-estate/delivery/SETUP.md
+	modified:   projects/2026/demo-real-estate/gas/src/generated/manifest.ts
+	modified:   projects/2026/demo-real-estate/gas/src/generated/richMenu.ts
+	modified:   projects/2026/demo-real-estate/project.json
+	modified:   projects/2026/demo-real-estate/rich-menu/design-spec.json
+	modified:   projects/2026/demo-real-estate/rich-menu/menu-config.json
+	modified:   projects/2026/demo-real-estate/spreadsheet/config-seed.json
+	modified:   projects/2026/demo-real-estate/spreadsheet/schema.json
+	modified:   projects/2026/demo-real-estate/workflow/selected-workflows.json
+	modified:   projects/2026/demo-real-estate/workflow/workflow.json
+	modified:   projects/2026/demo-restaurant/delivery/SETUP.md
+	modified:   src/agents/industrySpecialist.ts
+	modified:   src/generators/delivery.ts
+	modified:   src/schemas/assets.ts
+	modified:   src/validation/validateAssets.ts
+	modified:   tests/agents.test.ts
+	modified:   tests/helpers.ts
+	modified:   ../apps/hair-salon-portfolio/gas/tests/Api.test.ts
+	modified:   ../apps/hair-salon-portfolio/web/.env.example
+	modified:   ../apps/hair-salon-portfolio/web/app/reservation/page.tsx
+	modified:   ../apps/hair-salon-portfolio/web/components/reservation/ReservationSummary.test.tsx
+	modified:   ../apps/hair-salon-portfolio/web/components/reservation/ReservationSummary.tsx
+	modified:   ../apps/hair-salon-portfolio/web/lib/config/resolveCatalog.test.ts
+	modified:   ../apps/hair-salon-portfolio/web/lib/config/resolveCatalog.ts
+	modified:   ../apps/salon-portfolio/gas/tests/Api.test.ts
+	modified:   ../apps/salon-portfolio/web/.env.example
+	modified:   ../apps/salon-portfolio/web/app/reservation/page.tsx
+	modified:   ../apps/salon-portfolio/web/components/layout/SiteFooter.tsx
+	modified:   ../apps/salon-portfolio/web/components/reservation/ReservationSummary.test.tsx
+	modified:   ../apps/salon-portfolio/web/components/reservation/ReservationSummary.tsx
+	modified:   ../apps/salon-portfolio/web/components/reservation/ReservationWizard.test.tsx
+	modified:   ../apps/salon-portfolio/web/components/reservation/ReservationWizard.tsx
+	modified:   ../apps/salon-portfolio/web/components/reservation/useReservationWizard.test.ts
+	modified:   ../apps/salon-portfolio/web/components/reservation/useReservationWizard.ts
+	modified:   ../apps/salon-portfolio/web/lib/config/reservationDemoMode.test.ts
+	modified:   ../apps/salon-portfolio/web/lib/config/reservationDemoMode.ts
+	modified:   ../apps/salon-portfolio/web/types/reservation.ts
+	modified:   ../apps/site-report/START_HERE.md
+	modified:   ../apps/site-report/gas/esbuild.config.js
+	modified:   ../apps/site-report/gas/src/SheetStore.ts
+	modified:   ../apps/site-report/gas/src/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	../.evidence/2026-09-15-task16/
+	../.evidence/20260913-1500-site-report-p0-api-route/
+	../.evidence/20260913-2200-site-report-provisioning/
+	../.evidence/20260913-salon-portfolio-prod-deploy-audit/
+	../.evidence/20260913-salon-portfolio-runtime-config-prod-guard/
+	../.evidence/20260914-0900-site-report-gas-function-discovery/
+	../.evidence/20260914-2158-site-report-phase1-p0/
+	../.evidence/20260915-1130-task2/
+	../.evidence/20260915-1400-task4/
+	../.evidence/20260915-1630-task6/
+	../.evidence/20260915-1700-task7/
+	../.evidence/20260915-1830-task8/
+	../.evidence/20260915-1900-task9/
+	../.evidence/20260915-2338-final-review-fixes/
+	../.evidence/20260915-task10/
+	../.evidence/20260915-task14/
+	../.evidence/20260915-task15/
+	../.evidence/20260915-task17/
+	../.evidence/20260916-site-report-phase3/
+	../.evidence/20260917-2303-site-report-photouploader-filelist-fix/
+	../.evidence/20260917-site-report-phase3-finalization/
+	../.evidence/20260918-hair-salon-portfolio-baseline/gas-build-baseline.log
+	../.evidence/20260918-hair-salon-portfolio-baseline/gas-test-baseline.log
+	../.evidence/20260918-hair-salon-portfolio-baseline/gas-typecheck-baseline.log
+	../.evidence/20260918-hair-salon-portfolio-baseline/web-lint-baseline.log
+	../.evidence/20260918-hair-salon-portfolio-baseline/web-test-baseline.log
+	../.evidence/20260918-hair-salon-portfolio-baseline/web-typecheck-baseline.log
+	../.evidence/20260918-site-report-photo-storage-structure/
+	../.evidence/20260918-starter-mvp-verification/
+	../.evidence/20260918-starter-mvp/
+	../.evidence/20260919-0930-continue-gas-function-discovery/
+	../.evidence/20260919-footer-secondary-button-text-fix/
+	../.evidence/20260919-hair-salon-demo-images/
+	../.evidence/20260919-reservation-selection-visual-fix/
+	../.evidence/20260920-1500-diff-review-fixes/
+	../.evidence/20260920-hybrid-reservation-demo-mode/
+	../.evidence/20260920-site-report-audit/
+	../.evidence/20260921-1523-hair-salon-staff-conflict-management/
+	../.evidence/20260921-1647-hair-salon-p0-test-triage/
+	../.evidence/20260921-1721-p1-baseline-verification/
+	../.evidence/20260921-demo-reservation-safety/
+	../.evidence/20260923-1830-ai-agent-factory-phase1/
+	../.evidence/task-11/
+	.evidence/20260923-2037-phase1.5-commit/
+	.evidence/20260923-2121-phase1.6-hardening/
+	.evidence/20260923-2142-phase1.6-f2-correction/
+	../apps/hair-salon-portfolio/web/components/reservation/ReservationDemoSuccess.test.tsx
+	../apps/hair-salon-portfolio/web/components/reservation/ReservationDemoSuccess.tsx
+	../apps/hair-salon-portfolio/web/lib/config/demoAvailability.test.ts
+	../apps/hair-salon-portfolio/web/lib/config/demoAvailability.ts
+	../apps/hair-salon-portfolio/web/lib/config/reservationDemoCatalog.test.ts
+	../apps/hair-salon-portfolio/web/lib/config/reservationDemoCatalog.ts
+	../apps/hair-salon-portfolio/web/lib/config/reservationDemoMode.test.ts
+	../apps/hair-salon-portfolio/web/lib/config/reservationDemoMode.ts
+	../apps/hair-salon-portfolio/web/lib/config/reservationDemoSubmission.test.ts
+	../apps/hair-salon-portfolio/web/lib/config/reservationDemoSubmission.ts
+	../apps/salon-portfolio/web/components/reservation/ReservationDemoSuccess.test.tsx
+	../apps/salon-portfolio/web/components/reservation/ReservationDemoSuccess.tsx
+	../apps/salon-portfolio/web/lib/config/reservationDemoSubmission.test.ts
+	../apps/salon-portfolio/web/lib/config/reservationDemoSubmission.ts
+	../apps/site-report/gas/SETUP.md
+	../docs/ARCHITECTURE_GUIDE_VI.md
+	../docs/core-asset-a-extraction.md
+	../docs/core-assets-feature-reuse.md
+	../docs/core-assets-salon-dependencies.md
+	../docs/core-assets/
+	../docs/superpowers/plans/2026-09-15-site-report-phase2.md
+	../docs/superpowers/plans/2026-09-16-site-report-phase3.md
+	../docs/superpowers/plans/2026-09-21-core-asset-a-inquiry-automation.md
+	../docs/superpowers/specs/2026-09-15-site-report-phase2-design.md
+	../docs/superpowers/specs/2026-09-16-site-report-phase3-design.md
+
+no changes added to commit (use "git add" and/or "git commit -a")

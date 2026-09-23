@@ -1,0 +1,14 @@
+*./demo-hair-salon/delivery/SETUP.md
+*./demo-real-estate/analysis/industry-profile.json
+*./demo-real-estate/delivery/DELIVERY.md
+*./demo-real-estate/delivery/SETUP.md
+*./demo-real-estate/gas/src/generated/manifest.ts
+*./demo-real-estate/gas/src/generated/richMenu.ts
+*./demo-real-estate/project.json
+*./demo-real-estate/rich-menu/design-spec.json
+*./demo-real-estate/rich-menu/menu-config.json
+*./demo-real-estate/spreadsheet/config-seed.json
+*./demo-real-estate/spreadsheet/schema.json
+*./demo-real-estate/workflow/selected-workflows.json
+*./demo-real-estate/workflow/workflow.json
+*./demo-restaurant/delivery/SETUP.md

@@ -1,0 +1,9 @@
+
+ RUN  v5.0.1 D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/AI-Agent-Coconala-Factory
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 17 skipped (19)
+   Start at  21:42:57
+   Duration  661ms (transform 43%, import 30%, tests 26%, worker 2%)
+

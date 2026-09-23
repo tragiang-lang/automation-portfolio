@@ -25,14 +25,14 @@
       "inquiries-basic-v1": "1.0.0",
       "inquiry-basic-v1": "1.0.0",
       "real-estate-basic-v1": "1.0.0",
-      "real-estate-v1": "1.0.0",
+      "real-estate-v1": "1.1.0",
       "reservation-basic-v1": "1.0.0",
       "reservations-basic-v1": "1.0.0",
       "services-basic-v1": "1.0.0"
     }
   },
   "industry": "real_estate",
-  "industryAsset": "real-estate-v1@1.0.0",
+  "industryAsset": "real-estate-v1@1.1.0",
   "displayName": "不動産 / Real Estate",
   "businessType": "Small local real-estate agency (賃貸・売買仲介). First contact is a property or condition inquiry; the conversion goal is a viewing (内見) or in-store consultation request that staff confirm by hand.",
   "customerIntents": [
@@ -143,6 +143,51 @@
     "Property availability changes daily; no property data is stored in Phase 1, so answers about vacancies are given by staff manually via INQUIRIES."
   ],
   "assumptions": [
+    "The agency already publishes its property list on its own website or a portal; the Rich Menu links to it instead of storing properties.",
+    "Viewing and in-store consultation share one reservation-basic-v1 flow; staff tell them apart from the follow-up conversation.",
+    "Opening hours follow the common real-estate pattern (水曜定休).",
     "Requirement not mapped to a Phase 1 workflow (needs manual review): \"物件一覧は既存のWebサイトで見られるようにしたい\""
-  ]
+  ],
+  "extensionPoints": {
+    "implemented": [
+      "inquiry-basic-v1: 物件・条件のお問い合わせ",
+      "reservation-basic-v1: 内見・来店相談の予約リクエスト（REQUESTED のみ）",
+      "business-info-v1: 会社・店舗情報 / アクセス / 営業時間",
+      "Rich Menu URI button to an existing property list page (links.propertySiteUrl)"
+    ],
+    "planned": [
+      {
+        "id": "property-catalog-v1",
+        "description": "PROPERTIES sheet schema (property_catalog = deferred; no current workflow reads it)."
+      },
+      {
+        "id": "property-search-v2",
+        "description": "Search/filter properties by area, rent and layout from LINE."
+      },
+      {
+        "id": "property-detail-v2",
+        "description": "Flex Message card per property with photos and conditions."
+      },
+      {
+        "id": "property-viewing-v2",
+        "description": "Viewing request tied to a specific propertyId."
+      },
+      {
+        "id": "agent-assignment-v2",
+        "description": "Assign a staff member per viewing; per-agent availability."
+      },
+      {
+        "id": "property-status-sync-v1",
+        "description": "Sync vacancy status from a portal or management system."
+      },
+      {
+        "id": "calendar-integration-v1",
+        "description": "Google Calendar busy times / events on CONFIRMED (reuses reservation-basic-v1 google-calendar extension point)."
+      },
+      {
+        "id": "customer-history-v1",
+        "description": "Past inquiries and viewings per customer for staff follow-up."
+      }
+    ]
+  }
 }

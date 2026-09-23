@@ -40,7 +40,7 @@ export const MANIFEST = {
     "inquiries-basic-v1": "1.0.0",
     "inquiry-basic-v1": "1.0.0",
     "real-estate-basic-v1": "1.0.0",
-    "real-estate-v1": "1.0.0",
+    "real-estate-v1": "1.1.0",
     "reservation-basic-v1": "1.0.0",
     "reservations-basic-v1": "1.0.0",
     "services-basic-v1": "1.0.0"

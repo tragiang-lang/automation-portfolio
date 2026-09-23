@@ -191,8 +191,8 @@
       "sha256": "06e29863faaff3eb1865f4f95f1741b3d97e577b92db6f9005ab4fcfd35311e6"
     },
     "industries/real-estate/real-estate-v1.json": {
-      "version": "1.0.0",
-      "sha256": "0fc2e02073f7225d81ad1abefbf0556d9eff07bbfb453461334452c18ff308d9"
+      "version": "1.1.0",
+      "sha256": "3dd2b16b2909a80ed151739aa733deae9d58e14e05a50d7ef45b50aeac3ee042"
     },
     "industries/restaurant/restaurant-v1.json": {
       "version": "1.0.0",

@@ -2,7 +2,7 @@
 
 ## 今回の構成
 
-- 業種プロファイル: real-estate-v1@1.0.0（不動産 / Real Estate）
+- 業種プロファイル: real-estate-v1@1.1.0（不動産 / Real Estate）
 - リッチメニュー: real-estate-basic-v1／デザインプリセット: clean-professional-v1
 - ワークフロー:
   - **Inquiry (basic)** (`inquiry-basic-v1@1.0.0`): intent:ask_question (requirement)
@@ -37,6 +37,9 @@
 
 ## 前提・注意事項
 
+- The agency already publishes its property list on its own website or a portal; the Rich Menu links to it instead of storing properties.
+- Viewing and in-store consultation share one reservation-basic-v1 flow; staff tell them apart from the follow-up conversation.
+- Opening hours follow the common real-estate pattern (水曜定休).
 - Requirement not mapped to a Phase 1 workflow (needs manual review): "物件一覧は既存のWebサイトで見られるようにしたい"
 - A viewing request is only a REQUESTED row. Staff must confirm the slot with the property owner/management company and set status to CONFIRMED by hand; the customer is not told it is confirmed.
 - reservation-basic-v1 records only a date-time. The customer cannot pick which property to view from the Rich Menu, so staff must ask by LINE/phone after the request (planned: property-viewing-v2).
@@ -58,6 +61,14 @@
 - `reservation-basic-v1` / customer-notifications: Confirmation/reminder push via sendLineMessage@1 (planned).
 - `reservation-basic-v1` / customer-history: Query RESERVATIONS by customerId for a 'my bookings' button.
 - `business-info-v1` / flex-message: Replace the text reply with a Flex Message card (map thumbnail, call button).
+- `real-estate-v1@1.1.0` / property-catalog-v1: PROPERTIES sheet schema (property_catalog = deferred; no current workflow reads it).
+- `real-estate-v1@1.1.0` / property-search-v2: Search/filter properties by area, rent and layout from LINE.
+- `real-estate-v1@1.1.0` / property-detail-v2: Flex Message card per property with photos and conditions.
+- `real-estate-v1@1.1.0` / property-viewing-v2: Viewing request tied to a specific propertyId.
+- `real-estate-v1@1.1.0` / agent-assignment-v2: Assign a staff member per viewing; per-agent availability.
+- `real-estate-v1@1.1.0` / property-status-sync-v1: Sync vacancy status from a portal or management system.
+- `real-estate-v1@1.1.0` / calendar-integration-v1: Google Calendar busy times / events on CONFIRMED (reuses reservation-basic-v1 google-calendar extension point).
+- `real-estate-v1@1.1.0` / customer-history-v1: Past inquiries and viewings per customer for staff follow-up.
 
 ---
 
