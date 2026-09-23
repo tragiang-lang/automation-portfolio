@@ -1,0 +1,69 @@
+{
+  "kind": "gas-module-catalog",
+  "id": "gas-modules-v1",
+  "version": "1.0.0",
+  "description": "Reusable GAS source modules. The GAS generator copies the union of files of every module a project needs, byte for byte, into the client project's gas/ directory.",
+  "modules": [
+    {
+      "id": "runtime",
+      "version": "1.0.0",
+      "always": true,
+      "description": "Result envelope, CONFIG reader, table/cache/lock/mail/LINE interfaces and their GAS adapters, idempotency, notification, customer repository, API + LINE routers, setup planning.",
+      "files": [
+        "src/entry.ts",
+        "src/lib/result.ts",
+        "src/lib/rowMapper.ts",
+        "src/lib/ids.ts",
+        "src/lib/time.ts",
+        "src/config/configReader.ts",
+        "src/validation/validators.ts",
+        "src/services/context.ts",
+        "src/services/idempotency.ts",
+        "src/services/notify.ts",
+        "src/services/gas/gasContext.ts",
+        "src/services/gas/gasSetup.ts",
+        "src/repositories/customerRepository.ts",
+        "src/actions/types.ts",
+        "src/router/apiRouter.ts",
+        "src/router/dispatch.ts",
+        "src/line/webhook.ts",
+        "src/setup/spreadsheetSetup.ts",
+        "src/setup/richMenuSetup.ts"
+      ],
+      "tests": [
+        "tests/support/fakes.ts",
+        "tests/lib/lib.test.ts",
+        "tests/services/services.test.ts",
+        "tests/router/router.test.ts"
+      ]
+    },
+    {
+      "id": "business-info",
+      "version": "1.0.0",
+      "description": "getBusinessInfo action (business.* CONFIG keys).",
+      "files": ["src/actions/getBusinessInfo.ts"],
+      "tests": ["tests/actions/getBusinessInfo.test.ts"]
+    },
+    {
+      "id": "service-menu",
+      "version": "1.0.0",
+      "description": "getServiceList action (SERVICES sheet).",
+      "files": ["src/actions/getServiceList.ts"],
+      "tests": ["tests/actions/getServiceList.test.ts"]
+    },
+    {
+      "id": "inquiry",
+      "version": "1.0.0",
+      "description": "createInquiry action (INQUIRIES + CUSTOMERS sheets, owner email).",
+      "files": ["src/actions/createInquiry.ts"],
+      "tests": ["tests/actions/createInquiry.test.ts"]
+    },
+    {
+      "id": "reservation-basic",
+      "version": "1.0.0",
+      "description": "Basic single-resource availability, getAvailability and createReservation actions.",
+      "files": ["src/services/availability.ts", "src/actions/getAvailability.ts", "src/actions/createReservation.ts"],
+      "tests": ["tests/actions/reservation.test.ts"]
+    }
+  ]
+}

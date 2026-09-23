@@ -1,0 +1,54 @@
+{
+  "_meta": {
+    "artifact": "spreadsheet/config-seed.json",
+    "generatedBy": "spreadsheet-schema-generator",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-real-estate",
+    "industry": "real_estate",
+    "workflows": [
+      "inquiry-basic-v1@1.0.0",
+      "reservation-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "clean-professional-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "real-estate-basic-v1": "1.0.0",
+      "real-estate-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "values": {
+    "notification.ownerEmail": "owner@example.com",
+    "hours.mon": "10:00-18:00",
+    "hours.tue": "10:00-18:00",
+    "hours.wed": "closed",
+    "hours.thu": "10:00-18:00",
+    "hours.fri": "10:00-18:00",
+    "hours.sat": "10:00-18:00",
+    "hours.sun": "10:00-18:00",
+    "reservation.slotMinutes": "60",
+    "reservation.defaultDurationMinutes": "60",
+    "reservation.minLeadHours": "24",
+    "reservation.maxDaysAhead": "30",
+    "reservation.capacity": "2",
+    "business.name": "Demo Real Estate Tokyo",
+    "business.address": "東京都千代田区0-0-0",
+    "business.phone": "03-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-real-estate-tokyo",
+    "business.hoursText": "10:00-18:00（水曜定休）"
+  }
+}

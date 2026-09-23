@@ -1,0 +1,101 @@
+{
+  "kind": "spreadsheet-schema",
+  "id": "inquiries-basic-v1",
+  "version": "1.0.0",
+  "description": "Inquiries received via LINE or API.",
+  "sheets": [
+    {
+      "name": "INQUIRIES",
+      "description": "お問い合わせ",
+      "primaryKey": "inquiryId",
+      "indexes": [
+        "submissionId",
+        "customerId"
+      ],
+      "columns": [
+        {
+          "name": "inquiryId",
+          "type": "string",
+          "required": true,
+          "description": "受付番号 (INQ-YYYYMMDD-XXXXXX)"
+        },
+        {
+          "name": "submissionId",
+          "type": "string",
+          "required": true,
+          "description": "重複防止用ID（LINE webhookEventId 等）"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "description": "受付日時 (ISO 8601)"
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "required": false,
+          "description": "お客様ID",
+          "references": "CUSTOMERS.customerId"
+        },
+        {
+          "name": "lineUserId",
+          "type": "string",
+          "required": false,
+          "description": "LINE ユーザーID",
+          "pii": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "お名前",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "description": "メールアドレス",
+          "pii": true
+        },
+        {
+          "name": "phone",
+          "type": "phone",
+          "required": false,
+          "description": "電話番号",
+          "pii": true
+        },
+        {
+          "name": "message",
+          "type": "text",
+          "required": true,
+          "description": "お問い合わせ内容",
+          "pii": true
+        },
+        {
+          "name": "source",
+          "type": "enum",
+          "required": false,
+          "description": "受付経路",
+          "enum": [
+            "line",
+            "api"
+          ]
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "description": "対応状況（NEW=未対応 / IN_PROGRESS=対応中 / DONE=完了）",
+          "enum": [
+            "NEW",
+            "IN_PROGRESS",
+            "DONE"
+          ],
+          "default": "NEW"
+        }
+      ]
+    }
+  ]
+}

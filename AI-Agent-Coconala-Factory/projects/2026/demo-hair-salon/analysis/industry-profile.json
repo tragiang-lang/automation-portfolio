@@ -1,0 +1,145 @@
+{
+  "_meta": {
+    "artifact": "analysis/industry-profile.json",
+    "generatedBy": "industry-specialist",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-hair-salon",
+    "industry": "hair_salon",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "hair-salon-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "quiet-luxury-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "salon-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "industry": "hair_salon",
+  "industryAsset": "hair-salon-v1@1.0.0",
+  "displayName": "美容室 / Hair salon",
+  "businessType": "2 stylists, appointment-based hair salon",
+  "customerIntents": [
+    {
+      "id": "view_menu",
+      "description": "See services / menu / prices",
+      "source": "requirement",
+      "evidence": "Customer should be able to see menu"
+    },
+    {
+      "id": "book",
+      "description": "Make a reservation / appointment",
+      "source": "requirement",
+      "evidence": "Customer should be able to make reservation"
+    },
+    {
+      "id": "ask_question",
+      "description": "Send an inquiry",
+      "source": "requirement",
+      "evidence": "Customer should be able to send inquiry"
+    },
+    {
+      "id": "find_access",
+      "description": "Find the address / map",
+      "source": "requirement",
+      "evidence": "Customer should be able to see access information"
+    }
+  ],
+  "commonLineUseCases": [
+    "Customers open the Rich Menu to request a booking slot without calling during treatments",
+    "Price list lookup before booking",
+    "Questions about treatments, parking, children",
+    "Access / hours lookup on the day of the visit"
+  ],
+  "recommendedWorkflows": [
+    "reservation-basic-v1",
+    "service-menu-v1",
+    "inquiry-basic-v1",
+    "business-info-v1"
+  ],
+  "recommendedActions": [
+    "createReservation@1",
+    "getAvailability@1",
+    "getServiceList@1",
+    "createInquiry@1",
+    "getBusinessInfo@1"
+  ],
+  "recommendedRichMenu": "salon-basic-v1",
+  "recommendedRichMenuSections": [
+    {
+      "label": "ご予約",
+      "target": "reservation-basic-v1#default"
+    },
+    {
+      "label": "メニュー",
+      "target": "service-menu-v1#default"
+    },
+    {
+      "label": "お問い合わせ",
+      "target": "inquiry-basic-v1#default"
+    },
+    {
+      "label": "アクセス",
+      "target": "business-info-v1#access"
+    },
+    {
+      "label": "営業時間",
+      "target": "business-info-v1#hours"
+    },
+    {
+      "label": "スタイル写真",
+      "target": "uri:social.instagramUrl"
+    }
+  ],
+  "recommendedDesignPresets": [
+    "quiet-luxury-v1",
+    "minimal-modern-v1",
+    "warm-natural-v1"
+  ],
+  "requiredSpreadsheetData": [
+    "sheet CONFIG",
+    "sheet CUSTOMERS",
+    "sheet SERVICES",
+    "sheet RESERVATIONS",
+    "sheet INQUIRIES",
+    "CONFIG: 店舗名・住所・電話番号・地図URL・営業時間・定休日",
+    "SERVICES: メニュー名・所要時間・料金",
+    "reservation.capacity: 同じ時間帯に受けられる人数",
+    "notification.ownerEmail: 通知を受け取るメールアドレス"
+  ],
+  "notificationRequirements": [
+    "Owner email on every new reservation request and inquiry",
+    "Owner confirms reservations manually in the sheet (status CONFIRMED)"
+  ],
+  "terminology": {
+    "service": "メニュー",
+    "reservation": "ご予約",
+    "inquiry": "お問い合わせ",
+    "capacity": "同時に対応できる席数（スタイリスト数）"
+  },
+  "risks": [
+    "Reservations are requests, not instant confirmations, in Phase 1. Set the customer's expectation in the reply text.",
+    "Per-stylist booking is not supported by reservation-basic-v1 (use capacity = number of stylists).",
+    "If the salon already uses Hot Pepper Beauty etc., double-booking can occur. Keep capacity conservative or keep one booking channel."
+  ],
+  "assumptions": []
+}

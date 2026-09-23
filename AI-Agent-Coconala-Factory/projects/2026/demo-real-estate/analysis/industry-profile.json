@@ -1,0 +1,148 @@
+{
+  "_meta": {
+    "artifact": "analysis/industry-profile.json",
+    "generatedBy": "industry-specialist",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-real-estate",
+    "industry": "real_estate",
+    "workflows": [
+      "inquiry-basic-v1@1.0.0",
+      "reservation-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "clean-professional-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "real-estate-basic-v1": "1.0.0",
+      "real-estate-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "industry": "real_estate",
+  "industryAsset": "real-estate-v1@1.0.0",
+  "displayName": "不動産 / Real Estate",
+  "businessType": "Small local real-estate agency (賃貸・売買仲介). First contact is a property or condition inquiry; the conversion goal is a viewing (内見) or in-store consultation request that staff confirm by hand.",
+  "customerIntents": [
+    {
+      "id": "ask_question",
+      "description": "Send an inquiry",
+      "source": "requirement",
+      "evidence": "物件や条件について問い合わせ・相談ができる"
+    },
+    {
+      "id": "book",
+      "description": "Make a reservation / appointment",
+      "source": "requirement",
+      "evidence": "内見の予約リクエストができる"
+    },
+    {
+      "id": "find_access",
+      "description": "Find the address / map",
+      "source": "requirement",
+      "evidence": "店舗へのアクセスがわかる"
+    },
+    {
+      "id": "check_hours",
+      "description": "Check opening hours",
+      "source": "requirement",
+      "evidence": "営業時間と定休日がわかる"
+    }
+  ],
+  "commonLineUseCases": [
+    "物件・条件についてのお問い合わせ（空室確認・家賃・初期費用など）",
+    "内見予約リクエスト（スタッフが物件側と調整のうえ確定連絡）",
+    "来店相談予約リクエスト",
+    "会社・店舗情報、アクセス、営業時間の確認",
+    "物件一覧は既存の自社Webサイト／ポータルへリンク（Phase 1では物件データを持たない）"
+  ],
+  "recommendedWorkflows": [
+    "inquiry-basic-v1",
+    "reservation-basic-v1",
+    "business-info-v1"
+  ],
+  "recommendedActions": [
+    "createInquiry@1",
+    "createReservation@1",
+    "getAvailability@1",
+    "getBusinessInfo@1"
+  ],
+  "recommendedRichMenu": "real-estate-basic-v1",
+  "recommendedRichMenuSections": [
+    {
+      "label": "内見を申し込む",
+      "target": "reservation-basic-v1#default"
+    },
+    {
+      "label": "物件のご相談",
+      "target": "inquiry-basic-v1#default"
+    },
+    {
+      "label": "物件を探す",
+      "target": "uri:links.propertySiteUrl"
+    },
+    {
+      "label": "会社・店舗情報",
+      "target": "business-info-v1#default"
+    },
+    {
+      "label": "アクセス",
+      "target": "business-info-v1#access"
+    },
+    {
+      "label": "営業時間",
+      "target": "business-info-v1#hours"
+    }
+  ],
+  "recommendedDesignPresets": [
+    "clean-professional-v1",
+    "minimal-modern-v1"
+  ],
+  "requiredSpreadsheetData": [
+    "sheet CONFIG",
+    "sheet CUSTOMERS",
+    "sheet INQUIRIES",
+    "sheet SERVICES",
+    "sheet RESERVATIONS",
+    "CONFIG: 会社・店舗名・住所・電話番号・地図URL・営業時間（定休日を含む）",
+    "reservation.capacity: 同じ時間帯に対応できる内見・相談の件数",
+    "reservation.defaultDurationMinutes: 内見・相談1件あたりの目安時間",
+    "reservation.minLeadHours: 物件側との調整に必要な時間（例: 24時間前まで）",
+    "brief config links.propertySiteUrl: 既存の物件一覧ページ（Rich Menu の URI ボタン）",
+    "SERVICES: reservation-basic-v1 の構造上シートは作成されるが、不動産では空のままでよい（serviceId は任意）"
+  ],
+  "notificationRequirements": [
+    "Owner email on every inquiry",
+    "Owner email on every viewing / consultation reservation request"
+  ],
+  "terminology": {
+    "inquiry": "物件・条件のお問い合わせ",
+    "reservation": "内見・来店相談の予約リクエスト（確定ではありません）",
+    "viewing": "内見",
+    "property": "物件",
+    "capacity": "同じ時間帯に受けられる内見・相談の件数（対応できるスタッフ数）",
+    "owner": "担当スタッフ・店舗"
+  },
+  "risks": [
+    "A viewing request is only a REQUESTED row. Staff must confirm the slot with the property owner/management company and set status to CONFIRMED by hand; the customer is not told it is confirmed.",
+    "reservation-basic-v1 records only a date-time. The customer cannot pick which property to view from the Rich Menu, so staff must ask by LINE/phone after the request (planned: property-viewing-v2).",
+    "The LINE reply text from createReservation@1 says 「ご予約リクエストを受け付けました」, not 「内見予約リクエスト」. It is correct (request, not confirmation) but generic.",
+    "reservation.capacity counts parallel requests, not staff or vehicles; per-agent scheduling is not supported (planned: agent-assignment-v2).",
+    "Property availability changes daily; no property data is stored in Phase 1, so answers about vacancies are given by staff manually via INQUIRIES."
+  ],
+  "assumptions": [
+    "Requirement not mapped to a Phase 1 workflow (needs manual review): \"物件一覧は既存のWebサイトで見られるようにしたい\""
+  ]
+}

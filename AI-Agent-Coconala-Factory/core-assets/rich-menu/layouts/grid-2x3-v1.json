@@ -1,0 +1,72 @@
+{
+  "kind": "rich-menu-layout",
+  "id": "grid-2x3-v1",
+  "version": "1.0.0",
+  "description": "Large menu (2500x1686), 2 rows x 3 equal buttons. Slot a (top-left) is read first.",
+  "size": {
+    "width": 2500,
+    "height": 1686
+  },
+  "slots": [
+    {
+      "id": "a",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "b",
+      "bounds": {
+        "x": 833,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "c",
+      "bounds": {
+        "x": 1666,
+        "y": 0,
+        "width": 834,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "d",
+      "bounds": {
+        "x": 0,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "e",
+      "bounds": {
+        "x": 833,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "f",
+      "bounds": {
+        "x": 1666,
+        "y": 843,
+        "width": 834,
+        "height": 843
+      },
+      "emphasis": "normal"
+    }
+  ]
+}

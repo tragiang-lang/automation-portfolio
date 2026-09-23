@@ -1,0 +1,39 @@
+{
+  "kind": "design-preset",
+  "id": "warm-natural-v1",
+  "version": "1.0.0",
+  "name": "Warm natural",
+  "description": "Sage green, sand and terracotta. Organic and relaxed.",
+  "suitableIndustries": [
+    "hair_salon",
+    "beauty_salon",
+    "cafe",
+    "restaurant",
+    "school"
+  ],
+  "colors": {
+    "background": "#F4EFE6",
+    "surface": "#FFFDF8",
+    "primary": "#4F5E43",
+    "onPrimary": "#FFFFFF",
+    "accent": "#B7793E",
+    "text": "#3A3129",
+    "muted": "#6E6257",
+    "border": "#E4DACB"
+  },
+  "typography": {
+    "direction": "Rounded sans (M PLUS Rounded / Zen Maru Gothic) for labels",
+    "headingStyle": "rounded sans, medium weight",
+    "labelWeight": "medium",
+    "minLabelPx": 64
+  },
+  "spacing": {
+    "gutterPx": 16,
+    "tilePaddingPx": 44,
+    "cornerRadiusPx": 32
+  },
+  "hierarchy": "Primary tile sage green; secondary tiles cream with soft shadow.",
+  "iconStyle": "hand-drawn feel outline icons",
+  "buttonStyle": "soft rounded tiles",
+  "imagery": "optional botanical line illustration in the hero tile"
+}

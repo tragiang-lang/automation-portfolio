@@ -1,0 +1,266 @@
+{
+  "kind": "asset-lock",
+  "note": "Released Core Assets. Do not edit by hand. Use `npm run factory -- lock-assets`.",
+  "assets": {
+    "actions/cancelReservation/v1.json": {
+      "version": "1.0.0",
+      "sha256": "5283346ce0cd7fce87e12408e31cd2286f3d37b170dff331311a958f03e0ba1b"
+    },
+    "actions/createInquiry/v1.json": {
+      "version": "1.0.0",
+      "sha256": "57434ed899c0687e29904d4f3e3417b04d121c47cf979b83ad85abf545bc811e"
+    },
+    "actions/createReservation/v1.json": {
+      "version": "1.0.0",
+      "sha256": "25b3771dcece83b19d5ead9300e5e09949df06a27f69f0d3f4d7010bcf471f85"
+    },
+    "actions/getAvailability/v1.json": {
+      "version": "1.0.0",
+      "sha256": "de821b8fcd88e6b22722d517816bac3c0eaa435194ab44c0107419cde188f151"
+    },
+    "actions/getBusinessInfo/v1.json": {
+      "version": "1.0.0",
+      "sha256": "ae996cff56012c24d347cd139ff457d92211776acffd40b39e4edb8aaba460b9"
+    },
+    "actions/getServiceList/v1.json": {
+      "version": "1.0.0",
+      "sha256": "4377534f1bf921ff30d735559ed203b6ae3488c3815f725ff4f147ea4fd83fb4"
+    },
+    "actions/sendLineMessage/v1.json": {
+      "version": "1.0.0",
+      "sha256": "ae71bd4181991b7797e4d6f5593bd984cd38602385e391e15c15e601fc6aa58a"
+    },
+    "design-presets/clean-professional-v1.json": {
+      "version": "1.0.0",
+      "sha256": "39b45323a56fb34e148cb037ebe41e348f8220f6fb72f3c34023d5038acf7785"
+    },
+    "design-presets/friendly-local-v1.json": {
+      "version": "1.0.0",
+      "sha256": "1bcc8e2cc3788ea5ff8d046291866875a886c72599162bb5a3cbbb0cb65194d1"
+    },
+    "design-presets/minimal-modern-v1.json": {
+      "version": "1.0.0",
+      "sha256": "e639038297399c580d6efdc74161cad4657d411f4adbc462c1392a13e40e9422"
+    },
+    "design-presets/quiet-luxury-v1.json": {
+      "version": "1.0.0",
+      "sha256": "3c64ffc34d6b8dd1246b7f1e52a85f580c20204a89897fe4ba339551d3f50459"
+    },
+    "design-presets/warm-natural-v1.json": {
+      "version": "1.0.0",
+      "sha256": "58298e76cbed239f562d9b5e79d55d159dc7b58961b06d2a1ed7dd137f24adc2"
+    },
+    "gas-modules/modules.json": {
+      "version": "1.0.0",
+      "sha256": "976f09dca098808c32cb46bcaa341a017310f686c178ec6d21519e9ac17c1b44"
+    },
+    "gas-modules/src/actions/createInquiry.ts": {
+      "version": "1.0.0",
+      "sha256": "e7a6cf61446cdf5487875c0ca5771b39ea11ea623dcf4757fcb3b113650ab32d"
+    },
+    "gas-modules/src/actions/createReservation.ts": {
+      "version": "1.0.0",
+      "sha256": "cb29e5af4cf861cb9f302c966c1f56c76eba3c7eec2db65462c4ad68f7ddc248"
+    },
+    "gas-modules/src/actions/getAvailability.ts": {
+      "version": "1.0.0",
+      "sha256": "e7b374ce8dc41bfbd0960272a3cc7e1906f9eb5439ff2dae2674a2c581cc1592"
+    },
+    "gas-modules/src/actions/getBusinessInfo.ts": {
+      "version": "1.0.0",
+      "sha256": "6d43857cc00d872fc0d0bdfeed068f0a71ebb02dbcaa9bdd281e55961f88aba7"
+    },
+    "gas-modules/src/actions/getServiceList.ts": {
+      "version": "1.0.0",
+      "sha256": "101359968b00c7e72b0bec6421ed3f0d538e37d91870bbecf0373acd3d731625"
+    },
+    "gas-modules/src/actions/types.ts": {
+      "version": "1.0.0",
+      "sha256": "d3ac9d904e5e2c068eb7b91baa7b274eef61998af67bf70571b735d6da073287"
+    },
+    "gas-modules/src/config/configReader.ts": {
+      "version": "1.0.0",
+      "sha256": "02f50a7011fe26ed4523c234364d48232bcfe024784e05ee0fdac9e949327d68"
+    },
+    "gas-modules/src/entry.ts": {
+      "version": "1.0.0",
+      "sha256": "4327e71600cf57844032c3a3845cdc8fbe692fcd4734b26bfc867abf8915d7e1"
+    },
+    "gas-modules/src/lib/ids.ts": {
+      "version": "1.0.0",
+      "sha256": "d03150bfd2015333c4f3018eb908aea37d01f38f905e11188b634a003e6e3596"
+    },
+    "gas-modules/src/lib/result.ts": {
+      "version": "1.0.0",
+      "sha256": "b5ec4e945e2bd8d8f40a71d38d9b693906c4cca2658b16154b5f83da014c1e67"
+    },
+    "gas-modules/src/lib/rowMapper.ts": {
+      "version": "1.0.0",
+      "sha256": "4315da1a56bfa56046c28f213f619f6fe8fd519adc366e9b64d131242ad7ef54"
+    },
+    "gas-modules/src/lib/time.ts": {
+      "version": "1.0.0",
+      "sha256": "b02b0a693aa24721af75be739490f723c461fb014650ceaef5758dbd32d9842f"
+    },
+    "gas-modules/src/line/webhook.ts": {
+      "version": "1.0.0",
+      "sha256": "ebb7cdd3b03ae36c104bee9b091422eb5a89b1567d790d4289c1c45a0982bfae"
+    },
+    "gas-modules/src/repositories/customerRepository.ts": {
+      "version": "1.0.0",
+      "sha256": "ca2c4fcc2554d01b51afde2d926481bb69745adc6a425b42f2cedd8b07701451"
+    },
+    "gas-modules/src/router/apiRouter.ts": {
+      "version": "1.0.0",
+      "sha256": "86b8eb5863440db70a58a2e5b785e6cdc0168c0cfebdda21e536d56a837c02dd"
+    },
+    "gas-modules/src/router/dispatch.ts": {
+      "version": "1.0.0",
+      "sha256": "8e51b5e68a9912452e230993578f57f783eaa71a2b3d00f5b729533dd0e62bbe"
+    },
+    "gas-modules/src/services/availability.ts": {
+      "version": "1.0.0",
+      "sha256": "cb2c24b2dd1e6e13380be08b9b6ee6246b5cb6df6a9ad49918652e6cc70a5bfb"
+    },
+    "gas-modules/src/services/context.ts": {
+      "version": "1.0.0",
+      "sha256": "e685fb36e840308b38101e54f128a1792c2791eed24964d7cc7a1e93eafe08d9"
+    },
+    "gas-modules/src/services/gas/gasContext.ts": {
+      "version": "1.0.0",
+      "sha256": "80c3be60516589f3dc9b4aa66d709a3b08785f78dee14c7eeb19eb8585056bc5"
+    },
+    "gas-modules/src/services/gas/gasSetup.ts": {
+      "version": "1.0.0",
+      "sha256": "6dc2817b65aee84ff088294b38bd2c8b960b882d447c86d41e6fd754338cfc4e"
+    },
+    "gas-modules/src/services/idempotency.ts": {
+      "version": "1.0.0",
+      "sha256": "d7738718f72f6a89d379d9429c6aed54aa6155327a21da4abe6f044e16eb2afd"
+    },
+    "gas-modules/src/services/notify.ts": {
+      "version": "1.0.0",
+      "sha256": "598a8fc752f7539ee80d6c5c0c48fc8fc2ce0abaccf486b36f46787350c46559"
+    },
+    "gas-modules/src/setup/richMenuSetup.ts": {
+      "version": "1.0.0",
+      "sha256": "92050589a5b3e46663c9296568e53ff7e8b1019d273e2f8b2d4f420c10b2be1d"
+    },
+    "gas-modules/src/setup/spreadsheetSetup.ts": {
+      "version": "1.0.0",
+      "sha256": "9f9a1ddaaa4a684277131ffe797de0c916b9f9bef89aabe0a916e460bdcd59b6"
+    },
+    "gas-modules/src/validation/validators.ts": {
+      "version": "1.0.0",
+      "sha256": "c55e9789e7a9b3b2a9a0302422165739b41f5942a51d0e31ac8dc42603115e7c"
+    },
+    "gas-modules/tests/actions/createInquiry.test.ts": {
+      "version": "1.0.0",
+      "sha256": "ded3dcbf52a79a4750adf45042ad80e1b4cc48d9e57239a542ba9c3fe0bf466f"
+    },
+    "gas-modules/tests/actions/getBusinessInfo.test.ts": {
+      "version": "1.0.0",
+      "sha256": "f996de1a803f3421bd9fbd21a06858f2c87aed3fbc088d9f3ec13a8208551ac8"
+    },
+    "gas-modules/tests/actions/getServiceList.test.ts": {
+      "version": "1.0.0",
+      "sha256": "4238d193911a1ccfc83a9b90c783de3351154949ff113227caff9bd187c60d11"
+    },
+    "gas-modules/tests/actions/reservation.test.ts": {
+      "version": "1.0.0",
+      "sha256": "6de579b8b9274756ec728a82fa75b66d5b59ed7cad9649dd903f3c04c4adda24"
+    },
+    "gas-modules/tests/lib/lib.test.ts": {
+      "version": "1.0.0",
+      "sha256": "fddae62757802c8377028e016482363491944cccf98d2dade18dceda80d227f1"
+    },
+    "gas-modules/tests/router/router.test.ts": {
+      "version": "1.0.0",
+      "sha256": "169fa58c127e4e4746f3d1c94eb17baf9842e28bbe04260f18bf60c8c5ab637a"
+    },
+    "gas-modules/tests/services/services.test.ts": {
+      "version": "1.0.0",
+      "sha256": "3497775bf24326de1e3f57065fed3a85f6799fd66e43bfc287d4c5619095c2e3"
+    },
+    "gas-modules/tests/support/fakes.ts": {
+      "version": "1.0.0",
+      "sha256": "54ad6fc41a35f19a953fdd2cd251c3169ad468d1d8f91583e9d687ccd074495f"
+    },
+    "industries/common/customer-intents-v1.json": {
+      "version": "1.0.0",
+      "sha256": "06e29863faaff3eb1865f4f95f1741b3d97e577b92db6f9005ab4fcfd35311e6"
+    },
+    "industries/restaurant/restaurant-v1.json": {
+      "version": "1.0.0",
+      "sha256": "6ccc04e282a665465edb51ddd946e698412509253f2574f7de28aee5aabacf08"
+    },
+    "industries/salon/hair-salon-v1.json": {
+      "version": "1.0.0",
+      "sha256": "a209248ca9c4032edde6ae950d181607ffd99afaefca0a190207c80b3adfe46b"
+    },
+    "qa-rules/qa-rules-v1.json": {
+      "version": "1.0.0",
+      "sha256": "e681fe6df28f45e60515fbf0f397029ee0f735160b18bc5b22487dba9fe085ff"
+    },
+    "rich-menu/layouts/compact-1x3-v1.json": {
+      "version": "1.0.0",
+      "sha256": "4922d3a31c5fa8dd58a552e23afa77b86a407e782f91c51c1511f86376a5c00b"
+    },
+    "rich-menu/layouts/grid-2x2-v1.json": {
+      "version": "1.0.0",
+      "sha256": "ba8b2d47606c2a99b11ffa152998f23d6f30a88a7ebdb56bee8b6962c8ec2a75"
+    },
+    "rich-menu/layouts/grid-2x3-v1.json": {
+      "version": "1.0.0",
+      "sha256": "a2ca56ce9a5ccac9ac99579234ca1786c23ad7be92c53c835ed376cf2792dbaa"
+    },
+    "rich-menu/layouts/hero-1-plus-3-v1.json": {
+      "version": "1.0.0",
+      "sha256": "87930cda27bbd9994b9f19cd0fa34cf1bd5895e138bedf2cb0121f0e770cac59"
+    },
+    "rich-menu/menus/restaurant-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "784112e7abf7e87b41d9537d7d73429f428f3b43a1a9437f6d792773751d095a"
+    },
+    "rich-menu/menus/salon-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "9d9405f194ecb241704fefbfb08c873d1f64d7ad08cad5bcb80148c3d885b5af"
+    },
+    "spreadsheet-schemas/core-config-v1.json": {
+      "version": "1.0.0",
+      "sha256": "e5d4c567d49b3488176de0b0cd0ad09a6cb69d9ca002330bf5255f4a83d378f3"
+    },
+    "spreadsheet-schemas/customers-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "cf41547c75d793e5c6c6c425e6c6f767ac4244ff1deaa0506f49b23a4d77dc58"
+    },
+    "spreadsheet-schemas/inquiries-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "de3a9788f1d3d1619bfd167a59dfc7765a21d98006eee5237e9c5bf45cc5082d"
+    },
+    "spreadsheet-schemas/reservations-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "427f43eb17e998b5bd19a31f22d8ea65604f3afb1547fe192c4118b207684f61"
+    },
+    "spreadsheet-schemas/services-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "6a560e5cf3b34bdc3fd31e337673bf25ef28d4143b3361c196ef83c03e0b81fb"
+    },
+    "workflows/access/business-info-v1.json": {
+      "version": "1.0.0",
+      "sha256": "2540f0b0dcc404e40673fe2ae5ab882bd83669e69d8f160039548890fe278252"
+    },
+    "workflows/inquiry/inquiry-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "579c23575986fc88e1d17434a6b048d4eb2667e65d75298201b9018c8430e6f3"
+    },
+    "workflows/menu/service-menu-v1.json": {
+      "version": "1.0.0",
+      "sha256": "d5a804af7c8c1fa77400ee74668dd350d75391567951b36b7b7e15a9595d00f4"
+    },
+    "workflows/reservation/reservation-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "7195d13d9478af8f04f0a7394b4c52d3cb89439767bd3d857cfe665f46e7f98d"
+    }
+  }
+}

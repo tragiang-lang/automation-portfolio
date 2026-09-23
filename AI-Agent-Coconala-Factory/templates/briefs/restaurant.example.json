@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "slug": "demo-restaurant",
+    "clientName": "Demo Bistro（デモ）",
+    "year": 2026,
+    "createdOn": "2026-09-23"
+  },
+  "industry": "restaurant",
+  "requirements": [
+    "お客様がメニューを見られる",
+    "席の予約ができる",
+    "アクセスがわかる",
+    "貸切の相談など問い合わせができる"
+  ],
+  "existingResources": [
+    "LINE Official Account",
+    "Google Spreadsheet"
+  ],
+  "brand": {
+    "name": "Demo Bistro",
+    "preset": "friendly-local-v1"
+  },
+  "config": {
+    "business.name": "Demo Bistro",
+    "business.address": "大阪府大阪市北区0-0-0",
+    "business.phone": "06-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-bistro",
+    "business.hoursText": "17:00-23:00（日曜定休）",
+    "notification.ownerEmail": "owner@example.com",
+    "hours.mon": "17:00-23:00",
+    "hours.tue": "17:00-23:00",
+    "hours.wed": "17:00-23:00",
+    "hours.thu": "17:00-23:00",
+    "hours.fri": "17:00-24:00",
+    "hours.sat": "17:00-24:00",
+    "hours.sun": "closed",
+    "reservation.slotMinutes": "30",
+    "reservation.defaultDurationMinutes": "120",
+    "reservation.capacity": "6",
+    "reservation.minLeadHours": "2",
+    "labels.serviceList": "お料理・コース"
+  }
+}

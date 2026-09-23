@@ -1,0 +1,145 @@
+{
+  "kind": "spreadsheet-schema",
+  "id": "reservations-basic-v1",
+  "version": "1.0.0",
+  "description": "Reservation requests. The owner confirms by changing status to CONFIRMED.",
+  "sheets": [
+    {
+      "name": "RESERVATIONS",
+      "description": "予約",
+      "primaryKey": "reservationId",
+      "indexes": [
+        "submissionId",
+        "date",
+        "customerId"
+      ],
+      "columns": [
+        {
+          "name": "reservationId",
+          "type": "string",
+          "required": true,
+          "description": "予約番号 (RES-YYYYMMDD-XXXXXX)"
+        },
+        {
+          "name": "submissionId",
+          "type": "string",
+          "required": true,
+          "description": "重複防止用ID（LINE webhookEventId 等）"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "description": "受付日時 (ISO 8601)"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime",
+          "required": false,
+          "description": "更新日時 (ISO 8601)"
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "required": false,
+          "description": "お客様ID",
+          "references": "CUSTOMERS.customerId"
+        },
+        {
+          "name": "lineUserId",
+          "type": "string",
+          "required": false,
+          "description": "LINE ユーザーID",
+          "pii": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "お名前",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "description": "メールアドレス",
+          "pii": true
+        },
+        {
+          "name": "phone",
+          "type": "phone",
+          "required": false,
+          "description": "電話番号",
+          "pii": true
+        },
+        {
+          "name": "serviceId",
+          "type": "string",
+          "required": false,
+          "description": "メニューID",
+          "references": "SERVICES.serviceId"
+        },
+        {
+          "name": "partySize",
+          "type": "integer",
+          "required": false,
+          "description": "人数"
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": true,
+          "description": "日付 (YYYY-MM-DD)"
+        },
+        {
+          "name": "startTime",
+          "type": "time",
+          "required": true,
+          "description": "開始時刻 (HH:mm)"
+        },
+        {
+          "name": "endTime",
+          "type": "time",
+          "required": true,
+          "description": "終了時刻 (HH:mm)"
+        },
+        {
+          "name": "durationMinutes",
+          "type": "integer",
+          "required": false,
+          "description": "所要時間（分）"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "description": "状態（REQUESTED=リクエスト / CONFIRMED=確定 / CANCELLED=キャンセル）",
+          "enum": [
+            "REQUESTED",
+            "CONFIRMED",
+            "CANCELLED"
+          ],
+          "default": "REQUESTED"
+        },
+        {
+          "name": "source",
+          "type": "enum",
+          "required": false,
+          "description": "受付経路",
+          "enum": [
+            "line",
+            "api"
+          ]
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "description": "ご要望・メモ",
+          "pii": true
+        }
+      ]
+    }
+  ]
+}

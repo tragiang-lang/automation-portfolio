@@ -1,0 +1,7 @@
+
+> ai-agent-coconala-factory@0.1.0 factory
+> tsx src/cli.ts create-project --brief templates/briefs/real-estate.example.json
+
+
+wrote 59 file(s) to projects\2026\demo-real-estate
+QA: PASS (pass 28, fail 0, warn 0, skipped 0)

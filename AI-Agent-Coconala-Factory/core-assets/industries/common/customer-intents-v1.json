@@ -1,0 +1,87 @@
+{
+  "kind": "intent-catalog",
+  "id": "customer-intents-v1",
+  "version": "1.0.0",
+  "intents": [
+    {
+      "id": "book",
+      "description": "Make a reservation / appointment",
+      "workflows": [
+        "reservation-basic-v1"
+      ],
+      "keywords": [
+        "reservation",
+        "reserve",
+        "book",
+        "booking",
+        "appointment",
+        "予約",
+        "ご予約"
+      ]
+    },
+    {
+      "id": "view_menu",
+      "description": "See services / menu / prices",
+      "workflows": [
+        "service-menu-v1"
+      ],
+      "keywords": [
+        "menu",
+        "price",
+        "service list",
+        "メニュー",
+        "料金",
+        "料理",
+        "コース"
+      ]
+    },
+    {
+      "id": "ask_question",
+      "description": "Send an inquiry",
+      "workflows": [
+        "inquiry-basic-v1"
+      ],
+      "keywords": [
+        "inquiry",
+        "question",
+        "contact",
+        "問い合わせ",
+        "お問い合わせ",
+        "質問",
+        "相談"
+      ]
+    },
+    {
+      "id": "find_access",
+      "description": "Find the address / map",
+      "workflows": [
+        "business-info-v1"
+      ],
+      "keywords": [
+        "access",
+        "address",
+        "map",
+        "location",
+        "direction",
+        "アクセス",
+        "地図",
+        "場所",
+        "住所"
+      ]
+    },
+    {
+      "id": "check_hours",
+      "description": "Check opening hours",
+      "workflows": [
+        "business-info-v1"
+      ],
+      "keywords": [
+        "hours",
+        "opening hours",
+        "business hours",
+        "営業時間",
+        "定休日"
+      ]
+    }
+  ]
+}

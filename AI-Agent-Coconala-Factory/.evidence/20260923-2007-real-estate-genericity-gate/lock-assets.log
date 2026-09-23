@@ -1,0 +1,5 @@
+
+> ai-agent-coconala-factory@0.1.0 factory
+> tsx src/cli.ts lock-assets
+
+lock-assets: 2 added, 0 updated

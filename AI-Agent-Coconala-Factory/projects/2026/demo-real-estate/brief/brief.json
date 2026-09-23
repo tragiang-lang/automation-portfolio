@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "slug": "demo-real-estate",
+    "clientName": "Demo Real Estate Tokyo（デモ）",
+    "year": 2026,
+    "createdOn": "2026-09-23"
+  },
+  "industry": "real_estate",
+  "requirements": [
+    "物件や条件について問い合わせ・相談ができる",
+    "内見の予約リクエストができる",
+    "来店相談の予約リクエストができる",
+    "店舗へのアクセスがわかる",
+    "営業時間と定休日がわかる",
+    "物件一覧は既存のWebサイトで見られるようにしたい"
+  ],
+  "intents": [],
+  "existingResources": [
+    "LINE Official Account",
+    "Google Spreadsheet",
+    "Existing property list website"
+  ],
+  "brand": {
+    "name": "Demo Real Estate Tokyo",
+    "preset": "clean-professional-v1",
+    "tone": "誠実・落ち着いた・わかりやすい",
+    "logoAvailable": false
+  },
+  "config": {
+    "business.name": "Demo Real Estate Tokyo",
+    "business.address": "東京都千代田区0-0-0",
+    "business.phone": "03-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-real-estate-tokyo",
+    "business.hoursText": "10:00-18:00（水曜定休）",
+    "notification.ownerEmail": "owner@example.com",
+    "hours.mon": "10:00-18:00",
+    "hours.tue": "10:00-18:00",
+    "hours.wed": "closed",
+    "hours.thu": "10:00-18:00",
+    "hours.fri": "10:00-18:00",
+    "hours.sat": "10:00-18:00",
+    "hours.sun": "10:00-18:00",
+    "reservation.slotMinutes": "60",
+    "reservation.defaultDurationMinutes": "60",
+    "reservation.capacity": "2",
+    "reservation.minLeadHours": "24",
+    "reservation.maxDaysAhead": "30",
+    "links.propertySiteUrl": "https://example.com/properties/demo-real-estate-tokyo"
+  },
+  "overrides": {}
+}

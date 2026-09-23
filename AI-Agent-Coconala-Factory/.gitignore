@@ -1,0 +1,14 @@
+node_modules/
+# ad-hoc CLI output — regenerate any time
+output/*
+!output/.gitkeep
+# generated GAS bundles and per-environment clasp/secret files
+**/gas/build/
+**/.clasp.json
+**/.clasprc.json
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+# vitest temp projects
+.tmp/

@@ -1,0 +1,667 @@
+{
+  "_meta": {
+    "artifact": "spreadsheet/schema.json",
+    "generatedBy": "spreadsheet-schema-generator",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-restaurant",
+    "industry": "restaurant",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "business-info-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "friendly-local-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "hero-1-plus-3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "restaurant-basic-v1": "1.0.0",
+      "restaurant-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "sheets": [
+    {
+      "name": "CONFIG",
+      "description": "設定（店舗情報・営業時間・通知先など）",
+      "primaryKey": "key",
+      "indexes": [],
+      "columns": [
+        {
+          "name": "key",
+          "type": "string",
+          "required": true,
+          "description": "設定キー（変更しないでください）",
+          "pii": false
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "description": "設定値",
+          "pii": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "description": "説明",
+          "pii": false
+        }
+      ],
+      "sourceSchema": "core-config-v1@1.0.0"
+    },
+    {
+      "name": "CUSTOMERS",
+      "description": "お客様一覧",
+      "primaryKey": "customerId",
+      "indexes": [
+        "lineUserId",
+        "email"
+      ],
+      "columns": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "required": true,
+          "description": "お客様ID (CUS-YYYYMMDD-XXXXXX)",
+          "pii": false
+        },
+        {
+          "name": "lineUserId",
+          "type": "string",
+          "required": false,
+          "description": "LINE ユーザーID",
+          "pii": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "お名前",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "description": "メールアドレス",
+          "pii": true
+        },
+        {
+          "name": "phone",
+          "type": "phone",
+          "required": false,
+          "description": "電話番号",
+          "pii": true
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "description": "登録日時 (ISO 8601)",
+          "pii": false
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime",
+          "required": false,
+          "description": "更新日時 (ISO 8601)",
+          "pii": false
+        }
+      ],
+      "sourceSchema": "customers-basic-v1@1.0.0"
+    },
+    {
+      "name": "SERVICES",
+      "description": "メニュー（サービス）一覧",
+      "primaryKey": "serviceId",
+      "indexes": [],
+      "columns": [
+        {
+          "name": "serviceId",
+          "type": "string",
+          "required": true,
+          "description": "メニューID（英数字・重複不可 例: S001）",
+          "pii": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "メニュー名",
+          "pii": false
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "required": false,
+          "description": "カテゴリ",
+          "pii": false
+        },
+        {
+          "name": "durationMinutes",
+          "type": "integer",
+          "required": false,
+          "description": "所要時間（分）",
+          "pii": false
+        },
+        {
+          "name": "price",
+          "type": "integer",
+          "required": false,
+          "description": "料金（税込・円）",
+          "pii": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "description": "説明",
+          "pii": false
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "required": true,
+          "default": "TRUE",
+          "description": "表示する (TRUE/FALSE)",
+          "pii": false
+        },
+        {
+          "name": "displayOrder",
+          "type": "integer",
+          "required": false,
+          "description": "表示順（小さい順）",
+          "pii": false
+        }
+      ],
+      "sourceSchema": "services-basic-v1@1.0.0"
+    },
+    {
+      "name": "RESERVATIONS",
+      "description": "予約",
+      "primaryKey": "reservationId",
+      "indexes": [
+        "submissionId",
+        "date",
+        "customerId"
+      ],
+      "columns": [
+        {
+          "name": "reservationId",
+          "type": "string",
+          "required": true,
+          "description": "予約番号 (RES-YYYYMMDD-XXXXXX)",
+          "pii": false
+        },
+        {
+          "name": "submissionId",
+          "type": "string",
+          "required": true,
+          "description": "重複防止用ID（LINE webhookEventId 等）",
+          "pii": false
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "description": "受付日時 (ISO 8601)",
+          "pii": false
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime",
+          "required": false,
+          "description": "更新日時 (ISO 8601)",
+          "pii": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "required": false,
+          "description": "お客様ID",
+          "references": "CUSTOMERS.customerId",
+          "pii": false
+        },
+        {
+          "name": "lineUserId",
+          "type": "string",
+          "required": false,
+          "description": "LINE ユーザーID",
+          "pii": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "お名前",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "description": "メールアドレス",
+          "pii": true
+        },
+        {
+          "name": "phone",
+          "type": "phone",
+          "required": false,
+          "description": "電話番号",
+          "pii": true
+        },
+        {
+          "name": "serviceId",
+          "type": "string",
+          "required": false,
+          "description": "メニューID",
+          "references": "SERVICES.serviceId",
+          "pii": false
+        },
+        {
+          "name": "partySize",
+          "type": "integer",
+          "required": false,
+          "description": "人数",
+          "pii": false
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": true,
+          "description": "日付 (YYYY-MM-DD)",
+          "pii": false
+        },
+        {
+          "name": "startTime",
+          "type": "time",
+          "required": true,
+          "description": "開始時刻 (HH:mm)",
+          "pii": false
+        },
+        {
+          "name": "endTime",
+          "type": "time",
+          "required": true,
+          "description": "終了時刻 (HH:mm)",
+          "pii": false
+        },
+        {
+          "name": "durationMinutes",
+          "type": "integer",
+          "required": false,
+          "description": "所要時間（分）",
+          "pii": false
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "default": "REQUESTED",
+          "enum": [
+            "REQUESTED",
+            "CONFIRMED",
+            "CANCELLED"
+          ],
+          "description": "状態（REQUESTED=リクエスト / CONFIRMED=確定 / CANCELLED=キャンセル）",
+          "pii": false
+        },
+        {
+          "name": "source",
+          "type": "enum",
+          "required": false,
+          "enum": [
+            "line",
+            "api"
+          ],
+          "description": "受付経路",
+          "pii": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "description": "ご要望・メモ",
+          "pii": true
+        }
+      ],
+      "sourceSchema": "reservations-basic-v1@1.0.0"
+    },
+    {
+      "name": "INQUIRIES",
+      "description": "お問い合わせ",
+      "primaryKey": "inquiryId",
+      "indexes": [
+        "submissionId",
+        "customerId"
+      ],
+      "columns": [
+        {
+          "name": "inquiryId",
+          "type": "string",
+          "required": true,
+          "description": "受付番号 (INQ-YYYYMMDD-XXXXXX)",
+          "pii": false
+        },
+        {
+          "name": "submissionId",
+          "type": "string",
+          "required": true,
+          "description": "重複防止用ID（LINE webhookEventId 等）",
+          "pii": false
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "description": "受付日時 (ISO 8601)",
+          "pii": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "required": false,
+          "description": "お客様ID",
+          "references": "CUSTOMERS.customerId",
+          "pii": false
+        },
+        {
+          "name": "lineUserId",
+          "type": "string",
+          "required": false,
+          "description": "LINE ユーザーID",
+          "pii": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "お名前",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "description": "メールアドレス",
+          "pii": true
+        },
+        {
+          "name": "phone",
+          "type": "phone",
+          "required": false,
+          "description": "電話番号",
+          "pii": true
+        },
+        {
+          "name": "message",
+          "type": "text",
+          "required": true,
+          "description": "お問い合わせ内容",
+          "pii": true
+        },
+        {
+          "name": "source",
+          "type": "enum",
+          "required": false,
+          "enum": [
+            "line",
+            "api"
+          ],
+          "description": "受付経路",
+          "pii": false
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "default": "NEW",
+          "enum": [
+            "NEW",
+            "IN_PROGRESS",
+            "DONE"
+          ],
+          "description": "対応状況（NEW=未対応 / IN_PROGRESS=対応中 / DONE=完了）",
+          "pii": false
+        }
+      ],
+      "sourceSchema": "inquiries-basic-v1@1.0.0"
+    }
+  ],
+  "configKeys": [
+    {
+      "key": "hours.mon",
+      "type": "string",
+      "required": false,
+      "default": "closed",
+      "description": "営業時間 (mon) 例: 10:00-19:00 / 定休日は closed",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "hours.tue",
+      "type": "string",
+      "required": false,
+      "default": "closed",
+      "description": "営業時間 (tue) 例: 10:00-19:00 / 定休日は closed",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "hours.wed",
+      "type": "string",
+      "required": false,
+      "default": "closed",
+      "description": "営業時間 (wed) 例: 10:00-19:00 / 定休日は closed",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "hours.thu",
+      "type": "string",
+      "required": false,
+      "default": "closed",
+      "description": "営業時間 (thu) 例: 10:00-19:00 / 定休日は closed",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "hours.fri",
+      "type": "string",
+      "required": false,
+      "default": "closed",
+      "description": "営業時間 (fri) 例: 10:00-19:00 / 定休日は closed",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "hours.sat",
+      "type": "string",
+      "required": false,
+      "default": "closed",
+      "description": "営業時間 (sat) 例: 10:00-19:00 / 定休日は closed",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "hours.sun",
+      "type": "string",
+      "required": false,
+      "default": "closed",
+      "description": "営業時間 (sun) 例: 10:00-19:00 / 定休日は closed",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "reservation.slotMinutes",
+      "type": "number",
+      "required": false,
+      "default": "30",
+      "description": "予約枠の間隔（分）",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "reservation.defaultDurationMinutes",
+      "type": "number",
+      "required": false,
+      "default": "60",
+      "description": "メニュー未指定時の所要時間（分）",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "reservation.minLeadHours",
+      "type": "number",
+      "required": false,
+      "default": "3",
+      "description": "何時間前まで予約を受け付けるか",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "reservation.maxDaysAhead",
+      "type": "number",
+      "required": false,
+      "default": "60",
+      "description": "何日先まで予約を受け付けるか",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "reservation.capacity",
+      "type": "number",
+      "required": false,
+      "default": "1",
+      "description": "同じ時間帯に受け付ける予約数（席数・スタッフ数）",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "reservation.closedDates",
+      "type": "string",
+      "required": false,
+      "default": "",
+      "description": "臨時休業日（カンマ区切り 例: 2026-12-31,2027-01-01）",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0"
+      ]
+    },
+    {
+      "key": "notification.ownerEmail",
+      "type": "email",
+      "required": false,
+      "description": "新しいお問い合わせ・予約リクエストの通知先メールアドレス（店舗用）",
+      "sources": [
+        "createReservation@1.0.0",
+        "getAvailability@1.0.0",
+        "createInquiry@1.0.0"
+      ]
+    },
+    {
+      "key": "labels.serviceList",
+      "type": "string",
+      "required": false,
+      "default": "メニュー・料金",
+      "description": "メニュー一覧の見出し",
+      "sources": [
+        "getServiceList@1.0.0"
+      ]
+    },
+    {
+      "key": "business.name",
+      "type": "string",
+      "required": true,
+      "description": "店舗名",
+      "sources": [
+        "getBusinessInfo@1.0.0"
+      ]
+    },
+    {
+      "key": "business.address",
+      "type": "string",
+      "required": false,
+      "description": "住所",
+      "sources": [
+        "getBusinessInfo@1.0.0"
+      ]
+    },
+    {
+      "key": "business.phone",
+      "type": "string",
+      "required": false,
+      "description": "電話番号",
+      "sources": [
+        "getBusinessInfo@1.0.0"
+      ]
+    },
+    {
+      "key": "business.mapUrl",
+      "type": "url",
+      "required": false,
+      "description": "地図URL（Google マップ等）",
+      "sources": [
+        "getBusinessInfo@1.0.0"
+      ]
+    },
+    {
+      "key": "business.hoursText",
+      "type": "text",
+      "required": false,
+      "description": "営業時間の案内文 例: 10:00〜19:00（火曜定休）",
+      "sources": [
+        "getBusinessInfo@1.0.0"
+      ]
+    },
+    {
+      "key": "business.accessNote",
+      "type": "text",
+      "required": false,
+      "description": "アクセス案内 例: 〇〇駅 徒歩3分",
+      "sources": [
+        "getBusinessInfo@1.0.0"
+      ]
+    }
+  ]
+}

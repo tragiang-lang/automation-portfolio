@@ -1,0 +1,81 @@
+{
+  "kind": "rich-menu",
+  "id": "real-estate-basic-v1",
+  "version": "1.0.0",
+  "description": "Six-button menu for local real-estate agencies: viewing request first, then property consultation, company info, access, hours and a link to the existing property list page.",
+  "industries": [
+    "real_estate"
+  ],
+  "layout": "grid-2x3-v1",
+  "chatBarText": "メニュー",
+  "items": [
+    {
+      "slot": "a",
+      "label": "内見を申し込む",
+      "subLabel": "予約リクエスト",
+      "role": "primary",
+      "icon": "key",
+      "action": {
+        "type": "workflow",
+        "workflowId": "reservation-basic-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "b",
+      "label": "物件のご相談",
+      "subLabel": "空室・条件の確認",
+      "role": "secondary",
+      "icon": "chat",
+      "action": {
+        "type": "workflow",
+        "workflowId": "inquiry-basic-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "c",
+      "label": "物件を探す",
+      "subLabel": "物件一覧（Web）",
+      "role": "secondary",
+      "icon": "search",
+      "action": {
+        "type": "uri",
+        "configKey": "links.propertySiteUrl"
+      }
+    },
+    {
+      "slot": "d",
+      "label": "会社・店舗情報",
+      "role": "secondary",
+      "icon": "building",
+      "action": {
+        "type": "workflow",
+        "workflowId": "business-info-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "e",
+      "label": "アクセス",
+      "role": "secondary",
+      "icon": "map-pin",
+      "action": {
+        "type": "workflow",
+        "workflowId": "business-info-v1",
+        "entry": "access"
+      }
+    },
+    {
+      "slot": "f",
+      "label": "営業時間",
+      "role": "secondary",
+      "icon": "clock",
+      "action": {
+        "type": "workflow",
+        "workflowId": "business-info-v1",
+        "entry": "hours"
+      }
+    }
+  ]
+}

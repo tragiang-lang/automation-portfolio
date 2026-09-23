@@ -1,0 +1,55 @@
+{
+  "kind": "action",
+  "id": "getServiceList",
+  "version": "1.0.0",
+  "description": "Lists active rows of the SERVICES sheet in display order (a salon's menu, a restaurant's dishes, a school's courses).",
+  "status": "available",
+  "exposure": [
+    "api",
+    "line"
+  ],
+  "reusable": true,
+  "industrySpecific": false,
+  "input": {},
+  "output": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "services": {
+      "type": "array",
+      "required": true
+    }
+  },
+  "dependencies": {
+    "sheets": [
+      "CONFIG",
+      "SERVICES"
+    ],
+    "configKeys": [
+      {
+        "key": "labels.serviceList",
+        "type": "string",
+        "required": false,
+        "default": "メニュー・料金",
+        "description": "メニュー一覧の見出し"
+      }
+    ],
+    "services": [
+      "tables"
+    ],
+    "scriptProperties": []
+  },
+  "validation": [
+    "no input"
+  ],
+  "errors": [
+    {
+      "code": "SHEET_ERROR",
+      "when": "SERVICES sheet or its required headers are missing"
+    }
+  ],
+  "gas": {
+    "module": "service-menu"
+  }
+}

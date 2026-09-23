@@ -1,0 +1,35 @@
+{
+  "kind": "design-preset",
+  "id": "minimal-modern-v1",
+  "version": "1.0.0",
+  "name": "Minimal modern",
+  "description": "Neutral greys, black primary and one blue accent. Crisp and neutral, works for almost any business.",
+  "suitableIndustries": [
+    "*"
+  ],
+  "colors": {
+    "background": "#F5F5F4",
+    "surface": "#FFFFFF",
+    "primary": "#111827",
+    "onPrimary": "#FFFFFF",
+    "accent": "#2563EB",
+    "text": "#111827",
+    "muted": "#6B7280",
+    "border": "#E5E7EB"
+  },
+  "typography": {
+    "direction": "Geometric sans (Noto Sans JP) throughout",
+    "headingStyle": "bold sans, tight tracking",
+    "labelWeight": "bold",
+    "minLabelPx": 64
+  },
+  "spacing": {
+    "gutterPx": 12,
+    "tilePaddingPx": 40,
+    "cornerRadiusPx": 24
+  },
+  "hierarchy": "Primary tile solid black; secondary tiles white cards with rounded corners.",
+  "iconStyle": "2px outline icons, rounded caps",
+  "buttonStyle": "rounded cards on a light grey background",
+  "imagery": "none"
+}

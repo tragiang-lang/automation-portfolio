@@ -1,0 +1,53 @@
+{
+  "kind": "industry",
+  "id": "restaurant-v1",
+  "version": "1.0.0",
+  "industry": "restaurant",
+  "category": "food_service",
+  "displayName": "飲食店 / Restaurant",
+  "businessType": "Walk-in plus table reservations; menu browsing is the most common intent.",
+  "customerIntents": [
+    "book",
+    "view_menu",
+    "find_access",
+    "ask_question",
+    "check_hours"
+  ],
+  "lineUseCases": [
+    "Table reservation requests",
+    "Menu / course lookup",
+    "Access on the way to the restaurant",
+    "Private party / allergy questions"
+  ],
+  "recommendedWorkflows": [
+    "reservation-basic-v1",
+    "service-menu-v1",
+    "business-info-v1",
+    "inquiry-basic-v1"
+  ],
+  "recommendedRichMenu": "restaurant-basic-v1",
+  "recommendedDesignPresets": [
+    "friendly-local-v1",
+    "warm-natural-v1",
+    "minimal-modern-v1"
+  ],
+  "terminology": {
+    "service": "お料理・コース",
+    "reservation": "席のご予約",
+    "inquiry": "お問い合わせ",
+    "capacity": "同じ時間帯に受けられる組数"
+  },
+  "requiredData": [
+    "CONFIG: 店舗名・住所・電話番号・地図URL・営業時間",
+    "SERVICES: 料理・コース名・料金（所要時間はコース時間）",
+    "reservation.capacity: 同じ時間帯に受けられる組数",
+    "reservation.defaultDurationMinutes: 1組あたりの滞在時間"
+  ],
+  "notificationRequirements": [
+    "Owner email on every table reservation request"
+  ],
+  "risks": [
+    "Party size is recorded but not used for capacity in reservation-basic-v1 (capacity counts groups).",
+    "Same-day requests may need a shorter reservation.minLeadHours."
+  ]
+}

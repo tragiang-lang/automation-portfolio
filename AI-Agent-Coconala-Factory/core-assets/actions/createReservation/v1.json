@@ -1,0 +1,214 @@
+{
+  "kind": "action",
+  "id": "createReservation",
+  "version": "1.0.0",
+  "description": "Creates a reservation request (status REQUESTED) after re-checking the slot under the script lock. The owner confirms by setting status to CONFIRMED.",
+  "status": "available",
+  "exposure": [
+    "api",
+    "line"
+  ],
+  "reusable": true,
+  "industrySpecific": false,
+  "input": {
+    "submissionId": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "startDateTime": {
+      "type": "datetime",
+      "required": true,
+      "description": "YYYY-MM-DDTHH:mm, Asia/Tokyo"
+    },
+    "serviceId": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "partySize": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "email": {
+      "type": "email"
+    },
+    "phone": {
+      "type": "phone"
+    },
+    "lineUserId": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "line",
+        "api"
+      ]
+    }
+  },
+  "output": {
+    "reservationId": {
+      "type": "string",
+      "required": true
+    },
+    "status": {
+      "type": "string",
+      "required": true,
+      "enum": [
+        "REQUESTED"
+      ]
+    },
+    "startDateTime": {
+      "type": "datetime",
+      "required": true
+    },
+    "endDateTime": {
+      "type": "datetime",
+      "required": true
+    }
+  },
+  "dependencies": {
+    "sheets": [
+      "CONFIG",
+      "CUSTOMERS",
+      "RESERVATIONS",
+      "SERVICES"
+    ],
+    "configKeys": [
+      {
+        "key": "hours.mon",
+        "type": "string",
+        "required": false,
+        "default": "closed",
+        "description": "営業時間 (mon) 例: 10:00-19:00 / 定休日は closed"
+      },
+      {
+        "key": "hours.tue",
+        "type": "string",
+        "required": false,
+        "default": "closed",
+        "description": "営業時間 (tue) 例: 10:00-19:00 / 定休日は closed"
+      },
+      {
+        "key": "hours.wed",
+        "type": "string",
+        "required": false,
+        "default": "closed",
+        "description": "営業時間 (wed) 例: 10:00-19:00 / 定休日は closed"
+      },
+      {
+        "key": "hours.thu",
+        "type": "string",
+        "required": false,
+        "default": "closed",
+        "description": "営業時間 (thu) 例: 10:00-19:00 / 定休日は closed"
+      },
+      {
+        "key": "hours.fri",
+        "type": "string",
+        "required": false,
+        "default": "closed",
+        "description": "営業時間 (fri) 例: 10:00-19:00 / 定休日は closed"
+      },
+      {
+        "key": "hours.sat",
+        "type": "string",
+        "required": false,
+        "default": "closed",
+        "description": "営業時間 (sat) 例: 10:00-19:00 / 定休日は closed"
+      },
+      {
+        "key": "hours.sun",
+        "type": "string",
+        "required": false,
+        "default": "closed",
+        "description": "営業時間 (sun) 例: 10:00-19:00 / 定休日は closed"
+      },
+      {
+        "key": "reservation.slotMinutes",
+        "type": "number",
+        "required": false,
+        "default": "30",
+        "description": "予約枠の間隔（分）"
+      },
+      {
+        "key": "reservation.defaultDurationMinutes",
+        "type": "number",
+        "required": false,
+        "default": "60",
+        "description": "メニュー未指定時の所要時間（分）"
+      },
+      {
+        "key": "reservation.minLeadHours",
+        "type": "number",
+        "required": false,
+        "default": "3",
+        "description": "何時間前まで予約を受け付けるか"
+      },
+      {
+        "key": "reservation.maxDaysAhead",
+        "type": "number",
+        "required": false,
+        "default": "60",
+        "description": "何日先まで予約を受け付けるか"
+      },
+      {
+        "key": "reservation.capacity",
+        "type": "number",
+        "required": false,
+        "default": "1",
+        "description": "同じ時間帯に受け付ける予約数（席数・スタッフ数）"
+      },
+      {
+        "key": "reservation.closedDates",
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "臨時休業日（カンマ区切り 例: 2026-12-31,2027-01-01）"
+      },
+      {
+        "key": "notification.ownerEmail",
+        "type": "email",
+        "required": false,
+        "description": "新しいお問い合わせ・予約リクエストの通知先メールアドレス（店舗用）"
+      }
+    ],
+    "services": [
+      "tables",
+      "cache",
+      "lock",
+      "mail"
+    ],
+    "scriptProperties": []
+  },
+  "validation": [
+    "startDateTime must be a real Tokyo-local datetime",
+    "lineUserId, or name plus email/phone",
+    "slot inside opening hours, not a closed date, after lead time, inside booking window, under capacity"
+  ],
+  "errors": [
+    {
+      "code": "VALIDATION_ERROR",
+      "when": "bad datetime, missing contact, unknown serviceId"
+    },
+    {
+      "code": "SLOT_UNAVAILABLE",
+      "when": "closed, outside hours, too soon, too far, or full"
+    },
+    {
+      "code": "SYSTEM_BUSY",
+      "when": "script lock not acquired within 10s"
+    }
+  ],
+  "gas": {
+    "module": "reservation-basic"
+  }
+}

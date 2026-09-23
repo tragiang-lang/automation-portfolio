@@ -1,0 +1,34 @@
+{
+  "kind": "spreadsheet-schema",
+  "id": "core-config-v1",
+  "version": "1.0.0",
+  "description": "CONFIG key/value sheet the owner edits. Holds business information and settings only. Secrets never go here (they live in Script Properties).",
+  "sheets": [
+    {
+      "name": "CONFIG",
+      "description": "設定（店舗情報・営業時間・通知先など）",
+      "primaryKey": "key",
+      "indexes": [],
+      "columns": [
+        {
+          "name": "key",
+          "type": "string",
+          "required": true,
+          "description": "設定キー（変更しないでください）"
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "description": "設定値"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "description": "説明"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "kind": "workflow",
+  "id": "reservation-basic-v1",
+  "version": "1.0.0",
+  "name": "Reservation request (basic)",
+  "description": "Rich Menu button opens LINE's date-time picker; the chosen slot is checked against opening hours, capacity and existing bookings and saved as a REQUESTED reservation for the owner to confirm.",
+  "status": "stable",
+  "industries": [
+    "*"
+  ],
+  "trigger": "LINE_RICH_MENU",
+  "actions": [
+    "createReservation@1",
+    "getAvailability@1"
+  ],
+  "entries": {
+    "default": {
+      "type": "datetimepicker",
+      "action": "createReservation@1",
+      "mode": "direct",
+      "pickerMode": "datetime",
+      "params": {}
+    }
+  },
+  "spreadsheet": {
+    "schemas": [
+      "core-config-v1",
+      "customers-basic-v1",
+      "services-basic-v1",
+      "reservations-basic-v1"
+    ],
+    "requiredSheets": [
+      "CONFIG",
+      "CUSTOMERS",
+      "SERVICES",
+      "RESERVATIONS"
+    ]
+  },
+  "configKeys": [],
+  "notifications": [
+    {
+      "event": "reservation.requested",
+      "channel": "email",
+      "to": "owner"
+    }
+  ],
+  "extensionPoints": [
+    {
+      "id": "google-calendar",
+      "description": "Add Calendar busy times as extra BookedInterval sources in services/availability.ts; create an event on CONFIRMED."
+    },
+    {
+      "id": "staff-availability",
+      "description": "Per-staff capacity (reference: hair-salon-portfolio StaffAvailabilityStrategy)."
+    },
+    {
+      "id": "cancellation",
+      "description": "cancelReservation@1 (planned) with ownership check by lineUserId."
+    },
+    {
+      "id": "customer-notifications",
+      "description": "Confirmation/reminder push via sendLineMessage@1 (planned)."
+    },
+    {
+      "id": "customer-history",
+      "description": "Query RESERVATIONS by customerId for a 'my bookings' button."
+    }
+  ]
+}

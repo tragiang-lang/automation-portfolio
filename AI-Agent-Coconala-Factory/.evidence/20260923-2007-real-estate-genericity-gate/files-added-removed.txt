@@ -1,0 +1,3 @@
+> *./core-assets/industries/real-estate/real-estate-v1.json
+> *./core-assets/rich-menu/menus/real-estate-basic-v1.json
+> *./templates/briefs/real-estate.example.json

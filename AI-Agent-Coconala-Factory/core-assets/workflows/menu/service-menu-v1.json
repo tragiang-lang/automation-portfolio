@@ -1,0 +1,42 @@
+{
+  "kind": "workflow",
+  "id": "service-menu-v1",
+  "version": "1.0.0",
+  "name": "Service menu / price list",
+  "description": "Rich Menu button that replies with the active SERVICES list (name, duration, price).",
+  "status": "stable",
+  "industries": [
+    "*"
+  ],
+  "trigger": "LINE_RICH_MENU",
+  "actions": [
+    "getServiceList@1"
+  ],
+  "entries": {
+    "default": {
+      "type": "postback",
+      "action": "getServiceList@1",
+      "mode": "direct",
+      "params": {},
+      "displayText": "メニュー"
+    }
+  },
+  "spreadsheet": {
+    "schemas": [
+      "core-config-v1",
+      "services-basic-v1"
+    ],
+    "requiredSheets": [
+      "CONFIG",
+      "SERVICES"
+    ]
+  },
+  "configKeys": [],
+  "notifications": [],
+  "extensionPoints": [
+    {
+      "id": "flex-carousel",
+      "description": "Flex carousel with photos per service (needs image hosting)."
+    }
+  ]
+}

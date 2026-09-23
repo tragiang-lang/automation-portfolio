@@ -1,0 +1,52 @@
+{
+  "kind": "rich-menu-layout",
+  "id": "hero-1-plus-3-v1",
+  "version": "1.0.0",
+  "description": "Large menu (2500x1686): one full-width hero button on top for the main call to action, three buttons below.",
+  "size": {
+    "width": 2500,
+    "height": 1686
+  },
+  "slots": [
+    {
+      "id": "a",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 2500,
+        "height": 843
+      },
+      "emphasis": "hero"
+    },
+    {
+      "id": "b",
+      "bounds": {
+        "x": 0,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "c",
+      "bounds": {
+        "x": 833,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "d",
+      "bounds": {
+        "x": 1666,
+        "y": 843,
+        "width": 834,
+        "height": 843
+      },
+      "emphasis": "normal"
+    }
+  ]
+}

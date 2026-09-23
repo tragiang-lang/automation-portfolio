@@ -1,0 +1,923 @@
+{
+  "_meta": {
+    "artifact": "workflow/workflow.json",
+    "generatedBy": "workflow-planner",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-restaurant",
+    "industry": "restaurant",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "business-info-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "friendly-local-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "hero-1-plus-3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "restaurant-basic-v1": "1.0.0",
+      "restaurant-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "workflows": [
+    {
+      "id": "reservation-basic-v1",
+      "version": "1.0.0",
+      "kind": "workflow",
+      "name": "Reservation request (basic)",
+      "description": "Rich Menu button opens LINE's date-time picker; the chosen slot is checked against opening hours, capacity and existing bookings and saved as a REQUESTED reservation for the owner to confirm.",
+      "status": "stable",
+      "industries": [
+        "*"
+      ],
+      "trigger": "LINE_RICH_MENU",
+      "actions": [
+        "createReservation@1",
+        "getAvailability@1"
+      ],
+      "entries": {
+        "default": {
+          "type": "datetimepicker",
+          "action": "createReservation@1",
+          "mode": "direct",
+          "pickerMode": "datetime",
+          "params": {}
+        }
+      },
+      "spreadsheet": {
+        "schemas": [
+          "core-config-v1",
+          "customers-basic-v1",
+          "services-basic-v1",
+          "reservations-basic-v1"
+        ],
+        "requiredSheets": [
+          "CONFIG",
+          "CUSTOMERS",
+          "SERVICES",
+          "RESERVATIONS"
+        ]
+      },
+      "configKeys": [],
+      "notifications": [
+        {
+          "event": "reservation.requested",
+          "channel": "email",
+          "to": "owner"
+        }
+      ],
+      "extensionPoints": [
+        {
+          "id": "google-calendar",
+          "description": "Add Calendar busy times as extra BookedInterval sources in services/availability.ts; create an event on CONFIRMED."
+        },
+        {
+          "id": "staff-availability",
+          "description": "Per-staff capacity (reference: hair-salon-portfolio StaffAvailabilityStrategy)."
+        },
+        {
+          "id": "cancellation",
+          "description": "cancelReservation@1 (planned) with ownership check by lineUserId."
+        },
+        {
+          "id": "customer-notifications",
+          "description": "Confirmation/reminder push via sendLineMessage@1 (planned)."
+        },
+        {
+          "id": "customer-history",
+          "description": "Query RESERVATIONS by customerId for a 'my bookings' button."
+        }
+      ]
+    },
+    {
+      "id": "service-menu-v1",
+      "version": "1.0.0",
+      "kind": "workflow",
+      "name": "Service menu / price list",
+      "description": "Rich Menu button that replies with the active SERVICES list (name, duration, price).",
+      "status": "stable",
+      "industries": [
+        "*"
+      ],
+      "trigger": "LINE_RICH_MENU",
+      "actions": [
+        "getServiceList@1"
+      ],
+      "entries": {
+        "default": {
+          "type": "postback",
+          "action": "getServiceList@1",
+          "mode": "direct",
+          "params": {},
+          "displayText": "メニュー"
+        }
+      },
+      "spreadsheet": {
+        "schemas": [
+          "core-config-v1",
+          "services-basic-v1"
+        ],
+        "requiredSheets": [
+          "CONFIG",
+          "SERVICES"
+        ]
+      },
+      "configKeys": [],
+      "notifications": [],
+      "extensionPoints": [
+        {
+          "id": "flex-carousel",
+          "description": "Flex carousel with photos per service (needs image hosting)."
+        }
+      ]
+    },
+    {
+      "id": "business-info-v1",
+      "version": "1.0.0",
+      "kind": "workflow",
+      "name": "Business info / access",
+      "description": "Rich Menu buttons that reply with access information or opening hours, straight from the CONFIG sheet.",
+      "status": "stable",
+      "industries": [
+        "*"
+      ],
+      "trigger": "LINE_RICH_MENU",
+      "actions": [
+        "getBusinessInfo@1"
+      ],
+      "entries": {
+        "default": {
+          "type": "postback",
+          "action": "getBusinessInfo@1",
+          "mode": "direct",
+          "params": {
+            "view": "all"
+          },
+          "displayText": "店舗情報"
+        },
+        "access": {
+          "type": "postback",
+          "action": "getBusinessInfo@1",
+          "mode": "direct",
+          "params": {
+            "view": "access"
+          },
+          "displayText": "アクセス"
+        },
+        "hours": {
+          "type": "postback",
+          "action": "getBusinessInfo@1",
+          "mode": "direct",
+          "params": {
+            "view": "hours"
+          },
+          "displayText": "営業時間"
+        }
+      },
+      "spreadsheet": {
+        "schemas": [
+          "core-config-v1"
+        ],
+        "requiredSheets": [
+          "CONFIG"
+        ]
+      },
+      "configKeys": [],
+      "notifications": [],
+      "extensionPoints": [
+        {
+          "id": "flex-message",
+          "description": "Replace the text reply with a Flex Message card (map thumbnail, call button)."
+        }
+      ]
+    },
+    {
+      "id": "inquiry-basic-v1",
+      "version": "1.0.0",
+      "kind": "workflow",
+      "name": "Inquiry (basic)",
+      "description": "Rich Menu button asks the customer to type their question; the next message is saved to INQUIRIES and the owner gets an email.",
+      "status": "stable",
+      "industries": [
+        "*"
+      ],
+      "trigger": "LINE_RICH_MENU",
+      "actions": [
+        "createInquiry@1"
+      ],
+      "entries": {
+        "default": {
+          "type": "postback",
+          "action": "createInquiry@1",
+          "mode": "awaitText",
+          "prompt": "お問い合わせ内容をこのトークにメッセージで送信してください。\n（10分以内にお送りいただいた内容を受け付けます）",
+          "params": {},
+          "displayText": "お問い合わせ"
+        }
+      },
+      "spreadsheet": {
+        "schemas": [
+          "core-config-v1",
+          "customers-basic-v1",
+          "inquiries-basic-v1"
+        ],
+        "requiredSheets": [
+          "CONFIG",
+          "CUSTOMERS",
+          "INQUIRIES"
+        ]
+      },
+      "configKeys": [],
+      "notifications": [
+        {
+          "event": "inquiry.created",
+          "channel": "email",
+          "to": "owner"
+        }
+      ],
+      "extensionPoints": [
+        {
+          "id": "line-owner-push",
+          "description": "Notify the owner by LINE push instead of email (sendLineMessage@1, planned)."
+        },
+        {
+          "id": "auto-reply-hours",
+          "description": "Different acknowledgement outside business hours."
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "kind": "action",
+      "id": "createReservation",
+      "version": "1.0.0",
+      "description": "Creates a reservation request (status REQUESTED) after re-checking the slot under the script lock. The owner confirms by setting status to CONFIRMED.",
+      "status": "available",
+      "exposure": [
+        "api",
+        "line"
+      ],
+      "reusable": true,
+      "industrySpecific": false,
+      "input": {
+        "submissionId": {
+          "type": "string",
+          "required": true,
+          "maxLength": 100
+        },
+        "startDateTime": {
+          "type": "datetime",
+          "required": true,
+          "description": "YYYY-MM-DDTHH:mm, Asia/Tokyo"
+        },
+        "serviceId": {
+          "type": "string",
+          "required": false,
+          "maxLength": 50
+        },
+        "partySize": {
+          "type": "integer",
+          "required": false
+        },
+        "name": {
+          "type": "string",
+          "required": false,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "email",
+          "required": false
+        },
+        "phone": {
+          "type": "phone",
+          "required": false
+        },
+        "lineUserId": {
+          "type": "string",
+          "required": false,
+          "maxLength": 100
+        },
+        "notes": {
+          "type": "string",
+          "required": false,
+          "maxLength": 500
+        },
+        "source": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "line",
+            "api"
+          ]
+        }
+      },
+      "output": {
+        "reservationId": {
+          "type": "string",
+          "required": true
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "REQUESTED"
+          ]
+        },
+        "startDateTime": {
+          "type": "datetime",
+          "required": true
+        },
+        "endDateTime": {
+          "type": "datetime",
+          "required": true
+        }
+      },
+      "dependencies": {
+        "sheets": [
+          "CONFIG",
+          "CUSTOMERS",
+          "RESERVATIONS",
+          "SERVICES"
+        ],
+        "configKeys": [
+          {
+            "key": "hours.mon",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (mon) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.tue",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (tue) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.wed",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (wed) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.thu",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (thu) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.fri",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (fri) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.sat",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (sat) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.sun",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (sun) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "reservation.slotMinutes",
+            "type": "number",
+            "required": false,
+            "default": "30",
+            "description": "予約枠の間隔（分）"
+          },
+          {
+            "key": "reservation.defaultDurationMinutes",
+            "type": "number",
+            "required": false,
+            "default": "60",
+            "description": "メニュー未指定時の所要時間（分）"
+          },
+          {
+            "key": "reservation.minLeadHours",
+            "type": "number",
+            "required": false,
+            "default": "3",
+            "description": "何時間前まで予約を受け付けるか"
+          },
+          {
+            "key": "reservation.maxDaysAhead",
+            "type": "number",
+            "required": false,
+            "default": "60",
+            "description": "何日先まで予約を受け付けるか"
+          },
+          {
+            "key": "reservation.capacity",
+            "type": "number",
+            "required": false,
+            "default": "1",
+            "description": "同じ時間帯に受け付ける予約数（席数・スタッフ数）"
+          },
+          {
+            "key": "reservation.closedDates",
+            "type": "string",
+            "required": false,
+            "default": "",
+            "description": "臨時休業日（カンマ区切り 例: 2026-12-31,2027-01-01）"
+          },
+          {
+            "key": "notification.ownerEmail",
+            "type": "email",
+            "required": false,
+            "description": "新しいお問い合わせ・予約リクエストの通知先メールアドレス（店舗用）"
+          }
+        ],
+        "services": [
+          "tables",
+          "cache",
+          "lock",
+          "mail"
+        ],
+        "scriptProperties": []
+      },
+      "validation": [
+        "startDateTime must be a real Tokyo-local datetime",
+        "lineUserId, or name plus email/phone",
+        "slot inside opening hours, not a closed date, after lead time, inside booking window, under capacity"
+      ],
+      "errors": [
+        {
+          "code": "VALIDATION_ERROR",
+          "when": "bad datetime, missing contact, unknown serviceId"
+        },
+        {
+          "code": "SLOT_UNAVAILABLE",
+          "when": "closed, outside hours, too soon, too far, or full"
+        },
+        {
+          "code": "SYSTEM_BUSY",
+          "when": "script lock not acquired within 10s"
+        }
+      ],
+      "gas": {
+        "module": "reservation-basic"
+      }
+    },
+    {
+      "kind": "action",
+      "id": "getAvailability",
+      "version": "1.0.0",
+      "description": "Bookable start times for one date, from opening hours, closed dates, lead time, booking window and capacity. API-only in Phase 1 (for a Phase 2 booking screen).",
+      "status": "available",
+      "exposure": [
+        "api"
+      ],
+      "reusable": true,
+      "industrySpecific": false,
+      "input": {
+        "date": {
+          "type": "date",
+          "required": true
+        },
+        "serviceId": {
+          "type": "string",
+          "required": false,
+          "maxLength": 50
+        }
+      },
+      "output": {
+        "date": {
+          "type": "date",
+          "required": true
+        },
+        "durationMinutes": {
+          "type": "integer",
+          "required": true
+        },
+        "startTimes": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "dependencies": {
+        "sheets": [
+          "CONFIG",
+          "RESERVATIONS",
+          "SERVICES"
+        ],
+        "configKeys": [
+          {
+            "key": "hours.mon",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (mon) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.tue",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (tue) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.wed",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (wed) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.thu",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (thu) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.fri",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (fri) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.sat",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (sat) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "hours.sun",
+            "type": "string",
+            "required": false,
+            "default": "closed",
+            "description": "営業時間 (sun) 例: 10:00-19:00 / 定休日は closed"
+          },
+          {
+            "key": "reservation.slotMinutes",
+            "type": "number",
+            "required": false,
+            "default": "30",
+            "description": "予約枠の間隔（分）"
+          },
+          {
+            "key": "reservation.defaultDurationMinutes",
+            "type": "number",
+            "required": false,
+            "default": "60",
+            "description": "メニュー未指定時の所要時間（分）"
+          },
+          {
+            "key": "reservation.minLeadHours",
+            "type": "number",
+            "required": false,
+            "default": "3",
+            "description": "何時間前まで予約を受け付けるか"
+          },
+          {
+            "key": "reservation.maxDaysAhead",
+            "type": "number",
+            "required": false,
+            "default": "60",
+            "description": "何日先まで予約を受け付けるか"
+          },
+          {
+            "key": "reservation.capacity",
+            "type": "number",
+            "required": false,
+            "default": "1",
+            "description": "同じ時間帯に受け付ける予約数（席数・スタッフ数）"
+          },
+          {
+            "key": "reservation.closedDates",
+            "type": "string",
+            "required": false,
+            "default": "",
+            "description": "臨時休業日（カンマ区切り 例: 2026-12-31,2027-01-01）"
+          },
+          {
+            "key": "notification.ownerEmail",
+            "type": "email",
+            "required": false,
+            "description": "新しいお問い合わせ・予約リクエストの通知先メールアドレス（店舗用）"
+          }
+        ],
+        "services": [
+          "tables"
+        ],
+        "scriptProperties": []
+      },
+      "validation": [
+        "date must be a real YYYY-MM-DD date",
+        "serviceId must exist in SERVICES when given"
+      ],
+      "errors": [
+        {
+          "code": "VALIDATION_ERROR",
+          "when": "bad date or unknown serviceId"
+        },
+        {
+          "code": "CONFIG_INVALID",
+          "when": "a reservation.* number is not numeric"
+        }
+      ],
+      "gas": {
+        "module": "reservation-basic"
+      }
+    },
+    {
+      "kind": "action",
+      "id": "getServiceList",
+      "version": "1.0.0",
+      "description": "Lists active rows of the SERVICES sheet in display order (a salon's menu, a restaurant's dishes, a school's courses).",
+      "status": "available",
+      "exposure": [
+        "api",
+        "line"
+      ],
+      "reusable": true,
+      "industrySpecific": false,
+      "input": {},
+      "output": {
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "services": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "dependencies": {
+        "sheets": [
+          "CONFIG",
+          "SERVICES"
+        ],
+        "configKeys": [
+          {
+            "key": "labels.serviceList",
+            "type": "string",
+            "required": false,
+            "default": "メニュー・料金",
+            "description": "メニュー一覧の見出し"
+          }
+        ],
+        "services": [
+          "tables"
+        ],
+        "scriptProperties": []
+      },
+      "validation": [
+        "no input"
+      ],
+      "errors": [
+        {
+          "code": "SHEET_ERROR",
+          "when": "SERVICES sheet or its required headers are missing"
+        }
+      ],
+      "gas": {
+        "module": "service-menu"
+      }
+    },
+    {
+      "kind": "action",
+      "id": "getBusinessInfo",
+      "version": "1.0.0",
+      "description": "Returns the business profile (name, address, phone, map URL, opening hours text) from CONFIG. Read-only.",
+      "status": "available",
+      "exposure": [
+        "api",
+        "line"
+      ],
+      "reusable": true,
+      "industrySpecific": false,
+      "input": {
+        "view": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "all",
+            "access",
+            "hours"
+          ],
+          "description": "Which part to show in a LINE reply."
+        }
+      },
+      "output": {
+        "view": {
+          "type": "string",
+          "required": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "address": {
+          "type": "string",
+          "required": false
+        },
+        "phone": {
+          "type": "phone",
+          "required": false
+        },
+        "mapUrl": {
+          "type": "string",
+          "required": false
+        },
+        "hoursText": {
+          "type": "string",
+          "required": false
+        },
+        "accessNote": {
+          "type": "string",
+          "required": false
+        }
+      },
+      "dependencies": {
+        "sheets": [
+          "CONFIG"
+        ],
+        "configKeys": [
+          {
+            "key": "business.name",
+            "type": "string",
+            "required": true,
+            "description": "店舗名"
+          },
+          {
+            "key": "business.address",
+            "type": "string",
+            "required": false,
+            "description": "住所"
+          },
+          {
+            "key": "business.phone",
+            "type": "string",
+            "required": false,
+            "description": "電話番号"
+          },
+          {
+            "key": "business.mapUrl",
+            "type": "url",
+            "required": false,
+            "description": "地図URL（Google マップ等）"
+          },
+          {
+            "key": "business.hoursText",
+            "type": "text",
+            "required": false,
+            "description": "営業時間の案内文 例: 10:00〜19:00（火曜定休）"
+          },
+          {
+            "key": "business.accessNote",
+            "type": "text",
+            "required": false,
+            "description": "アクセス案内 例: 〇〇駅 徒歩3分"
+          }
+        ],
+        "services": [
+          "tables"
+        ],
+        "scriptProperties": []
+      },
+      "validation": [
+        "view must be one of all/access/hours"
+      ],
+      "errors": [
+        {
+          "code": "CONFIG_INVALID",
+          "when": "business.name is not set"
+        },
+        {
+          "code": "VALIDATION_ERROR",
+          "when": "view is not a known value"
+        }
+      ],
+      "gas": {
+        "module": "business-info"
+      }
+    },
+    {
+      "kind": "action",
+      "id": "createInquiry",
+      "version": "1.0.0",
+      "description": "Records an inquiry idempotently (by submissionId / LINE webhookEventId), links or creates the customer, and emails the owner.",
+      "status": "available",
+      "exposure": [
+        "api",
+        "line"
+      ],
+      "reusable": true,
+      "industrySpecific": false,
+      "input": {
+        "submissionId": {
+          "type": "string",
+          "required": true,
+          "maxLength": 100
+        },
+        "message": {
+          "type": "string",
+          "required": true,
+          "maxLength": 2000
+        },
+        "name": {
+          "type": "string",
+          "required": false,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "email",
+          "required": false
+        },
+        "phone": {
+          "type": "phone",
+          "required": false
+        },
+        "lineUserId": {
+          "type": "string",
+          "required": false,
+          "maxLength": 100
+        },
+        "source": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "line",
+            "api"
+          ]
+        }
+      },
+      "output": {
+        "inquiryId": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "dependencies": {
+        "sheets": [
+          "CONFIG",
+          "CUSTOMERS",
+          "INQUIRIES"
+        ],
+        "configKeys": [
+          {
+            "key": "notification.ownerEmail",
+            "type": "email",
+            "required": false,
+            "description": "新しいお問い合わせ・予約リクエストの通知先メールアドレス（店舗用）"
+          }
+        ],
+        "services": [
+          "tables",
+          "cache",
+          "lock",
+          "mail"
+        ],
+        "scriptProperties": []
+      },
+      "validation": [
+        "message required, max 2000 chars",
+        "at least one of lineUserId / email / phone",
+        "email and phone formats checked"
+      ],
+      "errors": [
+        {
+          "code": "VALIDATION_ERROR",
+          "when": "missing message or contact, bad email/phone format"
+        },
+        {
+          "code": "SYSTEM_BUSY",
+          "when": "script lock not acquired within 10s"
+        }
+      ],
+      "gas": {
+        "module": "inquiry"
+      }
+    }
+  ]
+}

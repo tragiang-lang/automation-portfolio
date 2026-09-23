@@ -1,0 +1,182 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/design-spec.json",
+    "generatedBy": "design-agent",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-restaurant",
+    "industry": "restaurant",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "business-info-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "friendly-local-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "hero-1-plus-3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "restaurant-basic-v1": "1.0.0",
+      "restaurant-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "canvas": {
+    "width": 2500,
+    "height": 1686
+  },
+  "layout": "hero-1-plus-3-v1",
+  "richMenu": "restaurant-basic-v1",
+  "preset": "friendly-local-v1",
+  "brand": {
+    "name": "Demo Bistro"
+  },
+  "colorTokens": {
+    "background": "#FFF8EE",
+    "surface": "#FFFFFF",
+    "primary": "#B93C0A",
+    "onPrimary": "#FFFFFF",
+    "accent": "#0F766E",
+    "text": "#3B2F2A",
+    "muted": "#6F5E53",
+    "border": "#F1DFC8"
+  },
+  "typography": {
+    "direction": "Rounded gothic for labels, playful but readable",
+    "headingStyle": "heavy rounded sans",
+    "labelWeight": "bold",
+    "minLabelPx": 68
+  },
+  "spacing": {
+    "gutterPx": 20,
+    "tilePaddingPx": 44,
+    "cornerRadiusPx": 36
+  },
+  "visualHierarchy": "Primary tile orange with large label; secondary tiles white with colored icons.",
+  "ctaHierarchy": [
+    "席のご予約",
+    "お料理",
+    "アクセス",
+    "お問い合わせ"
+  ],
+  "cells": [
+    {
+      "slot": "a",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 2500,
+        "height": 843
+      },
+      "label": "席のご予約",
+      "subLabel": "日時を選んで予約",
+      "role": "primary",
+      "ctaRank": 1,
+      "emphasis": "hero",
+      "icon": {
+        "name": "calendar",
+        "style": "filled two-tone icons"
+      },
+      "fill": "#B93C0A",
+      "labelColor": "#FFFFFF",
+      "contrastRatio": 5.65
+    },
+    {
+      "slot": "b",
+      "bounds": {
+        "x": 0,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "label": "お料理",
+      "role": "secondary",
+      "ctaRank": 2,
+      "emphasis": "normal",
+      "icon": {
+        "name": "utensils",
+        "style": "filled two-tone icons"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#3B2F2A",
+      "contrastRatio": 12.92
+    },
+    {
+      "slot": "c",
+      "bounds": {
+        "x": 833,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "label": "アクセス",
+      "role": "secondary",
+      "ctaRank": 3,
+      "emphasis": "normal",
+      "icon": {
+        "name": "map-pin",
+        "style": "filled two-tone icons"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#3B2F2A",
+      "contrastRatio": 12.92
+    },
+    {
+      "slot": "d",
+      "bounds": {
+        "x": 1666,
+        "y": 843,
+        "width": 834,
+        "height": 843
+      },
+      "label": "お問い合わせ",
+      "role": "secondary",
+      "ctaRank": 4,
+      "emphasis": "normal",
+      "icon": {
+        "name": "chat",
+        "style": "filled two-tone icons"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#3B2F2A",
+      "contrastRatio": 12.92
+    }
+  ],
+  "iconRequirements": [
+    "calendar icon, filled two-tone icons, at least 160px, readable at phone size",
+    "utensils icon, filled two-tone icons, at least 160px, readable at phone size",
+    "map-pin icon, filled two-tone icons, at least 160px, readable at phone size",
+    "chat icon, filled two-tone icons, at least 160px, readable at phone size"
+  ],
+  "assetRequirements": [
+    "One 2500x1686px image containing every button (LINE uses one image per rich menu)",
+    "No logo supplied. Use the business name as text",
+    "Imagery: optional food/shop photo in the hero tile with a dark overlay behind the label"
+  ],
+  "exportRequirements": {
+    "format": "PNG or JPEG",
+    "maxBytes": 1048576,
+    "width": 2500,
+    "height": 1686
+  },
+  "designNotes": [
+    "Buttons are tapped on phones: keep labels at least 68px on the 2500px canvas.",
+    "Button areas are fixed by the layout bounds below. Draw each label inside its own cell so the tap area matches what the customer sees.",
+    "Button style: pill-rounded tiles with generous spacing.",
+    "Industry: 飲食店 / Restaurant. Terminology: service=お料理・コース, reservation=席のご予約, inquiry=お問い合わせ, capacity=同じ時間帯に受けられる組数.",
+    "Colors are the Friendly local preset defaults."
+  ]
+}

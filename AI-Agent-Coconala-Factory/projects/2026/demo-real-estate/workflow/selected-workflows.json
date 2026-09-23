@@ -1,0 +1,127 @@
+{
+  "_meta": {
+    "artifact": "workflow/selected-workflows.json",
+    "generatedBy": "workflow-planner",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-real-estate",
+    "industry": "real_estate",
+    "workflows": [
+      "inquiry-basic-v1@1.0.0",
+      "reservation-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "clean-professional-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "real-estate-basic-v1": "1.0.0",
+      "real-estate-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "selected": [
+    {
+      "id": "inquiry-basic-v1",
+      "version": "1.0.0",
+      "name": "Inquiry (basic)",
+      "reasons": [
+        "intent:ask_question (requirement)"
+      ],
+      "actions": [
+        "createInquiry@1"
+      ],
+      "entries": [
+        "default"
+      ]
+    },
+    {
+      "id": "reservation-basic-v1",
+      "version": "1.0.0",
+      "name": "Reservation request (basic)",
+      "reasons": [
+        "intent:book (requirement)"
+      ],
+      "actions": [
+        "createReservation@1",
+        "getAvailability@1"
+      ],
+      "entries": [
+        "default"
+      ]
+    },
+    {
+      "id": "business-info-v1",
+      "version": "1.0.0",
+      "name": "Business info / access",
+      "reasons": [
+        "intent:find_access (requirement)",
+        "intent:check_hours (requirement)"
+      ],
+      "actions": [
+        "getBusinessInfo@1"
+      ],
+      "entries": [
+        "default",
+        "access",
+        "hours"
+      ]
+    }
+  ],
+  "deferred": [],
+  "richMenu": "real-estate-basic-v1",
+  "designPreset": "clean-professional-v1",
+  "extensionPoints": [
+    {
+      "workflow": "inquiry-basic-v1",
+      "id": "line-owner-push",
+      "description": "Notify the owner by LINE push instead of email (sendLineMessage@1, planned)."
+    },
+    {
+      "workflow": "inquiry-basic-v1",
+      "id": "auto-reply-hours",
+      "description": "Different acknowledgement outside business hours."
+    },
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "google-calendar",
+      "description": "Add Calendar busy times as extra BookedInterval sources in services/availability.ts; create an event on CONFIRMED."
+    },
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "staff-availability",
+      "description": "Per-staff capacity (reference: hair-salon-portfolio StaffAvailabilityStrategy)."
+    },
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "cancellation",
+      "description": "cancelReservation@1 (planned) with ownership check by lineUserId."
+    },
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "customer-notifications",
+      "description": "Confirmation/reminder push via sendLineMessage@1 (planned)."
+    },
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "customer-history",
+      "description": "Query RESERVATIONS by customerId for a 'my bookings' button."
+    },
+    {
+      "workflow": "business-info-v1",
+      "id": "flex-message",
+      "description": "Replace the text reply with a Flex Message card (map thumbnail, call button)."
+    }
+  ]
+}

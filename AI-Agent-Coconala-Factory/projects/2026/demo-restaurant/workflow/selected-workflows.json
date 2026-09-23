@@ -1,0 +1,148 @@
+{
+  "_meta": {
+    "artifact": "workflow/selected-workflows.json",
+    "generatedBy": "workflow-planner",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-restaurant",
+    "industry": "restaurant",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "business-info-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "friendly-local-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "hero-1-plus-3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "restaurant-basic-v1": "1.0.0",
+      "restaurant-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "selected": [
+    {
+      "id": "reservation-basic-v1",
+      "version": "1.0.0",
+      "name": "Reservation request (basic)",
+      "reasons": [
+        "intent:book (requirement)"
+      ],
+      "actions": [
+        "createReservation@1",
+        "getAvailability@1"
+      ],
+      "entries": [
+        "default"
+      ]
+    },
+    {
+      "id": "service-menu-v1",
+      "version": "1.0.0",
+      "name": "Service menu / price list",
+      "reasons": [
+        "intent:view_menu (requirement)"
+      ],
+      "actions": [
+        "getServiceList@1"
+      ],
+      "entries": [
+        "default"
+      ]
+    },
+    {
+      "id": "business-info-v1",
+      "version": "1.0.0",
+      "name": "Business info / access",
+      "reasons": [
+        "intent:find_access (requirement)"
+      ],
+      "actions": [
+        "getBusinessInfo@1"
+      ],
+      "entries": [
+        "default",
+        "access",
+        "hours"
+      ]
+    },
+    {
+      "id": "inquiry-basic-v1",
+      "version": "1.0.0",
+      "name": "Inquiry (basic)",
+      "reasons": [
+        "intent:ask_question (requirement)"
+      ],
+      "actions": [
+        "createInquiry@1"
+      ],
+      "entries": [
+        "default"
+      ]
+    }
+  ],
+  "deferred": [],
+  "richMenu": "restaurant-basic-v1",
+  "designPreset": "friendly-local-v1",
+  "extensionPoints": [
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "google-calendar",
+      "description": "Add Calendar busy times as extra BookedInterval sources in services/availability.ts; create an event on CONFIRMED."
+    },
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "staff-availability",
+      "description": "Per-staff capacity (reference: hair-salon-portfolio StaffAvailabilityStrategy)."
+    },
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "cancellation",
+      "description": "cancelReservation@1 (planned) with ownership check by lineUserId."
+    },
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "customer-notifications",
+      "description": "Confirmation/reminder push via sendLineMessage@1 (planned)."
+    },
+    {
+      "workflow": "reservation-basic-v1",
+      "id": "customer-history",
+      "description": "Query RESERVATIONS by customerId for a 'my bookings' button."
+    },
+    {
+      "workflow": "service-menu-v1",
+      "id": "flex-carousel",
+      "description": "Flex carousel with photos per service (needs image hosting)."
+    },
+    {
+      "workflow": "business-info-v1",
+      "id": "flex-message",
+      "description": "Replace the text reply with a Flex Message card (map thumbnail, call button)."
+    },
+    {
+      "workflow": "inquiry-basic-v1",
+      "id": "line-owner-push",
+      "description": "Notify the owner by LINE push instead of email (sendLineMessage@1, planned)."
+    },
+    {
+      "workflow": "inquiry-basic-v1",
+      "id": "auto-reply-hours",
+      "description": "Different acknowledgement outside business hours."
+    }
+  ]
+}

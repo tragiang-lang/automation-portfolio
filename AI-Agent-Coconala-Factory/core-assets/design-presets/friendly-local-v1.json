@@ -1,0 +1,38 @@
+{
+  "kind": "design-preset",
+  "id": "friendly-local-v1",
+  "version": "1.0.0",
+  "name": "Friendly local",
+  "description": "Warm orange and teal on cream. Approachable and lively, for neighborhood shops and restaurants.",
+  "suitableIndustries": [
+    "restaurant",
+    "cafe",
+    "retail",
+    "local_service"
+  ],
+  "colors": {
+    "background": "#FFF8EE",
+    "surface": "#FFFFFF",
+    "primary": "#B93C0A",
+    "onPrimary": "#FFFFFF",
+    "accent": "#0F766E",
+    "text": "#3B2F2A",
+    "muted": "#6F5E53",
+    "border": "#F1DFC8"
+  },
+  "typography": {
+    "direction": "Rounded gothic for labels, playful but readable",
+    "headingStyle": "heavy rounded sans",
+    "labelWeight": "bold",
+    "minLabelPx": 68
+  },
+  "spacing": {
+    "gutterPx": 20,
+    "tilePaddingPx": 44,
+    "cornerRadiusPx": 36
+  },
+  "hierarchy": "Primary tile orange with large label; secondary tiles white with colored icons.",
+  "iconStyle": "filled two-tone icons",
+  "buttonStyle": "pill-rounded tiles with generous spacing",
+  "imagery": "optional food/shop photo in the hero tile with a dark overlay behind the label"
+}

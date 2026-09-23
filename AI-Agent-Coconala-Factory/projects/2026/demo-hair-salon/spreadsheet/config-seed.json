@@ -1,0 +1,56 @@
+{
+  "_meta": {
+    "artifact": "spreadsheet/config-seed.json",
+    "generatedBy": "spreadsheet-schema-generator",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-hair-salon",
+    "industry": "hair_salon",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "hair-salon-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "quiet-luxury-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "salon-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "values": {
+    "hours.mon": "closed",
+    "hours.tue": "10:00-19:00",
+    "hours.wed": "10:00-19:00",
+    "hours.thu": "10:00-19:00",
+    "hours.fri": "10:00-20:00",
+    "hours.sat": "09:00-18:00",
+    "hours.sun": "09:00-18:00",
+    "reservation.slotMinutes": "30",
+    "reservation.defaultDurationMinutes": "60",
+    "reservation.capacity": "2",
+    "notification.ownerEmail": "owner@example.com",
+    "business.name": "Demo Hair Salon",
+    "business.address": "東京都渋谷区神南0-0-0 デモビル2F",
+    "business.phone": "03-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-hair-salon",
+    "business.hoursText": "火〜木 10:00-19:00／金 10:00-20:00／土日 9:00-18:00（月曜定休）",
+    "business.accessNote": "渋谷駅から徒歩7分"
+  }
+}

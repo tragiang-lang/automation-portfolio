@@ -1,0 +1,14 @@
+===== typecheck =====
+
+
+===== test =====
+RUN  v5.0.1 D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/AI-Agent-Coconala-Factory/projects/2026/demo-real-estate/gas
+
+
+ Test Files  7 passed (7)
+      Tests  46 passed (46)
+   Start at  20:10:21
+   Duration  476ms (transform 65%, import 23%, tests 9%, worker 4%)
+
+===== build =====
+

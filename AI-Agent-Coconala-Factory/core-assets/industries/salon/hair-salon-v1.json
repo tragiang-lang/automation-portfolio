@@ -1,0 +1,55 @@
+{
+  "kind": "industry",
+  "id": "hair-salon-v1",
+  "version": "1.0.0",
+  "industry": "hair_salon",
+  "category": "salon",
+  "displayName": "美容室 / Hair salon",
+  "businessType": "Appointment-based personal service with a fixed service menu and limited concurrent seats/stylists.",
+  "customerIntents": [
+    "book",
+    "view_menu",
+    "ask_question",
+    "find_access",
+    "check_hours"
+  ],
+  "lineUseCases": [
+    "Customers open the Rich Menu to request a booking slot without calling during treatments",
+    "Price list lookup before booking",
+    "Questions about treatments, parking, children",
+    "Access / hours lookup on the day of the visit"
+  ],
+  "recommendedWorkflows": [
+    "reservation-basic-v1",
+    "service-menu-v1",
+    "inquiry-basic-v1",
+    "business-info-v1"
+  ],
+  "recommendedRichMenu": "salon-basic-v1",
+  "recommendedDesignPresets": [
+    "quiet-luxury-v1",
+    "minimal-modern-v1",
+    "warm-natural-v1"
+  ],
+  "terminology": {
+    "service": "メニュー",
+    "reservation": "ご予約",
+    "inquiry": "お問い合わせ",
+    "capacity": "同時に対応できる席数（スタイリスト数）"
+  },
+  "requiredData": [
+    "CONFIG: 店舗名・住所・電話番号・地図URL・営業時間・定休日",
+    "SERVICES: メニュー名・所要時間・料金",
+    "reservation.capacity: 同じ時間帯に受けられる人数",
+    "notification.ownerEmail: 通知を受け取るメールアドレス"
+  ],
+  "notificationRequirements": [
+    "Owner email on every new reservation request and inquiry",
+    "Owner confirms reservations manually in the sheet (status CONFIRMED)"
+  ],
+  "risks": [
+    "Reservations are requests, not instant confirmations, in Phase 1. Set the customer's expectation in the reply text.",
+    "Per-stylist booking is not supported by reservation-basic-v1 (use capacity = number of stylists).",
+    "If the salon already uses Hot Pepper Beauty etc., double-booking can occur. Keep capacity conservative or keep one booking channel."
+  ]
+}

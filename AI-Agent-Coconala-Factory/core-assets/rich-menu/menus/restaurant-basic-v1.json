@@ -1,0 +1,59 @@
+{
+  "kind": "rich-menu",
+  "id": "restaurant-basic-v1",
+  "version": "1.0.0",
+  "description": "Hero booking button plus menu, access and inquiry for restaurants and cafes.",
+  "industries": [
+    "restaurant",
+    "cafe"
+  ],
+  "layout": "hero-1-plus-3-v1",
+  "chatBarText": "メニューを開く",
+  "items": [
+    {
+      "slot": "a",
+      "label": "席のご予約",
+      "subLabel": "日時を選んで予約",
+      "role": "primary",
+      "icon": "calendar",
+      "action": {
+        "type": "workflow",
+        "workflowId": "reservation-basic-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "b",
+      "label": "お料理",
+      "role": "secondary",
+      "icon": "utensils",
+      "action": {
+        "type": "workflow",
+        "workflowId": "service-menu-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "c",
+      "label": "アクセス",
+      "role": "secondary",
+      "icon": "map-pin",
+      "action": {
+        "type": "workflow",
+        "workflowId": "business-info-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "d",
+      "label": "お問い合わせ",
+      "role": "secondary",
+      "icon": "chat",
+      "action": {
+        "type": "workflow",
+        "workflowId": "inquiry-basic-v1",
+        "entry": "default"
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "kind": "workflow",
+  "id": "inquiry-basic-v1",
+  "version": "1.0.0",
+  "name": "Inquiry (basic)",
+  "description": "Rich Menu button asks the customer to type their question; the next message is saved to INQUIRIES and the owner gets an email.",
+  "status": "stable",
+  "industries": [
+    "*"
+  ],
+  "trigger": "LINE_RICH_MENU",
+  "actions": [
+    "createInquiry@1"
+  ],
+  "entries": {
+    "default": {
+      "type": "postback",
+      "action": "createInquiry@1",
+      "mode": "awaitText",
+      "prompt": "お問い合わせ内容をこのトークにメッセージで送信してください。\n（10分以内にお送りいただいた内容を受け付けます）",
+      "params": {},
+      "displayText": "お問い合わせ"
+    }
+  },
+  "spreadsheet": {
+    "schemas": [
+      "core-config-v1",
+      "customers-basic-v1",
+      "inquiries-basic-v1"
+    ],
+    "requiredSheets": [
+      "CONFIG",
+      "CUSTOMERS",
+      "INQUIRIES"
+    ]
+  },
+  "configKeys": [],
+  "notifications": [
+    {
+      "event": "inquiry.created",
+      "channel": "email",
+      "to": "owner"
+    }
+  ],
+  "extensionPoints": [
+    {
+      "id": "line-owner-push",
+      "description": "Notify the owner by LINE push instead of email (sendLineMessage@1, planned)."
+    },
+    {
+      "id": "auto-reply-hours",
+      "description": "Different acknowledgement outside business hours."
+    }
+  ]
+}

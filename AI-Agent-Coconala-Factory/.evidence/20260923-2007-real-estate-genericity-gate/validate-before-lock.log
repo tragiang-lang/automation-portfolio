@@ -1,0 +1,8 @@
+
+> ai-agent-coconala-factory@0.1.0 factory
+> tsx src/cli.ts validate
+
+warn  [ASSET_UNLOCKED] new asset not yet released (run `factory lock-assets`)  (industries/real-estate/real-estate-v1.json)
+warn  [ASSET_UNLOCKED] new asset not yet released (run `factory lock-assets`)  (rich-menu/menus/real-estate-basic-v1.json)
+
+validate: OK (2 warning(s))

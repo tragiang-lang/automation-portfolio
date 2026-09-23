@@ -1,0 +1,99 @@
+
+ RUN  v5.0.1 D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/AI-Agent-Coconala-Factory
+
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > time > parses Tokyo local date-times into real instants 4ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > time > rejects impossible dates and malformed input 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > time > computes weekdays, day arithmetic and opening hours 2ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > ids > builds PREFIX-YYYYMMDD-XXXXXX from the Tokyo date 0ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > rowMapper > maps rows by header and refuses missing required headers 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > rowMapper > serializes blanks as empty strings and rejects objects 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > result > never leaks raw exception text 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > result > forwards field issues only for validation errors 2ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > ConfigReader > keeps the first duplicate key and applies defaults 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > ConfigReader > rejects non-strict numbers and reports missing required keys by name 3ms
+ ✓ core-assets/gas-modules/tests/actions/getServiceList.test.ts > getServiceList > returns only active services in display order 31ms
+ ✓ core-assets/gas-modules/tests/actions/createInquiry.test.ts > createInquiry > requires a message and a way to reply 4ms
+ ✓ core-assets/gas-modules/tests/actions/createInquiry.test.ts > createInquiry > stores the inquiry once, links a customer, and notifies the owner once 6ms
+ ✓ core-assets/gas-modules/tests/actions/createInquiry.test.ts > createInquiry > still saves the inquiry when the notification email fails 1ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > parsePostbackData > decodes pairs without URLSearchParams 4ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > runs a direct route with its static params and replies 2ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > awaits text, then runs the pending action on the next message only 1ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > ignores free text with nothing pending and unknown postbacks 1ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > replies with the safe message for the error code, never the internal detail 2ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > dispatchPost > rejects LINE deliveries without the webhook key and fails closed when no key is configured 3ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > dispatchPost > keeps the JSON API closed unless API_ENABLED 1ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > dispatchPost > only exposes actions listed as API actions and rejects malformed bodies 1ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > setup planning > creates missing sheets, appends missing headers, seeds only missing config keys 2ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > setup planning > strips traceability metadata before sending a rich menu to LINE 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > lists availability for a date 6ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > creates a REQUESTED reservation from a LINE datetimepicker postback 7ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > is idempotent for LINE redelivery of the same event 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > rejects a second booking for a full slot with SLOT_UNAVAILABLE 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > uses the service duration when a serviceId is given and rejects unknown services 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > requires name plus contact when there is no LINE user 0ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > availability > rejects closed days, outside hours, too-soon and too-far slots 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > availability > enforces capacity against active bookings only 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > availability > normalizes Date cells written back by Sheets 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation via LINE webhook > books from a datetimepicker postback and replies with a safe message when the slot is closed 4ms
+ ✓ tests/registry.test.ts > Core Assets as shipped > validate without errors 133ms
+ ✓ tests/agents.test.ts > Industry Specialist > maps the hair-salon requirement lines to intents and workflows 79ms
+ ✓ tests/agents.test.ts > Industry Specialist > records unmatched requirements as assumptions instead of guessing 29ms
+ ✓ core-assets/gas-modules/tests/actions/getBusinessInfo.test.ts > getBusinessInfo > reads business.* keys and formats the access view 6ms
+ ✓ core-assets/gas-modules/tests/actions/getBusinessInfo.test.ts > getBusinessInfo > fails with CONFIG_INVALID when business.name is missing 1ms
+ ✓ core-assets/gas-modules/tests/actions/getBusinessInfo.test.ts > getBusinessInfo > rejects unknown views 0ms
+ ✓ core-assets/gas-modules/tests/services/services.test.ts > claimOnce > creates once and returns the cached result on retry 5ms
+ ✓ core-assets/gas-modules/tests/services/services.test.ts > claimOnce > falls back to the sheet backstop when the cache is cold 1ms
+ ✓ core-assets/gas-modules/tests/services/services.test.ts > notifyOwner > skips silently without an owner email and never throws on mail failure 2ms
+ ✓ core-assets/gas-modules/tests/services/services.test.ts > upsertCustomer > reuses an existing customer by LINE id and fills only blank fields 3ms
+ ✓ tests/agents.test.ts > Industry Specialist > fails clearly for an industry without a profile 28ms
+ ✓ tests/agents.test.ts > Workflow Planner > rejects a menu whose buttons need workflows that were not selected 26ms
+ ✓ tests/agents.test.ts > Design Agent > applies brand overrides and keeps every label readable 44ms
+ ✓ tests/agents.test.ts > second industry: restaurant > runs the same pipeline with only industry/menu data, no core changes 37ms
+ ✓ tests/registry.test.ts > workflow schema > accepts a valid workflow 1ms
+ ✓ tests/registry.test.ts > workflow schema > rejects an invalid workflow (unpinned action ref, missing fields) 2ms
+ ✓ tests/registry.test.ts > workflow schema > rejects a version whose major does not match the id 2ms
+ ✓ tests/registry.test.ts > workflow schema > detects a missing action 238ms
+ ✓ tests/richMenu.test.ts > rich menu layout geometry > accepts every shipped layout 70ms
+ ✓ tests/richMenu.test.ts > rich menu layout geometry > accepts a valid custom layout 1ms
+ ✓ tests/richMenu.test.ts > rich menu layout geometry > rejects out-of-canvas, overlapping, and LINE-size violations 1ms
+ ✓ tests/richMenu.test.ts > rich menu layout geometry > rejects an invalid layout asset and a menu that leaves a slot empty 256ms
+ ✓ tests/agents.test.ts > Orchestrator > is deterministic: the same brief gives byte-identical artifacts 59ms
+ ✓ tests/agents.test.ts > Orchestrator > stamps traceability on every generated JSON artifact 32ms
+ ✓ tests/project.test.ts > Client Project Generator > creates the expected directory structure and required files 311ms
+ ✓ tests/qa.test.ts > QA Agent > passes a freshly generated project 354ms
+ ✓ tests/assetLock.test.ts > asset lock (versioned, immutable Core Assets) > blocks silent edits to a released asset 591ms
+ ✓ tests/registry.test.ts > workflow schema > detects a missing spreadsheet schema 220ms
+ ✓ tests/richMenu.test.ts > rich menu references > detects a button pointing at a missing workflow 217ms
+ ✓ tests/registry.test.ts > workflow schema > detects a stable workflow that depends on a planned action 232ms
+ ✓ tests/project.test.ts > Client Project Generator > copies only the modules the selected workflows need 363ms
+ ✓ tests/richMenu.test.ts > rich menu references > detects an invalid entry reference 221ms
+ ✓ tests/qa.test.ts > QA Agent > detects an invalid workflow 316ms
+ ✓ tests/richMenu.test.ts > rich menu references > builds LINE actions from workflow entries and routes that match them 26ms
+ ✓ tests/richMenu.test.ts > rich menu references > reports a URI button whose URL is missing from the brief 19ms
+ ✓ tests/registry.test.ts > Action Registry > resolves a known, pinned action 20ms
+ ✓ tests/registry.test.ts > Action Registry > does not resolve unknown or unpinned actions 18ms
+ ✓ tests/registry.test.ts > Action Registry > rejects an invalid input schema 156ms
+ ✓ tests/assetLock.test.ts > asset lock (versioned, immutable Core Assets) > accepts the same edit once the version is bumped, and flags new assets as unreleased 469ms
+ ✓ tests/project.test.ts > Client Project Generator > refuses a workflow override that the chosen rich menu cannot serve 20ms
+ ✓ tests/project.test.ts > Client Project Generator > does not overwrite an existing project without --force, nor unrelated directories 211ms
+ ✓ tests/qa.test.ts > QA Agent > detects an invalid spreadsheet 284ms
+ ✓ tests/registry.test.ts > Action Registry > rejects an action wired to a LINE entry without LINE exposure 197ms
+ ✓ tests/assetLock.test.ts > asset lock (versioned, immutable Core Assets) > treats deleting a released asset as an error 313ms
+ ✓ tests/registry.test.ts > spreadsheet schema rules > detects duplicate columns, bad keys, bad defaults and dangling references 180ms
+ ✓ tests/qa.test.ts > QA Agent > detects an invalid Rich Menu reference 247ms
+ ✓ tests/registry.test.ts > spreadsheet schema rules > forbids two schemas defining the same sheet 204ms
+ ✓ tests/project.test.ts > Client Project Generator > regenerates with --force without touching hand-added files or other client projects 548ms
+ ✓ tests/project.test.ts > Client Project Generator > refuses an invalid brief before writing anything 15ms
+ ✓ tests/qa.test.ts > QA Agent > detects overlapping Rich Menu areas and oversized postback data 245ms
+ ✓ tests/qa.test.ts > QA Agent > detects missing GAS files and broken imports 272ms
+ ✓ tests/qa.test.ts > QA Agent > detects committed secrets and secret files 234ms
+ ✓ tests/qa.test.ts > QA Agent > detects a label color that fails contrast 195ms
+ ✓ tests/qa.test.ts > QA Agent > detects missing traceability 208ms
+ ✓ tests/qa.test.ts > QA Agent with real GAS checks > fails clearly when a project outside the factory has no toolchain installed 200ms
+ ✓ tests/qa.test.ts > QA Agent with real GAS checks > typechecks, tests and builds a generated restaurant GAS project 2542ms
+
+ Test Files  13 passed (13)
+      Tests  90 passed (90)
+   Start at  20:11:50
+   Duration  6.01s (tests 71%, transform 17%, import 11%, worker 1%)
+

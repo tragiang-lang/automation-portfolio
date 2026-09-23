@@ -1,0 +1,52 @@
+{
+  "kind": "rich-menu-layout",
+  "id": "grid-2x2-v1",
+  "version": "1.0.0",
+  "description": "Large menu (2500x1686), 2 rows x 2 equal buttons.",
+  "size": {
+    "width": 2500,
+    "height": 1686
+  },
+  "slots": [
+    {
+      "id": "a",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1250,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "b",
+      "bounds": {
+        "x": 1250,
+        "y": 0,
+        "width": 1250,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "c",
+      "bounds": {
+        "x": 0,
+        "y": 843,
+        "width": 1250,
+        "height": 843
+      },
+      "emphasis": "normal"
+    },
+    {
+      "id": "d",
+      "bounds": {
+        "x": 1250,
+        "y": 843,
+        "width": 1250,
+        "height": 843
+      },
+      "emphasis": "normal"
+    }
+  ]
+}

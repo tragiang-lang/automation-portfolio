@@ -1,0 +1,254 @@
+diff --git a/core-assets/industries/real-estate/real-estate-v1.json b/core-assets/industries/real-estate/real-estate-v1.json
+new file mode 100644
+index 0000000..5ff64ef
+--- /dev/null
++++ b/core-assets/industries/real-estate/real-estate-v1.json
+@@ -0,0 +1,82 @@
++{
++  "kind": "industry",
++  "id": "real-estate-v1",
++  "version": "1.0.0",
++  "industry": "real_estate",
++  "category": "real_estate",
++  "displayName": "不動産 / Real Estate",
++  "businessType": "Small local real-estate agency (賃貸・売買仲介). First contact is a property or condition inquiry; the conversion goal is a viewing (内見) or in-store consultation request that staff confirm by hand.",
++  "customerIntents": [
++    "ask_question",
++    "book",
++    "find_access",
++    "check_hours"
++  ],
++  "lineUseCases": [
++    "物件・条件についてのお問い合わせ（空室確認・家賃・初期費用など）",
++    "内見予約リクエスト（スタッフが物件側と調整のうえ確定連絡）",
++    "来店相談予約リクエスト",
++    "会社・店舗情報、アクセス、営業時間の確認",
++    "物件一覧は既存の自社Webサイト／ポータルへリンク（Phase 1では物件データを持たない）"
++  ],
++  "recommendedWorkflows": [
++    "inquiry-basic-v1",
++    "reservation-basic-v1",
++    "business-info-v1"
++  ],
++  "recommendedRichMenu": "real-estate-basic-v1",
++  "recommendedDesignPresets": [
++    "clean-professional-v1",
++    "minimal-modern-v1"
++  ],
++  "terminology": {
++    "inquiry": "物件・条件のお問い合わせ",
++    "reservation": "内見・来店相談の予約リクエスト（確定ではありません）",
++    "viewing": "内見",
++    "property": "物件",
++    "capacity": "同じ時間帯に受けられる内見・相談の件数（対応できるスタッフ数）",
++    "owner": "担当スタッフ・店舗"
++  },
++  "requiredData": [
++    "CONFIG: 会社・店舗名・住所・電話番号・地図URL・営業時間（定休日を含む）",
++    "reservation.capacity: 同じ時間帯に対応できる内見・相談の件数",
++    "reservation.defaultDurationMinutes: 内見・相談1件あたりの目安時間",
++    "reservation.minLeadHours: 物件側との調整に必要な時間（例: 24時間前まで）",
++    "brief config links.propertySiteUrl: 既存の物件一覧ページ（Rich Menu の URI ボタン）",
++    "SERVICES: reservation-basic-v1 の構造上シートは作成されるが、不動産では空のままでよい（serviceId は任意）"
++  ],
++  "notificationRequirements": [
++    "Owner email on every inquiry",
++    "Owner email on every viewing / consultation reservation request"
++  ],
++  "risks": [
++    "A viewing request is only a REQUESTED row. Staff must confirm the slot with the property owner/management company and set status to CONFIRMED by hand; the customer is not told it is confirmed.",
++    "reservation-basic-v1 records only a date-time. The customer cannot pick which property to view from the Rich Menu, so staff must ask by LINE/phone after the request (planned: property-viewing-v2).",
++    "The LINE reply text from createReservation@1 says 「ご予約リクエストを受け付けました」, not 「内見予約リクエスト」. It is correct (request, not confirmation) but generic.",
++    "reservation.capacity counts parallel requests, not staff or vehicles; per-agent scheduling is not supported (planned: agent-assignment-v2).",
++    "Property availability changes daily; no property data is stored in Phase 1, so answers about vacancies are given by staff manually via INQUIRIES."
++  ],
++  "assumptions": [
++    "The agency already publishes its property list on its own website or a portal; the Rich Menu links to it instead of storing properties.",
++    "Viewing and in-store consultation share one reservation-basic-v1 flow; staff tell them apart from the follow-up conversation.",
++    "Opening hours follow the common real-estate pattern (水曜定休)."
++  ],
++  "extensionPoints": {
++    "implemented": [
++      "inquiry-basic-v1: 物件・条件のお問い合わせ",
++      "reservation-basic-v1: 内見・来店相談の予約リクエスト（REQUESTED のみ）",
++      "business-info-v1: 会社・店舗情報 / アクセス / 営業時間",
++      "Rich Menu URI button to an existing property list page (links.propertySiteUrl)"
++    ],
++    "planned": [
++      { "id": "property-catalog-v1", "description": "PROPERTIES sheet schema (property_catalog = deferred; no current workflow reads it)." },
++      { "id": "property-search-v2", "description": "Search/filter properties by area, rent and layout from LINE." },
++      { "id": "property-detail-v2", "description": "Flex Message card per property with photos and conditions." },
++      { "id": "property-viewing-v2", "description": "Viewing request tied to a specific propertyId." },
++      { "id": "agent-assignment-v2", "description": "Assign a staff member per viewing; per-agent availability." },
++      { "id": "property-status-sync-v1", "description": "Sync vacancy status from a portal or management system." },
++      { "id": "calendar-integration-v1", "description": "Google Calendar busy times / events on CONFIRMED (reuses reservation-basic-v1 google-calendar extension point)." },
++      { "id": "customer-history-v1", "description": "Past inquiries and viewings per customer for staff follow-up." }
++    ]
++  }
++}
+diff --git a/core-assets/rich-menu/menus/real-estate-basic-v1.json b/core-assets/rich-menu/menus/real-estate-basic-v1.json
+new file mode 100644
+index 0000000..00ad9cf
+--- /dev/null
++++ b/core-assets/rich-menu/menus/real-estate-basic-v1.json
+@@ -0,0 +1,81 @@
++{
++  "kind": "rich-menu",
++  "id": "real-estate-basic-v1",
++  "version": "1.0.0",
++  "description": "Six-button menu for local real-estate agencies: viewing request first, then property consultation, company info, access, hours and a link to the existing property list page.",
++  "industries": [
++    "real_estate"
++  ],
++  "layout": "grid-2x3-v1",
++  "chatBarText": "メニュー",
++  "items": [
++    {
++      "slot": "a",
++      "label": "内見を申し込む",
++      "subLabel": "予約リクエスト",
++      "role": "primary",
++      "icon": "key",
++      "action": {
++        "type": "workflow",
++        "workflowId": "reservation-basic-v1",
++        "entry": "default"
++      }
++    },
++    {
++      "slot": "b",
++      "label": "物件のご相談",
++      "subLabel": "空室・条件の確認",
++      "role": "secondary",
++      "icon": "chat",
++      "action": {
++        "type": "workflow",
++        "workflowId": "inquiry-basic-v1",
++        "entry": "default"
++      }
++    },
++    {
++      "slot": "c",
++      "label": "物件を探す",
++      "subLabel": "物件一覧（Web）",
++      "role": "secondary",
++      "icon": "search",
++      "action": {
++        "type": "uri",
++        "configKey": "links.propertySiteUrl"
++      }
++    },
++    {
++      "slot": "d",
++      "label": "会社・店舗情報",
++      "role": "secondary",
++      "icon": "building",
++      "action": {
++        "type": "workflow",
++        "workflowId": "business-info-v1",
++        "entry": "default"
++      }
++    },
++    {
++      "slot": "e",
++      "label": "アクセス",
++      "role": "secondary",
++      "icon": "map-pin",
++      "action": {
++        "type": "workflow",
++        "workflowId": "business-info-v1",
++        "entry": "access"
++      }
++    },
++    {
++      "slot": "f",
++      "label": "営業時間",
++      "role": "secondary",
++      "icon": "clock",
++      "action": {
++        "type": "workflow",
++        "workflowId": "business-info-v1",
++        "entry": "hours"
++      }
++    }
++  ]
++}
+diff --git a/templates/briefs/real-estate.example.json b/templates/briefs/real-estate.example.json
+new file mode 100644
+index 0000000..f6273c4
+--- /dev/null
++++ b/templates/briefs/real-estate.example.json
+@@ -0,0 +1,49 @@
++{
++  "schemaVersion": 1,
++  "project": {
++    "slug": "demo-real-estate",
++    "clientName": "Demo Real Estate Tokyo（デモ）",
++    "year": 2026,
++    "createdOn": "2026-09-23"
++  },
++  "industry": "real_estate",
++  "requirements": [
++    "物件や条件について問い合わせ・相談ができる",
++    "内見の予約リクエストができる",
++    "来店相談の予約リクエストができる",
++    "店舗へのアクセスがわかる",
++    "営業時間と定休日がわかる",
++    "物件一覧は既存のWebサイトで見られるようにしたい"
++  ],
++  "existingResources": [
++    "LINE Official Account",
++    "Google Spreadsheet",
++    "Existing property list website"
++  ],
++  "brand": {
++    "name": "Demo Real Estate Tokyo",
++    "preset": "clean-professional-v1",
++    "tone": "誠実・落ち着いた・わかりやすい"
++  },
++  "config": {
++    "business.name": "Demo Real Estate Tokyo",
++    "business.address": "東京都千代田区0-0-0",
++    "business.phone": "03-0000-0000",
++    "business.mapUrl": "https://example.com/map/demo-real-estate-tokyo",
++    "business.hoursText": "10:00-18:00（水曜定休）",
++    "notification.ownerEmail": "owner@example.com",
++    "hours.mon": "10:00-18:00",
++    "hours.tue": "10:00-18:00",
++    "hours.wed": "closed",
++    "hours.thu": "10:00-18:00",
++    "hours.fri": "10:00-18:00",
++    "hours.sat": "10:00-18:00",
++    "hours.sun": "10:00-18:00",
++    "reservation.slotMinutes": "60",
++    "reservation.defaultDurationMinutes": "60",
++    "reservation.capacity": "2",
++    "reservation.minLeadHours": "24",
++    "reservation.maxDaysAhead": "30",
++    "links.propertySiteUrl": "https://example.com/properties/demo-real-estate-tokyo"
++  }
++}
+--- .evidence/20260923-2007-real-estate-genericity-gate/asset-lock.before.json	2026-09-23 20:10:04.821850700 +0900
++++ core-assets/asset-lock.json	2026-09-23 20:10:11.816064600 +0900
+@@ -190,6 +190,10 @@
+       "version": "1.0.0",
+       "sha256": "06e29863faaff3eb1865f4f95f1741b3d97e577b92db6f9005ab4fcfd35311e6"
+     },
++    "industries/real-estate/real-estate-v1.json": {
++      "version": "1.0.0",
++      "sha256": "0fc2e02073f7225d81ad1abefbf0556d9eff07bbfb453461334452c18ff308d9"
++    },
+     "industries/restaurant/restaurant-v1.json": {
+       "version": "1.0.0",
+       "sha256": "6ccc04e282a665465edb51ddd946e698412509253f2574f7de28aee5aabacf08"
+@@ -218,6 +222,10 @@
+       "version": "1.0.0",
+       "sha256": "87930cda27bbd9994b9f19cd0fa34cf1bd5895e138bedf2cb0121f0e770cac59"
+     },
++    "rich-menu/menus/real-estate-basic-v1.json": {
++      "version": "1.0.0",
++      "sha256": "d546a3beed209099a70723eb0a87ce0f29da6eb88910591b51a406bd5748b497"
++    },
+     "rich-menu/menus/restaurant-basic-v1.json": {
+       "version": "1.0.0",
+       "sha256": "784112e7abf7e87b41d9537d7d73429f428f3b43a1a9437f6d792773751d095a"

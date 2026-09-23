@@ -1,0 +1,60 @@
+{
+  "kind": "workflow",
+  "id": "business-info-v1",
+  "version": "1.0.0",
+  "name": "Business info / access",
+  "description": "Rich Menu buttons that reply with access information or opening hours, straight from the CONFIG sheet.",
+  "status": "stable",
+  "industries": [
+    "*"
+  ],
+  "trigger": "LINE_RICH_MENU",
+  "actions": [
+    "getBusinessInfo@1"
+  ],
+  "entries": {
+    "default": {
+      "type": "postback",
+      "action": "getBusinessInfo@1",
+      "mode": "direct",
+      "params": {
+        "view": "all"
+      },
+      "displayText": "店舗情報"
+    },
+    "access": {
+      "type": "postback",
+      "action": "getBusinessInfo@1",
+      "mode": "direct",
+      "params": {
+        "view": "access"
+      },
+      "displayText": "アクセス"
+    },
+    "hours": {
+      "type": "postback",
+      "action": "getBusinessInfo@1",
+      "mode": "direct",
+      "params": {
+        "view": "hours"
+      },
+      "displayText": "営業時間"
+    }
+  },
+  "spreadsheet": {
+    "schemas": [
+      "core-config-v1"
+    ],
+    "requiredSheets": [
+      "CONFIG"
+    ]
+  },
+  "configKeys": [],
+  "notifications": [],
+  "extensionPoints": [
+    {
+      "id": "flex-message",
+      "description": "Replace the text reply with a Flex Message card (map thumbnail, call button)."
+    }
+  ]
+}

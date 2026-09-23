@@ -1,0 +1,92 @@
+{
+  "kind": "action",
+  "id": "createInquiry",
+  "version": "1.0.0",
+  "description": "Records an inquiry idempotently (by submissionId / LINE webhookEventId), links or creates the customer, and emails the owner.",
+  "status": "available",
+  "exposure": [
+    "api",
+    "line"
+  ],
+  "reusable": true,
+  "industrySpecific": false,
+  "input": {
+    "submissionId": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "message": {
+      "type": "string",
+      "required": true,
+      "maxLength": 2000
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "email": {
+      "type": "email"
+    },
+    "phone": {
+      "type": "phone"
+    },
+    "lineUserId": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "line",
+        "api"
+      ]
+    }
+  },
+  "output": {
+    "inquiryId": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "dependencies": {
+    "sheets": [
+      "CONFIG",
+      "CUSTOMERS",
+      "INQUIRIES"
+    ],
+    "configKeys": [
+      {
+        "key": "notification.ownerEmail",
+        "type": "email",
+        "required": false,
+        "description": "新しいお問い合わせ・予約リクエストの通知先メールアドレス（店舗用）"
+      }
+    ],
+    "services": [
+      "tables",
+      "cache",
+      "lock",
+      "mail"
+    ],
+    "scriptProperties": []
+  },
+  "validation": [
+    "message required, max 2000 chars",
+    "at least one of lineUserId / email / phone",
+    "email and phone formats checked"
+  ],
+  "errors": [
+    {
+      "code": "VALIDATION_ERROR",
+      "when": "missing message or contact, bad email/phone format"
+    },
+    {
+      "code": "SYSTEM_BUSY",
+      "when": "script lock not acquired within 10s"
+    }
+  ],
+  "gas": {
+    "module": "inquiry"
+  }
+}

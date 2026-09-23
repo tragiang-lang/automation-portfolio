@@ -1,0 +1,48 @@
+{
+  "kind": "action",
+  "id": "cancelReservation",
+  "version": "1.0.0",
+  "description": "PLANNED extension point for reservation-basic: customer self-cancellation (reference: hair-salon-portfolio cancellation token flow). Not implemented in Phase 1.",
+  "status": "planned",
+  "exposure": [
+    "api",
+    "line"
+  ],
+  "reusable": true,
+  "industrySpecific": false,
+  "input": {
+    "reservationId": {
+      "type": "string",
+      "required": true
+    },
+    "lineUserId": {
+      "type": "string"
+    }
+  },
+  "output": {
+    "reservationId": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "dependencies": {
+    "sheets": [
+      "RESERVATIONS"
+    ],
+    "configKeys": [],
+    "services": [
+      "tables",
+      "lock"
+    ],
+    "scriptProperties": []
+  },
+  "validation": [
+    "reservation must belong to the requesting LINE user"
+  ],
+  "errors": [
+    {
+      "code": "VALIDATION_ERROR",
+      "when": "unknown or foreign reservation"
+    }
+  ]
+}

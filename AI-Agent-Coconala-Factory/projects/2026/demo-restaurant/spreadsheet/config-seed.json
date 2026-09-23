@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "artifact": "spreadsheet/config-seed.json",
+    "generatedBy": "spreadsheet-schema-generator",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-restaurant",
+    "industry": "restaurant",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "business-info-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "friendly-local-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "hero-1-plus-3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "restaurant-basic-v1": "1.0.0",
+      "restaurant-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "values": {
+    "hours.mon": "17:00-23:00",
+    "hours.tue": "17:00-23:00",
+    "hours.wed": "17:00-23:00",
+    "hours.thu": "17:00-23:00",
+    "hours.fri": "17:00-24:00",
+    "hours.sat": "17:00-24:00",
+    "hours.sun": "closed",
+    "reservation.slotMinutes": "30",
+    "reservation.defaultDurationMinutes": "120",
+    "reservation.minLeadHours": "2",
+    "reservation.capacity": "6",
+    "notification.ownerEmail": "owner@example.com",
+    "labels.serviceList": "お料理・コース",
+    "business.name": "Demo Bistro",
+    "business.address": "大阪府大阪市北区0-0-0",
+    "business.phone": "06-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-bistro",
+    "business.hoursText": "17:00-23:00（日曜定休）"
+  }
+}

@@ -1,0 +1,24 @@
+--- .evidence/20260923-2007-real-estate-genericity-gate/asset-lock.before.json	2026-09-23 20:10:04.821850700 +0900
++++ core-assets/asset-lock.json	2026-09-23 20:10:11.816064600 +0900
+@@ -190,6 +190,10 @@
+       "version": "1.0.0",
+       "sha256": "06e29863faaff3eb1865f4f95f1741b3d97e577b92db6f9005ab4fcfd35311e6"
+     },
++    "industries/real-estate/real-estate-v1.json": {
++      "version": "1.0.0",
++      "sha256": "0fc2e02073f7225d81ad1abefbf0556d9eff07bbfb453461334452c18ff308d9"
++    },
+     "industries/restaurant/restaurant-v1.json": {
+       "version": "1.0.0",
+       "sha256": "6ccc04e282a665465edb51ddd946e698412509253f2574f7de28aee5aabacf08"
+@@ -218,6 +222,10 @@
+       "version": "1.0.0",
+       "sha256": "87930cda27bbd9994b9f19cd0fa34cf1bd5895e138bedf2cb0121f0e770cac59"
+     },
++    "rich-menu/menus/real-estate-basic-v1.json": {
++      "version": "1.0.0",
++      "sha256": "d546a3beed209099a70723eb0a87ce0f29da6eb88910591b51a406bd5748b497"
++    },
+     "rich-menu/menus/restaurant-basic-v1.json": {
+       "version": "1.0.0",
+       "sha256": "784112e7abf7e87b41d9537d7d73429f428f3b43a1a9437f6d792773751d095a"

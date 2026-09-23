@@ -1,0 +1,226 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/design-spec.json",
+    "generatedBy": "design-agent",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-real-estate",
+    "industry": "real_estate",
+    "workflows": [
+      "inquiry-basic-v1@1.0.0",
+      "reservation-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "clean-professional-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "real-estate-basic-v1": "1.0.0",
+      "real-estate-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "canvas": {
+    "width": 2500,
+    "height": 1686
+  },
+  "layout": "grid-2x3-v1",
+  "richMenu": "real-estate-basic-v1",
+  "preset": "clean-professional-v1",
+  "brand": {
+    "name": "Demo Real Estate Tokyo",
+    "tone": "誠実・落ち着いた・わかりやすい"
+  },
+  "colorTokens": {
+    "background": "#F3F6FA",
+    "surface": "#FFFFFF",
+    "primary": "#1E3A5F",
+    "onPrimary": "#FFFFFF",
+    "accent": "#2E7D6B",
+    "text": "#1F2933",
+    "muted": "#52606D",
+    "border": "#D9E2EC"
+  },
+  "typography": {
+    "direction": "Neutral sans (Noto Sans JP), clear hierarchy",
+    "headingStyle": "semi-bold sans",
+    "labelWeight": "bold",
+    "minLabelPx": 60
+  },
+  "spacing": {
+    "gutterPx": 12,
+    "tilePaddingPx": 40,
+    "cornerRadiusPx": 12
+  },
+  "visualHierarchy": "Primary tile navy; secondary tiles white with navy icons.",
+  "ctaHierarchy": [
+    "内見を申し込む",
+    "物件のご相談",
+    "物件を探す",
+    "会社・店舗情報",
+    "アクセス",
+    "営業時間"
+  ],
+  "cells": [
+    {
+      "slot": "a",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "label": "内見を申し込む",
+      "subLabel": "予約リクエスト",
+      "role": "primary",
+      "ctaRank": 1,
+      "emphasis": "normal",
+      "icon": {
+        "name": "key",
+        "style": "solid icons in accent color"
+      },
+      "fill": "#1E3A5F",
+      "labelColor": "#FFFFFF",
+      "contrastRatio": 11.5
+    },
+    {
+      "slot": "b",
+      "bounds": {
+        "x": 833,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "label": "物件のご相談",
+      "subLabel": "空室・条件の確認",
+      "role": "secondary",
+      "ctaRank": 2,
+      "emphasis": "normal",
+      "icon": {
+        "name": "chat",
+        "style": "solid icons in accent color"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#1F2933",
+      "contrastRatio": 14.76
+    },
+    {
+      "slot": "c",
+      "bounds": {
+        "x": 1666,
+        "y": 0,
+        "width": 834,
+        "height": 843
+      },
+      "label": "物件を探す",
+      "subLabel": "物件一覧（Web）",
+      "role": "secondary",
+      "ctaRank": 3,
+      "emphasis": "normal",
+      "icon": {
+        "name": "search",
+        "style": "solid icons in accent color"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#1F2933",
+      "contrastRatio": 14.76
+    },
+    {
+      "slot": "d",
+      "bounds": {
+        "x": 0,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "label": "会社・店舗情報",
+      "role": "secondary",
+      "ctaRank": 4,
+      "emphasis": "normal",
+      "icon": {
+        "name": "building",
+        "style": "solid icons in accent color"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#1F2933",
+      "contrastRatio": 14.76
+    },
+    {
+      "slot": "e",
+      "bounds": {
+        "x": 833,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "label": "アクセス",
+      "role": "secondary",
+      "ctaRank": 5,
+      "emphasis": "normal",
+      "icon": {
+        "name": "map-pin",
+        "style": "solid icons in accent color"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#1F2933",
+      "contrastRatio": 14.76
+    },
+    {
+      "slot": "f",
+      "bounds": {
+        "x": 1666,
+        "y": 843,
+        "width": 834,
+        "height": 843
+      },
+      "label": "営業時間",
+      "role": "secondary",
+      "ctaRank": 6,
+      "emphasis": "normal",
+      "icon": {
+        "name": "clock",
+        "style": "solid icons in accent color"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#1F2933",
+      "contrastRatio": 14.76
+    }
+  ],
+  "iconRequirements": [
+    "key icon, solid icons in accent color, at least 160px, readable at phone size",
+    "chat icon, solid icons in accent color, at least 160px, readable at phone size",
+    "search icon, solid icons in accent color, at least 160px, readable at phone size",
+    "building icon, solid icons in accent color, at least 160px, readable at phone size",
+    "map-pin icon, solid icons in accent color, at least 160px, readable at phone size",
+    "clock icon, solid icons in accent color, at least 160px, readable at phone size"
+  ],
+  "assetRequirements": [
+    "One 2500x1686px image containing every button (LINE uses one image per rich menu)",
+    "No logo supplied. Use the business name as text",
+    "Imagery: none"
+  ],
+  "exportRequirements": {
+    "format": "PNG or JPEG",
+    "maxBytes": 1048576,
+    "width": 2500,
+    "height": 1686
+  },
+  "designNotes": [
+    "Buttons are tapped on phones: keep labels at least 60px on the 2500px canvas.",
+    "Button areas are fixed by the layout bounds below. Draw each label inside its own cell so the tap area matches what the customer sees.",
+    "Button style: slightly rounded tiles with 1px border.",
+    "Industry: 不動産 / Real Estate. Terminology: inquiry=物件・条件のお問い合わせ, reservation=内見・来店相談の予約リクエスト（確定ではありません）, viewing=内見, property=物件, capacity=同じ時間帯に受けられる内見・相談の件数（対応できるスタッフ数）, owner=担当スタッフ・店舗.",
+    "Colors are the Clean professional preset defaults."
+  ]
+}

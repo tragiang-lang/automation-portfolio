@@ -1,0 +1,65 @@
+{
+  "kind": "spreadsheet-schema",
+  "id": "services-basic-v1",
+  "version": "1.0.0",
+  "description": "The business's menu / service / course list, edited by the owner.",
+  "sheets": [
+    {
+      "name": "SERVICES",
+      "description": "メニュー（サービス）一覧",
+      "primaryKey": "serviceId",
+      "indexes": [],
+      "columns": [
+        {
+          "name": "serviceId",
+          "type": "string",
+          "required": true,
+          "description": "メニューID（英数字・重複不可 例: S001）"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "メニュー名"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "required": false,
+          "description": "カテゴリ"
+        },
+        {
+          "name": "durationMinutes",
+          "type": "integer",
+          "required": false,
+          "description": "所要時間（分）"
+        },
+        {
+          "name": "price",
+          "type": "integer",
+          "required": false,
+          "description": "料金（税込・円）"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "description": "説明"
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "required": true,
+          "description": "表示する (TRUE/FALSE)",
+          "default": "TRUE"
+        },
+        {
+          "name": "displayOrder",
+          "type": "integer",
+          "required": false,
+          "description": "表示順（小さい順）"
+        }
+      ]
+    }
+  ]
+}

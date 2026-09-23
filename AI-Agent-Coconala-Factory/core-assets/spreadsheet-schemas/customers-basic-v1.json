@@ -1,0 +1,65 @@
+{
+  "kind": "spreadsheet-schema",
+  "id": "customers-basic-v1",
+  "version": "1.0.0",
+  "description": "One row per customer, matched by LINE user id or email.",
+  "sheets": [
+    {
+      "name": "CUSTOMERS",
+      "description": "お客様一覧",
+      "primaryKey": "customerId",
+      "indexes": [
+        "lineUserId",
+        "email"
+      ],
+      "columns": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "required": true,
+          "description": "お客様ID (CUS-YYYYMMDD-XXXXXX)"
+        },
+        {
+          "name": "lineUserId",
+          "type": "string",
+          "required": false,
+          "description": "LINE ユーザーID",
+          "pii": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "お名前",
+          "pii": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "description": "メールアドレス",
+          "pii": true
+        },
+        {
+          "name": "phone",
+          "type": "phone",
+          "required": false,
+          "description": "電話番号",
+          "pii": true
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "description": "登録日時 (ISO 8601)"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime",
+          "required": false,
+          "description": "更新日時 (ISO 8601)"
+        }
+      ]
+    }
+  ]
+}

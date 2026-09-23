@@ -1,0 +1,46 @@
+{
+  "kind": "action",
+  "id": "sendLineMessage",
+  "version": "1.0.0",
+  "description": "PLANNED: push a LINE message to the owner or a customer (confirmation, reminder). Needs the Messaging API push quota plan. Not implemented in Phase 1.",
+  "status": "planned",
+  "exposure": [],
+  "reusable": true,
+  "industrySpecific": false,
+  "input": {
+    "to": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "string",
+      "required": true,
+      "maxLength": 5000
+    }
+  },
+  "output": {
+    "sent": {
+      "type": "boolean",
+      "required": true
+    }
+  },
+  "dependencies": {
+    "sheets": [],
+    "configKeys": [],
+    "services": [
+      "line"
+    ],
+    "scriptProperties": [
+      "LINE_CHANNEL_ACCESS_TOKEN"
+    ]
+  },
+  "validation": [
+    "text 1-5000 chars"
+  ],
+  "errors": [
+    {
+      "code": "INTERNAL_ERROR",
+      "when": "LINE API rejects the push"
+    }
+  ]
+}

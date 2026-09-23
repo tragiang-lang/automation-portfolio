@@ -1,0 +1,175 @@
+{
+  "kind": "qa-rules",
+  "id": "qa-rules-v1",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "WF_EXISTS",
+      "area": "workflow",
+      "severity": "error",
+      "description": "Every selected workflow exists in the registry and is stable."
+    },
+    {
+      "id": "WF_ACTIONS_EXIST",
+      "area": "workflow",
+      "severity": "error",
+      "description": "Every action a workflow references exists and is available."
+    },
+    {
+      "id": "WF_ACTION_INPUTS",
+      "area": "workflow",
+      "severity": "error",
+      "description": "Every LINE entry's action accepts LINE invocation and the action input schema is valid."
+    },
+    {
+      "id": "WF_DEPENDENCIES",
+      "area": "workflow",
+      "severity": "error",
+      "description": "Sheets each action needs are provided by the workflow's spreadsheet schemas."
+    },
+    {
+      "id": "WF_SCHEMAS_EXIST",
+      "area": "workflow",
+      "severity": "error",
+      "description": "Every spreadsheet schema a workflow references exists."
+    },
+    {
+      "id": "SS_REQUIRED_SHEETS",
+      "area": "spreadsheet",
+      "severity": "error",
+      "description": "All sheets required by selected workflows are present in the project schema."
+    },
+    {
+      "id": "SS_COLUMNS_VALID",
+      "area": "spreadsheet",
+      "severity": "error",
+      "description": "Columns have valid types, enums have values, defaults match types."
+    },
+    {
+      "id": "SS_DUPLICATE_COLUMNS",
+      "area": "spreadsheet",
+      "severity": "error",
+      "description": "No sheet defines the same column twice."
+    },
+    {
+      "id": "SS_KEYS_AND_REFERENCES",
+      "area": "spreadsheet",
+      "severity": "error",
+      "description": "Primary keys and indexes name real columns; references resolve inside the project schema."
+    },
+    {
+      "id": "SS_REQUIRED_CONFIG",
+      "area": "spreadsheet",
+      "severity": "warning",
+      "description": "Required CONFIG keys have a value in the brief (otherwise the owner must fill them in)."
+    },
+    {
+      "id": "GAS_FILES",
+      "area": "gas",
+      "severity": "error",
+      "description": "Every module file and generated file exists in the GAS project."
+    },
+    {
+      "id": "GAS_IMPORTS",
+      "area": "gas",
+      "severity": "error",
+      "description": "Every relative import inside gas/src and gas/tests resolves."
+    },
+    {
+      "id": "GAS_REGISTRY",
+      "area": "gas",
+      "severity": "error",
+      "description": "Generated action registry covers exactly the selected workflows' actions."
+    },
+    {
+      "id": "GAS_TESTS_EXIST",
+      "area": "gas",
+      "severity": "error",
+      "description": "The GAS project contains tests for every included module plus the generated wiring test."
+    },
+    {
+      "id": "GAS_TYPECHECK",
+      "area": "gas",
+      "severity": "error",
+      "description": "tsc --noEmit passes for the GAS project."
+    },
+    {
+      "id": "GAS_TESTS_PASS",
+      "area": "gas",
+      "severity": "error",
+      "description": "vitest passes for the GAS project."
+    },
+    {
+      "id": "GAS_BUILD",
+      "area": "gas",
+      "severity": "error",
+      "description": "esbuild bundle builds and exposes top-level doGet/doPost/setupSpreadsheet/setupRichMenu."
+    },
+    {
+      "id": "RM_LAYOUT_VALID",
+      "area": "rich-menu",
+      "severity": "error",
+      "description": "Size meets LINE limits; areas are inside the canvas and do not overlap; at most 20 areas."
+    },
+    {
+      "id": "RM_ACTIONS_VALID",
+      "area": "rich-menu",
+      "severity": "error",
+      "description": "Every workflow button references a selected workflow and an existing entry; URI buttons resolve to https URLs."
+    },
+    {
+      "id": "RM_LABELS",
+      "area": "rich-menu",
+      "severity": "error",
+      "description": "Every button has a label and every layout slot has a button."
+    },
+    {
+      "id": "RM_REQUIRED_BUTTONS",
+      "area": "rich-menu",
+      "severity": "error",
+      "description": "Every selected workflow is reachable from at least one button."
+    },
+    {
+      "id": "RM_POSTBACK_LENGTH",
+      "area": "rich-menu",
+      "severity": "error",
+      "description": "Postback data is at most 300 characters."
+    },
+    {
+      "id": "DS_CONTRAST",
+      "area": "design",
+      "severity": "error",
+      "description": "Label colors meet WCAG AA (4.5:1) against their tile colors."
+    },
+    {
+      "id": "SEC_NO_SECRETS",
+      "area": "security",
+      "severity": "error",
+      "description": "No tokens, channel secrets, private keys or .clasp.json in the project."
+    },
+    {
+      "id": "SEC_NO_REAL_PII",
+      "area": "security",
+      "severity": "warning",
+      "description": "No personal email addresses outside example domains in generated code or tests."
+    },
+    {
+      "id": "DEL_DOCS",
+      "area": "delivery",
+      "severity": "error",
+      "description": "SETUP.md, DELIVERY.md and QA_REPORT.md exist and are non-empty."
+    },
+    {
+      "id": "DEL_ARTIFACTS",
+      "area": "delivery",
+      "severity": "error",
+      "description": "Every artifact listed in project.json exists."
+    },
+    {
+      "id": "DEL_TRACEABILITY",
+      "area": "delivery",
+      "severity": "error",
+      "description": "Every generated JSON artifact carries _meta with project, industry, workflows and asset versions."
+    }
+  ]
+}

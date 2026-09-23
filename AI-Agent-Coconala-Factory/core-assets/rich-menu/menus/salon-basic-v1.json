@@ -1,0 +1,83 @@
+{
+  "kind": "rich-menu",
+  "id": "salon-basic-v1",
+  "version": "1.0.0",
+  "description": "Six-button menu for appointment-based salons: booking first, then menu, inquiry, access, hours and a style gallery link.",
+  "industries": [
+    "hair_salon",
+    "beauty_salon",
+    "nail_salon"
+  ],
+  "layout": "grid-2x3-v1",
+  "chatBarText": "メニュー",
+  "items": [
+    {
+      "slot": "a",
+      "label": "ご予約",
+      "subLabel": "日時を選ぶ",
+      "role": "primary",
+      "icon": "calendar",
+      "action": {
+        "type": "workflow",
+        "workflowId": "reservation-basic-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "b",
+      "label": "メニュー",
+      "subLabel": "料金・所要時間",
+      "role": "secondary",
+      "icon": "list",
+      "action": {
+        "type": "workflow",
+        "workflowId": "service-menu-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "c",
+      "label": "お問い合わせ",
+      "role": "secondary",
+      "icon": "chat",
+      "action": {
+        "type": "workflow",
+        "workflowId": "inquiry-basic-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "d",
+      "label": "アクセス",
+      "role": "secondary",
+      "icon": "map-pin",
+      "action": {
+        "type": "workflow",
+        "workflowId": "business-info-v1",
+        "entry": "access"
+      }
+    },
+    {
+      "slot": "e",
+      "label": "営業時間",
+      "role": "secondary",
+      "icon": "clock",
+      "action": {
+        "type": "workflow",
+        "workflowId": "business-info-v1",
+        "entry": "hours"
+      }
+    },
+    {
+      "slot": "f",
+      "label": "スタイル写真",
+      "subLabel": "Instagram",
+      "role": "secondary",
+      "icon": "camera",
+      "action": {
+        "type": "uri",
+        "configKey": "social.instagramUrl"
+      }
+    }
+  ]
+}

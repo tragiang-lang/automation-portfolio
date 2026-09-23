@@ -1,0 +1,38 @@
+{
+  "kind": "design-preset",
+  "id": "quiet-luxury-v1",
+  "version": "1.0.0",
+  "name": "Quiet luxury",
+  "description": "Warm off-white, near-black ink and a muted gold accent. Calm and high-end without ornament.",
+  "suitableIndustries": [
+    "hair_salon",
+    "beauty_salon",
+    "nail_salon",
+    "clinic"
+  ],
+  "colors": {
+    "background": "#F7F4EF",
+    "surface": "#FFFFFF",
+    "primary": "#2B2622",
+    "onPrimary": "#F7F4EF",
+    "accent": "#9C7A4B",
+    "text": "#2B2622",
+    "muted": "#6F655B",
+    "border": "#E3DCD1"
+  },
+  "typography": {
+    "direction": "Mincho (serif) heading for labels, thin sans for sub-labels",
+    "headingStyle": "serif, generous letter-spacing",
+    "labelWeight": "medium",
+    "minLabelPx": 64
+  },
+  "spacing": {
+    "gutterPx": 16,
+    "tilePaddingPx": 48,
+    "cornerRadiusPx": 0
+  },
+  "hierarchy": "Primary tile filled in ink with light text; secondary tiles white with thin border.",
+  "iconStyle": "1.5px outline icons, no fills",
+  "buttonStyle": "flat rectangles separated by hairline gutters",
+  "imagery": "no photos inside tiles; optional subtle paper texture on background"
+}

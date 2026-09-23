@@ -1,0 +1,229 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/design-spec.json",
+    "generatedBy": "design-agent",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-hair-salon",
+    "industry": "hair_salon",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "hair-salon-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "quiet-luxury-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "salon-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "canvas": {
+    "width": 2500,
+    "height": 1686
+  },
+  "layout": "grid-2x3-v1",
+  "richMenu": "salon-basic-v1",
+  "preset": "quiet-luxury-v1",
+  "brand": {
+    "name": "Demo Hair Salon",
+    "tone": "calm, adult, understated"
+  },
+  "colorTokens": {
+    "background": "#F7F4EF",
+    "surface": "#FFFFFF",
+    "primary": "#2B2622",
+    "onPrimary": "#F7F4EF",
+    "accent": "#9C7A4B",
+    "text": "#2B2622",
+    "muted": "#6F655B",
+    "border": "#E3DCD1"
+  },
+  "typography": {
+    "direction": "Mincho (serif) heading for labels, thin sans for sub-labels",
+    "headingStyle": "serif, generous letter-spacing",
+    "labelWeight": "medium",
+    "minLabelPx": 64
+  },
+  "spacing": {
+    "gutterPx": 16,
+    "tilePaddingPx": 48,
+    "cornerRadiusPx": 0
+  },
+  "visualHierarchy": "Primary tile filled in ink with light text; secondary tiles white with thin border.",
+  "ctaHierarchy": [
+    "ご予約",
+    "メニュー",
+    "お問い合わせ",
+    "アクセス",
+    "営業時間",
+    "スタイル写真"
+  ],
+  "cells": [
+    {
+      "slot": "a",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "label": "ご予約",
+      "subLabel": "日時を選ぶ",
+      "role": "primary",
+      "ctaRank": 1,
+      "emphasis": "normal",
+      "icon": {
+        "name": "calendar",
+        "style": "1.5px outline icons, no fills"
+      },
+      "fill": "#2B2622",
+      "labelColor": "#F7F4EF",
+      "contrastRatio": 13.64
+    },
+    {
+      "slot": "b",
+      "bounds": {
+        "x": 833,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "label": "メニュー",
+      "subLabel": "料金・所要時間",
+      "role": "secondary",
+      "ctaRank": 2,
+      "emphasis": "normal",
+      "icon": {
+        "name": "list",
+        "style": "1.5px outline icons, no fills"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#2B2622",
+      "contrastRatio": 14.97
+    },
+    {
+      "slot": "c",
+      "bounds": {
+        "x": 1666,
+        "y": 0,
+        "width": 834,
+        "height": 843
+      },
+      "label": "お問い合わせ",
+      "role": "secondary",
+      "ctaRank": 3,
+      "emphasis": "normal",
+      "icon": {
+        "name": "chat",
+        "style": "1.5px outline icons, no fills"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#2B2622",
+      "contrastRatio": 14.97
+    },
+    {
+      "slot": "d",
+      "bounds": {
+        "x": 0,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "label": "アクセス",
+      "role": "secondary",
+      "ctaRank": 4,
+      "emphasis": "normal",
+      "icon": {
+        "name": "map-pin",
+        "style": "1.5px outline icons, no fills"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#2B2622",
+      "contrastRatio": 14.97
+    },
+    {
+      "slot": "e",
+      "bounds": {
+        "x": 833,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "label": "営業時間",
+      "role": "secondary",
+      "ctaRank": 5,
+      "emphasis": "normal",
+      "icon": {
+        "name": "clock",
+        "style": "1.5px outline icons, no fills"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#2B2622",
+      "contrastRatio": 14.97
+    },
+    {
+      "slot": "f",
+      "bounds": {
+        "x": 1666,
+        "y": 843,
+        "width": 834,
+        "height": 843
+      },
+      "label": "スタイル写真",
+      "subLabel": "Instagram",
+      "role": "secondary",
+      "ctaRank": 6,
+      "emphasis": "normal",
+      "icon": {
+        "name": "camera",
+        "style": "1.5px outline icons, no fills"
+      },
+      "fill": "#FFFFFF",
+      "labelColor": "#2B2622",
+      "contrastRatio": 14.97
+    }
+  ],
+  "iconRequirements": [
+    "calendar icon, 1.5px outline icons, no fills, at least 160px, readable at phone size",
+    "list icon, 1.5px outline icons, no fills, at least 160px, readable at phone size",
+    "chat icon, 1.5px outline icons, no fills, at least 160px, readable at phone size",
+    "map-pin icon, 1.5px outline icons, no fills, at least 160px, readable at phone size",
+    "clock icon, 1.5px outline icons, no fills, at least 160px, readable at phone size",
+    "camera icon, 1.5px outline icons, no fills, at least 160px, readable at phone size"
+  ],
+  "assetRequirements": [
+    "One 2500x1686px image containing every button (LINE uses one image per rich menu)",
+    "No logo supplied. Use the business name as text",
+    "Imagery: no photos inside tiles; optional subtle paper texture on background"
+  ],
+  "exportRequirements": {
+    "format": "PNG or JPEG",
+    "maxBytes": 1048576,
+    "width": 2500,
+    "height": 1686
+  },
+  "designNotes": [
+    "Buttons are tapped on phones: keep labels at least 64px on the 2500px canvas.",
+    "Button areas are fixed by the layout bounds below. Draw each label inside its own cell so the tap area matches what the customer sees.",
+    "Button style: flat rectangles separated by hairline gutters.",
+    "Industry: 美容室 / Hair salon. Terminology: service=メニュー, reservation=ご予約, inquiry=お問い合わせ, capacity=同時に対応できる席数（スタイリスト数）.",
+    "Colors are the Quiet luxury preset defaults."
+  ]
+}

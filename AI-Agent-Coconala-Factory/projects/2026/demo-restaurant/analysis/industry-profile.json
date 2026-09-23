@@ -1,0 +1,135 @@
+{
+  "_meta": {
+    "artifact": "analysis/industry-profile.json",
+    "generatedBy": "industry-specialist",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-restaurant",
+    "industry": "restaurant",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "business-info-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "friendly-local-v1": "1.0.0",
+      "gas-modules-v1": "1.0.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "hero-1-plus-3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "restaurant-basic-v1": "1.0.0",
+      "restaurant-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "industry": "restaurant",
+  "industryAsset": "restaurant-v1@1.0.0",
+  "displayName": "飲食店 / Restaurant",
+  "businessType": "Walk-in plus table reservations; menu browsing is the most common intent.",
+  "customerIntents": [
+    {
+      "id": "view_menu",
+      "description": "See services / menu / prices",
+      "source": "requirement",
+      "evidence": "お客様がメニューを見られる"
+    },
+    {
+      "id": "book",
+      "description": "Make a reservation / appointment",
+      "source": "requirement",
+      "evidence": "席の予約ができる"
+    },
+    {
+      "id": "find_access",
+      "description": "Find the address / map",
+      "source": "requirement",
+      "evidence": "アクセスがわかる"
+    },
+    {
+      "id": "ask_question",
+      "description": "Send an inquiry",
+      "source": "requirement",
+      "evidence": "貸切の相談など問い合わせができる"
+    }
+  ],
+  "commonLineUseCases": [
+    "Table reservation requests",
+    "Menu / course lookup",
+    "Access on the way to the restaurant",
+    "Private party / allergy questions"
+  ],
+  "recommendedWorkflows": [
+    "reservation-basic-v1",
+    "service-menu-v1",
+    "business-info-v1",
+    "inquiry-basic-v1"
+  ],
+  "recommendedActions": [
+    "createReservation@1",
+    "getAvailability@1",
+    "getServiceList@1",
+    "getBusinessInfo@1",
+    "createInquiry@1"
+  ],
+  "recommendedRichMenu": "restaurant-basic-v1",
+  "recommendedRichMenuSections": [
+    {
+      "label": "席のご予約",
+      "target": "reservation-basic-v1#default"
+    },
+    {
+      "label": "お料理",
+      "target": "service-menu-v1#default"
+    },
+    {
+      "label": "アクセス",
+      "target": "business-info-v1#default"
+    },
+    {
+      "label": "お問い合わせ",
+      "target": "inquiry-basic-v1#default"
+    }
+  ],
+  "recommendedDesignPresets": [
+    "friendly-local-v1",
+    "warm-natural-v1",
+    "minimal-modern-v1"
+  ],
+  "requiredSpreadsheetData": [
+    "sheet CONFIG",
+    "sheet CUSTOMERS",
+    "sheet SERVICES",
+    "sheet RESERVATIONS",
+    "sheet INQUIRIES",
+    "CONFIG: 店舗名・住所・電話番号・地図URL・営業時間",
+    "SERVICES: 料理・コース名・料金（所要時間はコース時間）",
+    "reservation.capacity: 同じ時間帯に受けられる組数",
+    "reservation.defaultDurationMinutes: 1組あたりの滞在時間"
+  ],
+  "notificationRequirements": [
+    "Owner email on every table reservation request"
+  ],
+  "terminology": {
+    "service": "お料理・コース",
+    "reservation": "席のご予約",
+    "inquiry": "お問い合わせ",
+    "capacity": "同じ時間帯に受けられる組数"
+  },
+  "risks": [
+    "Party size is recorded but not used for capacity in reservation-basic-v1 (capacity counts groups).",
+    "Same-day requests may need a shorter reservation.minLeadHours."
+  ],
+  "assumptions": []
+}

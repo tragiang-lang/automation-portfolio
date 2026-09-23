@@ -1,0 +1,38 @@
+{
+  "kind": "design-preset",
+  "id": "clean-professional-v1",
+  "version": "1.0.0",
+  "name": "Clean professional",
+  "description": "Navy and teal on cool white. Trustworthy and clinical, for clinics, consultants and real estate.",
+  "suitableIndustries": [
+    "clinic",
+    "consultant",
+    "real_estate",
+    "school"
+  ],
+  "colors": {
+    "background": "#F3F6FA",
+    "surface": "#FFFFFF",
+    "primary": "#1E3A5F",
+    "onPrimary": "#FFFFFF",
+    "accent": "#2E7D6B",
+    "text": "#1F2933",
+    "muted": "#52606D",
+    "border": "#D9E2EC"
+  },
+  "typography": {
+    "direction": "Neutral sans (Noto Sans JP), clear hierarchy",
+    "headingStyle": "semi-bold sans",
+    "labelWeight": "bold",
+    "minLabelPx": 60
+  },
+  "spacing": {
+    "gutterPx": 12,
+    "tilePaddingPx": 40,
+    "cornerRadiusPx": 12
+  },
+  "hierarchy": "Primary tile navy; secondary tiles white with navy icons.",
+  "iconStyle": "solid icons in accent color",
+  "buttonStyle": "slightly rounded tiles with 1px border",
+  "imagery": "none"
+}

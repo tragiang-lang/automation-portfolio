@@ -1,0 +1,7 @@
+slot | label | target | selected? | entry action | workflow actions
+a | 内見を申し込む | reservation-basic-v1#default | true | createReservation@1 (datetimepicker) | createReservation@1,getAvailability@1
+b | 物件のご相談 | inquiry-basic-v1#default | true | createInquiry@1 (postback) | createInquiry@1
+c | 物件を探す | uri:links.propertySiteUrl | n/a | n/a | n/a
+d | 会社・店舗情報 | business-info-v1#default | true | getBusinessInfo@1 (postback view=all) | getBusinessInfo@1
+e | アクセス | business-info-v1#access | true | getBusinessInfo@1 (postback view=access) | getBusinessInfo@1
+f | 営業時間 | business-info-v1#hours | true | getBusinessInfo@1 (postback view=hours) | getBusinessInfo@1
