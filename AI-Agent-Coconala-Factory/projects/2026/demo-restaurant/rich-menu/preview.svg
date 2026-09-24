@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="1686" viewBox="0 0 2500 1686">
+<rect x="0" y="0" width="2500" height="1686" fill="#FFF8EE"/>
+<g id="slot-a">
+<rect x="10" y="10" width="2480" height="823" rx="36" fill="#B93C0A" stroke="#B93C0A" stroke-width="2"/>
+<g transform="translate(1135 173) scale(9.583)" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></g>
+<text x="1250" y="543" font-family="Noto Sans JP" font-weight="700" font-size="107" fill="#FFFFFF" text-anchor="middle">席のご予約</text>
+<text x="1250" y="662" font-family="Noto Sans JP" font-weight="400" font-size="66" fill="#FFFFFF" text-anchor="middle">日時を選んで予約</text>
+</g>
+<g id="slot-b">
+<rect x="10" y="853" width="813" height="823" rx="36" fill="#FFFFFF" stroke="#F1DFC8" stroke-width="2"/>
+<g transform="translate(303 1074) scale(9.5)" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 2-2 6 0 9v9"/></g>
+<text x="417" y="1442" font-family="Noto Sans JP" font-weight="700" font-size="107" fill="#3B2F2A" text-anchor="middle">お料理</text>
+</g>
+<g id="slot-c">
+<rect x="843" y="853" width="813" height="823" rx="36" fill="#FFFFFF" stroke="#F1DFC8" stroke-width="2"/>
+<g transform="translate(1136 1074) scale(9.5)" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></g>
+<text x="1250" y="1442" font-family="Noto Sans JP" font-weight="700" font-size="107" fill="#3B2F2A" text-anchor="middle">アクセス</text>
+</g>
+<g id="slot-d">
+<rect x="1676" y="853" width="814" height="823" rx="36" fill="#FFFFFF" stroke="#F1DFC8" stroke-width="2"/>
+<g transform="translate(1969 1074) scale(9.5)" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></g>
+<text x="2083" y="1442" font-family="Noto Sans JP" font-weight="700" font-size="107" fill="#3B2F2A" text-anchor="middle">お問い合わせ</text>
+</g>
+</svg>

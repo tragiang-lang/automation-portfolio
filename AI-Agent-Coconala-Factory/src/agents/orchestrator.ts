@@ -1,8 +1,10 @@
-import { businessRequirementsMd, deliveryMd, setupMd } from "../generators/delivery";
+import { businessRequirementsMd, deliveryMd, e2eTestMd, gasSetupMd, lineSetupMd, rollbackMd, setupMd, spreadsheetSetupMd } from "../generators/delivery";
 import { generateGasProject } from "../generators/gasProject";
 import { meta, TraceContext } from "../generators/meta";
 import { buildLineRoutes, generateRichMenuConfig } from "../generators/richMenuConfig";
 import { generateSpreadsheetSchema } from "../generators/spreadsheetSchema";
+import { imageRecord, localRenderer } from "../richMenu/renderer";
+import { DEPLOYMENT_FILE, deploymentDefinition, lineReadme, WEBHOOK_DIR, webhookFolder } from "../line/definition";
 import { toStableJson } from "../lib/fsx";
 import { error, hasErrors, Issue } from "../lib/issues";
 import type { CoreAssetRegistry } from "../registry/registry";
@@ -19,8 +21,9 @@ import { planWorkflows, WorkflowPlan } from "./workflowPlanner";
  * (see src/project.ts), so the pipeline itself is pure and easy to test.
  *
  *   brief → Industry Specialist → Workflow Planner → Design Agent
- *         → Spreadsheet Schema Generator → Rich Menu config → GAS Generator
- *         → delivery docs  (→ QA Agent, after the files are written)
+ *         → Spreadsheet Schema Generator → Rich Menu config → Rich Menu renderer
+ *         → GAS Generator → LINE deployment definition + webhook proxy
+ *         → delivery docs  (→ QA Agent + LINE QA, after the files are written)
  */
 
 export const PIPELINE_STEPS = [
@@ -29,13 +32,18 @@ export const PIPELINE_STEPS = [
   "design-agent",
   "spreadsheet-schema-generator",
   "rich-menu-config-generator",
+  "rich-menu-renderer",
   "gas-generator",
+  "line-deployment-generator",
   "delivery-docs",
   "qa-agent",
+  "line-qa",
 ] as const;
 
 export interface PipelineResult {
   files: Record<string, string>;
+  /** Binary artifacts (the rich-menu PNG). Kept apart so every text artifact stays a string. */
+  binaries: Record<string, Uint8Array>;
   issues: Issue[];
   profile?: IndustryProfile;
   plan?: WorkflowPlan;
@@ -51,13 +59,26 @@ export const ARTIFACTS = [
   "workflow/workflow.json",
   "rich-menu/design-spec.json",
   "rich-menu/menu-config.json",
+  "rich-menu/rich-menu.png",
+  "rich-menu/preview.svg",
+  "rich-menu/image.json",
   "spreadsheet/schema.json",
   "spreadsheet/config-seed.json",
   "gas/",
+  "line/deployment.json",
+  "line/README.md",
+  "line/webhook/",
   "delivery/SETUP.md",
+  "delivery/SPREADSHEET_SETUP.md",
+  "delivery/GAS_SETUP.md",
+  "delivery/LINE_SETUP.md",
+  "delivery/E2E_TEST.md",
+  "delivery/ROLLBACK.md",
   "delivery/DELIVERY.md",
   "qa/qa-report.json",
   "qa/QA_REPORT.md",
+  "qa/line-qa-report.json",
+  "qa/LINE_QA_REPORT.md",
 ];
 
 export function parseBrief(raw: unknown): { brief?: ClientBrief; issues: Issue[] } {
@@ -90,6 +111,7 @@ function traceFor(brief: ClientBrief, plan: WorkflowPlan, registry: CoreAssetReg
   }
   add(plan.designPreset, registry.presets.get(plan.designPreset)?.asset.version);
   if (registry.gasModules) add(registry.gasModules.id, registry.gasModules.version);
+  if (registry.lineProxy) add(registry.lineProxy.id, registry.lineProxy.version);
   const sorted = Object.fromEntries(Object.entries(assets).sort(([a], [b]) => a.localeCompare(b)));
   return {
     project: `${brief.project.year}/${brief.project.slug}`,
@@ -102,16 +124,17 @@ function traceFor(brief: ClientBrief, plan: WorkflowPlan, registry: CoreAssetReg
 export function runPipeline(brief: ClientBrief, registry: CoreAssetRegistry, options: { createdOn: string }): PipelineResult {
   const issues: Issue[] = [];
   const files: Record<string, string> = {};
+  const binaries: Record<string, Uint8Array> = {};
 
   const { profile, issues: industryIssues } = analyzeIndustry(brief, registry);
   issues.push(...industryIssues);
-  if (!profile) return { files, issues };
+  if (!profile) return { files, binaries, issues };
 
   const { plan, issues: planIssues } = planWorkflows(brief, profile, registry);
   issues.push(...planIssues);
   if (hasErrors(issues) || plan.selected.length === 0) {
     if (plan.selected.length === 0) issues.push(error("WF_EXISTS", "no workflow could be selected for this brief"));
-    return { files, issues, profile, plan };
+    return { files, binaries, issues, profile, plan };
   }
 
   const trace = traceFor(brief, plan, registry);
@@ -134,6 +157,12 @@ export function runPipeline(brief: ClientBrief, registry: CoreAssetRegistry, opt
   files["workflow/workflow.json"] = toStableJson({ _meta: stamp("workflow/workflow.json", "workflow-planner"), workflows, actions });
   files["rich-menu/design-spec.json"] = toStableJson({ _meta: stamp("rich-menu/design-spec.json", "design-agent"), ...design });
   files["rich-menu/menu-config.json"] = toStableJson(stampedMenu);
+  const rendered = localRenderer.render(design);
+  issues.push(...rendered.issues);
+  const image = imageRecord(rendered, design);
+  binaries["rich-menu/rich-menu.png"] = rendered.png;
+  files["rich-menu/preview.svg"] = rendered.svg;
+  files["rich-menu/image.json"] = toStableJson({ _meta: stamp("rich-menu/image.json", "rich-menu-renderer"), ...image });
   files["spreadsheet/schema.json"] = toStableJson({ _meta: stamp("spreadsheet/schema.json", "spreadsheet-schema-generator"), ...schema });
   files["spreadsheet/config-seed.json"] = toStableJson({ _meta: stamp("spreadsheet/config-seed.json", "spreadsheet-schema-generator"), values: configSeed });
 
@@ -141,8 +170,20 @@ export function runPipeline(brief: ClientBrief, registry: CoreAssetRegistry, opt
   issues.push(...gas.issues);
   for (const [rel, content] of Object.entries(gas.files)) files[`gas/${rel}`] = content;
 
-  const deliveryInputs = { brief, profile, plan, schema, configSeed, menuConfig, trace, artifacts: ARTIFACTS };
+  const definition = deploymentDefinition({ plan, registry, menuConfig, image, meta: stamp(DEPLOYMENT_FILE, "line-deployment-generator") });
+  const webhook = webhookFolder(registry, brief.project.slug, trace.project);
+  issues.push(...definition.issues, ...webhook.issues);
+  files[DEPLOYMENT_FILE] = toStableJson(definition.json);
+  files["line/README.md"] = lineReadme(trace.project, menuConfig.name);
+  for (const [rel, content] of Object.entries(webhook.files)) files[`${WEBHOOK_DIR}/${rel}`] = content;
+
+  const deliveryInputs = { brief, profile, plan, schema, configSeed, menuConfig, routes, image, trace, artifacts: ARTIFACTS };
   files["delivery/SETUP.md"] = setupMd(deliveryInputs);
+  files["delivery/SPREADSHEET_SETUP.md"] = spreadsheetSetupMd(deliveryInputs);
+  files["delivery/GAS_SETUP.md"] = gasSetupMd(deliveryInputs);
+  files["delivery/LINE_SETUP.md"] = lineSetupMd(deliveryInputs);
+  files["delivery/E2E_TEST.md"] = e2eTestMd(deliveryInputs);
+  files["delivery/ROLLBACK.md"] = rollbackMd(deliveryInputs);
   files["delivery/DELIVERY.md"] = deliveryMd(deliveryInputs);
 
   files["project.json"] = toStableJson({
@@ -154,8 +195,8 @@ export function runPipeline(brief: ClientBrief, registry: CoreAssetRegistry, opt
     industry: brief.industry,
     pipeline: PIPELINE_STEPS,
     artifacts: ARTIFACTS,
-    generatedFiles: Object.keys(files).concat("project.json").sort(),
+    generatedFiles: [...Object.keys(files), ...Object.keys(binaries), "project.json"].sort(),
   });
 
-  return { files, issues, profile, plan, trace };
+  return { files, binaries, issues, profile, plan, trace };
 }

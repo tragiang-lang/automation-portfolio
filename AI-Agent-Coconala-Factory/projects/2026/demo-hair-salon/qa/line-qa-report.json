@@ -1,0 +1,125 @@
+{
+  "project": "2026/demo-hair-salon",
+  "result": "PASS",
+  "summary": {
+    "pass": 13,
+    "fail": 0,
+    "warn": 0,
+    "skipped": 1
+  },
+  "levels": [
+    {
+      "level": 1,
+      "name": "Static LINE validation",
+      "status": "PASS",
+      "note": "image, config, actions, traceability, deployment definition, secrets, webhook/proxy"
+    },
+    {
+      "level": 2,
+      "name": "Generated GAS LINE runtime tests",
+      "status": "PASS",
+      "note": "gas/tests/lineRuntime.test.ts, in-memory Google services"
+    },
+    {
+      "level": 3,
+      "name": "Webhook proxy tests",
+      "status": "PASS",
+      "note": "line/webhook/tests: signature and forwarding; the factory suite adds end-to-end proxy → GAS tests"
+    },
+    {
+      "level": 4,
+      "name": "Live LINE smoke test",
+      "status": "NOT RUN",
+      "note": "requires a real test account; never automatic"
+    }
+  ],
+  "checks": [
+    {
+      "rule": "LINE_IMAGE_EXISTS",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_IMAGE_FORMAT",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_IMAGE_MATCHES_CONFIG",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_IMAGE_READABLE",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_DETERMINISTIC_IMAGE",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_ACTIONS_VALID",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_WORKFLOW_REFERENCES",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_DEPLOYMENT_CONFIG",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_SECRET_SCAN",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_WEBHOOK_CONFIG",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_PROXY_CONFIG",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_RUNTIME_TESTS",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_PROXY_TESTS",
+      "area": "line",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "LINE_LIVE_SMOKE",
+      "area": "line",
+      "status": "skipped",
+      "details": [
+        "NOT RUN (needs a real test LINE Official Account: line-smoke-test --live)"
+      ]
+    }
+  ],
+  "issues": []
+}

@@ -7,11 +7,13 @@ import { handleApiRequest } from "./apiRouter";
 /**
  * Single doPost decision point, kept pure so it can be tested.
  *
- * GAS web apps cannot read request headers, so LINE's X-Line-Signature
- * cannot be verified here (a documented platform limitation, see
- * docs/security.md). Instead the webhook URL carries a secret `key` query
- * parameter that must equal the WEBHOOK_KEY Script Property. When
- * WEBHOOK_KEY is unset, every LINE delivery is rejected (fail closed).
+ * GAS web apps cannot read request headers, so LINE's x-line-signature
+ * cannot be verified here (a platform limitation, see docs/security.md).
+ * In production LINE calls the verification proxy (line/webhook/), which
+ * checks the signature and forwards only verified deliveries here with a
+ * secret `key` query parameter. That key must equal the WEBHOOK_KEY Script
+ * Property; it authenticates the proxy, it is NOT a LINE signature check.
+ * When WEBHOOK_KEY is unset, every LINE delivery is rejected (fail closed).
  */
 
 export interface DispatchDeps {

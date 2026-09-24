@@ -3,7 +3,7 @@ import path from "node:path";
 import { hashFile, readJson, toStableJson, writeFile } from "../lib/fsx";
 import { error, Issue, warning } from "../lib/issues";
 import { SEMVER } from "../schemas/assets";
-import { ASSET_LOCK_FILE, CoreAssetRegistry, GAS_MODULES_DIR } from "./registry";
+import { ASSET_LOCK_FILE, CoreAssetRegistry, GAS_MODULES_DIR, LINE_PROXY_DIR } from "./registry";
 
 /**
  * Immutability guard for released Core Assets (docs/decisions/0003).
@@ -43,6 +43,9 @@ export function currentEntries(registry: CoreAssetRegistry): Record<string, Lock
     }
   }
   if (registry.gasModules) add(`${GAS_MODULES_DIR}/modules.json`, registry.gasModules.version);
+  if (registry.lineProxy) {
+    for (const file of [...registry.lineProxy.files, ...registry.lineProxy.tests, "proxy.json", "tsconfig.json"]) add(`${LINE_PROXY_DIR}/${file}`, registry.lineProxy.version);
+  }
   return Object.fromEntries(Object.entries(entries).sort(([a], [b]) => a.localeCompare(b)));
 }
 

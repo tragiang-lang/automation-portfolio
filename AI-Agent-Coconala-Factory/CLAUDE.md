@@ -26,15 +26,22 @@ npm test                 # vitest: tests/ + core-assets/gas-modules/tests/
 npm run factory -- validate
 npm run factory -- create-project --brief templates/briefs/hair-salon.example.json
 npm run factory -- generate-gas --brief <brief> --run-gas-checks
-npm run factory -- qa --project projects/2026/<slug> --run-gas-checks
+npm run factory -- qa --project projects/2026/<slug> --run-gas-checks   # factory QA + LINE QA
+npm run factory -- line-deploy --project projects/2026/<slug> --env test  # dry run; --live needs LINE_CHANNEL_ACCESS_TOKEN env
 ```
+
+Never run `line-deploy`/`line-rollback`/`line-delete`/`line-smoke-test` with `--live` unless the user asks;
+never write a LINE token, channel secret or webhook key to any file.
 
 ## Where things live
 
 - `src/schemas/`: zod shapes of assets and briefs. `src/validation/rules.ts`: rules shared by `validate` and QA.
 - `src/agents/`: industry specialist, workflow planner, design agent, orchestrator (pure `runPipeline`).
 - `src/generators/`: spreadsheet schema, rich menu config, GAS project, delivery docs, safe writer.
-- `src/qa/qaAgent.ts`: QA Agent (reads projects from disk).
+- `src/qa/qaAgent.ts`: QA Agent (reads projects from disk). `src/qa/lineQa.ts`: LINE QA (Levels 1–4).
+- `src/richMenu/`: deterministic Rich Menu renderer (design spec → SVG → PNG).
+- `src/line/`: deployment definition, LINE API adapter, deploy/rollback/smoke test. See `docs/line-automation-v1.md`.
+- `core-assets/line-webhook-proxy/`: signature-verifying Cloudflare Worker, copied into `line/webhook/`.
 - `core-assets/gas-modules/`: reusable GAS TypeScript. `modules.json` lists each module's files and
   tests. An action's code must be `src/actions/<actionId>.ts` exporting `<actionId>`.
 

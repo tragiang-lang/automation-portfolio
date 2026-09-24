@@ -17,9 +17,10 @@ export function toStableJson(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-export function writeFile(file: string, content: string): void {
+/** Text is written with LF line endings; binary content (the rich-menu PNG) is written as-is. */
+export function writeFile(file: string, content: string | Uint8Array): void {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, content.replace(/\r\n/g, "\n"));
+  fs.writeFileSync(file, typeof content === "string" ? content.replace(/\r\n/g, "\n") : content);
 }
 
 /** Recursive file list (posix-style paths relative to `dir`), skipping `skipDirs` names. */
@@ -41,6 +42,11 @@ export function listFiles(dir: string, skipDirs: readonly string[] = ["node_modu
 /** sha256 over LF-normalized text, so a CRLF checkout on Windows hashes the same as LF. */
 export function hashText(text: string): string {
   return createHash("sha256").update(text.replace(/\r\n/g, "\n")).digest("hex");
+}
+
+/** sha256 over raw bytes, for binary artifacts. */
+export function hashBytes(bytes: Uint8Array): string {
+  return createHash("sha256").update(bytes).digest("hex");
 }
 
 export function hashFile(file: string): string {

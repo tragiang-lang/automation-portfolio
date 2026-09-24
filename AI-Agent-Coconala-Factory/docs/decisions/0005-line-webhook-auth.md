@@ -9,3 +9,6 @@ API is disabled unless `API_ENABLED=true`, and only actions with `api` exposure 
 
 **Consequences.** Security depends on the secrecy of the webhook URL, which is documented in
 SETUP.md and security.md. Phase 2 can put an HMAC-verifying proxy in front if needed.
+
+**Update (LINE Automation v1).** [0008](0008-line-webhook-proxy.md) adds that proxy. The URL key is now
+the authentication between the proxy and GAS only. It is not, and was never, LINE signature verification.

@@ -25,7 +25,7 @@ customer-facing authentication, Supabase, SaaS/multi-tenant infrastructure, and 
 
 | Item | Why deferred | Extension point |
 |---|---|---|
-| Final Rich Menu PNG generation | Spec says a design spec is enough; the image is made in Canva or similar | `design-spec.json` |
+| Final Rich Menu PNG generation | Spec says a design spec is enough; the image is made in Canva or similar | Delivered in LINE Automation v1 ([line-automation-v1.md](line-automation-v1.md)) |
 | Google Calendar sync, staff availability, cancellation, LINE push | Keep `reservation-basic-v1` small and correct first | see [architecture.md](architecture.md#extension-points-not-in-phase-1) |
 | LLM-driven agents | Deterministic rules are testable and sufficient for 2 industries | [decisions/0004](decisions/0004-deterministic-agents.md) |
 | Localized (Japanese) text inside asset-sourced notes | Industry `risks` and workflow `extensionPoints` are English | bump the industry/workflow asset versions with Japanese text |

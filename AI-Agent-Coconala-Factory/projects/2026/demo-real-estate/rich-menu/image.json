@@ -1,0 +1,49 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/image.json",
+    "generatedBy": "rich-menu-renderer",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-real-estate",
+    "industry": "real_estate",
+    "workflows": [
+      "inquiry-basic-v1@1.0.0",
+      "reservation-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "clean-professional-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "real-estate-basic-v1": "1.0.0",
+      "real-estate-v1": "1.1.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "file": "rich-menu/rich-menu.png",
+  "format": "png",
+  "contentType": "image/png",
+  "width": 2500,
+  "height": 1686,
+  "bytes": 159064,
+  "sha256": "f1cec71e9449101b86251358b543e8c07f2ac25da92caf3bfe9a0f4f57e27877",
+  "previewSvgSha256": "389cd130a1262865d04b01850b3a3dcb15744023a2cc911c55f5fcb668563f0c",
+  "renderer": {
+    "id": "local-svg-resvg",
+    "version": "1.0.0",
+    "rasterizer": "@resvg/resvg-js@2.6.2",
+    "font": "Noto Sans JP (@embedpdf/fonts-jp@1.0.0, OFL-1.1)"
+  }
+}

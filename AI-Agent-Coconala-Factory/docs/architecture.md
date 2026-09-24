@@ -1,4 +1,7 @@
-# Architecture (Phase 1)
+# Architecture (Phase 1 + LINE Automation v1)
+
+The LINE delivery layer added in v1 (renderer, deployment, webhook proxy, LINE QA) is described in
+[line-automation-v1.md](line-automation-v1.md). This document covers the shared pipeline.
 
 ## One-paragraph summary
 
@@ -57,13 +60,19 @@ Spreadsheet Schema Generator   merge schema assets + CONFIG keys of actions
 Rich Menu Config Generator     workflow entries → LINE actions + GAS routes
   │                                            rich-menu/menu-config.json
   ▼
-GAS Generator         copy modules verbatim + generate data files
+Rich Menu Renderer    design spec → SVG → PNG (deterministic)
+  │                                            rich-menu/preview.svg, rich-menu.png, image.json
+  ▼
+GAS Generator         copy modules verbatim + generate data files (+ LINE runtime test)
   │                                            gas/
   ▼
-Delivery docs                                  delivery/SETUP.md, DELIVERY.md
+LINE deployment generator  definition + traceability + proxy copy
+  │                                            line/deployment.json, README.md, webhook/
+  ▼
+Delivery docs                                  delivery/SETUP.md … DELIVERY.md (7 files)
   ▼  (files written by the safe project writer)
-QA Agent              reads disk; optional tsc / vitest / esbuild
-                                               qa/qa-report.json, QA_REPORT.md
+QA Agent + LINE QA    reads disk; optional tsc / vitest / esbuild / proxy tests
+                                               qa/qa-report.json, QA_REPORT.md, line-qa-report.json, LINE_QA_REPORT.md
 ```
 
 `runPipeline` (src/agents/orchestrator.ts) is pure: it returns a file map and
@@ -80,6 +89,7 @@ same code can serve `create-project`, `generate-gas`, and
 | Geometry | `rich-menu/layouts/*.json` | canvas size, slot bounds, hero emphasis | labels, actions |
 | Visual design | `design-presets/*.json` → `design-spec.json` | colors, typography, spacing, icon style, contrast | LINE payloads |
 | LINE configuration | `menu-config.json` | LINE rich-menu object (areas, postback/datetimepicker/uri) | colors, fonts |
+| Image | `rich-menu.png` (+ `preview.svg`, `image.json`) | pixels drawn from `design-spec.json` only | workflow logic |
 
 Postback data is only `wf=<workflowId>&e=<entry>`. Parameters stay server-side in the
 generated routes, so a customer cannot tamper with them. The routes and the menu

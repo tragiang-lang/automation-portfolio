@@ -1,0 +1,10 @@
+f1bccd7 (HEAD -> feature/starter-mvp) feat: harden factory intent, delivery, and industry metadata
+81cc4af feat: validate third-industry genericity with real estate
+5ecd802 (worktree-core-asset-b-quote-invoice) feat(hair-salon): prevent staff booking conflicts and add self-service cancellation
+624359a (origin/feature/starter-mvp) feat(salon): add explicit reservation demo mode
+6348993 Merge branch 'feature/hair-salon-portfolio' into feature/starter-mvp
+122b13b fix(salon): resolve section anchors across routes
+17137fd fix(salon): improve reservation selection states
+d01e935 feat(salon): add customer testimonials section
+f02d03d feat(hair-salon-portfolio): add homepage testimonials section
+55e9cd8 fix(hair-salon-portfolio): resolve header/footer nav anchors against the current route

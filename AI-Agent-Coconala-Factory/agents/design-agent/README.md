@@ -9,4 +9,6 @@ typography and spacing direction, icon and asset requirements, export requiremen
 Rules:
 - Keeps layers separate: no LINE payloads in the spec, no colors in the LINE config.
 - Brand colors override preset tokens. Every label must reach WCAG AA (4.5:1), which QA enforces.
-- Produces a **spec**, not the PNG. The image is made in Canva or another design tool (a future connector).
+- Produces the **spec**. It also decides the sub-label, icon and border colors, so the renderer never
+  chooses a color. The local renderer (`src/richMenu/`) draws `rich-menu.png` from this spec alone. A
+  design-tool adapter (e.g. Canva) is an optional future path ([ADR 0009](../../docs/decisions/0009-rich-menu-renderer.md)).

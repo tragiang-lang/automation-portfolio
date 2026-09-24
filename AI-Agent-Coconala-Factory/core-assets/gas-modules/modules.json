@@ -1,12 +1,12 @@
 {
   "kind": "gas-module-catalog",
   "id": "gas-modules-v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Reusable GAS source modules. The GAS generator copies the union of files of every module a project needs, byte for byte, into the client project's gas/ directory.",
   "modules": [
     {
       "id": "runtime",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "always": true,
       "description": "Result envelope, CONFIG reader, table/cache/lock/mail/LINE interfaces and their GAS adapters, idempotency, notification, customer repository, API + LINE routers, setup planning.",
       "files": [

@@ -18,12 +18,13 @@
       "createReservation@1": "1.0.0",
       "customer-intents-v1": "1.0.0",
       "customers-basic-v1": "1.0.0",
-      "gas-modules-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
       "getAvailability@1": "1.0.0",
       "getBusinessInfo@1": "1.0.0",
       "grid-2x3-v1": "1.0.0",
       "inquiries-basic-v1": "1.0.0",
       "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
       "real-estate-basic-v1": "1.0.0",
       "real-estate-v1": "1.1.0",
       "reservation-basic-v1": "1.0.0",
@@ -92,7 +93,10 @@
       },
       "fill": "#1E3A5F",
       "labelColor": "#FFFFFF",
-      "contrastRatio": 11.5
+      "contrastRatio": 11.5,
+      "subLabelColor": "#FFFFFF",
+      "iconColor": "#FFFFFF",
+      "borderColor": "#1E3A5F"
     },
     {
       "slot": "b",
@@ -113,7 +117,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#1F2933",
-      "contrastRatio": 14.76
+      "contrastRatio": 14.76,
+      "subLabelColor": "#52606D",
+      "iconColor": "#2E7D6B",
+      "borderColor": "#D9E2EC"
     },
     {
       "slot": "c",
@@ -134,7 +141,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#1F2933",
-      "contrastRatio": 14.76
+      "contrastRatio": 14.76,
+      "subLabelColor": "#52606D",
+      "iconColor": "#2E7D6B",
+      "borderColor": "#D9E2EC"
     },
     {
       "slot": "d",
@@ -154,7 +164,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#1F2933",
-      "contrastRatio": 14.76
+      "contrastRatio": 14.76,
+      "subLabelColor": "#52606D",
+      "iconColor": "#2E7D6B",
+      "borderColor": "#D9E2EC"
     },
     {
       "slot": "e",
@@ -174,7 +187,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#1F2933",
-      "contrastRatio": 14.76
+      "contrastRatio": 14.76,
+      "subLabelColor": "#52606D",
+      "iconColor": "#2E7D6B",
+      "borderColor": "#D9E2EC"
     },
     {
       "slot": "f",
@@ -194,7 +210,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#1F2933",
-      "contrastRatio": 14.76
+      "contrastRatio": 14.76,
+      "subLabelColor": "#52606D",
+      "iconColor": "#2E7D6B",
+      "borderColor": "#D9E2EC"
     }
   ],
   "iconRequirements": [

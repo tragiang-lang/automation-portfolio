@@ -79,6 +79,21 @@ describe("handleLineWebhook", () => {
     expect(sent).toEqual([]);
   });
 
+  it("handles a redelivered event (same webhookEventId) once: one record, one reply", () => {
+    const ctx = makeContext();
+    handleLineWebhook({ events: [postback("wf=ask-v1&e=default")] }, { routes, registry, ctx });
+    const text = { type: "message", webhookEventId: "evt-dup", replyToken: "rt-dup", source: { userId: "U0000test" }, message: { type: "text", text: "一度だけ" } };
+    handleLineWebhook({ events: [text] }, { routes, registry, ctx });
+    const redelivered = { ...text, deliveryContext: { isRedelivery: true } };
+    const again = handleLineWebhook({ events: [redelivered] }, { routes, registry, ctx });
+    expect(again).toEqual([]);
+    expect(ctx.tables.readAll("INQUIRIES")).toHaveLength(1);
+    expect(ctx.replies.map((r) => r.replyToken)).toEqual(["rt", "rt-dup"]);
+    // a duplicate postback must not re-arm the awaitText state either
+    handleLineWebhook({ events: [postback("wf=ask-v1&e=default")] }, { routes, registry, ctx });
+    expect(ctx.cache.get("line-await:U0000test")).toBeNull();
+  });
+
   it("replies with the safe message for the error code, never the internal detail", () => {
     const ctx = makeContext();
     const sent = handleLineWebhook({ events: [postback("wf=fail-v1")] }, { routes, registry, ctx });

@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/image.json",
+    "generatedBy": "rich-menu-renderer",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-restaurant",
+    "industry": "restaurant",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "business-info-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "friendly-local-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "hero-1-plus-3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "restaurant-basic-v1": "1.0.0",
+      "restaurant-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "file": "rich-menu/rich-menu.png",
+  "format": "png",
+  "contentType": "image/png",
+  "width": 2500,
+  "height": 1686,
+  "bytes": 97307,
+  "sha256": "79af79b90f00b0f1c0b990be22835ec2ec60b29e69976413a9184251befca5c3",
+  "previewSvgSha256": "8b11ed0ebfe40890f269756e7f33372a3a09881776d15e8aabd7f03971af1ee1",
+  "renderer": {
+    "id": "local-svg-resvg",
+    "version": "1.0.0",
+    "rasterizer": "@resvg/resvg-js@2.6.2",
+    "font": "Noto Sans JP (@embedpdf/fonts-jp@1.0.0, OFL-1.1)"
+  }
+}

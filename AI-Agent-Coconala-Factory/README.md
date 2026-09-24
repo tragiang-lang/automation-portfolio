@@ -29,9 +29,20 @@ delivery documents. Salons are the first example, but nothing in the core is sal
 ## 3. What Phase 1 does NOT do
 
 No Next.js, React, LIFF, Vercel, customer web UI, LINE mini-app, customer auth, Supabase,
-SaaS/multi-tenant infrastructure, or dashboard. It does not generate the final Rich Menu PNG
-(it produces a design spec). There is no Google Calendar sync, staff booking, cancellation, or
-LINE push yet; these are documented extension points. See [docs/phase-1-scope.md](docs/phase-1-scope.md).
+SaaS/multi-tenant infrastructure, or dashboard. There is no Google Calendar sync, staff booking,
+cancellation, or LINE push yet; these are documented extension points. See [docs/phase-1-scope.md](docs/phase-1-scope.md).
+
+## 3a. LINE Automation Factory v1
+
+On top of Phase 1, every project now also gets a deployable LINE layer ([docs/line-automation-v1.md](docs/line-automation-v1.md)):
+
+- `rich-menu/rich-menu.png` + `preview.svg` + `image.json`: a real, deterministic Rich Menu image rendered
+  from `design-spec.json` (SVG + resvg + pinned Noto Sans JP; [ADR 0009](docs/decisions/0009-rich-menu-renderer.md)).
+- `line/deployment.json` (deployment definition and button → workflow → action → GAS traceability),
+  `line/webhook/` (Cloudflare Worker that verifies `x-line-signature` before GAS; [ADR 0008](docs/decisions/0008-line-webhook-proxy.md)).
+- `line-*` CLI commands: dry-run-by-default deploy, status, rollback, delete, and a gated smoke test.
+- `qa/LINE_QA_REPORT.md`: LINE QA Levels 1–4, separate from the factory QA.
+- Japanese `delivery/` set: SETUP, SPREADSHEET_SETUP, GAS_SETUP, LINE_SETUP, E2E_TEST, ROLLBACK, DELIVERY.
 
 ## 4. Architecture
 
@@ -103,7 +114,18 @@ npm run factory -- generate-gas --brief my-client.json --run-gas-checks
 Then follow `projects/<year>/<slug>/delivery/SETUP.md` (Japanese, written for the client).
 
 Other commands: `audit`, `list-industries`, `list-workflows`, `list-actions`, `lock-assets`,
-`generate-rich-menu-spec --brief <file> [--out dir]`, `qa --project <dir> [--run-gas-checks]`.
+`generate-rich-menu-spec --brief <file> [--out dir]`, `qa --project <dir> [--run-gas-checks]`,
+`render-rich-menu --project <dir>`.
+
+LINE (dry run unless `--live`; token only from the `LINE_CHANNEL_ACCESS_TOKEN` environment variable):
+
+```bash
+npm run factory -- line-validate   --project projects/2026/<slug>
+npm run factory -- line-deploy     --project projects/2026/<slug> --env test [--live]
+npm run factory -- line-status     --project projects/2026/<slug> [--remote --env test]
+npm run factory -- line-rollback   --project projects/2026/<slug> --env test [--live]
+npm run factory -- line-smoke-test --project projects/2026/<slug> --env test --live   # test account only
+```
 
 ## 11. Testing
 
@@ -118,9 +140,10 @@ generator (structure, no overwrite, isolation, regeneration), QA detection (work
 spreadsheet, Rich Menu, GAS files, secrets, contrast, traceability), the asset lock, determinism,
 and the restaurant industry.
 
-## 12. Future Phase 2
+## 12. Future optional extensions
 
-Next.js/LIFF customer screens (booking with `getAvailability`/`createReservation` through the
-existing JSON API), Vercel deployment, Google Calendar and staff availability, cancellation,
-LINE push notifications, an HMAC-verifying webhook proxy, a Canva connector for the Rich Menu
-image, and LLM-assisted brief intake in front of the deterministic agents.
+None of these are needed for v1: Next.js/LIFF customer screens (booking with
+`getAvailability`/`createReservation` through the existing JSON API), Vercel deployment, Google
+Calendar and staff availability, cancellation, LINE push notifications, a Canva adapter for the
+Rich Menu image (behind `RichMenuImageRenderer`), and LLM-assisted brief intake in front of the
+deterministic agents.

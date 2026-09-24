@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="1686" viewBox="0 0 2500 1686">
+<rect x="0" y="0" width="2500" height="1686" fill="#F3F6FA"/>
+<g id="slot-a">
+<rect x="6" y="6" width="821" height="831" rx="12" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="2"/>
+<g transform="translate(302 175) scale(9.583)" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></g>
+<text x="417" y="543" font-family="Noto Sans JP" font-weight="700" font-size="105" fill="#FFFFFF" text-anchor="middle">内見を申し込む</text>
+<text x="417" y="660" font-family="Noto Sans JP" font-weight="400" font-size="65" fill="#FFFFFF" text-anchor="middle">予約リクエスト</text>
+</g>
+<g id="slot-b">
+<rect x="839" y="6" width="821" height="831" rx="12" fill="#FFFFFF" stroke="#D9E2EC" stroke-width="2"/>
+<g transform="translate(1135 172) scale(9.583)" fill="none" stroke="#2E7D6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></g>
+<text x="1250" y="543" font-family="Noto Sans JP" font-weight="700" font-size="108" fill="#1F2933" text-anchor="middle">物件のご相談</text>
+<text x="1250" y="664" font-family="Noto Sans JP" font-weight="400" font-size="67" fill="#52606D" text-anchor="middle">空室・条件の確認</text>
+</g>
+<g id="slot-c">
+<rect x="1672" y="6" width="822" height="831" rx="12" fill="#FFFFFF" stroke="#D9E2EC" stroke-width="2"/>
+<g transform="translate(1968 172) scale(9.583)" fill="none" stroke="#2E7D6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M16 16l5 5"/></g>
+<text x="2083" y="543" font-family="Noto Sans JP" font-weight="700" font-size="108" fill="#1F2933" text-anchor="middle">物件を探す</text>
+<text x="2083" y="664" font-family="Noto Sans JP" font-weight="400" font-size="67" fill="#52606D" text-anchor="middle">物件一覧（Web）</text>
+</g>
+<g id="slot-d">
+<rect x="6" y="849" width="821" height="831" rx="12" fill="#FFFFFF" stroke="#D9E2EC" stroke-width="2"/>
+<g transform="translate(302 1074) scale(9.583)" fill="none" stroke="#2E7D6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M11 21v-3h2v3"/></g>
+<text x="417" y="1442" font-family="Noto Sans JP" font-weight="700" font-size="105" fill="#1F2933" text-anchor="middle">会社・店舗情報</text>
+</g>
+<g id="slot-e">
+<rect x="839" y="849" width="821" height="831" rx="12" fill="#FFFFFF" stroke="#D9E2EC" stroke-width="2"/>
+<g transform="translate(1135 1073) scale(9.583)" fill="none" stroke="#2E7D6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></g>
+<text x="1250" y="1444" font-family="Noto Sans JP" font-weight="700" font-size="108" fill="#1F2933" text-anchor="middle">アクセス</text>
+</g>
+<g id="slot-f">
+<rect x="1672" y="849" width="822" height="831" rx="12" fill="#FFFFFF" stroke="#D9E2EC" stroke-width="2"/>
+<g transform="translate(1968 1073) scale(9.583)" fill="none" stroke="#2E7D6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g>
+<text x="2083" y="1444" font-family="Noto Sans JP" font-weight="700" font-size="108" fill="#1F2933" text-anchor="middle">営業時間</text>
+</g>
+</svg>

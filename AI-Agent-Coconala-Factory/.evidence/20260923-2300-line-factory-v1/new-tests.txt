@@ -1,0 +1,69 @@
+core-assets/line-webhook-proxy/tests/worker.test.ts > verifyLineSignature > matches a signature computed independently with openssl
+core-assets/line-webhook-proxy/tests/worker.test.ts > verifyLineSignature > rejects missing, malformed, wrong-secret and modified-body signatures
+core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > valid signature: answers 200 and forwards the exact raw body to GAS with the internal key
+core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > accepts the header in any letter case
+core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > invalid, missing, wrong-secret or modified: 401 and GAS is never called
+core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > empty webhook events (LINE verification ping): 200 without calling GAS
+core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > fails closed when not configured, and refuses non-POST and non-JSON bodies
+core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > only forwards to an https script.google.com URL
+tests/richMenuRender.test.ts > Rich Menu renderer > renders a LINE-valid, opaque PNG for hair_salon
+core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > handles a redelivered event (same webhookEventId) once: one record, one reply
+tests/richMenuRender.test.ts > Rich Menu renderer > renders a LINE-valid, opaque PNG for restaurant
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > every Rich Menu button reaches its workflow and gets a reply
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > inquiry: prompt, then the message is saved once, the owner is notified, and a receipt is replied
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > reservation: a request (not a confirmed booking) is saved once; a closed slot gets the safe message
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > business info and service menu reply from CONFIG / sheet data without writing anything
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > invalid, missing or modified signatures never reach GAS
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > GAS rejects a forward whose internal key does not match WEBHOOK_KEY
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > unknown workflows are ignored and unknown actions get only the safe message
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > every Rich Menu button reaches its workflow and gets a reply
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > inquiry: prompt, then the message is saved once, the owner is notified, and a receipt is replied
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > reservation: a request (not a confirmed booking) is saved once; a closed slot gets the safe message
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > business info and service menu reply from CONFIG / sheet data without writing anything
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > invalid, missing or modified signatures never reach GAS
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > GAS rejects a forward whose internal key does not match WEBHOOK_KEY
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > unknown workflows are ignored and unknown actions get only the safe message
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > every Rich Menu button reaches its workflow and gets a reply
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > inquiry: prompt, then the message is saved once, the owner is notified, and a receipt is replied
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > reservation: a request (not a confirmed booking) is saved once; a closed slot gets the safe message
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > business info and service menu reply from CONFIG / sheet data without writing anything
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > invalid, missing or modified signatures never reach GAS
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > GAS rejects a forward whose internal key does not match WEBHOOK_KEY
+tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > unknown workflows are ignored and unknown actions get only the safe message
+tests/richMenuRender.test.ts > Rich Menu renderer > renders a LINE-valid, opaque PNG for real_estate
+tests/lineDeploy.test.ts > line-deploy (dry run) > shows project, rich menu, image, actions, environment and intended operations without any API
+tests/lineQa.test.ts > LINE QA > passes a freshly generated project and reports levels honestly
+tests/richMenuRender.test.ts > Rich Menu renderer > is deterministic: same spec and renderer give byte-identical PNG and SVG
+tests/lineDeploy.test.ts > line-deploy (dry run) > is blocked by LINE QA errors
+tests/richMenuRender.test.ts > Rich Menu renderer > draws every tile inside the same bounds LINE uses as its tappable area
+tests/lineQa.test.ts > LINE QA > detects a missing or replaced rich menu image
+tests/richMenuRender.test.ts > Rich Menu renderer > changing a layout slot moves both the drawn tile and the tappable area
+tests/lineQa.test.ts > LINE QA > detects an image LINE would reject and one that no longer matches its record
+tests/richMenuRender.test.ts > Rich Menu renderer > reports a label that cannot fit at the preset minimum size, and an unknown icon
+tests/richMenuRender.test.ts > Rich Menu renderer > escapes label text for the SVG
+tests/richMenuRender.test.ts > PNG inspector > detects transparency, dimensions and non-image files
+tests/lineDeploy.test.ts > line-deploy (dry run) > the CLI makes no API call without --live, even with no token set
+tests/lineQa.test.ts > LINE QA > detects a tappable area that no longer matches the drawn tile
+tests/lineDeploy.test.ts > line-deploy (live, fake LINE) > creates, uploads, verifies, then sets default; remembers the previous default; deletes nothing
+tests/lineQa.test.ts > LINE QA > detects an area outside the image
+tests/lineDeploy.test.ts > line-deploy (live, fake LINE) > records a failed step and never switches the default when the upload fails
+tests/lineQa.test.ts > LINE QA > detects a design spec edited after rendering (non-reproducible image)
+tests/lineQa.test.ts > LINE QA > detects unreadable sub-labels and icons
+tests/lineDeploy.test.ts > line-deploy (live, fake LINE) > keeps deployment ids out of generated artifacts, so regeneration stays deterministic
+tests/lineQa.test.ts > LINE QA > detects invalid LINE actions
+tests/lineDeploy.test.ts > line-rollback and line-delete > rolls back to the previous default without deleting anything
+tests/lineQa.test.ts > LINE QA > detects a broken button → workflow → action → GAS chain
+tests/lineDeploy.test.ts > line-rollback and line-delete > refuses a rollback when there was no previous default, or nothing was deployed
+tests/lineQa.test.ts > LINE QA > detects server-issued ids in the generated deployment definition
+tests/lineDeploy.test.ts > line-rollback and line-delete > never deletes the current default rich menu
+tests/lineQa.test.ts > LINE QA > detects secrets and Worker secret files anywhere in the project
+tests/lineDeploy.test.ts > line-smoke-test (live checks, fake LINE) > refuses production
+tests/lineQa.test.ts > LINE QA > detects a proxy that differs from the released asset or declares secrets as vars
+tests/lineDeploy.test.ts > line-smoke-test (live checks, fake LINE) > checks default menu, areas, image hash and webhook, lists manual checks, and feeds Level 4
+tests/lineQa.test.ts > LINE QA > detects a GAS webhook that no longer requires the internal key
+tests/lineDeploy.test.ts > line-smoke-test (live checks, fake LINE) > fails when the webhook points straight at GAS instead of the proxy
+tests/lineQa.test.ts > LINE QA > reports Level 4 only when a live smoke test result exists, and never fails on NOT RUN
+tests/lineDeploy.test.ts > LINE Messaging API adapter > uses the documented hosts, paths and bearer auth
+tests/lineDeploy.test.ts > LINE Messaging API adapter > treats 404 as 'no default rich menu' and never puts the token in errors
+tests/lineQa.test.ts > LINE QA > finds no secrets in the factory's own core assets, templates, docs and client projects
+tests/lineQa.test.ts > LINE QA > fails Level 2 when the GAS test run failed

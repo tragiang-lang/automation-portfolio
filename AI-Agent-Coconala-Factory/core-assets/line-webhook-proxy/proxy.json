@@ -1,0 +1,10 @@
+{
+  "kind": "line-proxy-catalog",
+  "id": "line-webhook-proxy-v1",
+  "version": "1.0.0",
+  "description": "Minimal LINE webhook verification proxy (Cloudflare Worker). Verifies x-line-signature on the raw body, then forwards verified deliveries to the GAS web app with the internal WEBHOOK_KEY. Copied byte for byte into each client project's line/webhook/.",
+  "runtime": "cloudflare-workers",
+  "secrets": ["LINE_CHANNEL_SECRET", "GAS_WEBAPP_URL", "GAS_WEBHOOK_KEY"],
+  "files": ["src/signature.ts", "src/worker.ts"],
+  "tests": ["tests/worker.test.ts"]
+}

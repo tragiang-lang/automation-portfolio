@@ -1,0 +1,125 @@
+ M CLAUDE.md
+ M README.md
+ M agents/design-agent/README.md
+ M core-assets/asset-lock.json
+ M core-assets/gas-modules/modules.json
+ M core-assets/gas-modules/src/line/webhook.ts
+ M core-assets/gas-modules/src/router/dispatch.ts
+ M core-assets/gas-modules/tests/router/router.test.ts
+ M core-assets/qa-rules/qa-rules-v1.json
+ M docs/architecture.md
+ M docs/decisions/0005-line-webhook-auth.md
+ M docs/decisions/README.md
+ M docs/phase-1-scope.md
+ M docs/security.md
+ M package-lock.json
+ M package.json
+ M projects/2026/demo-hair-salon/analysis/industry-profile.json
+ M projects/2026/demo-hair-salon/delivery/DELIVERY.md
+ M projects/2026/demo-hair-salon/delivery/SETUP.md
+ M projects/2026/demo-hair-salon/gas/src/generated/manifest.ts
+ M projects/2026/demo-hair-salon/gas/src/generated/richMenu.ts
+ M projects/2026/demo-hair-salon/gas/src/line/webhook.ts
+ M projects/2026/demo-hair-salon/gas/src/router/dispatch.ts
+ M projects/2026/demo-hair-salon/gas/tests/router/router.test.ts
+ M projects/2026/demo-hair-salon/project.json
+ M projects/2026/demo-hair-salon/rich-menu/design-spec.json
+ M projects/2026/demo-hair-salon/rich-menu/menu-config.json
+ M projects/2026/demo-hair-salon/spreadsheet/config-seed.json
+ M projects/2026/demo-hair-salon/spreadsheet/schema.json
+ M projects/2026/demo-hair-salon/workflow/selected-workflows.json
+ M projects/2026/demo-hair-salon/workflow/workflow.json
+ M projects/2026/demo-real-estate/analysis/industry-profile.json
+ M projects/2026/demo-real-estate/delivery/DELIVERY.md
+ M projects/2026/demo-real-estate/delivery/SETUP.md
+ M projects/2026/demo-real-estate/gas/src/generated/manifest.ts
+ M projects/2026/demo-real-estate/gas/src/generated/richMenu.ts
+ M projects/2026/demo-real-estate/gas/src/line/webhook.ts
+ M projects/2026/demo-real-estate/gas/src/router/dispatch.ts
+ M projects/2026/demo-real-estate/gas/tests/router/router.test.ts
+ M projects/2026/demo-real-estate/project.json
+ M projects/2026/demo-real-estate/rich-menu/design-spec.json
+ M projects/2026/demo-real-estate/rich-menu/menu-config.json
+ M projects/2026/demo-real-estate/spreadsheet/config-seed.json
+ M projects/2026/demo-real-estate/spreadsheet/schema.json
+ M projects/2026/demo-real-estate/workflow/selected-workflows.json
+ M projects/2026/demo-real-estate/workflow/workflow.json
+ M projects/2026/demo-restaurant/analysis/industry-profile.json
+ M projects/2026/demo-restaurant/delivery/DELIVERY.md
+ M projects/2026/demo-restaurant/delivery/SETUP.md
+ M projects/2026/demo-restaurant/gas/src/generated/manifest.ts
+ M projects/2026/demo-restaurant/gas/src/generated/richMenu.ts
+ M projects/2026/demo-restaurant/gas/src/line/webhook.ts
+ M projects/2026/demo-restaurant/gas/src/router/dispatch.ts
+ M projects/2026/demo-restaurant/gas/tests/router/router.test.ts
+ M projects/2026/demo-restaurant/project.json
+ M projects/2026/demo-restaurant/rich-menu/design-spec.json
+ M projects/2026/demo-restaurant/rich-menu/menu-config.json
+ M projects/2026/demo-restaurant/spreadsheet/config-seed.json
+ M projects/2026/demo-restaurant/spreadsheet/schema.json
+ M projects/2026/demo-restaurant/workflow/selected-workflows.json
+ M projects/2026/demo-restaurant/workflow/workflow.json
+ M src/agents/designAgent.ts
+ M src/agents/orchestrator.ts
+ M src/cli.ts
+ M src/generators/delivery.ts
+ M src/generators/gasProject.ts
+ M src/generators/projectWriter.ts
+ M src/lib/fsx.ts
+ M src/project.ts
+ M src/qa/qaAgent.ts
+ M src/registry/assetLock.ts
+ M src/registry/registry.ts
+ M src/schemas/assets.ts
+ M tests/agents.test.ts
+ M tests/project.test.ts
+ M vitest.config.ts
+?? core-assets/line-webhook-proxy/
+?? core-assets/qa-rules/line-qa-rules-v1.json
+?? docs/decisions/0008-line-webhook-proxy.md
+?? docs/decisions/0009-rich-menu-renderer.md
+?? docs/line-automation-v1.md
+?? projects/2026/demo-hair-salon/delivery/E2E_TEST.md
+?? projects/2026/demo-hair-salon/delivery/GAS_SETUP.md
+?? projects/2026/demo-hair-salon/delivery/LINE_SETUP.md
+?? projects/2026/demo-hair-salon/delivery/ROLLBACK.md
+?? projects/2026/demo-hair-salon/delivery/SPREADSHEET_SETUP.md
+?? projects/2026/demo-hair-salon/gas/tests/lineRuntime.test.ts
+?? projects/2026/demo-hair-salon/line/
+?? projects/2026/demo-hair-salon/qa/LINE_QA_REPORT.md
+?? projects/2026/demo-hair-salon/qa/line-qa-report.json
+?? projects/2026/demo-hair-salon/rich-menu/image.json
+?? projects/2026/demo-hair-salon/rich-menu/preview.svg
+?? projects/2026/demo-hair-salon/rich-menu/rich-menu.png
+?? projects/2026/demo-real-estate/delivery/E2E_TEST.md
+?? projects/2026/demo-real-estate/delivery/GAS_SETUP.md
+?? projects/2026/demo-real-estate/delivery/LINE_SETUP.md
+?? projects/2026/demo-real-estate/delivery/ROLLBACK.md
+?? projects/2026/demo-real-estate/delivery/SPREADSHEET_SETUP.md
+?? projects/2026/demo-real-estate/gas/tests/lineRuntime.test.ts
+?? projects/2026/demo-real-estate/line/
+?? projects/2026/demo-real-estate/qa/LINE_QA_REPORT.md
+?? projects/2026/demo-real-estate/qa/line-qa-report.json
+?? projects/2026/demo-real-estate/rich-menu/image.json
+?? projects/2026/demo-real-estate/rich-menu/preview.svg
+?? projects/2026/demo-real-estate/rich-menu/rich-menu.png
+?? projects/2026/demo-restaurant/delivery/E2E_TEST.md
+?? projects/2026/demo-restaurant/delivery/GAS_SETUP.md
+?? projects/2026/demo-restaurant/delivery/LINE_SETUP.md
+?? projects/2026/demo-restaurant/delivery/ROLLBACK.md
+?? projects/2026/demo-restaurant/delivery/SPREADSHEET_SETUP.md
+?? projects/2026/demo-restaurant/gas/tests/lineRuntime.test.ts
+?? projects/2026/demo-restaurant/line/
+?? projects/2026/demo-restaurant/qa/LINE_QA_REPORT.md
+?? projects/2026/demo-restaurant/qa/line-qa-report.json
+?? projects/2026/demo-restaurant/rich-menu/image.json
+?? projects/2026/demo-restaurant/rich-menu/preview.svg
+?? projects/2026/demo-restaurant/rich-menu/rich-menu.png
+?? src/generators/templates/
+?? src/line/
+?? src/qa/lineQa.ts
+?? src/richMenu/
+?? tests/lineDeploy.test.ts
+?? tests/lineIntegration.test.ts
+?? tests/lineQa.test.ts
+?? tests/richMenuRender.test.ts

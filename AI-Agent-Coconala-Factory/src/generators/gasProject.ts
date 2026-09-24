@@ -44,6 +44,7 @@ export const GENERATED_GAS_FILES = [
   "src/generated/richMenu.ts",
   "src/generated/manifest.ts",
   "tests/generated.test.ts",
+  "tests/lineRuntime.test.ts",
   "package.json",
   "tsconfig.json",
   "vitest.config.mjs",
@@ -140,6 +141,7 @@ export function generateGasProject(inputs: GasInputs): { files: Record<string, s
   ].join("\n");
 
   files["tests/generated.test.ts"] = generatedWiringTest(header);
+  files["tests/lineRuntime.test.ts"] = lineRuntimeTest(header);
   Object.assign(files, toolingFiles(slug, trace));
   return { files, issues };
 }
@@ -214,6 +216,15 @@ describe("generated wiring", () => {
   });
 });
 `;
+}
+
+/**
+ * Level 2 of LINE QA: every generated route, through the real webhook
+ * handler, registry and schema, with in-memory Google services. Generic on
+ * purpose: nothing here knows which industry or workflow it is testing.
+ */
+function lineRuntimeTest(header: string): string {
+  return header + fs.readFileSync(path.join(FACTORY_ROOT, "src/generators/templates/lineRuntime.test.ts.tmpl"), "utf8").replace(/\r\n/g, "\n");
 }
 
 function toolingFiles(slug: string, trace: TraceContext): Record<string, string> {

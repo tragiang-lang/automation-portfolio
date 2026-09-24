@@ -9,11 +9,13 @@
   },
   "scripts": {
     "factory": "tsx src/cli.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p core-assets/gas-modules/tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p core-assets/gas-modules/tsconfig.json && tsc --noEmit -p core-assets/line-webhook-proxy/tsconfig.json",
     "test": "vitest run",
     "check": "npm run typecheck && npm test && npm run factory -- validate"
   },
   "devDependencies": {
+    "@embedpdf/fonts-jp": "1.0.0",
+    "@resvg/resvg-js": "2.6.2",
     "@types/google-apps-script": "^2.0.13",
     "@types/node": "^22.20.4",
     "esbuild": "^0.28.2",

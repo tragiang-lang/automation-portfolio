@@ -86,10 +86,11 @@ describe("Client Project Generator", () => {
     const restaurantDir = path.join(projectsDir, "2026", "demo-restaurant");
     const before = listFiles(restaurantDir).map((f) => [f, fs.readFileSync(path.join(restaurantDir, f), "utf8")]);
 
-    fs.writeFileSync(path.join(salon.projectDir!, "rich-menu/rich-menu.png"), "fake image");
+    // deployment-history.json is written by `line-deploy --live`, never by generation.
+    fs.writeFileSync(path.join(salon.projectDir!, "line/deployment-history.json"), '{"entries":["live record"]}');
     const again = createProject(hairSalonBrief(), registry, options(projectsDir, { force: true }));
     expect(again.removed).toEqual([]);
-    expect(fs.readFileSync(path.join(salon.projectDir!, "rich-menu/rich-menu.png"), "utf8")).toBe("fake image");
+    expect(fs.readFileSync(path.join(salon.projectDir!, "line/deployment-history.json"), "utf8")).toBe('{"entries":["live record"]}');
     expect(listFiles(restaurantDir).map((f) => [f, fs.readFileSync(path.join(restaurantDir, f), "utf8")])).toEqual(before);
   });
 

@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/image.json",
+    "generatedBy": "rich-menu-renderer",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-hair-salon",
+    "industry": "hair_salon",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "hair-salon-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "quiet-luxury-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "salon-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "file": "rich-menu/rich-menu.png",
+  "format": "png",
+  "contentType": "image/png",
+  "width": 2500,
+  "height": 1686,
+  "bytes": 138013,
+  "sha256": "ec1c019a1571a7669ef009f69ed6b5324ee755ec4682a59013a70b8b76b85407",
+  "previewSvgSha256": "47db6e68539f007d5d02a0c6bdd02fd1405bd1c998d3f84f1de6ebd9dfc0a02a",
+  "renderer": {
+    "id": "local-svg-resvg",
+    "version": "1.0.0",
+    "rasterizer": "@resvg/resvg-js@2.6.2",
+    "font": "Noto Sans JP (@embedpdf/fonts-jp@1.0.0, OFL-1.1)"
+  }
+}

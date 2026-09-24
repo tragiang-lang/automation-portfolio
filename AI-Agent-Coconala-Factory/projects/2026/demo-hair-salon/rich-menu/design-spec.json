@@ -18,7 +18,7 @@
       "createReservation@1": "1.0.0",
       "customer-intents-v1": "1.0.0",
       "customers-basic-v1": "1.0.0",
-      "gas-modules-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
       "getAvailability@1": "1.0.0",
       "getBusinessInfo@1": "1.0.0",
       "getServiceList@1": "1.0.0",
@@ -26,6 +26,7 @@
       "hair-salon-v1": "1.0.0",
       "inquiries-basic-v1": "1.0.0",
       "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
       "quiet-luxury-v1": "1.0.0",
       "reservation-basic-v1": "1.0.0",
       "reservations-basic-v1": "1.0.0",
@@ -95,7 +96,10 @@
       },
       "fill": "#2B2622",
       "labelColor": "#F7F4EF",
-      "contrastRatio": 13.64
+      "contrastRatio": 13.64,
+      "subLabelColor": "#F7F4EF",
+      "iconColor": "#F7F4EF",
+      "borderColor": "#2B2622"
     },
     {
       "slot": "b",
@@ -116,7 +120,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#2B2622",
-      "contrastRatio": 14.97
+      "contrastRatio": 14.97,
+      "subLabelColor": "#6F655B",
+      "iconColor": "#9C7A4B",
+      "borderColor": "#E3DCD1"
     },
     {
       "slot": "c",
@@ -136,7 +143,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#2B2622",
-      "contrastRatio": 14.97
+      "contrastRatio": 14.97,
+      "subLabelColor": "#6F655B",
+      "iconColor": "#9C7A4B",
+      "borderColor": "#E3DCD1"
     },
     {
       "slot": "d",
@@ -156,7 +166,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#2B2622",
-      "contrastRatio": 14.97
+      "contrastRatio": 14.97,
+      "subLabelColor": "#6F655B",
+      "iconColor": "#9C7A4B",
+      "borderColor": "#E3DCD1"
     },
     {
       "slot": "e",
@@ -176,7 +189,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#2B2622",
-      "contrastRatio": 14.97
+      "contrastRatio": 14.97,
+      "subLabelColor": "#6F655B",
+      "iconColor": "#9C7A4B",
+      "borderColor": "#E3DCD1"
     },
     {
       "slot": "f",
@@ -197,7 +213,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#2B2622",
-      "contrastRatio": 14.97
+      "contrastRatio": 14.97,
+      "subLabelColor": "#6F655B",
+      "iconColor": "#9C7A4B",
+      "borderColor": "#E3DCD1"
     }
   ],
   "iconRequirements": [

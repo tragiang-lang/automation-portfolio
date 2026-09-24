@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import type { WorkflowPlan } from "../agents/workflowPlanner";
+import { DELIVERY_DOCS } from "../generators/delivery";
 import { ENTRYPOINTS, GENERATED_GAS_FILES, selectedModules } from "../generators/gasProject";
 import type { ArtifactMeta } from "../generators/meta";
 import type { LineRichMenuConfig } from "../generators/richMenuConfig";
@@ -142,6 +143,8 @@ function checkDesign(spec: { colorTokens: ColorTokens; cells: { label: string; f
   return issues;
 }
 
+export const FACTORY_QA_RULES = "qa-rules-v1";
+
 const IMPORT_PATTERN = /(?:from|import)\s+["'](\.{1,2}\/[^"']+)["']/g;
 
 function checkGasFiles(dir: string, plan: WorkflowPlan, registry: CoreAssetRegistry): Issue[] {
@@ -249,7 +252,7 @@ export function scanForSecrets(dir: string): Issue[] {
 
 function checkDelivery(dir: string, artifacts: string[]): Issue[] {
   const issues: Issue[] = [];
-  for (const doc of ["delivery/SETUP.md", "delivery/DELIVERY.md"]) {
+  for (const doc of DELIVERY_DOCS) {
     const file = path.join(dir, doc);
     if (!fs.existsSync(file) || fs.readFileSync(file, "utf8").trim().length < 200) issues.push(error("DEL_DOCS", `${doc} is missing or empty`, doc));
   }
@@ -297,7 +300,8 @@ export function runQa(dir: string, registry: CoreAssetRegistry, options: QaOptio
     gasChecksRan = true;
   }
 
-  const rules = [...registry.qaRules.values()][0]?.asset.rules ?? [];
+  // The Phase 1 factory QA catalog. LINE integration QA has its own catalog (src/qa/lineQa.ts).
+  const rules = registry.qaRules.get(FACTORY_QA_RULES)?.asset.rules ?? [];
   const checks: QaCheck[] = rules.map((rule) => {
     const found = issues.filter((i) => i.rule === rule.id);
     const skipped = gasRuleIds.includes(rule.id) && !gasChecksRan;

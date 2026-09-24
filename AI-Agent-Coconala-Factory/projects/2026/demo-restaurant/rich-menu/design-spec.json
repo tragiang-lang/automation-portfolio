@@ -19,13 +19,14 @@
       "customer-intents-v1": "1.0.0",
       "customers-basic-v1": "1.0.0",
       "friendly-local-v1": "1.0.0",
-      "gas-modules-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
       "getAvailability@1": "1.0.0",
       "getBusinessInfo@1": "1.0.0",
       "getServiceList@1": "1.0.0",
       "hero-1-plus-3-v1": "1.0.0",
       "inquiries-basic-v1": "1.0.0",
       "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
       "reservation-basic-v1": "1.0.0",
       "reservations-basic-v1": "1.0.0",
       "restaurant-basic-v1": "1.0.0",
@@ -92,7 +93,10 @@
       },
       "fill": "#B93C0A",
       "labelColor": "#FFFFFF",
-      "contrastRatio": 5.65
+      "contrastRatio": 5.65,
+      "subLabelColor": "#FFFFFF",
+      "iconColor": "#FFFFFF",
+      "borderColor": "#B93C0A"
     },
     {
       "slot": "b",
@@ -112,7 +116,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#3B2F2A",
-      "contrastRatio": 12.92
+      "contrastRatio": 12.92,
+      "subLabelColor": "#6F5E53",
+      "iconColor": "#0F766E",
+      "borderColor": "#F1DFC8"
     },
     {
       "slot": "c",
@@ -132,7 +139,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#3B2F2A",
-      "contrastRatio": 12.92
+      "contrastRatio": 12.92,
+      "subLabelColor": "#6F5E53",
+      "iconColor": "#0F766E",
+      "borderColor": "#F1DFC8"
     },
     {
       "slot": "d",
@@ -152,7 +162,10 @@
       },
       "fill": "#FFFFFF",
       "labelColor": "#3B2F2A",
-      "contrastRatio": 12.92
+      "contrastRatio": 12.92,
+      "subLabelColor": "#6F5E53",
+      "iconColor": "#0F766E",
+      "borderColor": "#F1DFC8"
     }
   ],
   "iconRequirements": [

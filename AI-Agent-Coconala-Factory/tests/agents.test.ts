@@ -168,7 +168,7 @@ describe("Orchestrator", () => {
   it("stamps traceability on every generated JSON artifact", () => {
     const { files } = runPipeline(hairSalonBrief(), realRegistry(), { createdOn: "2026-09-23" });
     for (const [rel, content] of Object.entries(files)) {
-      if (!rel.endsWith(".json") || rel.startsWith("gas/") || rel === "brief/brief.json") continue;
+      if (!rel.endsWith(".json") || rel.startsWith("gas/") || rel.startsWith("line/webhook/") || rel === "brief/brief.json") continue;
       const meta = JSON.parse(content)._meta;
       expect(meta, rel).toMatchObject({ project: "2026/demo-hair-salon", industry: "hair_salon" });
       expect(meta.workflows, rel).toContain("inquiry-basic-v1@1.0.0");

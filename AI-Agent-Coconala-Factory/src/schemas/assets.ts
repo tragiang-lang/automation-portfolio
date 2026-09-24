@@ -278,7 +278,7 @@ export type IntentCatalogAsset = z.infer<typeof intentCatalogAsset>;
 
 export const qaRulesAsset = versionedIdentity({
   kind: z.literal("qa-rules"),
-  rules: z.array(z.object({ id: z.string(), area: z.enum(["workflow", "spreadsheet", "gas", "rich-menu", "delivery", "security", "design"]), severity: z.enum(["error", "warning"]), description: z.string() })),
+  rules: z.array(z.object({ id: z.string(), area: z.enum(["workflow", "spreadsheet", "gas", "rich-menu", "delivery", "security", "design", "line"]), severity: z.enum(["error", "warning"]), description: z.string() })),
 });
 export type QaRulesAsset = z.infer<typeof qaRulesAsset>;
 

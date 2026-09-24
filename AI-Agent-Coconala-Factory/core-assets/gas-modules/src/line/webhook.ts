@@ -11,6 +11,14 @@ import type { ActionContext, LineMessage } from "../services/context";
  * workflow definitions that produced `routes`). Each route either runs its
  * action right away ("direct") or asks a question and runs the action on
  * the user's next text message ("awaitText").
+ *
+ * In production the webhook sits behind the signature-verifying proxy
+ * (line/webhook/ in each client project); see router/dispatch.ts.
+ *
+ * Redelivery: LINE may send the same event more than once (same
+ * `webhookEventId`). Records are already idempotent per event id
+ * (services/idempotency.ts); the event-level marker below also stops a
+ * second reply and a second "awaitText" prompt for the same event.
  */
 
 export interface LineRoute {
@@ -25,6 +33,7 @@ export interface LineRoute {
 interface LineEvent {
   type: string;
   webhookEventId?: string;
+  deliveryContext?: { isRedelivery?: boolean };
   replyToken?: string;
   source?: { userId?: string };
   message?: { type: string; text?: string };
@@ -38,6 +47,9 @@ export interface LineWebhookBody {
 
 const AWAIT_TTL_SECONDS = 600;
 const AWAIT_PREFIX = "line-await:";
+const HANDLED_PREFIX = "line-event:";
+/** CacheService's maximum TTL (6 hours), longer than LINE's redelivery window. */
+const HANDLED_TTL_SECONDS = 21600;
 
 export function isLineWebhookBody(value: unknown): value is LineWebhookBody {
   return typeof value === "object" && value !== null && Array.isArray((value as { events?: unknown }).events);
@@ -103,6 +115,11 @@ export function handleLineWebhook(
   for (const event of body.events) {
     const userId = event.source?.userId;
     const base = { eventId: event.webhookEventId ?? `${userId ?? "anon"}-${ctx.now().getTime()}`, userId };
+    const handledKey = event.webhookEventId ? `${HANDLED_PREFIX}${event.webhookEventId}` : null;
+    if (handledKey && ctx.cache.get(handledKey)) {
+      ctx.logger.info("line.duplicate_event", { eventId: base.eventId, redelivery: event.deliveryContext?.isRedelivery === true });
+      continue;
+    }
     let messages: LineMessage[] = [];
 
     if (event.type === "postback" && event.postback?.data) {
@@ -130,6 +147,9 @@ export function handleLineWebhook(
       continue;
     }
 
+    // Marked after processing: a delivery that crashed half-way can still be retried,
+    // and anything it already recorded is protected by the per-record idempotency.
+    if (handledKey) ctx.cache.put(handledKey, "1", HANDLED_TTL_SECONDS);
     if (event.replyToken && messages.length > 0) {
       try {
         ctx.line.reply(event.replyToken, messages.slice(0, 5));

@@ -43,7 +43,21 @@ export const gasModuleCatalog = z.object({
 });
 export type GasModuleCatalog = z.infer<typeof gasModuleCatalog>;
 
+/** The LINE webhook verification proxy: copied into each project's line/webhook/. */
+export const lineProxyCatalog = z.object({
+  kind: z.literal("line-proxy-catalog"),
+  id: z.string(),
+  version: z.string(),
+  description: z.string(),
+  runtime: z.literal("cloudflare-workers"),
+  secrets: z.array(z.string()).min(1),
+  files: z.array(z.string()).min(1),
+  tests: z.array(z.string()).min(1),
+});
+export type LineProxyCatalog = z.infer<typeof lineProxyCatalog>;
+
 export const GAS_MODULES_DIR = "gas-modules";
+export const LINE_PROXY_DIR = "line-webhook-proxy";
 export const ASSET_LOCK_FILE = "asset-lock.json";
 
 /**
@@ -63,6 +77,7 @@ export class CoreAssetRegistry {
   readonly intentCatalogs = new Map<string, Loaded<IntentCatalogAsset>>();
   readonly qaRules = new Map<string, Loaded<QaRulesAsset>>();
   gasModules: GasModuleCatalog | null = null;
+  lineProxy: LineProxyCatalog | null = null;
   readonly loadIssues: Issue[] = [];
 
   private constructor(readonly dir: string) {}
@@ -70,10 +85,11 @@ export class CoreAssetRegistry {
   static load(dir: string = CORE_ASSETS_DIR): CoreAssetRegistry {
     const registry = new CoreAssetRegistry(dir);
     for (const file of listFiles(dir)) {
-      if (!file.endsWith(".json") || file === ASSET_LOCK_FILE || file.startsWith(`${GAS_MODULES_DIR}/`)) continue;
+      if (!file.endsWith(".json") || file === ASSET_LOCK_FILE || file.startsWith(`${GAS_MODULES_DIR}/`) || file.startsWith(`${LINE_PROXY_DIR}/`)) continue;
       registry.loadFile(file);
     }
     registry.loadGasModules();
+    registry.loadLineProxy();
     return registry;
   }
 
@@ -154,6 +170,23 @@ export class CoreAssetRegistry {
       return;
     }
     this.gasModules = parsed.data;
+  }
+
+  private loadLineProxy(): void {
+    const file = path.join(this.dir, LINE_PROXY_DIR, "proxy.json");
+    if (!fs.existsSync(file)) {
+      this.loadIssues.push(error("ASSET_MISSING", `${LINE_PROXY_DIR}/proxy.json is missing`, LINE_PROXY_DIR));
+      return;
+    }
+    const parsed = lineProxyCatalog.safeParse(JSON.parse(fs.readFileSync(file, "utf8")));
+    if (!parsed.success) {
+      this.loadIssues.push(error("ASSET_SCHEMA", parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "), `${LINE_PROXY_DIR}/proxy.json`));
+      return;
+    }
+    this.lineProxy = parsed.data;
+    for (const rel of [...parsed.data.files, ...parsed.data.tests]) {
+      if (!fs.existsSync(path.join(this.dir, LINE_PROXY_DIR, rel))) this.loadIssues.push(error("ASSET_MISSING", `proxy file ${rel} is missing`, LINE_PROXY_DIR));
+    }
   }
 
   /** Resolves `createInquiry@1`. Unpinned refs (`createInquiry`) never resolve. */

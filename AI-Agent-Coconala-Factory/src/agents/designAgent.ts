@@ -8,8 +8,9 @@ import type { WorkflowPlan } from "./workflowPlanner";
 /**
  * Design Agent: combines the menu structure (business meaning), the
  * layout (geometry) and the design preset (visual direction) with the
- * client's brand into rich-menu-design-spec.json. It produces a spec for
- * a designer or a design tool (Canva etc.), not the final PNG.
+ * client's brand into rich-menu-design-spec.json. The spec is the only
+ * input of the image renderer (src/richMenu/), which draws rich-menu.png
+ * from it; a designer or an optional design-tool adapter can use it too.
  *
  * The layers stay separate: this spec never contains LINE action payloads,
  * and menu-config.json (LINE layer) never contains colors.
@@ -27,6 +28,10 @@ export interface DesignCell {
   fill: string;
   labelColor: string;
   contrastRatio: number;
+  /** Colors of the other drawn elements, decided here so the renderer never picks colors itself. */
+  subLabelColor: string;
+  iconColor: string;
+  borderColor: string;
 }
 
 export interface DesignSpec {
@@ -71,6 +76,9 @@ export function designRichMenu(brief: ClientBrief, profile: IndustryProfile, pla
       fill,
       labelColor,
       contrastRatio: contrastRatio(labelColor, fill),
+      subLabelColor: primary ? colors.onPrimary : colors.muted,
+      iconColor: primary ? colors.onPrimary : colors.accent,
+      borderColor: primary ? colors.primary : colors.border,
     };
   });
 

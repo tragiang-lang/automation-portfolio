@@ -1,0 +1,21 @@
+{
+  "kind": "qa-rules",
+  "id": "line-qa-rules-v1",
+  "version": "1.0.0",
+  "rules": [
+    { "id": "LINE_IMAGE_EXISTS", "area": "line", "severity": "error", "description": "Level 1. rich-menu/rich-menu.png, preview.svg and image.json exist, and image.json matches the PNG (bytes, sha256)." },
+    { "id": "LINE_IMAGE_FORMAT", "area": "line", "severity": "error", "description": "Level 1. The image is PNG or JPEG, 800-2500px wide, at least 250px high, width/height >= 1.45, at most 1 MB, fully opaque (LINE Messaging API: Requirements for rich menu image)." },
+    { "id": "LINE_IMAGE_MATCHES_CONFIG", "area": "line", "severity": "error", "description": "Level 1. Image size equals menu-config size and design-spec canvas; every tappable area lies inside the image and equals the drawn tile of the same button." },
+    { "id": "LINE_IMAGE_READABLE", "area": "line", "severity": "error", "description": "Level 1. Every tile has a label drawn at or above the preset minimum size; label, sub-label (4.5:1) and icon (3:1) contrast pass; the design preset exists." },
+    { "id": "LINE_DETERMINISTIC_IMAGE", "area": "line", "severity": "error", "description": "Level 1. Re-rendering design-spec.json with the current renderer gives the same PNG bytes (sha256) as the delivered image." },
+    { "id": "LINE_ACTIONS_VALID", "area": "line", "severity": "error", "description": "Level 1. At most 20 areas; action types are postback, datetimepicker or uri; labels at most 20 characters; postback data at most 300 characters; URIs are https." },
+    { "id": "LINE_WORKFLOW_REFERENCES", "area": "line", "severity": "error", "description": "Level 1. Every button traces to a LINE action, a selected workflow entry, a pinned action, a generated webhook route and a GAS handler file in the registry." },
+    { "id": "LINE_DEPLOYMENT_CONFIG", "area": "line", "severity": "error", "description": "Level 1. line/deployment.json matches the menu config, image hash and asset versions; it carries no server-issued ids and no secret values." },
+    { "id": "LINE_SECRET_SCAN", "area": "line", "severity": "error", "description": "Level 1. No channel secret, access token, webhook key, GAS web app URL with key, .dev.vars or wrangler secret values anywhere in the project." },
+    { "id": "LINE_WEBHOOK_CONFIG", "area": "line", "severity": "error", "description": "Level 1. The webhook topology is LINE -> verification proxy -> GAS; GAS requires WEBHOOK_KEY; every postback the menu can send has a route." },
+    { "id": "LINE_PROXY_CONFIG", "area": "line", "severity": "error", "description": "Level 1. line/webhook/ contains the released proxy files byte for byte, its tests, and a wrangler config example that declares secrets by name only." },
+    { "id": "LINE_RUNTIME_TESTS", "area": "line", "severity": "error", "description": "Level 2. The generated GAS LINE runtime tests (every route: valid input, invalid input, duplicate event, safe error) pass. Needs --run-gas-checks." },
+    { "id": "LINE_PROXY_TESTS", "area": "line", "severity": "error", "description": "Level 3. The proxy tests in line/webhook/ (valid, invalid, missing, modified, wrong secret, empty events) pass. Needs --run-gas-checks." },
+    { "id": "LINE_LIVE_SMOKE", "area": "line", "severity": "warning", "description": "Level 4. Result of `line-smoke-test` against a real test LINE Official Account, if one was run. Never runs automatically; NOT RUN is reported, not failed." }
+  ]
+}
