@@ -82,6 +82,25 @@ export const siteContent = {
       "ヘアサロンを想定し、LINEのリッチメニューから予約リクエスト・お問い合わせを受け付けて、スプレッドシートへ記録し、メールでお知らせするデモ構成です。",
     href: "/works/hair-salon",
     linkLabel: "事例を見る",
+    // Lightweight demos shown below the flagship Hair Salon case study.
+    moreDemos: [
+      {
+        badge: "デモ",
+        title: "Nail Salon",
+        description: "同じ仕組みをネイルサロン向けのメニュー・デザインにしたデモです。",
+        image: { src: "/demos/nail-salon/rich-menu.png", width: 2500, height: 1686, alt: "ネイルサロン向けリッチメニューのデモ画像" },
+        href: "/works/nail-salon",
+        linkLabel: "デモを見る",
+      },
+      {
+        badge: "デモ",
+        title: "Spa",
+        description: "同じ仕組みをスパ・リラクゼーション向けのメニュー・デザインにしたデモです。",
+        image: { src: "/demos/spa/rich-menu.png", width: 2500, height: 1686, alt: "スパ向けリッチメニューのデモ画像" },
+        href: "/works/spa",
+        linkLabel: "デモを見る",
+      },
+    ],
   },
   faq: {
     eyebrow: "FAQ",

@@ -3,9 +3,11 @@
 A small static sales/demo site for a Coconala LINE automation service.
 
 - `/`: one-page landing page
-- `/works/hair-salon`: Hair Salon case study (demo sample)
+- `/works/hair-salon`: Hair Salon case study (demo sample, the flagship)
+- `/works/nail-salon`: Nail Salon lightweight demo (Rich Menu, short workflow, synthetic menu)
+- `/works/spa`: Spa lightweight demo (same format as Nail Salon)
 
-It uses Next.js (App Router), TypeScript and Tailwind CSS. There is no backend, no API routes, no database and no LINE connection. Both pages are prerendered as static HTML.
+It uses Next.js (App Router), TypeScript and Tailwind CSS. There is no backend, no API routes, no database and no LINE connection. All pages are prerendered as static HTML.
 
 ## Run locally
 
@@ -39,6 +41,9 @@ npm run start        # serve the production build locally
 | Brand name, SEO title/description | `content/site.ts` → `siteConfig` |
 | Homepage copy (hero, cards, flow, FAQ, CTA) | `content/site.ts` → `siteContent` |
 | Case study copy | `content/hair-salon.ts` → `hairSalonCaseStudy` |
+| Nail Salon demo copy (incl. synthetic menu/prices) | `content/nail-salon.ts` → `nailSalonDemo` |
+| Spa demo copy (incl. synthetic menu/prices) | `content/spa.ts` → `spaDemo` |
+| Extra demo cards under WORKS | `content/site.ts` → `caseStudyPreview.moreDemos` |
 | Spreadsheet / email mock data (synthetic only) | `content/hair-salon.ts` → `demoReservations`, `demoEmail` |
 | Colors | `app/globals.css` → `@theme` |
 
@@ -51,6 +56,9 @@ All demo assets are in `public/demos/hair-salon/`.
 | `rich-menu.png` | Copied from the Factory output `AI-Agent-Coconala-Factory/projects/2026/demo-hair-salon/rich-menu/rich-menu.png` (2500×1686). Also used as the Open Graph image. |
 | `demo.mp4` | **Not added yet.** Add the file here, then set `siteContent.demo.videoSrc` in `content/site.ts` to `"/demos/hair-salon/demo.mp4"`. Until you do, a "準備中" placeholder is shown. The video is muted, has controls and does not autoplay. |
 | Spreadsheet / email visuals | Drawn with HTML/CSS in `components/DemoVisuals.tsx` using fake data. To use real screenshots instead, add `spreadsheet.png` / `email.png` here and swap the components for `next/image`. |
+
+`public/demos/nail-salon/rich-menu.png` is copied from `AI-Agent-Coconala-Factory/projects/2026/demo-nail-salon/rich-menu/rich-menu.png` (2500×1686).
+`public/demos/spa/rich-menu.png` is copied from `AI-Agent-Coconala-Factory/projects/2026/demo-spa/rich-menu/rich-menu.png` (2500×1686).
 
 To refresh the Rich Menu, re-copy the PNG from the Factory project. The site never imports anything from the Factory at runtime.
 
