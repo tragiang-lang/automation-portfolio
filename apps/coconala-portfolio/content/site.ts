@@ -76,6 +76,8 @@ export const siteContent = {
     eyebrow: "WORKS",
     sectionTitle: "制作事例",
     badge: "デモ",
+    featuredBadge: "メイン事例",
+    backLabel: "制作事例一覧へ戻る",
     title: "Hair Salon",
     subtitle: "LINE予約受付 自動化デモ",
     description:
@@ -87,6 +89,7 @@ export const siteContent = {
       {
         badge: "デモ",
         title: "Nail Salon",
+        subtitle: "ネイルサロン向け LINE予約受付デモ",
         description: "同じ仕組みをネイルサロン向けのメニュー・デザインにしたデモです。",
         image: { src: "/demos/nail-salon/rich-menu.png", width: 2500, height: 1686, alt: "ネイルサロン向けリッチメニューのデモ画像" },
         href: "/works/nail-salon",
@@ -95,6 +98,7 @@ export const siteContent = {
       {
         badge: "デモ",
         title: "Spa",
+        subtitle: "スパ・リラクゼーション向け LINE予約受付デモ",
         description: "同じ仕組みをスパ・リラクゼーション向けのメニュー・デザインにしたデモです。",
         image: { src: "/demos/spa/rich-menu.png", width: 2500, height: 1686, alt: "スパ向けリッチメニューのデモ画像" },
         href: "/works/spa",

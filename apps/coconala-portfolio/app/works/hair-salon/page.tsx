@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CaseStudySection } from "@/components/CaseStudySection";
 import { CTA } from "@/components/CTA";
 import { EmailMock, RichMenuImage, SpreadsheetMock } from "@/components/DemoVisuals";
-import { DemoBadge } from "@/components/ui";
+import { BackToWorksLink, DemoBadge } from "@/components/ui";
 import { WorkflowDiagram } from "@/components/WorkflowDiagram";
 import { hairSalonCaseStudy as cs } from "@/content/hair-salon";
 
@@ -49,6 +49,9 @@ export default function HairSalonCaseStudyPage() {
     <>
       {/* Overview */}
       <section className="mx-auto max-w-5xl px-4 pb-10 pt-14 sm:px-6 sm:pt-20">
+        <div className="mb-6">
+          <BackToWorksLink />
+        </div>
         <DemoBadge label={cs.badge} />
         <p className="mt-6 text-sm font-medium tracking-[0.2em] text-accent">{cs.eyebrow}</p>
         <h1 className="mt-2 text-3xl font-bold leading-snug sm:text-5xl">
@@ -104,6 +107,10 @@ export default function HairSalonCaseStudyPage() {
         </ul>
         <p className="mt-6 text-xs text-muted">{cs.technology.portfolioNote}</p>
       </CaseStudySection>
+
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <BackToWorksLink />
+      </div>
 
       <CTA titleLines={cs.cta.titleLines} buttonLabel={cs.cta.buttonLabel} />
     </>

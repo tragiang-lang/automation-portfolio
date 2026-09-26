@@ -1,5 +1,5 @@
-// Small shared building blocks: section shell, heading, badge, Coconala button.
-import { siteConfig } from "@/content/site";
+// Small shared building blocks: section shell, heading, badge, back link, Coconala button.
+import { siteConfig, siteContent } from "@/content/site";
 
 export function Section({
   id,
@@ -26,11 +26,25 @@ export function SectionHeading({ eyebrow, title }: { eyebrow: string; title: str
   );
 }
 
-export function DemoBadge({ label }: { label: string }) {
+export function DemoBadge({ label, solid = false }: { label: string; solid?: boolean }) {
+  const tone = solid ? "bg-accent text-white" : "text-accent";
   return (
-    <span className="inline-block rounded-full border border-accent px-3 py-1 text-xs font-medium tracking-wider text-accent">
+    <span className={`inline-block rounded-full border border-accent px-3 py-1 text-xs font-medium tracking-wider ${tone}`}>
       {label}
     </span>
+  );
+}
+
+/**
+ * Link from a /works/* page back to the WORKS section of the homepage.
+ * A plain <a> (like the header nav): next/link's client navigation to "/#works" stays near the top of the page.
+ */
+export function BackToWorksLink() {
+  return (
+    <a href="/#works" className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-muted hover:text-ink">
+      <span aria-hidden>←</span>
+      {siteContent.caseStudyPreview.backLabel}
+    </a>
   );
 }
 

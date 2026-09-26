@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { CaseStudySection } from "@/components/CaseStudySection";
 import { CTA } from "@/components/CTA";
-import { DemoBadge } from "@/components/ui";
+import { BackToWorksLink, DemoBadge } from "@/components/ui";
 import { WorkflowDiagram } from "@/components/WorkflowDiagram";
 import { spaDemo as demo } from "@/content/spa";
 
@@ -16,6 +16,9 @@ export default function SpaDemoPage() {
   return (
     <>
       <section className="mx-auto max-w-5xl px-4 pb-10 pt-14 sm:px-6 sm:pt-20">
+        <div className="mb-6">
+          <BackToWorksLink />
+        </div>
         <DemoBadge label={demo.badge} />
         <p className="mt-6 text-sm font-medium tracking-[0.2em] text-accent">{demo.eyebrow}</p>
         <h1 className="mt-2 text-3xl font-bold leading-snug sm:text-5xl">
@@ -58,6 +61,10 @@ export default function SpaDemoPage() {
         </ul>
         <p className="mt-4 text-xs text-muted">{demo.menu.note}</p>
       </CaseStudySection>
+
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <BackToWorksLink />
+      </div>
 
       <CTA titleLines={demo.cta.titleLines} buttonLabel={demo.cta.buttonLabel} />
     </>

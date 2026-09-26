@@ -1,0 +1,8 @@
+next start -p 3107 (production build). Same-origin iframes, images forced eager. Automated tab visibilityState=hidden.
+/@375: overflow=false imgs=5 loaded fit; cards hair-salon/nail-salon/spa all stacked, width 328
+/@768: overflow=false imgs=5 loaded fit; cards all side-by-side (image left, text right), width 705
+/@1440: overflow=false imgs=5 loaded fit; cards all side-by-side, width 976
+/works/{hair-salon,nail-salon,spa}@{375,768,1440}: overflow=false, image loaded + fits, back links (制作事例一覧へ戻る -> /#works) = 2 (top + bottom)
+Back link click from /works/nail-salon -> URL /#works (full navigation).
+Scroll note: in the hidden automated tab, scrollY stays 0 after /#works because html has scroll-behavior:smooth and smooth scrolling does not advance in a hidden tab.
+Same result for the pre-existing header "Works" link. Instant scrollIntoView of #works -> scrollY 2289 (target unique, 1 element). Visible-browser scroll NOT verified by automation.

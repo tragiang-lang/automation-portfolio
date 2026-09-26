@@ -1,0 +1,7 @@
+ .../app/works/hair-salon/page.tsx                  |   9 +-
+ .../app/works/nail-salon/page.tsx                  |   9 +-
+ apps/coconala-portfolio/app/works/spa/page.tsx     |   9 +-
+ .../components/CaseStudyPreview.tsx                | 102 ++++++++++++++-------
+ apps/coconala-portfolio/components/ui.tsx          |  22 ++++-
+ apps/coconala-portfolio/content/site.ts            |   4 +
+ 6 files changed, 116 insertions(+), 39 deletions(-)

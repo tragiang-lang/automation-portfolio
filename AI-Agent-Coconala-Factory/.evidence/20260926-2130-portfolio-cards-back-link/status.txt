@@ -1,0 +1,6 @@
+ M apps/coconala-portfolio/app/works/hair-salon/page.tsx
+ M apps/coconala-portfolio/app/works/nail-salon/page.tsx
+ M apps/coconala-portfolio/app/works/spa/page.tsx
+ M apps/coconala-portfolio/components/CaseStudyPreview.tsx
+ M apps/coconala-portfolio/components/ui.tsx
+ M apps/coconala-portfolio/content/site.ts

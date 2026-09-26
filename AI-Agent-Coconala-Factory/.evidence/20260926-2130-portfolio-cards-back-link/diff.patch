@@ -1,0 +1,295 @@
+diff --git a/apps/coconala-portfolio/app/works/hair-salon/page.tsx b/apps/coconala-portfolio/app/works/hair-salon/page.tsx
+index 1c2a7ec..b90822c 100644
+--- a/apps/coconala-portfolio/app/works/hair-salon/page.tsx
++++ b/apps/coconala-portfolio/app/works/hair-salon/page.tsx
+@@ -2,7 +2,7 @@ import type { Metadata } from "next";
+ import { CaseStudySection } from "@/components/CaseStudySection";
+ import { CTA } from "@/components/CTA";
+ import { EmailMock, RichMenuImage, SpreadsheetMock } from "@/components/DemoVisuals";
+-import { DemoBadge } from "@/components/ui";
++import { BackToWorksLink, DemoBadge } from "@/components/ui";
+ import { WorkflowDiagram } from "@/components/WorkflowDiagram";
+ import { hairSalonCaseStudy as cs } from "@/content/hair-salon";
+ 
+@@ -49,6 +49,9 @@ export default function HairSalonCaseStudyPage() {
+     <>
+       {/* Overview */}
+       <section className="mx-auto max-w-5xl px-4 pb-10 pt-14 sm:px-6 sm:pt-20">
++        <div className="mb-6">
++          <BackToWorksLink />
++        </div>
+         <DemoBadge label={cs.badge} />
+         <p className="mt-6 text-sm font-medium tracking-[0.2em] text-accent">{cs.eyebrow}</p>
+         <h1 className="mt-2 text-3xl font-bold leading-snug sm:text-5xl">
+@@ -105,6 +108,10 @@ export default function HairSalonCaseStudyPage() {
+         <p className="mt-6 text-xs text-muted">{cs.technology.portfolioNote}</p>
+       </CaseStudySection>
+ 
++      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
++        <BackToWorksLink />
++      </div>
++
+       <CTA titleLines={cs.cta.titleLines} buttonLabel={cs.cta.buttonLabel} />
+     </>
+   );
+diff --git a/apps/coconala-portfolio/app/works/nail-salon/page.tsx b/apps/coconala-portfolio/app/works/nail-salon/page.tsx
+index 024eb7a..efaa94b 100644
+--- a/apps/coconala-portfolio/app/works/nail-salon/page.tsx
++++ b/apps/coconala-portfolio/app/works/nail-salon/page.tsx
+@@ -2,7 +2,7 @@ import type { Metadata } from "next";
+ import Image from "next/image";
+ import { CaseStudySection } from "@/components/CaseStudySection";
+ import { CTA } from "@/components/CTA";
+-import { DemoBadge } from "@/components/ui";
++import { BackToWorksLink, DemoBadge } from "@/components/ui";
+ import { WorkflowDiagram } from "@/components/WorkflowDiagram";
+ import { nailSalonDemo as demo } from "@/content/nail-salon";
+ 
+@@ -16,6 +16,9 @@ export default function NailSalonDemoPage() {
+   return (
+     <>
+       <section className="mx-auto max-w-5xl px-4 pb-10 pt-14 sm:px-6 sm:pt-20">
++        <div className="mb-6">
++          <BackToWorksLink />
++        </div>
+         <DemoBadge label={demo.badge} />
+         <p className="mt-6 text-sm font-medium tracking-[0.2em] text-accent">{demo.eyebrow}</p>
+         <h1 className="mt-2 text-3xl font-bold leading-snug sm:text-5xl">
+@@ -59,6 +62,10 @@ export default function NailSalonDemoPage() {
+         <p className="mt-4 text-xs text-muted">{demo.menu.note}</p>
+       </CaseStudySection>
+ 
++      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
++        <BackToWorksLink />
++      </div>
++
+       <CTA titleLines={demo.cta.titleLines} buttonLabel={demo.cta.buttonLabel} />
+     </>
+   );
+diff --git a/apps/coconala-portfolio/app/works/spa/page.tsx b/apps/coconala-portfolio/app/works/spa/page.tsx
+index 166aa9a..1fb350c 100644
+--- a/apps/coconala-portfolio/app/works/spa/page.tsx
++++ b/apps/coconala-portfolio/app/works/spa/page.tsx
+@@ -2,7 +2,7 @@ import type { Metadata } from "next";
+ import Image from "next/image";
+ import { CaseStudySection } from "@/components/CaseStudySection";
+ import { CTA } from "@/components/CTA";
+-import { DemoBadge } from "@/components/ui";
++import { BackToWorksLink, DemoBadge } from "@/components/ui";
+ import { WorkflowDiagram } from "@/components/WorkflowDiagram";
+ import { spaDemo as demo } from "@/content/spa";
+ 
+@@ -16,6 +16,9 @@ export default function SpaDemoPage() {
+   return (
+     <>
+       <section className="mx-auto max-w-5xl px-4 pb-10 pt-14 sm:px-6 sm:pt-20">
++        <div className="mb-6">
++          <BackToWorksLink />
++        </div>
+         <DemoBadge label={demo.badge} />
+         <p className="mt-6 text-sm font-medium tracking-[0.2em] text-accent">{demo.eyebrow}</p>
+         <h1 className="mt-2 text-3xl font-bold leading-snug sm:text-5xl">
+@@ -59,6 +62,10 @@ export default function SpaDemoPage() {
+         <p className="mt-4 text-xs text-muted">{demo.menu.note}</p>
+       </CaseStudySection>
+ 
++      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
++        <BackToWorksLink />
++      </div>
++
+       <CTA titleLines={demo.cta.titleLines} buttonLabel={demo.cta.buttonLabel} />
+     </>
+   );
+diff --git a/apps/coconala-portfolio/components/CaseStudyPreview.tsx b/apps/coconala-portfolio/components/CaseStudyPreview.tsx
+index 49a19df..d0db2f4 100644
+--- a/apps/coconala-portfolio/components/CaseStudyPreview.tsx
++++ b/apps/coconala-portfolio/components/CaseStudyPreview.tsx
+@@ -4,46 +4,84 @@ import { siteContent } from "@/content/site";
+ import { RichMenuImage } from "./DemoVisuals";
+ import { DemoBadge, Section, SectionHeading } from "./ui";
+ 
++const imageSizes = "(min-width: 768px) 480px, 100vw";
++
++/** One work card. All cards share this layout; the featured one only gets a solid badge and a larger title. */
++function WorkCard({
++  href,
++  image,
++  badge,
++  featuredBadge,
++  title,
++  subtitle,
++  description,
++  linkLabel,
++}: {
++  href: string;
++  image: React.ReactNode;
++  badge: string;
++  featuredBadge?: string;
++  title: string;
++  subtitle: string;
++  description: string;
++  linkLabel: string;
++}) {
++  return (
++    <Link
++      href={href}
++      className="group grid gap-6 rounded-xl border border-line bg-surface p-4 transition-shadow hover:shadow-md sm:p-6 md:grid-cols-2 md:items-center md:gap-10"
++    >
++      {image}
++      <div>
++        <div className="flex flex-wrap gap-2">
++          {featuredBadge && <DemoBadge label={featuredBadge} solid />}
++          <DemoBadge label={badge} />
++        </div>
++        <h3 className={`mt-4 font-bold ${featuredBadge ? "text-2xl" : "text-xl"}`}>{title}</h3>
++        <p className="mt-1 text-base font-medium">{subtitle}</p>
++        <p className="mt-4 text-sm leading-relaxed text-muted">{description}</p>
++        <p className="mt-6 text-sm font-bold text-accent group-hover:underline">{linkLabel} →</p>
++      </div>
++    </Link>
++  );
++}
++
+ export function CaseStudyPreview() {
+   const { caseStudyPreview: cs } = siteContent;
+   return (
+     <Section id="works">
+       <SectionHeading eyebrow={cs.eyebrow} title={cs.sectionTitle} />
+-      <Link
+-        href={cs.href}
+-        className="group grid gap-6 rounded-xl border border-line bg-surface p-4 transition-shadow hover:shadow-md sm:p-6 md:grid-cols-2 md:items-center md:gap-10"
+-      >
+-        <RichMenuImage sizes="(min-width: 768px) 480px, 100vw" />
+-        <div>
+-          <DemoBadge label={cs.badge} />
+-          <h3 className="mt-4 text-2xl font-bold">{cs.title}</h3>
+-          <p className="mt-1 text-base font-medium">{cs.subtitle}</p>
+-          <p className="mt-4 text-sm leading-relaxed text-muted">{cs.description}</p>
+-          <p className="mt-6 text-sm font-bold text-accent group-hover:underline">{cs.linkLabel} →</p>
+-        </div>
+-      </Link>
+-      <div className="mt-6 grid gap-6 md:grid-cols-2">
++      <div className="flex flex-col gap-6">
++        <WorkCard
++          href={cs.href}
++          image={<RichMenuImage sizes={imageSizes} />}
++          badge={cs.badge}
++          featuredBadge={cs.featuredBadge}
++          title={cs.title}
++          subtitle={cs.subtitle}
++          description={cs.description}
++          linkLabel={cs.linkLabel}
++        />
+         {cs.moreDemos.map((demo) => (
+-          <Link
++          <WorkCard
+             key={demo.href}
+             href={demo.href}
+-            className="group flex flex-col gap-4 rounded-xl border border-line bg-surface p-4 transition-shadow hover:shadow-md sm:p-6"
+-          >
+-            <Image
+-              src={demo.image.src}
+-              width={demo.image.width}
+-              height={demo.image.height}
+-              alt={demo.image.alt}
+-              sizes="(min-width: 768px) 440px, 100vw"
+-              className="h-auto w-full rounded-lg border border-line"
+-            />
+-            <div>
+-              <DemoBadge label={demo.badge} />
+-              <h3 className="mt-3 text-xl font-bold">{demo.title}</h3>
+-              <p className="mt-2 text-sm leading-relaxed text-muted">{demo.description}</p>
+-              <p className="mt-4 text-sm font-bold text-accent group-hover:underline">{demo.linkLabel} →</p>
+-            </div>
+-          </Link>
++            image={
++              <Image
++                src={demo.image.src}
++                width={demo.image.width}
++                height={demo.image.height}
++                alt={demo.image.alt}
++                sizes={imageSizes}
++                className="h-auto w-full rounded-lg border border-line"
++              />
++            }
++            badge={demo.badge}
++            title={demo.title}
++            subtitle={demo.subtitle}
++            description={demo.description}
++            linkLabel={demo.linkLabel}
++          />
+         ))}
+       </div>
+     </Section>
+diff --git a/apps/coconala-portfolio/components/ui.tsx b/apps/coconala-portfolio/components/ui.tsx
+index 070d54c..1349352 100644
+--- a/apps/coconala-portfolio/components/ui.tsx
++++ b/apps/coconala-portfolio/components/ui.tsx
+@@ -1,5 +1,5 @@
+-// Small shared building blocks: section shell, heading, badge, Coconala button.
+-import { siteConfig } from "@/content/site";
++// Small shared building blocks: section shell, heading, badge, back link, Coconala button.
++import { siteConfig, siteContent } from "@/content/site";
+ 
+ export function Section({
+   id,
+@@ -26,14 +26,28 @@ export function SectionHeading({ eyebrow, title }: { eyebrow: string; title: str
+   );
+ }
+ 
+-export function DemoBadge({ label }: { label: string }) {
++export function DemoBadge({ label, solid = false }: { label: string; solid?: boolean }) {
++  const tone = solid ? "bg-accent text-white" : "text-accent";
+   return (
+-    <span className="inline-block rounded-full border border-accent px-3 py-1 text-xs font-medium tracking-wider text-accent">
++    <span className={`inline-block rounded-full border border-accent px-3 py-1 text-xs font-medium tracking-wider ${tone}`}>
+       {label}
+     </span>
+   );
+ }
+ 
++/**
++ * Link from a /works/* page back to the WORKS section of the homepage.
++ * A plain <a> (like the header nav): next/link's client navigation to "/#works" stays near the top of the page.
++ */
++export function BackToWorksLink() {
++  return (
++    <a href="/#works" className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-muted hover:text-ink">
++      <span aria-hidden>←</span>
++      {siteContent.caseStudyPreview.backLabel}
++    </a>
++  );
++}
++
+ export function CoconalaButton({ label, size = "md" }: { label: string; size?: "md" | "lg" }) {
+   const sizing = size === "lg" ? "px-8 py-4 text-base" : "px-6 py-3 text-sm";
+   return (
+diff --git a/apps/coconala-portfolio/content/site.ts b/apps/coconala-portfolio/content/site.ts
+index 400ec1b..20d8f1b 100644
+--- a/apps/coconala-portfolio/content/site.ts
++++ b/apps/coconala-portfolio/content/site.ts
+@@ -76,6 +76,8 @@ export const siteContent = {
+     eyebrow: "WORKS",
+     sectionTitle: "制作事例",
+     badge: "デモ",
++    featuredBadge: "メイン事例",
++    backLabel: "制作事例一覧へ戻る",
+     title: "Hair Salon",
+     subtitle: "LINE予約受付 自動化デモ",
+     description:
+@@ -87,6 +89,7 @@ export const siteContent = {
+       {
+         badge: "デモ",
+         title: "Nail Salon",
++        subtitle: "ネイルサロン向け LINE予約受付デモ",
+         description: "同じ仕組みをネイルサロン向けのメニュー・デザインにしたデモです。",
+         image: { src: "/demos/nail-salon/rich-menu.png", width: 2500, height: 1686, alt: "ネイルサロン向けリッチメニューのデモ画像" },
+         href: "/works/nail-salon",
+@@ -95,6 +98,7 @@ export const siteContent = {
+       {
+         badge: "デモ",
+         title: "Spa",
++        subtitle: "スパ・リラクゼーション向け LINE予約受付デモ",
+         description: "同じ仕組みをスパ・リラクゼーション向けのメニュー・デザインにしたデモです。",
+         image: { src: "/demos/spa/rich-menu.png", width: 2500, height: 1686, alt: "スパ向けリッチメニューのデモ画像" },
+         href: "/works/spa",
