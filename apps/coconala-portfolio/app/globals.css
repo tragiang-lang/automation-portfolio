@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* The whole palette: warm neutrals + one restrained accent. */
+@theme {
+  --color-paper: #f7f5f1;
+  --color-surface: #ffffff;
+  --color-sunken: #efebe4;
+  --color-ink: #26231f;
+  --color-muted: #6f675e;
+  --color-line: #e2dcd2;
+  --color-accent: #2e6b52;
+  --color-accent-dark: #245641;
+  --color-accent-soft: #e6efe9;
+
+  --font-sans: var(--font-noto-sans-jp), "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  line-break: strict;
+  /* Break Japanese at phrase boundaries where supported (Chrome/Edge); ignored elsewhere. */
+  word-break: auto-phrase;
+}
