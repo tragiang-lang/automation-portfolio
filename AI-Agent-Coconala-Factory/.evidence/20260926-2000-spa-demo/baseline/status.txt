@@ -1,0 +1,10 @@
+ M ../apps/coconala-portfolio/README.md
+ M ../apps/coconala-portfolio/components/CaseStudyPreview.tsx
+ M ../apps/coconala-portfolio/content/site.ts
+?? .evidence/20260923-2037-phase1.5-commit/
+?? .evidence/20260923-2200-phase1.6-commit/
+?? .evidence/20260924-2014-line-factory-v1-commit/
+?? .evidence/20260926-2000-spa-demo/
+?? ../apps/coconala-portfolio/app/works/nail-salon/
+?? ../apps/coconala-portfolio/content/nail-salon.ts
+?? ../apps/coconala-portfolio/public/demos/nail-salon/

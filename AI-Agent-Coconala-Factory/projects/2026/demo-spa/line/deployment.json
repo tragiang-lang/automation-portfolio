@@ -1,0 +1,185 @@
+{
+  "_meta": {
+    "artifact": "line/deployment.json",
+    "generatedBy": "line-deployment-generator",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-spa",
+    "industry": "spa",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0",
+      "spa-basic-v1": "1.0.0",
+      "spa-v1": "1.0.0",
+      "warm-natural-v1": "1.0.0"
+    }
+  },
+  "richMenu": {
+    "asset": "spa-basic-v1@1.0.0",
+    "layout": "grid-2x3-v1@1.0.0",
+    "designPreset": "warm-natural-v1@1.0.0",
+    "name": "demo-spa-spa-basic-v1",
+    "chatBarText": "メニュー",
+    "size": {
+      "width": 2500,
+      "height": 1686
+    },
+    "areaCount": 6,
+    "config": "rich-menu/menu-config.json",
+    "configSha256": "0bb3a8809e86a8dc605485a0864eff07b76959ec93b6a3822cf221e5159b1470",
+    "image": {
+      "file": "rich-menu/rich-menu.png",
+      "contentType": "image/png",
+      "width": 2500,
+      "height": 1686,
+      "bytes": 155166,
+      "sha256": "e3f63f19e0d44a70f5f426bedc2ab1bc35e7df2f58249e722bb9a9d0bffd0059",
+      "renderer": "local-svg-resvg@1.0.0"
+    },
+    "setAsDefault": true
+  },
+  "webhook": {
+    "topology": [
+      "LINE Platform",
+      "line/webhook (Cloudflare Worker: verifies x-line-signature)",
+      "GAS web app doPost (?key=WEBHOOK_KEY)"
+    ],
+    "proxy": "line-webhook-proxy-v1@1.0.0",
+    "lineWebhookUrl": "the Worker URL (https://<worker>.<account>.workers.dev/), never the GAS URL",
+    "gasAuthentication": "WEBHOOK_KEY query parameter, known only to the proxy",
+    "response": "The proxy answers LINE with HTTP 200 after verifying the signature and forwards to GAS in the background."
+  },
+  "secrets": [
+    {
+      "name": "LINE_CHANNEL_ACCESS_TOKEN",
+      "usedBy": "GAS (reply) and the factory CLI (line-deploy)",
+      "storedIn": "Apps Script Script Properties; CLI: environment variable only"
+    },
+    {
+      "name": "LINE_CHANNEL_SECRET",
+      "usedBy": "webhook proxy (signature check)",
+      "storedIn": "Cloudflare Worker secret (wrangler secret put)"
+    },
+    {
+      "name": "GAS_WEBAPP_URL",
+      "usedBy": "webhook proxy (forward target)",
+      "storedIn": "Cloudflare Worker secret"
+    },
+    {
+      "name": "GAS_WEBHOOK_KEY",
+      "usedBy": "webhook proxy → GAS",
+      "storedIn": "Cloudflare Worker secret; the same value as the GAS Script Property WEBHOOK_KEY"
+    },
+    {
+      "name": "WEBHOOK_KEY",
+      "usedBy": "GAS (accepts only proxy-forwarded deliveries)",
+      "storedIn": "Apps Script Script Properties"
+    },
+    {
+      "name": "SPREADSHEET_ID",
+      "usedBy": "GAS",
+      "storedIn": "Apps Script Script Properties"
+    }
+  ],
+  "environments": [
+    "test",
+    "production"
+  ],
+  "deployment": {
+    "order": [
+      "validate (static LINE QA)",
+      "validate rich menu object (LINE API)",
+      "create rich menu",
+      "upload image",
+      "verify rich menu",
+      "set default rich menu",
+      "record in line/deployment-history.json"
+    ],
+    "neverDeletes": "line-deploy never deletes a rich menu. Old menus are removed only with `line-delete --rich-menu-id <id> --live`.",
+    "serverIssuedIds": "line/deployment-history.json"
+  },
+  "traceability": [
+    {
+      "slot": "a",
+      "button": "ご予約",
+      "lineAction": "datetimepicker",
+      "target": "wf=reservation-basic-v1&e=default",
+      "workflow": "reservation-basic-v1@1.0.0",
+      "entry": "default",
+      "mode": "direct",
+      "action": "createReservation@1 (v1.0.0)",
+      "gasHandler": "gas/src/actions/createReservation.ts"
+    },
+    {
+      "slot": "b",
+      "button": "メニュー",
+      "lineAction": "postback",
+      "target": "wf=service-menu-v1&e=default",
+      "workflow": "service-menu-v1@1.0.0",
+      "entry": "default",
+      "mode": "direct",
+      "action": "getServiceList@1 (v1.0.0)",
+      "gasHandler": "gas/src/actions/getServiceList.ts"
+    },
+    {
+      "slot": "c",
+      "button": "お問い合わせ",
+      "lineAction": "postback",
+      "target": "wf=inquiry-basic-v1&e=default",
+      "workflow": "inquiry-basic-v1@1.0.0",
+      "entry": "default",
+      "mode": "awaitText",
+      "action": "createInquiry@1 (v1.0.0)",
+      "gasHandler": "gas/src/actions/createInquiry.ts"
+    },
+    {
+      "slot": "d",
+      "button": "アクセス",
+      "lineAction": "postback",
+      "target": "wf=business-info-v1&e=access",
+      "workflow": "business-info-v1@1.0.0",
+      "entry": "access",
+      "mode": "direct",
+      "action": "getBusinessInfo@1 (v1.0.0)",
+      "gasHandler": "gas/src/actions/getBusinessInfo.ts"
+    },
+    {
+      "slot": "e",
+      "button": "営業時間",
+      "lineAction": "postback",
+      "target": "wf=business-info-v1&e=hours",
+      "workflow": "business-info-v1@1.0.0",
+      "entry": "hours",
+      "mode": "direct",
+      "action": "getBusinessInfo@1 (v1.0.0)",
+      "gasHandler": "gas/src/actions/getBusinessInfo.ts"
+    },
+    {
+      "slot": "f",
+      "button": "はじめての方",
+      "lineAction": "uri",
+      "target": "config:web.firstVisitUrl"
+    }
+  ]
+}

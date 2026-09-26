@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/image.json",
+    "generatedBy": "rich-menu-renderer",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-spa",
+    "industry": "spa",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0",
+      "spa-basic-v1": "1.0.0",
+      "spa-v1": "1.0.0",
+      "warm-natural-v1": "1.0.0"
+    }
+  },
+  "file": "rich-menu/rich-menu.png",
+  "format": "png",
+  "contentType": "image/png",
+  "width": 2500,
+  "height": 1686,
+  "bytes": 155166,
+  "sha256": "e3f63f19e0d44a70f5f426bedc2ab1bc35e7df2f58249e722bb9a9d0bffd0059",
+  "previewSvgSha256": "5aea8f83369935abab6a0dacfc18172b58a45db1d1299a15a608c78d05e0abba",
+  "renderer": {
+    "id": "local-svg-resvg",
+    "version": "1.0.0",
+    "rasterizer": "@resvg/resvg-js@2.6.2",
+    "font": "Noto Sans JP (@embedpdf/fonts-jp@1.0.0, OFL-1.1)"
+  }
+}

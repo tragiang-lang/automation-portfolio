@@ -1,0 +1,83 @@
+{
+  "kind": "industry",
+  "id": "spa-v1",
+  "version": "1.0.0",
+  "industry": "spa",
+  "category": "salon",
+  "displayName": "スパ・リラクゼーション / Spa",
+  "businessType": "Appointment-based relaxation spa (aroma, body care, facial, head spa) with a fixed course menu and a small number of therapists and private treatment rooms.",
+  "customerIntents": [
+    "book",
+    "view_menu",
+    "ask_question",
+    "find_access",
+    "check_hours"
+  ],
+  "lineUseCases": [
+    "施術中で電話に出られない時間でも、LINEのリッチメニューから施術の予約リクエストを受け付ける",
+    "予約前にコース（アロマトリートメント・ボディケア・フェイシャル・ヘッドスパなど）の料金と施術時間を確認する",
+    "施術内容・オプション・体調（妊娠中、持病など）についてのお問い合わせ",
+    "はじめての方向けに、ご来店の流れ・当日の持ち物・注意事項のページを案内する",
+    "来店当日のアクセス・営業時間の確認"
+  ],
+  "recommendedWorkflows": [
+    "reservation-basic-v1",
+    "service-menu-v1",
+    "inquiry-basic-v1",
+    "business-info-v1"
+  ],
+  "recommendedRichMenu": "spa-basic-v1",
+  "recommendedDesignPresets": [
+    "warm-natural-v1",
+    "quiet-luxury-v1"
+  ],
+  "terminology": {
+    "service": "施術メニュー（コース）",
+    "treatment": "施術",
+    "reservation": "施術のご予約リクエスト（確定ではありません）",
+    "inquiry": "お問い合わせ",
+    "capacity": "同じ時間帯に施術できる人数（セラピスト数・施術ルーム数の少ない方）"
+  },
+  "requiredData": [
+    "CONFIG: 店舗名・住所・電話番号・地図URL・営業時間・定休日",
+    "SERVICES: コース名・施術時間・料金（例: アロマトリートメント、ボディケア、フェイシャル、リフレクソロジー、ヘッドスパ。時間違い・組み合わせコースは別の行で表す）",
+    "reservation.capacity: 同じ時間帯に施術できる人数（セラピスト数・施術ルーム数の少ない方）",
+    "reservation.defaultDurationMinutes: コース未選択時の目安の施術時間（着替え・カウンセリング込みで長めに設定）",
+    "notification.ownerEmail: 通知を受け取るメールアドレス"
+  ],
+  "notificationRequirements": [
+    "Owner email on every new reservation request and inquiry",
+    "Owner confirms reservations manually in the sheet (status CONFIRMED)"
+  ],
+  "risks": [
+    "Reservations are requests, not instant confirmations, in Phase 1. The LINE reply from createReservation@1 says 「ご予約リクエストを受け付けました」 (generic, not 「施術の予約リクエスト」) and that the spa will contact the customer once confirmed.",
+    "The customer picks only a date-time from the Rich Menu. Course, length and options are not collected; the spa asks by LINE after the request.",
+    "Health questions (pregnancy, medical conditions, oil allergies) arrive as free-text inquiries. The spa answers them itself; nothing is judged automatically.",
+    "Per-therapist or per-room booking is not supported by reservation-basic-v1 (use capacity = the smaller of therapists and treatment rooms).",
+    "Course length varies (45-120 min plus changing time). reservation.defaultDurationMinutes should be set on the long side to avoid overlapping requests.",
+    "If the spa already takes bookings on a portal (Hot Pepper Beauty etc.), double-booking can occur. Keep capacity conservative or keep one booking channel."
+  ],
+  "intentAliases": {
+    "view_menu": ["施術時間", "所要時間"],
+    "ask_question": ["体調"]
+  },
+  "assumptions": [
+    "Each course length and combination course is a separate SERVICES row; no extra sheet or column is needed.",
+    "The first-visit guide (ご来店の流れ・持ち物・注意事項) is a page the spa already publishes; the Rich Menu links to it instead of storing it."
+  ],
+  "extensionPoints": {
+    "implemented": [
+      "reservation-basic-v1: 施術の予約リクエスト（REQUESTED のみ、オーナーが確定）",
+      "service-menu-v1: 施術メニュー・料金・施術時間（SERVICES シート）",
+      "inquiry-basic-v1: 施術内容・オプション・体調についてのお問い合わせ",
+      "business-info-v1: アクセス / 営業時間",
+      "Rich Menu URI button to the spa's first-visit guide (web.firstVisitUrl)"
+    ],
+    "planned": [
+      { "id": "treatment-options-v2", "description": "Pick course, length and options in the booking flow." },
+      { "id": "pre-visit-counseling-v1", "description": "Structured counseling sheet (health, preferences) before the first visit." },
+      { "id": "staff-availability", "description": "Per-therapist / per-room capacity (reservation-basic-v1 extension point)." },
+      { "id": "calendar-integration-v1", "description": "Google Calendar sync on CONFIRMED (reservation-basic-v1 google-calendar extension point)." }
+    ]
+  }
+}

@@ -1,0 +1,162 @@
+diff --git a/AI-Agent-Coconala-Factory/README.md b/AI-Agent-Coconala-Factory/README.md
+index d9bbeea..a79dc42 100644
+--- a/AI-Agent-Coconala-Factory/README.md
++++ b/AI-Agent-Coconala-Factory/README.md
+@@ -24,8 +24,9 @@ delivery documents. Salons are the first example, but nothing in the core is sal
+   (off by default), unit tests, and an esbuild bundle.
+ - Delivers an end-to-end demo: [`projects/2026/demo-hair-salon/`](projects/2026/demo-hair-salon/) (QA PASS),
+   plus [`projects/2026/demo-restaurant/`](projects/2026/demo-restaurant/), which shows a second industry
+-  with no core changes, and [`projects/2026/demo-nail-salon/`](projects/2026/demo-nail-salon/), a nail salon
+-  built from data only (industry + menu asset) on the Hair Salon workflows.
++  with no core changes, [`projects/2026/demo-nail-salon/`](projects/2026/demo-nail-salon/), a nail salon
++  built from data only (industry + menu asset) on the Hair Salon workflows, and
++  [`projects/2026/demo-spa/`](projects/2026/demo-spa/), a spa built the same way.
+ 
+ ## 3. What Phase 1 does NOT do
+ 
+diff --git a/AI-Agent-Coconala-Factory/core-assets/asset-lock.json b/AI-Agent-Coconala-Factory/core-assets/asset-lock.json
+index 631a3c8..839d1af 100644
+--- a/AI-Agent-Coconala-Factory/core-assets/asset-lock.json
++++ b/AI-Agent-Coconala-Factory/core-assets/asset-lock.json
+@@ -206,6 +206,10 @@
+       "version": "1.0.0",
+       "sha256": "4b1306b393583d56b0a5ba22f87717ab2c77c453691657a70ac44f9ff2e89276"
+     },
++    "industries/salon/spa-v1.json": {
++      "version": "1.0.0",
++      "sha256": "112987decff5e541da5f25d53d961f83fd8a5546ea1d52531c56f706a782126b"
++    },
+     "line-webhook-proxy/proxy.json": {
+       "version": "1.0.0",
+       "sha256": "998476a5ffc76e830ce9f729323811a36140f9e38a0416e93b90227401b070a7"
+@@ -266,6 +270,10 @@
+       "version": "1.0.0",
+       "sha256": "9d9405f194ecb241704fefbfb08c873d1f64d7ad08cad5bcb80148c3d885b5af"
+     },
++    "rich-menu/menus/spa-basic-v1.json": {
++      "version": "1.0.0",
++      "sha256": "d04107a5afad795dd2ef648ad615781770a6e186ff36acf9f43faecf1059588b"
++    },
+     "spreadsheet-schemas/core-config-v1.json": {
+       "version": "1.0.0",
+       "sha256": "e5d4c567d49b3488176de0b0cd0ad09a6cb69d9ca002330bf5255f4a83d378f3"
+diff --git a/AI-Agent-Coconala-Factory/templates/README.md b/AI-Agent-Coconala-Factory/templates/README.md
+index b066aff..a13e7da 100644
+--- a/AI-Agent-Coconala-Factory/templates/README.md
++++ b/AI-Agent-Coconala-Factory/templates/README.md
+@@ -3,6 +3,7 @@
+ - `briefs/hair-salon.example.json`: the brief behind `projects/2026/demo-hair-salon`.
+ - `briefs/restaurant.example.json`: the brief behind `projects/2026/demo-restaurant` (second-industry check).
+ - `briefs/nail-salon.example.json`: the brief behind `projects/2026/demo-nail-salon` (Japanese requirement lines, quiet-luxury preset with brand color overrides).
++- `briefs/spa.example.json`: the brief behind `projects/2026/demo-spa` (Japanese requirement lines, warm-natural preset with brand color overrides).
+ 
+ Copy one, change `project.slug`, the client name, requirements, brand and `config`, then run
+ `npm run factory -- create-project --brief <your-brief.json>`. Use only fictional data in templates.
+diff --git a/apps/coconala-portfolio/README.md b/apps/coconala-portfolio/README.md
+index 6a53ac2..421696f 100644
+--- a/apps/coconala-portfolio/README.md
++++ b/apps/coconala-portfolio/README.md
+@@ -3,9 +3,11 @@
+ A small static sales/demo site for a Coconala LINE automation service.
+ 
+ - `/`: one-page landing page
+-- `/works/hair-salon`: Hair Salon case study (demo sample)
++- `/works/hair-salon`: Hair Salon case study (demo sample, the flagship)
++- `/works/nail-salon`: Nail Salon lightweight demo (Rich Menu, short workflow, synthetic menu)
++- `/works/spa`: Spa lightweight demo (same format as Nail Salon)
+ 
+-It uses Next.js (App Router), TypeScript and Tailwind CSS. There is no backend, no API routes, no database and no LINE connection. Both pages are prerendered as static HTML.
++It uses Next.js (App Router), TypeScript and Tailwind CSS. There is no backend, no API routes, no database and no LINE connection. All pages are prerendered as static HTML.
+ 
+ ## Run locally
+ 
+@@ -39,6 +41,9 @@ npm run start        # serve the production build locally
+ | Brand name, SEO title/description | `content/site.ts` → `siteConfig` |
+ | Homepage copy (hero, cards, flow, FAQ, CTA) | `content/site.ts` → `siteContent` |
+ | Case study copy | `content/hair-salon.ts` → `hairSalonCaseStudy` |
++| Nail Salon demo copy (incl. synthetic menu/prices) | `content/nail-salon.ts` → `nailSalonDemo` |
++| Spa demo copy (incl. synthetic menu/prices) | `content/spa.ts` → `spaDemo` |
++| Extra demo cards under WORKS | `content/site.ts` → `caseStudyPreview.moreDemos` |
+ | Spreadsheet / email mock data (synthetic only) | `content/hair-salon.ts` → `demoReservations`, `demoEmail` |
+ | Colors | `app/globals.css` → `@theme` |
+ 
+@@ -52,6 +57,9 @@ All demo assets are in `public/demos/hair-salon/`.
+ | `demo.mp4` | **Not added yet.** Add the file here, then set `siteContent.demo.videoSrc` in `content/site.ts` to `"/demos/hair-salon/demo.mp4"`. Until you do, a "準備中" placeholder is shown. The video is muted, has controls and does not autoplay. |
+ | Spreadsheet / email visuals | Drawn with HTML/CSS in `components/DemoVisuals.tsx` using fake data. To use real screenshots instead, add `spreadsheet.png` / `email.png` here and swap the components for `next/image`. |
+ 
++`public/demos/nail-salon/rich-menu.png` is copied from `AI-Agent-Coconala-Factory/projects/2026/demo-nail-salon/rich-menu/rich-menu.png` (2500×1686).
++`public/demos/spa/rich-menu.png` is copied from `AI-Agent-Coconala-Factory/projects/2026/demo-spa/rich-menu/rich-menu.png` (2500×1686).
++
+ To refresh the Rich Menu, re-copy the PNG from the Factory project. The site never imports anything from the Factory at runtime.
+ 
+ Only use synthetic data (such as `example.com` addresses and "Demo User") in any asset.
+diff --git a/apps/coconala-portfolio/components/CaseStudyPreview.tsx b/apps/coconala-portfolio/components/CaseStudyPreview.tsx
+index 75b4345..49a19df 100644
+--- a/apps/coconala-portfolio/components/CaseStudyPreview.tsx
++++ b/apps/coconala-portfolio/components/CaseStudyPreview.tsx
+@@ -1,3 +1,4 @@
++import Image from "next/image";
+ import Link from "next/link";
+ import { siteContent } from "@/content/site";
+ import { RichMenuImage } from "./DemoVisuals";
+@@ -21,6 +22,30 @@ export function CaseStudyPreview() {
+           <p className="mt-6 text-sm font-bold text-accent group-hover:underline">{cs.linkLabel} →</p>
+         </div>
+       </Link>
++      <div className="mt-6 grid gap-6 md:grid-cols-2">
++        {cs.moreDemos.map((demo) => (
++          <Link
++            key={demo.href}
++            href={demo.href}
++            className="group flex flex-col gap-4 rounded-xl border border-line bg-surface p-4 transition-shadow hover:shadow-md sm:p-6"
++          >
++            <Image
++              src={demo.image.src}
++              width={demo.image.width}
++              height={demo.image.height}
++              alt={demo.image.alt}
++              sizes="(min-width: 768px) 440px, 100vw"
++              className="h-auto w-full rounded-lg border border-line"
++            />
++            <div>
++              <DemoBadge label={demo.badge} />
++              <h3 className="mt-3 text-xl font-bold">{demo.title}</h3>
++              <p className="mt-2 text-sm leading-relaxed text-muted">{demo.description}</p>
++              <p className="mt-4 text-sm font-bold text-accent group-hover:underline">{demo.linkLabel} →</p>
++            </div>
++          </Link>
++        ))}
++      </div>
+     </Section>
+   );
+ }
+diff --git a/apps/coconala-portfolio/content/site.ts b/apps/coconala-portfolio/content/site.ts
+index 2883272..400ec1b 100644
+--- a/apps/coconala-portfolio/content/site.ts
++++ b/apps/coconala-portfolio/content/site.ts
+@@ -82,6 +82,25 @@ export const siteContent = {
+       "ヘアサロンを想定し、LINEのリッチメニューから予約リクエスト・お問い合わせを受け付けて、スプレッドシートへ記録し、メールでお知らせするデモ構成です。",
+     href: "/works/hair-salon",
+     linkLabel: "事例を見る",
++    // Lightweight demos shown below the flagship Hair Salon case study.
++    moreDemos: [
++      {
++        badge: "デモ",
++        title: "Nail Salon",
++        description: "同じ仕組みをネイルサロン向けのメニュー・デザインにしたデモです。",
++        image: { src: "/demos/nail-salon/rich-menu.png", width: 2500, height: 1686, alt: "ネイルサロン向けリッチメニューのデモ画像" },
++        href: "/works/nail-salon",
++        linkLabel: "デモを見る",
++      },
++      {
++        badge: "デモ",
++        title: "Spa",
++        description: "同じ仕組みをスパ・リラクゼーション向けのメニュー・デザインにしたデモです。",
++        image: { src: "/demos/spa/rich-menu.png", width: 2500, height: 1686, alt: "スパ向けリッチメニューのデモ画像" },
++        href: "/works/spa",
++        linkLabel: "デモを見る",
++      },
++    ],
+   },
+   faq: {
+     eyebrow: "FAQ",

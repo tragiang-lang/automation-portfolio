@@ -1,0 +1,181 @@
+{
+  "project": "2026/demo-spa",
+  "result": "PASS",
+  "summary": {
+    "pass": 28,
+    "fail": 0,
+    "warn": 0,
+    "skipped": 0
+  },
+  "checks": [
+    {
+      "rule": "WF_EXISTS",
+      "area": "workflow",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "WF_ACTIONS_EXIST",
+      "area": "workflow",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "WF_ACTION_INPUTS",
+      "area": "workflow",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "WF_DEPENDENCIES",
+      "area": "workflow",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "WF_SCHEMAS_EXIST",
+      "area": "workflow",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "SS_REQUIRED_SHEETS",
+      "area": "spreadsheet",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "SS_COLUMNS_VALID",
+      "area": "spreadsheet",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "SS_DUPLICATE_COLUMNS",
+      "area": "spreadsheet",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "SS_KEYS_AND_REFERENCES",
+      "area": "spreadsheet",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "SS_REQUIRED_CONFIG",
+      "area": "spreadsheet",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "GAS_FILES",
+      "area": "gas",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "GAS_IMPORTS",
+      "area": "gas",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "GAS_REGISTRY",
+      "area": "gas",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "GAS_TESTS_EXIST",
+      "area": "gas",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "GAS_TYPECHECK",
+      "area": "gas",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "GAS_TESTS_PASS",
+      "area": "gas",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "GAS_BUILD",
+      "area": "gas",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "RM_LAYOUT_VALID",
+      "area": "rich-menu",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "RM_ACTIONS_VALID",
+      "area": "rich-menu",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "RM_LABELS",
+      "area": "rich-menu",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "RM_REQUIRED_BUTTONS",
+      "area": "rich-menu",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "RM_POSTBACK_LENGTH",
+      "area": "rich-menu",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "DS_CONTRAST",
+      "area": "design",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "SEC_NO_SECRETS",
+      "area": "security",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "SEC_NO_REAL_PII",
+      "area": "security",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "DEL_DOCS",
+      "area": "delivery",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "DEL_ARTIFACTS",
+      "area": "delivery",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "rule": "DEL_TRACEABILITY",
+      "area": "delivery",
+      "status": "pass",
+      "details": []
+    }
+  ],
+  "issues": []
+}

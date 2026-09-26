@@ -206,6 +206,10 @@
       "version": "1.0.0",
       "sha256": "4b1306b393583d56b0a5ba22f87717ab2c77c453691657a70ac44f9ff2e89276"
     },
+    "industries/salon/spa-v1.json": {
+      "version": "1.0.0",
+      "sha256": "112987decff5e541da5f25d53d961f83fd8a5546ea1d52531c56f706a782126b"
+    },
     "line-webhook-proxy/proxy.json": {
       "version": "1.0.0",
       "sha256": "998476a5ffc76e830ce9f729323811a36140f9e38a0416e93b90227401b070a7"
@@ -265,6 +269,10 @@
     "rich-menu/menus/salon-basic-v1.json": {
       "version": "1.0.0",
       "sha256": "9d9405f194ecb241704fefbfb08c873d1f64d7ad08cad5bcb80148c3d885b5af"
+    },
+    "rich-menu/menus/spa-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "d04107a5afad795dd2ef648ad615781770a6e186ff36acf9f43faecf1059588b"
     },
     "spreadsheet-schemas/core-config-v1.json": {
       "version": "1.0.0",

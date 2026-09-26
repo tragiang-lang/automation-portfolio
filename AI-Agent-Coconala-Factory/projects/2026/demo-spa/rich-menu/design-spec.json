@@ -1,0 +1,249 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/design-spec.json",
+    "generatedBy": "design-agent",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-spa",
+    "industry": "spa",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0",
+      "spa-basic-v1": "1.0.0",
+      "spa-v1": "1.0.0",
+      "warm-natural-v1": "1.0.0"
+    }
+  },
+  "canvas": {
+    "width": 2500,
+    "height": 1686
+  },
+  "layout": "grid-2x3-v1",
+  "richMenu": "spa-basic-v1",
+  "preset": "warm-natural-v1",
+  "brand": {
+    "name": "Demo Spa Tokyo",
+    "tone": "静か・上質・自然体"
+  },
+  "colorTokens": {
+    "background": "#F3F0E8",
+    "surface": "#FFFDF8",
+    "primary": "#46564A",
+    "onPrimary": "#F7F5EF",
+    "accent": "#9A7B52",
+    "text": "#33302A",
+    "muted": "#67625A",
+    "border": "#E0DACD"
+  },
+  "typography": {
+    "direction": "Rounded sans (M PLUS Rounded / Zen Maru Gothic) for labels",
+    "headingStyle": "rounded sans, medium weight",
+    "labelWeight": "medium",
+    "minLabelPx": 64
+  },
+  "spacing": {
+    "gutterPx": 16,
+    "tilePaddingPx": 44,
+    "cornerRadiusPx": 32
+  },
+  "visualHierarchy": "Primary tile sage green; secondary tiles cream with soft shadow.",
+  "ctaHierarchy": [
+    "ご予約",
+    "メニュー",
+    "お問い合わせ",
+    "アクセス",
+    "営業時間",
+    "はじめての方"
+  ],
+  "cells": [
+    {
+      "slot": "a",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "label": "ご予約",
+      "subLabel": "日時を選ぶ",
+      "role": "primary",
+      "ctaRank": 1,
+      "emphasis": "normal",
+      "icon": {
+        "name": "calendar",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#46564A",
+      "labelColor": "#F7F5EF",
+      "contrastRatio": 7.16,
+      "subLabelColor": "#F7F5EF",
+      "iconColor": "#F7F5EF",
+      "borderColor": "#46564A"
+    },
+    {
+      "slot": "b",
+      "bounds": {
+        "x": 833,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "label": "メニュー",
+      "subLabel": "料金・施術時間",
+      "role": "secondary",
+      "ctaRank": 2,
+      "emphasis": "normal",
+      "icon": {
+        "name": "list",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#FFFDF8",
+      "labelColor": "#33302A",
+      "contrastRatio": 12.94,
+      "subLabelColor": "#67625A",
+      "iconColor": "#9A7B52",
+      "borderColor": "#E0DACD"
+    },
+    {
+      "slot": "c",
+      "bounds": {
+        "x": 1666,
+        "y": 0,
+        "width": 834,
+        "height": 843
+      },
+      "label": "お問い合わせ",
+      "subLabel": "施術・体調のご相談",
+      "role": "secondary",
+      "ctaRank": 3,
+      "emphasis": "normal",
+      "icon": {
+        "name": "chat",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#FFFDF8",
+      "labelColor": "#33302A",
+      "contrastRatio": 12.94,
+      "subLabelColor": "#67625A",
+      "iconColor": "#9A7B52",
+      "borderColor": "#E0DACD"
+    },
+    {
+      "slot": "d",
+      "bounds": {
+        "x": 0,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "label": "アクセス",
+      "role": "secondary",
+      "ctaRank": 4,
+      "emphasis": "normal",
+      "icon": {
+        "name": "map-pin",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#FFFDF8",
+      "labelColor": "#33302A",
+      "contrastRatio": 12.94,
+      "subLabelColor": "#67625A",
+      "iconColor": "#9A7B52",
+      "borderColor": "#E0DACD"
+    },
+    {
+      "slot": "e",
+      "bounds": {
+        "x": 833,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "label": "営業時間",
+      "role": "secondary",
+      "ctaRank": 5,
+      "emphasis": "normal",
+      "icon": {
+        "name": "clock",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#FFFDF8",
+      "labelColor": "#33302A",
+      "contrastRatio": 12.94,
+      "subLabelColor": "#67625A",
+      "iconColor": "#9A7B52",
+      "borderColor": "#E0DACD"
+    },
+    {
+      "slot": "f",
+      "bounds": {
+        "x": 1666,
+        "y": 843,
+        "width": 834,
+        "height": 843
+      },
+      "label": "はじめての方",
+      "subLabel": "ご来店の流れ",
+      "role": "secondary",
+      "ctaRank": 6,
+      "emphasis": "normal",
+      "icon": {
+        "name": "building",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#FFFDF8",
+      "labelColor": "#33302A",
+      "contrastRatio": 12.94,
+      "subLabelColor": "#67625A",
+      "iconColor": "#9A7B52",
+      "borderColor": "#E0DACD"
+    }
+  ],
+  "iconRequirements": [
+    "calendar icon, hand-drawn feel outline icons, at least 160px, readable at phone size",
+    "list icon, hand-drawn feel outline icons, at least 160px, readable at phone size",
+    "chat icon, hand-drawn feel outline icons, at least 160px, readable at phone size",
+    "map-pin icon, hand-drawn feel outline icons, at least 160px, readable at phone size",
+    "clock icon, hand-drawn feel outline icons, at least 160px, readable at phone size",
+    "building icon, hand-drawn feel outline icons, at least 160px, readable at phone size"
+  ],
+  "assetRequirements": [
+    "One 2500x1686px image containing every button (LINE uses one image per rich menu)",
+    "No logo supplied. Use the business name as text",
+    "Imagery: optional botanical line illustration in the hero tile"
+  ],
+  "exportRequirements": {
+    "format": "PNG or JPEG",
+    "maxBytes": 1048576,
+    "width": 2500,
+    "height": 1686
+  },
+  "designNotes": [
+    "Buttons are tapped on phones: keep labels at least 64px on the 2500px canvas.",
+    "Button areas are fixed by the layout bounds below. Draw each label inside its own cell so the tap area matches what the customer sees.",
+    "Button style: soft rounded tiles.",
+    "Industry: スパ・リラクゼーション / Spa. Terminology: service=施術メニュー（コース）, treatment=施術, reservation=施術のご予約リクエスト（確定ではありません）, inquiry=お問い合わせ, capacity=同じ時間帯に施術できる人数（セラピスト数・施術ルーム数の少ない方）.",
+    "Brand color overrides applied: background, primary, onPrimary, accent, text, muted, border."
+  ]
+}

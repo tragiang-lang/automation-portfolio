@@ -1,0 +1,82 @@
+{
+  "kind": "rich-menu",
+  "id": "spa-basic-v1",
+  "version": "1.0.0",
+  "description": "Six-button menu for spas on the same grid-2x3-v1 layout as salon-basic-v1: booking request first, then course menu, inquiry, access, hours and a first-visit guide link.",
+  "industries": [
+    "spa"
+  ],
+  "layout": "grid-2x3-v1",
+  "chatBarText": "メニュー",
+  "items": [
+    {
+      "slot": "a",
+      "label": "ご予約",
+      "subLabel": "日時を選ぶ",
+      "role": "primary",
+      "icon": "calendar",
+      "action": {
+        "type": "workflow",
+        "workflowId": "reservation-basic-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "b",
+      "label": "メニュー",
+      "subLabel": "料金・施術時間",
+      "role": "secondary",
+      "icon": "list",
+      "action": {
+        "type": "workflow",
+        "workflowId": "service-menu-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "c",
+      "label": "お問い合わせ",
+      "subLabel": "施術・体調のご相談",
+      "role": "secondary",
+      "icon": "chat",
+      "action": {
+        "type": "workflow",
+        "workflowId": "inquiry-basic-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "d",
+      "label": "アクセス",
+      "role": "secondary",
+      "icon": "map-pin",
+      "action": {
+        "type": "workflow",
+        "workflowId": "business-info-v1",
+        "entry": "access"
+      }
+    },
+    {
+      "slot": "e",
+      "label": "営業時間",
+      "role": "secondary",
+      "icon": "clock",
+      "action": {
+        "type": "workflow",
+        "workflowId": "business-info-v1",
+        "entry": "hours"
+      }
+    },
+    {
+      "slot": "f",
+      "label": "はじめての方",
+      "subLabel": "ご来店の流れ",
+      "role": "secondary",
+      "icon": "building",
+      "action": {
+        "type": "uri",
+        "configKey": "web.firstVisitUrl"
+      }
+    }
+  ]
+}

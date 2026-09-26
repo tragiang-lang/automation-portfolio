@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "artifact": "spreadsheet/config-seed.json",
+    "generatedBy": "spreadsheet-schema-generator",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-spa",
+    "industry": "spa",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0",
+      "spa-basic-v1": "1.0.0",
+      "spa-v1": "1.0.0",
+      "warm-natural-v1": "1.0.0"
+    }
+  },
+  "values": {
+    "hours.mon": "10:00-21:00",
+    "hours.tue": "closed",
+    "hours.wed": "10:00-21:00",
+    "hours.thu": "10:00-21:00",
+    "hours.fri": "10:00-21:00",
+    "hours.sat": "10:00-21:00",
+    "hours.sun": "10:00-21:00",
+    "reservation.slotMinutes": "30",
+    "reservation.defaultDurationMinutes": "90",
+    "reservation.capacity": "2",
+    "notification.ownerEmail": "owner@example.com",
+    "business.name": "Demo Spa Tokyo",
+    "business.address": "東京都渋谷区恵比寿0-0-0 デモビル5F",
+    "business.phone": "03-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-spa-tokyo",
+    "business.hoursText": "10:00-21:00（最終受付 19:30）／火曜定休",
+    "business.accessNote": "恵比寿駅から徒歩6分"
+  }
+}

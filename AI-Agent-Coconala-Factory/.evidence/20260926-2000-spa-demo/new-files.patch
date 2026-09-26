@@ -1,0 +1,457 @@
+diff --git a/AI-Agent-Coconala-Factory/core-assets/industries/salon/spa-v1.json b/AI-Agent-Coconala-Factory/core-assets/industries/salon/spa-v1.json
+new file mode 100644
+index 0000000..2ea3623
+--- /dev/null
++++ b/AI-Agent-Coconala-Factory/core-assets/industries/salon/spa-v1.json
+@@ -0,0 +1,83 @@
++{
++  "kind": "industry",
++  "id": "spa-v1",
++  "version": "1.0.0",
++  "industry": "spa",
++  "category": "salon",
++  "displayName": "スパ・リラクゼーション / Spa",
++  "businessType": "Appointment-based relaxation spa (aroma, body care, facial, head spa) with a fixed course menu and a small number of therapists and private treatment rooms.",
++  "customerIntents": [
++    "book",
++    "view_menu",
++    "ask_question",
++    "find_access",
++    "check_hours"
++  ],
++  "lineUseCases": [
++    "施術中で電話に出られない時間でも、LINEのリッチメニューから施術の予約リクエストを受け付ける",
++    "予約前にコース（アロマトリートメント・ボディケア・フェイシャル・ヘッドスパなど）の料金と施術時間を確認する",
++    "施術内容・オプション・体調（妊娠中、持病など）についてのお問い合わせ",
++    "はじめての方向けに、ご来店の流れ・当日の持ち物・注意事項のページを案内する",
++    "来店当日のアクセス・営業時間の確認"
++  ],
++  "recommendedWorkflows": [
++    "reservation-basic-v1",
++    "service-menu-v1",
++    "inquiry-basic-v1",
++    "business-info-v1"
++  ],
++  "recommendedRichMenu": "spa-basic-v1",
++  "recommendedDesignPresets": [
++    "warm-natural-v1",
++    "quiet-luxury-v1"
++  ],
++  "terminology": {
++    "service": "施術メニュー（コース）",
++    "treatment": "施術",
++    "reservation": "施術のご予約リクエスト（確定ではありません）",
++    "inquiry": "お問い合わせ",
++    "capacity": "同じ時間帯に施術できる人数（セラピスト数・施術ルーム数の少ない方）"
++  },
++  "requiredData": [
++    "CONFIG: 店舗名・住所・電話番号・地図URL・営業時間・定休日",
++    "SERVICES: コース名・施術時間・料金（例: アロマトリートメント、ボディケア、フェイシャル、リフレクソロジー、ヘッドスパ。時間違い・組み合わせコースは別の行で表す）",
++    "reservation.capacity: 同じ時間帯に施術できる人数（セラピスト数・施術ルーム数の少ない方）",
++    "reservation.defaultDurationMinutes: コース未選択時の目安の施術時間（着替え・カウンセリング込みで長めに設定）",
++    "notification.ownerEmail: 通知を受け取るメールアドレス"
++  ],
++  "notificationRequirements": [
++    "Owner email on every new reservation request and inquiry",
++    "Owner confirms reservations manually in the sheet (status CONFIRMED)"
++  ],
++  "risks": [
++    "Reservations are requests, not instant confirmations, in Phase 1. The LINE reply from createReservation@1 says 「ご予約リクエストを受け付けました」 (generic, not 「施術の予約リクエスト」) and that the spa will contact the customer once confirmed.",
++    "The customer picks only a date-time from the Rich Menu. Course, length and options are not collected; the spa asks by LINE after the request.",
++    "Health questions (pregnancy, medical conditions, oil allergies) arrive as free-text inquiries. The spa answers them itself; nothing is judged automatically.",
++    "Per-therapist or per-room booking is not supported by reservation-basic-v1 (use capacity = the smaller of therapists and treatment rooms).",
++    "Course length varies (45-120 min plus changing time). reservation.defaultDurationMinutes should be set on the long side to avoid overlapping requests.",
++    "If the spa already takes bookings on a portal (Hot Pepper Beauty etc.), double-booking can occur. Keep capacity conservative or keep one booking channel."
++  ],
++  "intentAliases": {
++    "view_menu": ["施術時間", "所要時間"],
++    "ask_question": ["体調"]
++  },
++  "assumptions": [
++    "Each course length and combination course is a separate SERVICES row; no extra sheet or column is needed.",
++    "The first-visit guide (ご来店の流れ・持ち物・注意事項) is a page the spa already publishes; the Rich Menu links to it instead of storing it."
++  ],
++  "extensionPoints": {
++    "implemented": [
++      "reservation-basic-v1: 施術の予約リクエスト（REQUESTED のみ、オーナーが確定）",
++      "service-menu-v1: 施術メニュー・料金・施術時間（SERVICES シート）",
++      "inquiry-basic-v1: 施術内容・オプション・体調についてのお問い合わせ",
++      "business-info-v1: アクセス / 営業時間",
++      "Rich Menu URI button to the spa's first-visit guide (web.firstVisitUrl)"
++    ],
++    "planned": [
++      { "id": "treatment-options-v2", "description": "Pick course, length and options in the booking flow." },
++      { "id": "pre-visit-counseling-v1", "description": "Structured counseling sheet (health, preferences) before the first visit." },
++      { "id": "staff-availability", "description": "Per-therapist / per-room capacity (reservation-basic-v1 extension point)." },
++      { "id": "calendar-integration-v1", "description": "Google Calendar sync on CONFIRMED (reservation-basic-v1 google-calendar extension point)." }
++    ]
++  }
++}
+diff --git a/AI-Agent-Coconala-Factory/core-assets/rich-menu/menus/spa-basic-v1.json b/AI-Agent-Coconala-Factory/core-assets/rich-menu/menus/spa-basic-v1.json
+new file mode 100644
+index 0000000..d90d929
+--- /dev/null
++++ b/AI-Agent-Coconala-Factory/core-assets/rich-menu/menus/spa-basic-v1.json
+@@ -0,0 +1,82 @@
++{
++  "kind": "rich-menu",
++  "id": "spa-basic-v1",
++  "version": "1.0.0",
++  "description": "Six-button menu for spas on the same grid-2x3-v1 layout as salon-basic-v1: booking request first, then course menu, inquiry, access, hours and a first-visit guide link.",
++  "industries": [
++    "spa"
++  ],
++  "layout": "grid-2x3-v1",
++  "chatBarText": "メニュー",
++  "items": [
++    {
++      "slot": "a",
++      "label": "ご予約",
++      "subLabel": "日時を選ぶ",
++      "role": "primary",
++      "icon": "calendar",
++      "action": {
++        "type": "workflow",
++        "workflowId": "reservation-basic-v1",
++        "entry": "default"
++      }
++    },
++    {
++      "slot": "b",
++      "label": "メニュー",
++      "subLabel": "料金・施術時間",
++      "role": "secondary",
++      "icon": "list",
++      "action": {
++        "type": "workflow",
++        "workflowId": "service-menu-v1",
++        "entry": "default"
++      }
++    },
++    {
++      "slot": "c",
++      "label": "お問い合わせ",
++      "subLabel": "施術・体調のご相談",
++      "role": "secondary",
++      "icon": "chat",
++      "action": {
++        "type": "workflow",
++        "workflowId": "inquiry-basic-v1",
++        "entry": "default"
++      }
++    },
++    {
++      "slot": "d",
++      "label": "アクセス",
++      "role": "secondary",
++      "icon": "map-pin",
++      "action": {
++        "type": "workflow",
++        "workflowId": "business-info-v1",
++        "entry": "access"
++      }
++    },
++    {
++      "slot": "e",
++      "label": "営業時間",
++      "role": "secondary",
++      "icon": "clock",
++      "action": {
++        "type": "workflow",
++        "workflowId": "business-info-v1",
++        "entry": "hours"
++      }
++    },
++    {
++      "slot": "f",
++      "label": "はじめての方",
++      "subLabel": "ご来店の流れ",
++      "role": "secondary",
++      "icon": "building",
++      "action": {
++        "type": "uri",
++        "configKey": "web.firstVisitUrl"
++      }
++    }
++  ]
++}
+diff --git a/AI-Agent-Coconala-Factory/templates/briefs/spa.example.json b/AI-Agent-Coconala-Factory/templates/briefs/spa.example.json
+new file mode 100644
+index 0000000..8f62ab6
+--- /dev/null
++++ b/AI-Agent-Coconala-Factory/templates/briefs/spa.example.json
+@@ -0,0 +1,60 @@
++{
++  "schemaVersion": 1,
++  "project": {
++    "slug": "demo-spa",
++    "clientName": "Demo Spa Tokyo（デモ）",
++    "year": 2026,
++    "createdOn": "2026-09-26"
++  },
++  "industry": "spa",
++  "businessType": "セラピスト3名・個室2室、予約制のリラクゼーションスパ（アロマ・ボディケア・フェイシャル・ヘッドスパ）",
++  "requirements": [
++    "LINEから施術の予約を受け付けたい",
++    "施術メニューと料金を確認できるようにしたい",
++    "施術内容・オプションについて問い合わせを受け付けたい",
++    "店舗へのアクセスを確認できるようにしたい",
++    "営業時間を確認できるようにしたい"
++  ],
++  "intents": [],
++  "existingResources": [
++    "LINE Official Account",
++    "Google Spreadsheet",
++    "Website (first-visit guide page)"
++  ],
++  "brand": {
++    "name": "Demo Spa Tokyo",
++    "preset": "warm-natural-v1",
++    "colors": {
++      "background": "#F3F0E8",
++      "primary": "#46564A",
++      "onPrimary": "#F7F5EF",
++      "accent": "#9A7B52",
++      "text": "#33302A",
++      "muted": "#67625A",
++      "border": "#E0DACD"
++    },
++    "tone": "静か・上質・自然体",
++    "logoAvailable": false
++  },
++  "config": {
++    "business.name": "Demo Spa Tokyo",
++    "business.address": "東京都渋谷区恵比寿0-0-0 デモビル5F",
++    "business.phone": "03-0000-0000",
++    "business.mapUrl": "https://example.com/map/demo-spa-tokyo",
++    "business.hoursText": "10:00-21:00（最終受付 19:30）／火曜定休",
++    "business.accessNote": "恵比寿駅から徒歩6分",
++    "notification.ownerEmail": "owner@example.com",
++    "hours.mon": "10:00-21:00",
++    "hours.tue": "closed",
++    "hours.wed": "10:00-21:00",
++    "hours.thu": "10:00-21:00",
++    "hours.fri": "10:00-21:00",
++    "hours.sat": "10:00-21:00",
++    "hours.sun": "10:00-21:00",
++    "reservation.slotMinutes": "30",
++    "reservation.defaultDurationMinutes": "90",
++    "reservation.capacity": "2",
++    "web.firstVisitUrl": "https://example.com/first-visit/demo-spa-tokyo"
++  },
++  "overrides": {}
++}
+diff --git a/AI-Agent-Coconala-Factory/tests/spa.test.ts b/AI-Agent-Coconala-Factory/tests/spa.test.ts
+new file mode 100644
+index 0000000..c24882d
+--- /dev/null
++++ b/AI-Agent-Coconala-Factory/tests/spa.test.ts
+@@ -0,0 +1,76 @@
++import path from "node:path";
++import { describe, expect, it } from "vitest";
++import { analyzeIndustry } from "../src/agents/industrySpecialist";
++import { ARTIFACTS, runPipeline } from "../src/agents/orchestrator";
++import { FACTORY_ROOT, readJson } from "../src/lib/fsx";
++import { ClientBrief, clientBrief } from "../src/schemas/brief";
++import { validateAssets } from "../src/validation/validateAssets";
++import { hairSalonBrief, realRegistry } from "./helpers";
++
++/** Third beauty industry: spa must come out of the same pipeline with data-only changes. */
++const readBrief = (file: string): ClientBrief => clientBrief.parse(readJson(path.join(FACTORY_ROOT, "templates/briefs", file)));
++const spaBrief = () => readBrief("spa.example.json");
++const nailSalonBrief = () => readBrief("nail-salon.example.json");
++const intentsFor = (brief: ClientBrief, requirements: string[]) => analyzeIndustry({ ...brief, requirements }, realRegistry()).profile!.customerIntents.map((i) => i.id);
++
++describe("beauty industry: spa", () => {
++  it("loads the spa-v1 profile and validates it without errors", () => {
++    const registry = realRegistry();
++    expect(registry.industryFor("spa")).toMatchObject({ id: "spa-v1", category: "salon", recommendedRichMenu: "spa-basic-v1" });
++    const issues = validateAssets(registry);
++    expect(issues.filter((i) => i.severity === "error")).toEqual([]);
++    // Also covers ASSET_UNLOCKED: both new assets must be released in asset-lock.json.
++    expect(issues.filter((i) => /spa-/.test(i.where ?? ""))).toEqual([]);
++  });
++
++  it("maps the Japanese brief lines to the existing intents", () => {
++    const { profile, issues } = analyzeIndustry(spaBrief(), realRegistry());
++    expect(issues).toEqual([]);
++    expect(profile!.customerIntents.map((i) => [i.id, i.source])).toEqual([
++      ["book", "requirement"],
++      ["view_menu", "requirement"],
++      ["ask_question", "requirement"],
++      ["find_access", "requirement"],
++      ["check_hours", "requirement"],
++    ]);
++    for (const line of ["施術を予約したい", "トリートメントを予約したい", "ボディケアを予約したい"]) expect(intentsFor(spaBrief(), [line]), line).toEqual(["book"]);
++  });
++
++  it("maps spa words through its own aliases without leaking them into hair_salon or nail_salon", () => {
++    expect(intentsFor(spaBrief(), ["施術時間を確認できるようにしたい"])).toEqual(["view_menu"]);
++    expect(intentsFor(spaBrief(), ["体調について事前に確認したい"])).toEqual(["ask_question"]);
++    for (const other of [hairSalonBrief(), nailSalonBrief()]) {
++      expect(intentsFor(other, ["施術時間を確認できるようにしたい", "体調について事前に確認したい", "問い合わせしたい"]), other.industry).toEqual(["ask_question"]);
++    }
++  });
++
++  it("reuses exactly the hair_salon and nail_salon workflows and a menu whose buttons all target them", () => {
++    const registry = realRegistry();
++    const spa = runPipeline(spaBrief(), registry, { createdOn: "2026-09-26" });
++    const hair = runPipeline(hairSalonBrief(), registry, { createdOn: "2026-09-23" });
++    const nail = runPipeline(nailSalonBrief(), registry, { createdOn: "2026-09-26" });
++    expect(spa.issues.filter((i) => i.severity === "error")).toEqual([]);
++    expect(spa.plan!.selected.map((w) => w.id)).toEqual(["reservation-basic-v1", "service-menu-v1", "inquiry-basic-v1", "business-info-v1"]);
++    expect(spa.plan!.selected.map((w) => w.id)).toEqual(hair.plan!.selected.map((w) => w.id));
++    expect(spa.plan!.selected.map((w) => w.id)).toEqual(nail.plan!.selected.map((w) => w.id));
++    expect(spa.plan!.deferred).toEqual([]);
++    expect(spa.plan!).toMatchObject({ richMenu: "spa-basic-v1", designPreset: "warm-natural-v1" });
++
++    const selected = new Set(spa.plan!.selected.map((w) => w.id));
++    const menu = registry.menus.get("spa-basic-v1")!.asset;
++    expect(menu.layout).toBe(registry.menus.get("salon-basic-v1")!.asset.layout);
++    for (const item of menu.items) {
++      if (item.action.type === "workflow") expect(selected.has(item.action.workflowId), item.label).toBe(true);
++      else expect(spaBrief().config[item.action.configKey], item.label).toMatch(/^https:\/\/example\.com\//);
++    }
++  });
++
++  it("generates every standard artifact, including the rich-menu PNG", () => {
++    const result = runPipeline(spaBrief(), realRegistry(), { createdOn: "2026-09-26" });
++    const generated = [...Object.keys(result.files), ...Object.keys(result.binaries), "project.json"];
++    for (const artifact of ARTIFACTS.filter((a) => !a.endsWith("/") && !a.startsWith("qa/"))) expect(generated, artifact).toContain(artifact);
++    expect(result.binaries["rich-menu/rich-menu.png"].length).toBeGreaterThan(0);
++    const schema = JSON.parse(result.files["spreadsheet/schema.json"]);
++    expect(schema.sheets.map((s: { name: string }) => s.name).sort()).toEqual(["CONFIG", "CUSTOMERS", "INQUIRIES", "RESERVATIONS", "SERVICES"]);
++  });
++});
+diff --git a/apps/coconala-portfolio/content/spa.ts b/apps/coconala-portfolio/content/spa.ts
+new file mode 100644
+index 0000000..dbefdd9
+--- /dev/null
++++ b/apps/coconala-portfolio/content/spa.ts
+@@ -0,0 +1,55 @@
++// Copy for /works/spa: a lightweight demo, not a full case study.
++// Generated by the same Factory pipeline as the Hair Salon demo
++// (AI-Agent-Coconala-Factory/projects/2026/demo-spa). All data is synthetic.
++
++export const spaDemo = {
++  badge: "DEMO SAMPLE",
++  eyebrow: "Spa",
++  title: "スパ・リラクゼーション向け LINE予約受付デモ",
++  titleLines: ["スパ・リラクゼーション向け", "LINE予約受付デモ"],
++  metaDescription:
++    "スパ・リラクゼーションサロンを想定した、LINE公式アカウントのリッチメニューから予約リクエスト・お問い合わせを受け付けるデモ構成。",
++  description:
++    "ヘアサロンのデモと同じ仕組みを、スパ向けの言葉・メニュー・落ち着いた配色に置き換えたデモです。予約はLINEで日時を選ぶ「予約リクエスト」として記録し、店舗側で確定します。",
++  note: "実在の店舗ではなく、スパを想定したデモです。店舗名・料金・住所はすべて架空のものです。",
++  richMenu: {
++    title: "Rich Menu",
++    description:
++      "ご予約・メニュー・お問い合わせ・アクセス・営業時間・はじめての方の6ボタン構成。ヘアサロンと同じレイアウトのまま、ラベルと配色だけをスパ向けにしています。",
++    image: {
++      src: "/demos/spa/rich-menu.png",
++      width: 2500,
++      height: 1686,
++      alt: "スパ向けリッチメニューのデモ画像（ご予約・メニュー・お問い合わせ・アクセス・営業時間・はじめての方）",
++    },
++  },
++  workflow: {
++    title: "Workflow",
++    steps: [
++      { label: "リッチメニュー", note: "「ご予約」をタップ" },
++      { label: "日時の選択", note: "LINEの日時選択画面で希望日時を選ぶ" },
++      { label: "Google Apps Script", note: "営業時間・空き状況を確認" },
++      { label: "スプレッドシート", note: "「REQUESTED（リクエスト）」として記録" },
++      { label: "メール通知", note: "店舗へお知らせ" },
++    ],
++    note: "予約は確定ではなく「リクエスト」として記録されます。コースやオプション、体調についてのご相談は、受付後にLINEでやり取りする流れです。",
++  },
++  menu: {
++    title: "Menu（デモ用）",
++    description: "「メニュー」ボタンでは、スプレッドシートに登録したコースをLINEで返信します。以下はデモ用の架空のメニューです。",
++    // Synthetic examples only: not real prices and not an actual spa's offering.
++    items: [
++      { name: "アロマトリートメント", minutes: 60, price: "9,900円" },
++      { name: "ボディケア", minutes: 60, price: "7,700円" },
++      { name: "フェイシャル", minutes: 60, price: "8,800円" },
++      { name: "リフレクソロジー", minutes: 45, price: "5,500円" },
++      { name: "ヘッドスパ", minutes: 45, price: "6,600円" },
++      { name: "アロマ＋ヘッドスパ", minutes: 90, price: "14,300円" },
++    ],
++    note: "料金・施術時間はデモ用の架空の値です。",
++  },
++  cta: {
++    titleLines: ["同じ仕組みを、", "あなたのお店のLINEにも。"],
++    buttonLabel: "Coconalaで相談する",
++  },
++};
+diff --git a/apps/coconala-portfolio/app/works/spa/page.tsx b/apps/coconala-portfolio/app/works/spa/page.tsx
+new file mode 100644
+index 0000000..166aa9a
+--- /dev/null
++++ b/apps/coconala-portfolio/app/works/spa/page.tsx
+@@ -0,0 +1,65 @@
++import type { Metadata } from "next";
++import Image from "next/image";
++import { CaseStudySection } from "@/components/CaseStudySection";
++import { CTA } from "@/components/CTA";
++import { DemoBadge } from "@/components/ui";
++import { WorkflowDiagram } from "@/components/WorkflowDiagram";
++import { spaDemo as demo } from "@/content/spa";
++
++export const metadata: Metadata = {
++  title: `${demo.eyebrow} ${demo.title}`,
++  description: demo.metaDescription,
++};
++
++export default function SpaDemoPage() {
++  const { image } = demo.richMenu;
++  return (
++    <>
++      <section className="mx-auto max-w-5xl px-4 pb-10 pt-14 sm:px-6 sm:pt-20">
++        <DemoBadge label={demo.badge} />
++        <p className="mt-6 text-sm font-medium tracking-[0.2em] text-accent">{demo.eyebrow}</p>
++        <h1 className="mt-2 text-3xl font-bold leading-snug sm:text-5xl">
++          {demo.titleLines.map((line) => (
++            <span key={line} className="inline-block pr-[0.5em]">
++              {line}
++            </span>
++          ))}
++        </h1>
++        <p className="mt-8 max-w-2xl text-lg leading-loose">{demo.description}</p>
++        <p className="mt-4 text-xs text-muted">{demo.note}</p>
++      </section>
++
++      <CaseStudySection title={demo.richMenu.title} description={demo.richMenu.description} tone="surface">
++        <Image
++          src={image.src}
++          width={image.width}
++          height={image.height}
++          alt={image.alt}
++          sizes="(min-width: 1024px) 976px, 100vw"
++          priority
++          className="h-auto w-full rounded-lg border border-line"
++        />
++      </CaseStudySection>
++
++      <CaseStudySection title={demo.workflow.title} description={demo.workflow.note}>
++        <WorkflowDiagram steps={demo.workflow.steps} />
++      </CaseStudySection>
++
++      <CaseStudySection title={demo.menu.title} description={demo.menu.description} tone="surface">
++        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
++          {demo.menu.items.map((item) => (
++            <li key={item.name} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3 text-sm sm:text-base">
++              <span className="font-medium">{item.name}</span>
++              <span className="text-muted">
++                {item.minutes}分 ・ {item.price}
++              </span>
++            </li>
++          ))}
++        </ul>
++        <p className="mt-4 text-xs text-muted">{demo.menu.note}</p>
++      </CaseStudySection>
++
++      <CTA titleLines={demo.cta.titleLines} buttonLabel={demo.cta.buttonLabel} />
++    </>
++  );
++}

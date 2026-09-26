@@ -1,0 +1,8 @@
+Portfolio served with `next start -p 3107` (production build). Checked via same-origin iframes at 375/768/1440px (JS in Chrome):
+/@375,768,1440: overflow=false imgs=5 all loaded spaCard=true demoSample=true productionClaims=0
+/works/hair-salon@375,768,1440: overflow=false imgs=1 loaded demoSample=true claims=0
+/works/nail-salon@375,768,1440: overflow=false imgs=1 loaded demoSample=true claims=0
+/works/spa@375: overflow=false imgLoaded=true imgW=328 cta=https://coconala.com/
+/works/spa@768: overflow=false imgLoaded=true imgW=705 cta=https://coconala.com/
+/works/spa@1440: overflow=false imgLoaded=true imgW=976 cta=https://coconala.com/
+Visual screenshots (1297px window): /works/spa Rich Menu section, homepage WORKS section (Hair Salon flagship card, Nail + Spa demo cards below).

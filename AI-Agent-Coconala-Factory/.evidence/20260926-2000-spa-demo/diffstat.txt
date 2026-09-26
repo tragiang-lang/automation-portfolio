@@ -1,0 +1,7 @@
+ AI-Agent-Coconala-Factory/README.md                |  5 +++--
+ .../core-assets/asset-lock.json                    |  8 +++++++
+ AI-Agent-Coconala-Factory/templates/README.md      |  1 +
+ apps/coconala-portfolio/README.md                  | 12 +++++++++--
+ .../components/CaseStudyPreview.tsx                | 25 ++++++++++++++++++++++
+ apps/coconala-portfolio/content/site.ts            | 19 ++++++++++++++++
+ 6 files changed, 66 insertions(+), 4 deletions(-)

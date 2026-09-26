@@ -1,0 +1,21 @@
+ M AI-Agent-Coconala-Factory/README.md
+ M AI-Agent-Coconala-Factory/core-assets/asset-lock.json
+ M AI-Agent-Coconala-Factory/templates/README.md
+ M apps/coconala-portfolio/README.md
+ M apps/coconala-portfolio/components/CaseStudyPreview.tsx
+ M apps/coconala-portfolio/content/site.ts
+?? AI-Agent-Coconala-Factory/.evidence/20260923-2037-phase1.5-commit/
+?? AI-Agent-Coconala-Factory/.evidence/20260923-2200-phase1.6-commit/
+?? AI-Agent-Coconala-Factory/.evidence/20260924-2014-line-factory-v1-commit/
+?? AI-Agent-Coconala-Factory/.evidence/20260926-2000-spa-demo/
+?? AI-Agent-Coconala-Factory/core-assets/industries/salon/spa-v1.json
+?? AI-Agent-Coconala-Factory/core-assets/rich-menu/menus/spa-basic-v1.json
+?? AI-Agent-Coconala-Factory/projects/2026/demo-spa/
+?? AI-Agent-Coconala-Factory/templates/briefs/spa.example.json
+?? AI-Agent-Coconala-Factory/tests/spa.test.ts
+?? apps/coconala-portfolio/app/works/nail-salon/
+?? apps/coconala-portfolio/app/works/spa/
+?? apps/coconala-portfolio/content/nail-salon.ts
+?? apps/coconala-portfolio/content/spa.ts
+?? apps/coconala-portfolio/public/demos/nail-salon/
+?? apps/coconala-portfolio/public/demos/spa/

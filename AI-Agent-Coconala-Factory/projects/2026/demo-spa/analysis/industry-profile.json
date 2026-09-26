@@ -1,0 +1,187 @@
+{
+  "_meta": {
+    "artifact": "analysis/industry-profile.json",
+    "generatedBy": "industry-specialist",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-spa",
+    "industry": "spa",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0",
+      "spa-basic-v1": "1.0.0",
+      "spa-v1": "1.0.0",
+      "warm-natural-v1": "1.0.0"
+    }
+  },
+  "industry": "spa",
+  "industryAsset": "spa-v1@1.0.0",
+  "displayName": "スパ・リラクゼーション / Spa",
+  "businessType": "セラピスト3名・個室2室、予約制のリラクゼーションスパ（アロマ・ボディケア・フェイシャル・ヘッドスパ）",
+  "customerIntents": [
+    {
+      "id": "book",
+      "description": "Make a reservation / appointment",
+      "source": "requirement",
+      "evidence": "LINEから施術の予約を受け付けたい"
+    },
+    {
+      "id": "view_menu",
+      "description": "See services / menu / prices",
+      "source": "requirement",
+      "evidence": "施術メニューと料金を確認できるようにしたい"
+    },
+    {
+      "id": "ask_question",
+      "description": "Send an inquiry",
+      "source": "requirement",
+      "evidence": "施術内容・オプションについて問い合わせを受け付けたい"
+    },
+    {
+      "id": "find_access",
+      "description": "Find the address / map",
+      "source": "requirement",
+      "evidence": "店舗へのアクセスを確認できるようにしたい"
+    },
+    {
+      "id": "check_hours",
+      "description": "Check opening hours",
+      "source": "requirement",
+      "evidence": "営業時間を確認できるようにしたい"
+    }
+  ],
+  "commonLineUseCases": [
+    "施術中で電話に出られない時間でも、LINEのリッチメニューから施術の予約リクエストを受け付ける",
+    "予約前にコース（アロマトリートメント・ボディケア・フェイシャル・ヘッドスパなど）の料金と施術時間を確認する",
+    "施術内容・オプション・体調（妊娠中、持病など）についてのお問い合わせ",
+    "はじめての方向けに、ご来店の流れ・当日の持ち物・注意事項のページを案内する",
+    "来店当日のアクセス・営業時間の確認"
+  ],
+  "recommendedWorkflows": [
+    "reservation-basic-v1",
+    "service-menu-v1",
+    "inquiry-basic-v1",
+    "business-info-v1"
+  ],
+  "recommendedActions": [
+    "createReservation@1",
+    "getAvailability@1",
+    "getServiceList@1",
+    "createInquiry@1",
+    "getBusinessInfo@1"
+  ],
+  "recommendedRichMenu": "spa-basic-v1",
+  "recommendedRichMenuSections": [
+    {
+      "label": "ご予約",
+      "target": "reservation-basic-v1#default"
+    },
+    {
+      "label": "メニュー",
+      "target": "service-menu-v1#default"
+    },
+    {
+      "label": "お問い合わせ",
+      "target": "inquiry-basic-v1#default"
+    },
+    {
+      "label": "アクセス",
+      "target": "business-info-v1#access"
+    },
+    {
+      "label": "営業時間",
+      "target": "business-info-v1#hours"
+    },
+    {
+      "label": "はじめての方",
+      "target": "uri:web.firstVisitUrl"
+    }
+  ],
+  "recommendedDesignPresets": [
+    "warm-natural-v1",
+    "quiet-luxury-v1"
+  ],
+  "requiredSpreadsheetData": [
+    "sheet CONFIG",
+    "sheet CUSTOMERS",
+    "sheet SERVICES",
+    "sheet RESERVATIONS",
+    "sheet INQUIRIES",
+    "CONFIG: 店舗名・住所・電話番号・地図URL・営業時間・定休日",
+    "SERVICES: コース名・施術時間・料金（例: アロマトリートメント、ボディケア、フェイシャル、リフレクソロジー、ヘッドスパ。時間違い・組み合わせコースは別の行で表す）",
+    "reservation.capacity: 同じ時間帯に施術できる人数（セラピスト数・施術ルーム数の少ない方）",
+    "reservation.defaultDurationMinutes: コース未選択時の目安の施術時間（着替え・カウンセリング込みで長めに設定）",
+    "notification.ownerEmail: 通知を受け取るメールアドレス"
+  ],
+  "notificationRequirements": [
+    "Owner email on every new reservation request and inquiry",
+    "Owner confirms reservations manually in the sheet (status CONFIRMED)"
+  ],
+  "terminology": {
+    "service": "施術メニュー（コース）",
+    "treatment": "施術",
+    "reservation": "施術のご予約リクエスト（確定ではありません）",
+    "inquiry": "お問い合わせ",
+    "capacity": "同じ時間帯に施術できる人数（セラピスト数・施術ルーム数の少ない方）"
+  },
+  "risks": [
+    "Reservations are requests, not instant confirmations, in Phase 1. The LINE reply from createReservation@1 says 「ご予約リクエストを受け付けました」 (generic, not 「施術の予約リクエスト」) and that the spa will contact the customer once confirmed.",
+    "The customer picks only a date-time from the Rich Menu. Course, length and options are not collected; the spa asks by LINE after the request.",
+    "Health questions (pregnancy, medical conditions, oil allergies) arrive as free-text inquiries. The spa answers them itself; nothing is judged automatically.",
+    "Per-therapist or per-room booking is not supported by reservation-basic-v1 (use capacity = the smaller of therapists and treatment rooms).",
+    "Course length varies (45-120 min plus changing time). reservation.defaultDurationMinutes should be set on the long side to avoid overlapping requests.",
+    "If the spa already takes bookings on a portal (Hot Pepper Beauty etc.), double-booking can occur. Keep capacity conservative or keep one booking channel."
+  ],
+  "assumptions": [
+    "Each course length and combination course is a separate SERVICES row; no extra sheet or column is needed.",
+    "The first-visit guide (ご来店の流れ・持ち物・注意事項) is a page the spa already publishes; the Rich Menu links to it instead of storing it."
+  ],
+  "extensionPoints": {
+    "implemented": [
+      "reservation-basic-v1: 施術の予約リクエスト（REQUESTED のみ、オーナーが確定）",
+      "service-menu-v1: 施術メニュー・料金・施術時間（SERVICES シート）",
+      "inquiry-basic-v1: 施術内容・オプション・体調についてのお問い合わせ",
+      "business-info-v1: アクセス / 営業時間",
+      "Rich Menu URI button to the spa's first-visit guide (web.firstVisitUrl)"
+    ],
+    "planned": [
+      {
+        "id": "treatment-options-v2",
+        "description": "Pick course, length and options in the booking flow."
+      },
+      {
+        "id": "pre-visit-counseling-v1",
+        "description": "Structured counseling sheet (health, preferences) before the first visit."
+      },
+      {
+        "id": "staff-availability",
+        "description": "Per-therapist / per-room capacity (reservation-basic-v1 extension point)."
+      },
+      {
+        "id": "calendar-integration-v1",
+        "description": "Google Calendar sync on CONFIRMED (reservation-basic-v1 google-calendar extension point)."
+      }
+    ]
+  }
+}

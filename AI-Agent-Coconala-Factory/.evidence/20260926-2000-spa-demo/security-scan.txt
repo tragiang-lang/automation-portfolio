@@ -1,0 +1,16 @@
+== emails not example.com
+== urls not example.com
+http://script.google.com/macros/s/x/exec
+http://www.w3.org/2000/svg
+https://<name
+https://<worker
+https://api-data.line.me/v2/bot/richmenu/${richMenuId}/content`,
+https://api.line.me/v2/bot/message/reply
+https://api.line.me/v2/bot/richmenu
+https://api.line.me/v2/bot/user/all/richmenu/${richMenuId}`,
+https://script.google.com/macros/s/TEST_DEPLOYMENT_ID/exec
+https://script.google.com/macros/s/TEST_DEPLOYMENT_ID/exec?key=${
+https://….workers.dev
+== phone numbers not 03-0000-0000
+== secret-like tokens
+(end)

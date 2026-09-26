@@ -24,8 +24,9 @@ delivery documents. Salons are the first example, but nothing in the core is sal
   (off by default), unit tests, and an esbuild bundle.
 - Delivers an end-to-end demo: [`projects/2026/demo-hair-salon/`](projects/2026/demo-hair-salon/) (QA PASS),
   plus [`projects/2026/demo-restaurant/`](projects/2026/demo-restaurant/), which shows a second industry
-  with no core changes, and [`projects/2026/demo-nail-salon/`](projects/2026/demo-nail-salon/), a nail salon
-  built from data only (industry + menu asset) on the Hair Salon workflows.
+  with no core changes, [`projects/2026/demo-nail-salon/`](projects/2026/demo-nail-salon/), a nail salon
+  built from data only (industry + menu asset) on the Hair Salon workflows, and
+  [`projects/2026/demo-spa/`](projects/2026/demo-spa/), a spa built the same way.
 
 ## 3. What Phase 1 does NOT do
 

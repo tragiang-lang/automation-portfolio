@@ -1,0 +1,13 @@
+diff -r '--exclude=node_modules' '--exclude=dist' C:/Users/giang/AppData/Local/Temp/claude/D--ClaudeCodeProjects-GAS-Project-Coconala-Web-Services-AI-Agent-Coconala-Factory/68222ef9-8fb6-48a3-b2c8-f73156a482f3/scratchpad/run1/qa/gas-checks.log projects/2026/demo-spa/qa/gas-checks.log
+10,11c10,11
+<    Start at  19:00:39
+<    Duration  581ms (transform 61%, import 24%, tests 12%, worker 3%)
+---
+>    Start at  19:00:44
+>    Duration  570ms (transform 60%, import 24%, tests 12%, worker 4%)
+22,23c22,23
+<    Start at  19:00:40
+<    Duration  263ms (transform 42%, tests 36%, import 18%, worker 5%)
+---
+>    Start at  19:00:45
+>    Duration  264ms (transform 42%, tests 35%, import 17%, worker 5%)

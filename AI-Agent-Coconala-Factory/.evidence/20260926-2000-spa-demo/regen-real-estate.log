@@ -1,0 +1,5 @@
+
+> ai-agent-coconala-factory@0.1.0 factory
+> tsx src/cli.ts generate-gas --brief templates/briefs/real-estate.example.json --run-gas-checks
+
+generate-gas: wrote 79 file(s) (48 in gas/), removed 0; QA PASS; LINE QA PASS

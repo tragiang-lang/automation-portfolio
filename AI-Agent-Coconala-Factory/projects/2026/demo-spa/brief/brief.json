@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "slug": "demo-spa",
+    "clientName": "Demo Spa Tokyo（デモ）",
+    "year": 2026,
+    "createdOn": "2026-09-26"
+  },
+  "industry": "spa",
+  "businessType": "セラピスト3名・個室2室、予約制のリラクゼーションスパ（アロマ・ボディケア・フェイシャル・ヘッドスパ）",
+  "requirements": [
+    "LINEから施術の予約を受け付けたい",
+    "施術メニューと料金を確認できるようにしたい",
+    "施術内容・オプションについて問い合わせを受け付けたい",
+    "店舗へのアクセスを確認できるようにしたい",
+    "営業時間を確認できるようにしたい"
+  ],
+  "intents": [],
+  "existingResources": [
+    "LINE Official Account",
+    "Google Spreadsheet",
+    "Website (first-visit guide page)"
+  ],
+  "brand": {
+    "name": "Demo Spa Tokyo",
+    "preset": "warm-natural-v1",
+    "colors": {
+      "background": "#F3F0E8",
+      "primary": "#46564A",
+      "onPrimary": "#F7F5EF",
+      "accent": "#9A7B52",
+      "text": "#33302A",
+      "muted": "#67625A",
+      "border": "#E0DACD"
+    },
+    "tone": "静か・上質・自然体",
+    "logoAvailable": false
+  },
+  "config": {
+    "business.name": "Demo Spa Tokyo",
+    "business.address": "東京都渋谷区恵比寿0-0-0 デモビル5F",
+    "business.phone": "03-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-spa-tokyo",
+    "business.hoursText": "10:00-21:00（最終受付 19:30）／火曜定休",
+    "business.accessNote": "恵比寿駅から徒歩6分",
+    "notification.ownerEmail": "owner@example.com",
+    "hours.mon": "10:00-21:00",
+    "hours.tue": "closed",
+    "hours.wed": "10:00-21:00",
+    "hours.thu": "10:00-21:00",
+    "hours.fri": "10:00-21:00",
+    "hours.sat": "10:00-21:00",
+    "hours.sun": "10:00-21:00",
+    "reservation.slotMinutes": "30",
+    "reservation.defaultDurationMinutes": "90",
+    "reservation.capacity": "2",
+    "web.firstVisitUrl": "https://example.com/first-visit/demo-spa-tokyo"
+  },
+  "overrides": {}
+}
