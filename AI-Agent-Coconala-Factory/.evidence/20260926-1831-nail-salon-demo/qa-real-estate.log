@@ -1,0 +1,8 @@
+
+> ai-agent-coconala-factory@0.1.0 factory
+> tsx src/cli.ts qa --project projects/2026/demo-real-estate --run-gas-checks
+
+QA: PASS (pass 28, fail 0, warn 0, skipped 0)
+LINE QA: PASS (pass 13, fail 0, warn 0, skipped 1)
+reports: projects\2026\demo-real-estate\qa\QA_REPORT.md, projects\2026\demo-real-estate\qa\LINE_QA_REPORT.md
+exit 0

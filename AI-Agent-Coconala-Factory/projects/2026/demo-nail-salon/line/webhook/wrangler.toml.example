@@ -1,0 +1,5 @@
+# Copy to wrangler.toml (gitignored). Secrets are NEVER written here:
+# set them with `npx wrangler secret put <NAME>` for: LINE_CHANNEL_SECRET, GAS_WEBAPP_URL, GAS_WEBHOOK_KEY.
+name = "demo-nail-salon-line-webhook"
+main = "src/worker.ts"
+compatibility_date = "2026-09-01"

@@ -1,0 +1,7 @@
+
+> ai-agent-coconala-factory@0.1.0 factory
+> tsx src/cli.ts validate
+
+
+validate: OK (0 warning(s))
+exit 0

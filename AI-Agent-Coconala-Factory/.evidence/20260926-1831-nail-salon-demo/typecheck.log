@@ -1,0 +1,5 @@
+
+> ai-agent-coconala-factory@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json && tsc --noEmit -p core-assets/gas-modules/tsconfig.json && tsc --noEmit -p core-assets/line-webhook-proxy/tsconfig.json
+
+exit 0

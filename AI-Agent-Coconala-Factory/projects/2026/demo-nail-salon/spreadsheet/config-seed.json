@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "artifact": "spreadsheet/config-seed.json",
+    "generatedBy": "spreadsheet-schema-generator",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-nail-salon",
+    "industry": "nail_salon",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "nail-salon-basic-v1": "1.0.0",
+      "nail-salon-v1": "1.0.0",
+      "quiet-luxury-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "values": {
+    "hours.mon": "closed",
+    "hours.tue": "closed",
+    "hours.wed": "11:00-20:00",
+    "hours.thu": "11:00-20:00",
+    "hours.fri": "11:00-20:00",
+    "hours.sat": "10:00-19:00",
+    "hours.sun": "10:00-19:00",
+    "reservation.slotMinutes": "30",
+    "reservation.defaultDurationMinutes": "90",
+    "reservation.capacity": "2",
+    "notification.ownerEmail": "owner@example.com",
+    "business.name": "Demo Nail Salon",
+    "business.address": "東京都港区南青山0-0-0 デモビル3F",
+    "business.phone": "03-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-nail-salon",
+    "business.hoursText": "水〜金 11:00-20:00／土日祝 10:00-19:00（月・火曜定休）",
+    "business.accessNote": "表参道駅から徒歩5分"
+  }
+}

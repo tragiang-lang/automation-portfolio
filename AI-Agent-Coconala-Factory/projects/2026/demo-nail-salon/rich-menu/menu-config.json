@@ -1,0 +1,130 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/menu-config.json",
+    "generatedBy": "rich-menu-config-generator",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-nail-salon",
+    "industry": "nail_salon",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "nail-salon-basic-v1": "1.0.0",
+      "nail-salon-v1": "1.0.0",
+      "quiet-luxury-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "size": {
+    "width": 2500,
+    "height": 1686
+  },
+  "selected": true,
+  "name": "demo-nail-salon-nail-salon-basic-v1",
+  "chatBarText": "メニュー",
+  "areas": [
+    {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "action": {
+        "type": "datetimepicker",
+        "label": "ご予約",
+        "data": "wf=reservation-basic-v1&e=default",
+        "mode": "datetime"
+      }
+    },
+    {
+      "bounds": {
+        "x": 833,
+        "y": 0,
+        "width": 833,
+        "height": 843
+      },
+      "action": {
+        "type": "postback",
+        "label": "ネイルメニュー",
+        "data": "wf=service-menu-v1&e=default",
+        "displayText": "メニュー"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1666,
+        "y": 0,
+        "width": 834,
+        "height": 843
+      },
+      "action": {
+        "type": "postback",
+        "label": "お問い合わせ",
+        "data": "wf=inquiry-basic-v1&e=default",
+        "displayText": "お問い合わせ"
+      }
+    },
+    {
+      "bounds": {
+        "x": 0,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "action": {
+        "type": "postback",
+        "label": "アクセス",
+        "data": "wf=business-info-v1&e=access",
+        "displayText": "アクセス"
+      }
+    },
+    {
+      "bounds": {
+        "x": 833,
+        "y": 843,
+        "width": 833,
+        "height": 843
+      },
+      "action": {
+        "type": "postback",
+        "label": "営業時間",
+        "data": "wf=business-info-v1&e=hours",
+        "displayText": "営業時間"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1666,
+        "y": 843,
+        "width": 834,
+        "height": 843
+      },
+      "action": {
+        "type": "uri",
+        "label": "デザイン写真",
+        "uri": "https://example.com/instagram/demo-nail-salon"
+      }
+    }
+  ]
+}

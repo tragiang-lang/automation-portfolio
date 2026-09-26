@@ -1,0 +1,9 @@
+
+> ai-agent-coconala-factory@0.1.0 factory
+> tsx src/cli.ts create-project --brief templates/briefs/nail-salon.example.json
+
+
+wrote 81 file(s) to projects\2026\demo-nail-salon
+QA: PASS (pass 28, fail 0, warn 0, skipped 0)
+LINE QA: PASS (pass 13, fail 0, warn 0, skipped 1)
+exit 0

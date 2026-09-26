@@ -1,0 +1,189 @@
+{
+  "_meta": {
+    "artifact": "analysis/industry-profile.json",
+    "generatedBy": "industry-specialist",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-nail-salon",
+    "industry": "nail_salon",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0",
+      "business-info-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x3-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "nail-salon-basic-v1": "1.0.0",
+      "nail-salon-v1": "1.0.0",
+      "quiet-luxury-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0"
+    }
+  },
+  "industry": "nail_salon",
+  "industryAsset": "nail-salon-v1@1.0.0",
+  "displayName": "ネイルサロン / Nail salon",
+  "businessType": "ネイリスト2名、予約制のネイルサロン（ハンド・フット）",
+  "customerIntents": [
+    {
+      "id": "book",
+      "description": "Make a reservation / appointment",
+      "source": "requirement",
+      "evidence": "LINEからネイルの予約を受け付けたい"
+    },
+    {
+      "id": "view_menu",
+      "description": "See services / menu / prices",
+      "source": "requirement",
+      "evidence": "ネイルメニュー・料金を確認できるようにしたい"
+    },
+    {
+      "id": "ask_question",
+      "description": "Send an inquiry",
+      "source": "requirement",
+      "evidence": "お問い合わせを受け付けたい"
+    },
+    {
+      "id": "find_access",
+      "description": "Find the address / map",
+      "source": "requirement",
+      "evidence": "店舗のアクセス情報を確認できるようにしたい"
+    },
+    {
+      "id": "check_hours",
+      "description": "Check opening hours",
+      "source": "requirement",
+      "evidence": "営業時間を確認できるようにしたい"
+    }
+  ],
+  "commonLineUseCases": [
+    "施術中で電話に出られない時間でも、LINEのリッチメニューからネイルの予約リクエストを受け付ける",
+    "予約前にネイルメニュー（ワンカラー・定額デザイン・フットなど）の料金と所要時間を確認する",
+    "デザインの持ち込み、他店オフ、爪の状態などについてのお問い合わせ",
+    "来店当日のアクセス・営業時間の確認"
+  ],
+  "recommendedWorkflows": [
+    "reservation-basic-v1",
+    "service-menu-v1",
+    "inquiry-basic-v1",
+    "business-info-v1"
+  ],
+  "recommendedActions": [
+    "createReservation@1",
+    "getAvailability@1",
+    "getServiceList@1",
+    "createInquiry@1",
+    "getBusinessInfo@1"
+  ],
+  "recommendedRichMenu": "nail-salon-basic-v1",
+  "recommendedRichMenuSections": [
+    {
+      "label": "ご予約",
+      "target": "reservation-basic-v1#default"
+    },
+    {
+      "label": "ネイルメニュー",
+      "target": "service-menu-v1#default"
+    },
+    {
+      "label": "お問い合わせ",
+      "target": "inquiry-basic-v1#default"
+    },
+    {
+      "label": "アクセス",
+      "target": "business-info-v1#access"
+    },
+    {
+      "label": "営業時間",
+      "target": "business-info-v1#hours"
+    },
+    {
+      "label": "デザイン写真",
+      "target": "uri:social.instagramUrl"
+    }
+  ],
+  "recommendedDesignPresets": [
+    "quiet-luxury-v1",
+    "minimal-modern-v1"
+  ],
+  "requiredSpreadsheetData": [
+    "sheet CONFIG",
+    "sheet CUSTOMERS",
+    "sheet SERVICES",
+    "sheet RESERVATIONS",
+    "sheet INQUIRIES",
+    "CONFIG: 店舗名・住所・電話番号・地図URL・営業時間・定休日",
+    "SERVICES: メニュー名・所要時間・料金（例: ワンカラー、グラデーション、フレンチ、定額デザイン、フットネイル、オフのみ。ハンド／フット・オフの有無はメニュー名で表す）",
+    "reservation.capacity: 同じ時間帯に施術できる人数（ネイリスト数）",
+    "reservation.defaultDurationMinutes: メニュー未選択時の目安の施術時間（オフ込みで長めに設定）",
+    "notification.ownerEmail: 通知を受け取るメールアドレス"
+  ],
+  "notificationRequirements": [
+    "Owner email on every new reservation request and inquiry",
+    "Owner confirms reservations manually in the sheet (status CONFIRMED)"
+  ],
+  "terminology": {
+    "service": "ネイルメニュー",
+    "treatment": "施術",
+    "reservation": "ネイルのご予約リクエスト（確定ではありません）",
+    "inquiry": "お問い合わせ",
+    "capacity": "同じ時間帯に施術できる人数（ネイリスト数）"
+  },
+  "risks": [
+    "Reservations are requests, not instant confirmations, in Phase 1. The LINE reply from createReservation@1 says 「ご予約リクエストを受け付けました」 (generic, not 「ネイルの予約リクエスト」) and that the salon will contact the customer once confirmed.",
+    "The customer picks only a date-time from the Rich Menu. Hand/foot, design and whether an off (removal) is needed are not collected; the salon asks by LINE after the request.",
+    "Per-nailist booking is not supported by reservation-basic-v1 (use capacity = number of nail technicians).",
+    "Treatment length varies a lot (off, art, foot). reservation.defaultDurationMinutes should be set on the long side to avoid overlapping requests.",
+    "If the salon already takes bookings on a portal (Hot Pepper Beauty etc.), double-booking can occur. Keep capacity conservative or keep one booking channel."
+  ],
+  "assumptions": [
+    "Hand, foot and removal (オフ) are separate SERVICES rows; no extra sheet or column is needed.",
+    "Design photos are published on the salon's existing Instagram; the Rich Menu links to it instead of storing images."
+  ],
+  "extensionPoints": {
+    "implemented": [
+      "reservation-basic-v1: ネイルの予約リクエスト（REQUESTED のみ、オーナーが確定）",
+      "service-menu-v1: ネイルメニュー・料金・所要時間（SERVICES シート）",
+      "inquiry-basic-v1: デザイン・オフ・爪の状態などのお問い合わせ",
+      "business-info-v1: アクセス / 営業時間",
+      "Rich Menu URI button to the salon's design gallery (social.instagramUrl)"
+    ],
+    "planned": [
+      {
+        "id": "treatment-options-v2",
+        "description": "Pick hand/foot, off (removal) and design category in the booking flow."
+      },
+      {
+        "id": "design-image-v2",
+        "description": "Customer sends a reference design image with the booking request."
+      },
+      {
+        "id": "staff-availability",
+        "description": "Per-nailist capacity (reservation-basic-v1 extension point)."
+      },
+      {
+        "id": "customer-history-v1",
+        "description": "Past treatments per customer for repeat visits."
+      },
+      {
+        "id": "calendar-integration-v1",
+        "description": "Google Calendar sync on CONFIRMED (reservation-basic-v1 google-calendar extension point)."
+      }
+    ]
+  }
+}

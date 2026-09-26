@@ -1,0 +1,230 @@
+
+ RUN  v5.0.1 D:/ClaudeCodeProjects/GAS-Project/Coconala-Web-Services/AI-Agent-Coconala-Factory
+
+ ✓ tests/registry.test.ts > Core Assets as shipped > validate without errors 150ms
+ ✓ tests/agents.test.ts > Industry Specialist > maps the hair-salon requirement lines to intents and workflows 85ms
+ ✓ tests/agents.test.ts > Industry Specialist > records unmatched requirements as assumptions instead of guessing 32ms
+ ✓ tests/nailSalon.test.ts > fourth industry: nail_salon > loads the nail-salon-v1 profile and validates it without errors 132ms
+ ✓ tests/agents.test.ts > Industry Specialist > fails clearly for an industry without a profile 32ms
+ ✓ tests/agents.test.ts > industry-scoped intent aliases (F1) > keeps matching common keywords for every industry 86ms
+ ✓ tests/nailSalon.test.ts > fourth industry: nail_salon > maps the Japanese brief lines to the existing intents 80ms
+ ✓ tests/nailSalon.test.ts > fourth industry: nail_salon > maps nail words through its own aliases without leaking them into hair_salon 62ms
+ ✓ tests/registry.test.ts > workflow schema > accepts a valid workflow 1ms
+ ✓ tests/registry.test.ts > workflow schema > rejects an invalid workflow (unpinned action ref, missing fields) 3ms
+ ✓ tests/registry.test.ts > workflow schema > rejects a version whose major does not match the id 2ms
+ ✓ tests/registry.test.ts > workflow schema > detects a missing action 402ms
+ ✓ tests/agents.test.ts > industry-scoped intent aliases (F1) > maps real_estate words to intents through the industry's own aliases 72ms
+ ✓ tests/agents.test.ts > industry-scoped intent aliases (F1) > does not leak real_estate aliases into hair_salon or restaurant 52ms
+ ✓ tests/richMenu.test.ts > rich menu layout geometry > accepts every shipped layout 92ms
+ ✓ tests/richMenu.test.ts > rich menu layout geometry > accepts a valid custom layout 1ms
+ ✓ tests/richMenu.test.ts > rich menu layout geometry > rejects out-of-canvas, overlapping, and LINE-size violations 1ms
+ ✓ tests/richMenu.test.ts > rich menu layout geometry > rejects an invalid layout asset and a menu that leaves a slot empty 424ms
+ ✓ tests/agents.test.ts > industry-scoped intent aliases (F1) > behaves as before when an industry has no aliases 438ms
+ ✓ tests/registry.test.ts > workflow schema > detects a missing spreadsheet schema 523ms
+ ✓ tests/richMenuRender.test.ts > Rich Menu renderer > renders a LINE-valid, opaque PNG for hair_salon 930ms
+ ✓ tests/richMenu.test.ts > rich menu references > detects a button pointing at a missing workflow 595ms
+ ✓ tests/assetLock.test.ts > asset lock (versioned, immutable Core Assets) > blocks silent edits to a released asset 1355ms
+ ✓ tests/agents.test.ts > industry-scoped intent aliases (F1) > rejects aliases for an intent that is not in the catalog 361ms
+ ✓ tests/registry.test.ts > workflow schema > detects a stable workflow that depends on a planned action 370ms
+ ✓ tests/richMenu.test.ts > rich menu references > detects an invalid entry reference 386ms
+ ✓ tests/richMenu.test.ts > rich menu references > builds LINE actions from workflow entries and routes that match them 38ms
+ ✓ tests/richMenu.test.ts > rich menu references > reports a URI button whose URL is missing from the brief 31ms
+ ✓ tests/registry.test.ts > Action Registry > resolves a known, pinned action 25ms
+ ✓ tests/registry.test.ts > Action Registry > does not resolve unknown or unpinned actions 30ms
+ ✓ tests/registry.test.ts > Action Registry > rejects an invalid input schema 249ms
+ ✓ tests/richMenuRender.test.ts > Rich Menu renderer > renders a LINE-valid, opaque PNG for restaurant 588ms
+ ✓ tests/nailSalon.test.ts > fourth industry: nail_salon > reuses exactly the hair_salon workflows and a menu whose buttons all target them 1481ms
+ ✓ tests/registry.test.ts > Action Registry > rejects an action wired to a LINE entry without LINE exposure 402ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > every Rich Menu button reaches its workflow and gets a reply 93ms
+stderr | core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > invalid, missing, wrong-secret or modified: 401 and GAS is never called
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > invalid, missing, wrong-secret or modified: 401 and GAS is never called
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > invalid, missing, wrong-secret or modified: 401 and GAS is never called
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > invalid, missing, wrong-secret or modified: 401 and GAS is never called
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > fails closed when not configured, and refuses non-POST and non-JSON bodies
+[proxy] not configured: set LINE_CHANNEL_SECRET, GAS_WEBAPP_URL and GAS_WEBHOOK_KEY
+
+stderr | core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > fails closed when not configured, and refuses non-POST and non-JSON bodies
+[proxy] not configured: set LINE_CHANNEL_SECRET, GAS_WEBAPP_URL and GAS_WEBHOOK_KEY
+
+ ✓ core-assets/line-webhook-proxy/tests/worker.test.ts > verifyLineSignature > matches a signature computed independently with openssl 18ms
+ ✓ core-assets/line-webhook-proxy/tests/worker.test.ts > verifyLineSignature > rejects missing, malformed, wrong-secret and modified-body signatures 2ms
+ ✓ core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > valid signature: answers 200 and forwards the exact raw body to GAS with the internal key 42ms
+ ✓ core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > accepts the header in any letter case 5ms
+ ✓ core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > invalid, missing, wrong-secret or modified: 401 and GAS is never called 15ms
+ ✓ core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > empty webhook events (LINE verification ping): 200 without calling GAS 5ms
+ ✓ core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > fails closed when not configured, and refuses non-POST and non-JSON bodies 8ms
+ ✓ core-assets/line-webhook-proxy/tests/worker.test.ts > proxy handleRequest > only forwards to an https script.google.com URL 1ms
+stderr | tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > invalid, missing or modified signatures never reach GAS
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > invalid, missing or modified signatures never reach GAS
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > invalid, missing or modified signatures never reach GAS
+[proxy] rejected: invalid or missing x-line-signature
+
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > inquiry: prompt, then the message is saved once, the owner is notified, and a receipt is replied 14ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > reservation: a request (not a confirmed booking) is saved once; a closed slot gets the safe message 39ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > business info and service menu reply from CONFIG / sheet data without writing anything 22ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > invalid, missing or modified signatures never reach GAS 15ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > GAS rejects a forward whose internal key does not match WEBHOOK_KEY 8ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: hair_salon > unknown workflows are ignored and unknown actions get only the safe message 14ms
+ ✓ tests/project.test.ts > Client Project Generator > creates the expected directory structure and required files 2076ms
+ ✓ tests/assetLock.test.ts > asset lock (versioned, immutable Core Assets) > accepts the same edit once the version is bumped, and flags new assets as unreleased 988ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > every Rich Menu button reaches its workflow and gets a reply 48ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > inquiry: prompt, then the message is saved once, the owner is notified, and a receipt is replied 37ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > reservation: a request (not a confirmed booking) is saved once; a closed slot gets the safe message 154ms
+stderr | tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > invalid, missing or modified signatures never reach GAS
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > invalid, missing or modified signatures never reach GAS
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > invalid, missing or modified signatures never reach GAS
+[proxy] rejected: invalid or missing x-line-signature
+
+ ✓ tests/registry.test.ts > spreadsheet schema rules > detects duplicate columns, bad keys, bad defaults and dangling references 382ms
+stderr | tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > invalid, missing or modified signatures never reach GAS
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > invalid, missing or modified signatures never reach GAS
+[proxy] rejected: invalid or missing x-line-signature
+
+stderr | tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > invalid, missing or modified signatures never reach GAS
+[proxy] rejected: invalid or missing x-line-signature
+
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > business info and service menu reply from CONFIG / sheet data without writing anything 9ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > invalid, missing or modified signatures never reach GAS 5ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > GAS rejects a forward whose internal key does not match WEBHOOK_KEY 3ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: restaurant > unknown workflows are ignored and unknown actions get only the safe message 4ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > every Rich Menu button reaches its workflow and gets a reply 17ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > inquiry: prompt, then the message is saved once, the owner is notified, and a receipt is replied 7ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > reservation: a request (not a confirmed booking) is saved once; a closed slot gets the safe message 20ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > business info and service menu reply from CONFIG / sheet data without writing anything 4ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > invalid, missing or modified signatures never reach GAS 18ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > GAS rejects a forward whose internal key does not match WEBHOOK_KEY 3ms
+ ✓ tests/lineIntegration.test.ts > LINE → proxy → GAS end to end: real_estate > unknown workflows are ignored and unknown actions get only the safe message 10ms
+ ✓ tests/richMenuRender.test.ts > Rich Menu renderer > renders a LINE-valid, opaque PNG for real_estate 834ms
+ ✓ core-assets/gas-modules/tests/actions/getServiceList.test.ts > getServiceList > returns only active services in display order 43ms
+ ✓ tests/nailSalon.test.ts > fourth industry: nail_salon > generates every standard artifact, including the rich-menu PNG 818ms
+ ✓ tests/qa.test.ts > QA Agent > passes a freshly generated project 2468ms
+ ✓ tests/agents.test.ts > generic delivery wording (F2) > does not assume every industry has a menu / service catalog 1520ms
+ ✓ tests/registry.test.ts > spreadsheet schema rules > forbids two schemas defining the same sheet 369ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > lists availability for a date 7ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > creates a REQUESTED reservation from a LINE datetimepicker postback 8ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > is idempotent for LINE redelivery of the same event 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > rejects a second booking for a full slot with SLOT_UNAVAILABLE 2ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > uses the service duration when a serviceId is given and rejects unknown services 2ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation actions > requires name plus contact when there is no LINE user 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > availability > rejects closed days, outside hours, too-soon and too-far slots 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > availability > enforces capacity against active bookings only 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > availability > normalizes Date cells written back by Sheets 1ms
+ ✓ core-assets/gas-modules/tests/actions/reservation.test.ts > reservation via LINE webhook > books from a datetimepicker postback and replies with a safe message when the slot is closed 3ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > parsePostbackData > decodes pairs without URLSearchParams 4ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > runs a direct route with its static params and replies 3ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > awaits text, then runs the pending action on the next message only 1ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > ignores free text with nothing pending and unknown postbacks 1ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > handles a redelivered event (same webhookEventId) once: one record, one reply 2ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > handleLineWebhook > replies with the safe message for the error code, never the internal detail 2ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > dispatchPost > rejects LINE deliveries without the webhook key and fails closed when no key is configured 3ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > dispatchPost > keeps the JSON API closed unless API_ENABLED 1ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > dispatchPost > only exposes actions listed as API actions and rejects malformed bodies 1ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > setup planning > creates missing sheets, appends missing headers, seeds only missing config keys 2ms
+ ✓ core-assets/gas-modules/tests/router/router.test.ts > setup planning > strips traceability metadata before sending a rich menu to LINE 2ms
+ ✓ tests/assetLock.test.ts > asset lock (versioned, immutable Core Assets) > treats deleting a released asset as an error 773ms
+ ✓ tests/lineQa.test.ts > LINE QA > passes a freshly generated project and reports levels honestly 2780ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > time > parses Tokyo local date-times into real instants 5ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > time > rejects impossible dates and malformed input 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > time > computes weekdays, day arithmetic and opening hours 2ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > ids > builds PREFIX-YYYYMMDD-XXXXXX from the Tokyo date 0ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > rowMapper > maps rows by header and refuses missing required headers 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > rowMapper > serializes blanks as empty strings and rejects objects 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > result > never leaks raw exception text 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > result > forwards field issues only for validation errors 2ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > ConfigReader > keeps the first duplicate key and applies defaults 1ms
+ ✓ core-assets/gas-modules/tests/lib/lib.test.ts > ConfigReader > rejects non-strict numbers and reports missing required keys by name 2ms
+ ✓ core-assets/gas-modules/tests/actions/getBusinessInfo.test.ts > getBusinessInfo > reads business.* keys and formats the access view 7ms
+ ✓ core-assets/gas-modules/tests/actions/getBusinessInfo.test.ts > getBusinessInfo > fails with CONFIG_INVALID when business.name is missing 1ms
+ ✓ core-assets/gas-modules/tests/actions/getBusinessInfo.test.ts > getBusinessInfo > rejects unknown views 1ms
+ ✓ tests/lineDeploy.test.ts > line-deploy (dry run) > shows project, rich menu, image, actions, environment and intended operations without any API 2913ms
+ ✓ core-assets/gas-modules/tests/actions/createInquiry.test.ts > createInquiry > requires a message and a way to reply 4ms
+ ✓ core-assets/gas-modules/tests/actions/createInquiry.test.ts > createInquiry > stores the inquiry once, links a customer, and notifies the owner once 8ms
+ ✓ core-assets/gas-modules/tests/actions/createInquiry.test.ts > createInquiry > still saves the inquiry when the notification email fails 1ms
+ ✓ core-assets/gas-modules/tests/services/services.test.ts > claimOnce > creates once and returns the cached result on retry 6ms
+ ✓ core-assets/gas-modules/tests/services/services.test.ts > claimOnce > falls back to the sheet backstop when the cache is cold 1ms
+ ✓ core-assets/gas-modules/tests/services/services.test.ts > notifyOwner > skips silently without an owner email and never throws on mail failure 2ms
+ ✓ core-assets/gas-modules/tests/services/services.test.ts > upsertCustomer > reuses an existing customer by LINE id and fills only blank fields 3ms
+ ✓ tests/agents.test.ts > generic delivery wording (F2) > keeps the delivery generator free of industry and sheet-name branches 1ms
+ ✓ tests/agents.test.ts > industry assumptions and extensionPoints (F3) > keeps both fields through load and validation 23ms
+ ✓ tests/agents.test.ts > industry assumptions and extensionPoints (F3) > copies the source values into analysis/industry-profile.json 479ms
+ ✓ tests/project.test.ts > Client Project Generator > copies only the modules the selected workflows need 1155ms
+ ✓ tests/agents.test.ts > industry assumptions and extensionPoints (F3) > shows them in DELIVERY.md when present 356ms
+ ✓ tests/richMenuRender.test.ts > Rich Menu renderer > is deterministic: same spec and renderer give byte-identical PNG and SVG 1235ms
+ ✓ tests/qa.test.ts > QA Agent > detects an invalid workflow 1398ms
+ ✓ tests/agents.test.ts > industry assumptions and extensionPoints (F3) > does not change industries that declare neither field 589ms
+ ✓ tests/agents.test.ts > Workflow Planner > rejects a menu whose buttons need workflows that were not selected 17ms
+ ✓ tests/agents.test.ts > Design Agent > applies brand overrides and keeps every label readable 19ms
+ ✓ tests/agents.test.ts > second industry: restaurant > runs the same pipeline with only industry/menu data, no core changes 282ms
+ ✓ tests/richMenuRender.test.ts > Rich Menu renderer > draws every tile inside the same bounds LINE uses as its tappable area 913ms
+ ✓ tests/lineDeploy.test.ts > line-deploy (dry run) > is blocked by LINE QA errors 1691ms
+ ✓ tests/project.test.ts > Client Project Generator > refuses a workflow override that the chosen rich menu cannot serve 22ms
+ ✓ tests/project.test.ts > Client Project Generator > does not overwrite an existing project without --force, nor unrelated directories 1690ms
+ ✓ tests/agents.test.ts > Orchestrator > is deterministic: the same brief gives byte-identical artifacts 659ms
+ ✓ tests/qa.test.ts > QA Agent > detects an invalid spreadsheet 1196ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects a missing or replaced rich menu image 1302ms
+ ✓ tests/agents.test.ts > Orchestrator > stamps traceability on every generated JSON artifact 315ms
+ ✓ tests/richMenuRender.test.ts > Rich Menu renderer > changing a layout slot moves both the drawn tile and the tappable area 983ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects an image LINE would reject and one that no longer matches its record 1454ms
+ ✓ tests/richMenuRender.test.ts > Rich Menu renderer > reports a label that cannot fit at the preset minimum size, and an unknown icon 275ms
+ ✓ tests/richMenuRender.test.ts > Rich Menu renderer > escapes label text for the SVG 281ms
+ ✓ tests/richMenuRender.test.ts > PNG inspector > detects transparency, dimensions and non-image files 3ms
+ ✓ tests/qa.test.ts > QA Agent > detects an invalid Rich Menu reference 1045ms
+ ✓ tests/lineDeploy.test.ts > line-deploy (dry run) > the CLI makes no API call without --live, even with no token set 2114ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects a tappable area that no longer matches the drawn tile 1373ms
+ ✓ tests/qa.test.ts > QA Agent > detects overlapping Rich Menu areas and oversized postback data 1001ms
+ ✓ tests/project.test.ts > Client Project Generator > regenerates with --force without touching hand-added files or other client projects 2694ms
+ ✓ tests/project.test.ts > Client Project Generator > refuses an invalid brief before writing anything 21ms
+ ✓ tests/lineDeploy.test.ts > line-deploy (live, fake LINE) > creates, uploads, verifies, then sets default; remembers the previous default; deletes nothing 1340ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects an area outside the image 1339ms
+ ✓ tests/qa.test.ts > QA Agent > detects missing GAS files and broken imports 987ms
+ ✓ tests/qa.test.ts > QA Agent > detects committed secrets and secret files 925ms
+ ✓ tests/lineDeploy.test.ts > line-deploy (live, fake LINE) > records a failed step and never switches the default when the upload fails 1205ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects a design spec edited after rendering (non-reproducible image) 1186ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects unreadable sub-labels and icons 1201ms
+ ✓ tests/qa.test.ts > QA Agent > detects a label color that fails contrast 838ms
+ ✓ tests/qa.test.ts > QA Agent > detects missing traceability 941ms
+ ✓ tests/lineDeploy.test.ts > line-deploy (live, fake LINE) > keeps deployment ids out of generated artifacts, so regeneration stays deterministic 1931ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects invalid LINE actions 1246ms
+ ✓ tests/lineDeploy.test.ts > line-rollback and line-delete > rolls back to the previous default without deleting anything 1174ms
+ ✓ tests/qa.test.ts > QA Agent with real GAS checks > fails clearly when a project outside the factory has no toolchain installed 877ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects a broken button → workflow → action → GAS chain 1193ms
+ ✓ tests/lineDeploy.test.ts > line-rollback and line-delete > refuses a rollback when there was no previous default, or nothing was deployed 1179ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects server-issued ids in the generated deployment definition 1274ms
+ ✓ tests/lineDeploy.test.ts > line-rollback and line-delete > never deletes the current default rich menu 1206ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects secrets and Worker secret files anywhere in the project 1254ms
+ ✓ tests/lineDeploy.test.ts > line-smoke-test (live checks, fake LINE) > refuses production 821ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects a proxy that differs from the released asset or declares secrets as vars 1335ms
+ ✓ tests/lineDeploy.test.ts > line-smoke-test (live checks, fake LINE) > checks default menu, areas, image hash and webhook, lists manual checks, and feeds Level 4 1703ms
+ ✓ tests/qa.test.ts > QA Agent with real GAS checks > typechecks, tests and builds a generated restaurant GAS project 5654ms
+ ✓ tests/lineQa.test.ts > LINE QA > detects a GAS webhook that no longer requires the internal key 1136ms
+ ✓ tests/lineDeploy.test.ts > line-smoke-test (live checks, fake LINE) > fails when the webhook points straight at GAS instead of the proxy 1062ms
+ ✓ tests/lineQa.test.ts > LINE QA > reports Level 4 only when a live smoke test result exists, and never fails on NOT RUN 1104ms
+ ✓ tests/lineDeploy.test.ts > LINE Messaging API adapter > uses the documented hosts, paths and bearer auth 692ms
+ ✓ tests/lineDeploy.test.ts > LINE Messaging API adapter > treats 404 as 'no default rich menu' and never puts the token in errors 743ms
+ ✓ tests/lineQa.test.ts > LINE QA > finds no secrets in the factory's own core assets, templates, docs and client projects 985ms
+ ✓ tests/lineQa.test.ts > LINE QA > fails Level 2 when the GAS test run failed 1073ms
+
+ Test Files  19 passed (19)
+      Tests  175 passed (175)
+   Start at  18:36:55
+   Duration  22.24s (tests 91%, import 6%, transform 3%)
+
+exit 0

@@ -1,0 +1,12 @@
+== emails not example.com
+== urls not example.com
+http://script.google.com/macros/s/x/exec
+http://www.w3.org/2000/svg
+https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+https://<name>.<account>.workers.dev
+https://<worker>.<account>.workers.dev/
+https://script.google.com/macros/s/TEST_DEPLOYMENT_ID/exec
+https://script.google.com/macros/s/TEST_DEPLOYMENT_ID/exec?key=${
+== token/secret patterns
+== phones
+03-0000-0000

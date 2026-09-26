@@ -1,0 +1,447 @@
+diff --git a/AI-Agent-Coconala-Factory/core-assets/industries/salon/nail-salon-v1.json b/AI-Agent-Coconala-Factory/core-assets/industries/salon/nail-salon-v1.json
+new file mode 100644
+index 0000000..f8772f8
+--- /dev/null
++++ b/AI-Agent-Coconala-Factory/core-assets/industries/salon/nail-salon-v1.json
+@@ -0,0 +1,81 @@
++{
++  "kind": "industry",
++  "id": "nail-salon-v1",
++  "version": "1.0.0",
++  "industry": "nail_salon",
++  "category": "salon",
++  "displayName": "ネイルサロン / Nail salon",
++  "businessType": "Appointment-based nail salon (hand and foot) with a fixed menu of treatments and a small number of nail technicians working in parallel.",
++  "customerIntents": [
++    "book",
++    "view_menu",
++    "ask_question",
++    "find_access",
++    "check_hours"
++  ],
++  "lineUseCases": [
++    "施術中で電話に出られない時間でも、LINEのリッチメニューからネイルの予約リクエストを受け付ける",
++    "予約前にネイルメニュー（ワンカラー・定額デザイン・フットなど）の料金と所要時間を確認する",
++    "デザインの持ち込み、他店オフ、爪の状態などについてのお問い合わせ",
++    "来店当日のアクセス・営業時間の確認"
++  ],
++  "recommendedWorkflows": [
++    "reservation-basic-v1",
++    "service-menu-v1",
++    "inquiry-basic-v1",
++    "business-info-v1"
++  ],
++  "recommendedRichMenu": "nail-salon-basic-v1",
++  "recommendedDesignPresets": [
++    "quiet-luxury-v1",
++    "minimal-modern-v1"
++  ],
++  "terminology": {
++    "service": "ネイルメニュー",
++    "treatment": "施術",
++    "reservation": "ネイルのご予約リクエスト（確定ではありません）",
++    "inquiry": "お問い合わせ",
++    "capacity": "同じ時間帯に施術できる人数（ネイリスト数）"
++  },
++  "requiredData": [
++    "CONFIG: 店舗名・住所・電話番号・地図URL・営業時間・定休日",
++    "SERVICES: メニュー名・所要時間・料金（例: ワンカラー、グラデーション、フレンチ、定額デザイン、フットネイル、オフのみ。ハンド／フット・オフの有無はメニュー名で表す）",
++    "reservation.capacity: 同じ時間帯に施術できる人数（ネイリスト数）",
++    "reservation.defaultDurationMinutes: メニュー未選択時の目安の施術時間（オフ込みで長めに設定）",
++    "notification.ownerEmail: 通知を受け取るメールアドレス"
++  ],
++  "notificationRequirements": [
++    "Owner email on every new reservation request and inquiry",
++    "Owner confirms reservations manually in the sheet (status CONFIRMED)"
++  ],
++  "risks": [
++    "Reservations are requests, not instant confirmations, in Phase 1. The LINE reply from createReservation@1 says 「ご予約リクエストを受け付けました」 (generic, not 「ネイルの予約リクエスト」) and that the salon will contact the customer once confirmed.",
++    "The customer picks only a date-time from the Rich Menu. Hand/foot, design and whether an off (removal) is needed are not collected; the salon asks by LINE after the request.",
++    "Per-nailist booking is not supported by reservation-basic-v1 (use capacity = number of nail technicians).",
++    "Treatment length varies a lot (off, art, foot). reservation.defaultDurationMinutes should be set on the long side to avoid overlapping requests.",
++    "If the salon already takes bookings on a portal (Hot Pepper Beauty etc.), double-booking can occur. Keep capacity conservative or keep one booking channel."
++  ],
++  "intentAliases": {
++    "view_menu": ["定額デザイン", "ネイルデザイン", "施術内容"]
++  },
++  "assumptions": [
++    "Hand, foot and removal (オフ) are separate SERVICES rows; no extra sheet or column is needed.",
++    "Design photos are published on the salon's existing Instagram; the Rich Menu links to it instead of storing images."
++  ],
++  "extensionPoints": {
++    "implemented": [
++      "reservation-basic-v1: ネイルの予約リクエスト（REQUESTED のみ、オーナーが確定）",
++      "service-menu-v1: ネイルメニュー・料金・所要時間（SERVICES シート）",
++      "inquiry-basic-v1: デザイン・オフ・爪の状態などのお問い合わせ",
++      "business-info-v1: アクセス / 営業時間",
++      "Rich Menu URI button to the salon's design gallery (social.instagramUrl)"
++    ],
++    "planned": [
++      { "id": "treatment-options-v2", "description": "Pick hand/foot, off (removal) and design category in the booking flow." },
++      { "id": "design-image-v2", "description": "Customer sends a reference design image with the booking request." },
++      { "id": "staff-availability", "description": "Per-nailist capacity (reservation-basic-v1 extension point)." },
++      { "id": "customer-history-v1", "description": "Past treatments per customer for repeat visits." },
++      { "id": "calendar-integration-v1", "description": "Google Calendar sync on CONFIRMED (reservation-basic-v1 google-calendar extension point)." }
++    ]
++  }
++}
+diff --git a/AI-Agent-Coconala-Factory/core-assets/rich-menu/menus/nail-salon-basic-v1.json b/AI-Agent-Coconala-Factory/core-assets/rich-menu/menus/nail-salon-basic-v1.json
+new file mode 100644
+index 0000000..16b7dcc
+--- /dev/null
++++ b/AI-Agent-Coconala-Factory/core-assets/rich-menu/menus/nail-salon-basic-v1.json
+@@ -0,0 +1,82 @@
++{
++  "kind": "rich-menu",
++  "id": "nail-salon-basic-v1",
++  "version": "1.0.0",
++  "description": "Six-button menu for nail salons on the same grid-2x3-v1 layout as salon-basic-v1: booking request first, then nail menu, inquiry, access, hours and a design gallery link.",
++  "industries": [
++    "nail_salon"
++  ],
++  "layout": "grid-2x3-v1",
++  "chatBarText": "メニュー",
++  "items": [
++    {
++      "slot": "a",
++      "label": "ご予約",
++      "subLabel": "日時を選ぶ",
++      "role": "primary",
++      "icon": "calendar",
++      "action": {
++        "type": "workflow",
++        "workflowId": "reservation-basic-v1",
++        "entry": "default"
++      }
++    },
++    {
++      "slot": "b",
++      "label": "ネイルメニュー",
++      "subLabel": "料金・所要時間",
++      "role": "secondary",
++      "icon": "list",
++      "action": {
++        "type": "workflow",
++        "workflowId": "service-menu-v1",
++        "entry": "default"
++      }
++    },
++    {
++      "slot": "c",
++      "label": "お問い合わせ",
++      "subLabel": "デザイン・オフの相談",
++      "role": "secondary",
++      "icon": "chat",
++      "action": {
++        "type": "workflow",
++        "workflowId": "inquiry-basic-v1",
++        "entry": "default"
++      }
++    },
++    {
++      "slot": "d",
++      "label": "アクセス",
++      "role": "secondary",
++      "icon": "map-pin",
++      "action": {
++        "type": "workflow",
++        "workflowId": "business-info-v1",
++        "entry": "access"
++      }
++    },
++    {
++      "slot": "e",
++      "label": "営業時間",
++      "role": "secondary",
++      "icon": "clock",
++      "action": {
++        "type": "workflow",
++        "workflowId": "business-info-v1",
++        "entry": "hours"
++      }
++    },
++    {
++      "slot": "f",
++      "label": "デザイン写真",
++      "subLabel": "Instagram",
++      "role": "secondary",
++      "icon": "camera",
++      "action": {
++        "type": "uri",
++        "configKey": "social.instagramUrl"
++      }
++    }
++  ]
++}
+diff --git a/AI-Agent-Coconala-Factory/templates/briefs/nail-salon.example.json b/AI-Agent-Coconala-Factory/templates/briefs/nail-salon.example.json
+new file mode 100644
+index 0000000..9aa548d
+--- /dev/null
++++ b/AI-Agent-Coconala-Factory/templates/briefs/nail-salon.example.json
+@@ -0,0 +1,60 @@
++{
++  "schemaVersion": 1,
++  "project": {
++    "slug": "demo-nail-salon",
++    "clientName": "Demo Nail Salon（デモ）",
++    "year": 2026,
++    "createdOn": "2026-09-26"
++  },
++  "industry": "nail_salon",
++  "businessType": "ネイリスト2名、予約制のネイルサロン（ハンド・フット）",
++  "requirements": [
++    "LINEからネイルの予約を受け付けたい",
++    "ネイルメニュー・料金を確認できるようにしたい",
++    "お問い合わせを受け付けたい",
++    "店舗のアクセス情報を確認できるようにしたい",
++    "営業時間を確認できるようにしたい"
++  ],
++  "intents": [],
++  "existingResources": [
++    "LINE Official Account",
++    "Google Spreadsheet",
++    "Instagram (design gallery)"
++  ],
++  "brand": {
++    "name": "Demo Nail Salon",
++    "preset": "quiet-luxury-v1",
++    "colors": {
++      "background": "#F8F3F1",
++      "primary": "#5A4448",
++      "onPrimary": "#FBF7F5",
++      "accent": "#A0666F",
++      "text": "#3A2E30",
++      "muted": "#6F6164",
++      "border": "#EADCD9"
++    },
++    "tone": "上品・落ち着いた・やわらかい",
++    "logoAvailable": false
++  },
++  "config": {
++    "business.name": "Demo Nail Salon",
++    "business.address": "東京都港区南青山0-0-0 デモビル3F",
++    "business.phone": "03-0000-0000",
++    "business.mapUrl": "https://example.com/map/demo-nail-salon",
++    "business.hoursText": "水〜金 11:00-20:00／土日祝 10:00-19:00（月・火曜定休）",
++    "business.accessNote": "表参道駅から徒歩5分",
++    "notification.ownerEmail": "owner@example.com",
++    "hours.mon": "closed",
++    "hours.tue": "closed",
++    "hours.wed": "11:00-20:00",
++    "hours.thu": "11:00-20:00",
++    "hours.fri": "11:00-20:00",
++    "hours.sat": "10:00-19:00",
++    "hours.sun": "10:00-19:00",
++    "reservation.slotMinutes": "30",
++    "reservation.defaultDurationMinutes": "90",
++    "reservation.capacity": "2",
++    "social.instagramUrl": "https://example.com/instagram/demo-nail-salon"
++  },
++  "overrides": {}
++}
+diff --git a/AI-Agent-Coconala-Factory/tests/nailSalon.test.ts b/AI-Agent-Coconala-Factory/tests/nailSalon.test.ts
+new file mode 100644
+index 0000000..9e4a24e
+--- /dev/null
++++ b/AI-Agent-Coconala-Factory/tests/nailSalon.test.ts
+@@ -0,0 +1,68 @@
++import path from "node:path";
++import { describe, expect, it } from "vitest";
++import { analyzeIndustry } from "../src/agents/industrySpecialist";
++import { ARTIFACTS, runPipeline } from "../src/agents/orchestrator";
++import { FACTORY_ROOT, readJson } from "../src/lib/fsx";
++import { ClientBrief, clientBrief } from "../src/schemas/brief";
++import { validateAssets } from "../src/validation/validateAssets";
++import { hairSalonBrief, realRegistry } from "./helpers";
++
++/** Fourth industry: nail_salon must come out of the same pipeline with data-only changes. */
++const nailSalonBrief = (): ClientBrief => clientBrief.parse(readJson(path.join(FACTORY_ROOT, "templates/briefs/nail-salon.example.json")));
++const intentsFor = (brief: ClientBrief, requirements: string[]) => analyzeIndustry({ ...brief, requirements }, realRegistry()).profile!.customerIntents.map((i) => i.id);
++
++describe("fourth industry: nail_salon", () => {
++  it("loads the nail-salon-v1 profile and validates it without errors", () => {
++    const registry = realRegistry();
++    expect(registry.industryFor("nail_salon")).toMatchObject({ id: "nail-salon-v1", category: "salon", recommendedRichMenu: "nail-salon-basic-v1" });
++    const issues = validateAssets(registry);
++    expect(issues.filter((i) => i.severity === "error")).toEqual([]);
++    // Also covers ASSET_UNLOCKED: both new assets must be released in asset-lock.json.
++    expect(issues.filter((i) => /nail-salon/.test(i.where ?? ""))).toEqual([]);
++  });
++
++  it("maps the Japanese brief lines to the existing intents", () => {
++    const { profile, issues } = analyzeIndustry(nailSalonBrief(), realRegistry());
++    expect(issues).toEqual([]);
++    expect(profile!.customerIntents.map((i) => [i.id, i.source])).toEqual([
++      ["book", "requirement"],
++      ["view_menu", "requirement"],
++      ["ask_question", "requirement"],
++      ["find_access", "requirement"],
++      ["check_hours", "requirement"],
++    ]);
++    expect(intentsFor(nailSalonBrief(), ["施術を予約したい"])).toEqual(["book"]);
++  });
++
++  it("maps nail words through its own aliases without leaking them into hair_salon", () => {
++    expect(intentsFor(nailSalonBrief(), ["定額デザインを見られるようにしたい"])).toEqual(["view_menu"]);
++    expect(intentsFor(hairSalonBrief(), ["定額デザインを見られるようにしたい", "問い合わせしたい"])).toEqual(["ask_question"]);
++  });
++
++  it("reuses exactly the hair_salon workflows and a menu whose buttons all target them", () => {
++    const registry = realRegistry();
++    const nail = runPipeline(nailSalonBrief(), registry, { createdOn: "2026-09-26" });
++    const hair = runPipeline(hairSalonBrief(), registry, { createdOn: "2026-09-23" });
++    expect(nail.issues.filter((i) => i.severity === "error")).toEqual([]);
++    expect(nail.plan!.selected.map((w) => w.id)).toEqual(hair.plan!.selected.map((w) => w.id));
++    expect(nail.plan!.deferred).toEqual([]);
++    expect(nail.plan!).toMatchObject({ richMenu: "nail-salon-basic-v1", designPreset: "quiet-luxury-v1" });
++
++    const selected = new Set(nail.plan!.selected.map((w) => w.id));
++    const menu = registry.menus.get("nail-salon-basic-v1")!.asset;
++    expect(menu.layout).toBe(registry.menus.get("salon-basic-v1")!.asset.layout);
++    for (const item of menu.items) {
++      if (item.action.type === "workflow") expect(selected.has(item.action.workflowId), item.label).toBe(true);
++      else expect(nailSalonBrief().config[item.action.configKey], item.label).toMatch(/^https:\/\/example\.com\//);
++    }
++  });
++
++  it("generates every standard artifact, including the rich-menu PNG", () => {
++    const result = runPipeline(nailSalonBrief(), realRegistry(), { createdOn: "2026-09-26" });
++    const generated = [...Object.keys(result.files), ...Object.keys(result.binaries), "project.json"];
++    for (const artifact of ARTIFACTS.filter((a) => !a.endsWith("/") && !a.startsWith("qa/"))) expect(generated, artifact).toContain(artifact);
++    expect(result.binaries["rich-menu/rich-menu.png"].length).toBeGreaterThan(0);
++    const schema = JSON.parse(result.files["spreadsheet/schema.json"]);
++    expect(schema.sheets.map((s: { name: string }) => s.name).sort()).toEqual(["CONFIG", "CUSTOMERS", "INQUIRIES", "RESERVATIONS", "SERVICES"]);
++  });
++});
+diff --git a/apps/coconala-portfolio/app/works/nail-salon/page.tsx b/apps/coconala-portfolio/app/works/nail-salon/page.tsx
+new file mode 100644
+index 0000000..024eb7a
+--- /dev/null
++++ b/apps/coconala-portfolio/app/works/nail-salon/page.tsx
+@@ -0,0 +1,65 @@
++import type { Metadata } from "next";
++import Image from "next/image";
++import { CaseStudySection } from "@/components/CaseStudySection";
++import { CTA } from "@/components/CTA";
++import { DemoBadge } from "@/components/ui";
++import { WorkflowDiagram } from "@/components/WorkflowDiagram";
++import { nailSalonDemo as demo } from "@/content/nail-salon";
++
++export const metadata: Metadata = {
++  title: `${demo.eyebrow} ${demo.title}`,
++  description: demo.metaDescription,
++};
++
++export default function NailSalonDemoPage() {
++  const { image } = demo.richMenu;
++  return (
++    <>
++      <section className="mx-auto max-w-5xl px-4 pb-10 pt-14 sm:px-6 sm:pt-20">
++        <DemoBadge label={demo.badge} />
++        <p className="mt-6 text-sm font-medium tracking-[0.2em] text-accent">{demo.eyebrow}</p>
++        <h1 className="mt-2 text-3xl font-bold leading-snug sm:text-5xl">
++          {demo.titleLines.map((line) => (
++            <span key={line} className="inline-block pr-[0.5em]">
++              {line}
++            </span>
++          ))}
++        </h1>
++        <p className="mt-8 max-w-2xl text-lg leading-loose">{demo.description}</p>
++        <p className="mt-4 text-xs text-muted">{demo.note}</p>
++      </section>
++
++      <CaseStudySection title={demo.richMenu.title} description={demo.richMenu.description} tone="surface">
++        <Image
++          src={image.src}
++          width={image.width}
++          height={image.height}
++          alt={image.alt}
++          sizes="(min-width: 1024px) 976px, 100vw"
++          priority
++          className="h-auto w-full rounded-lg border border-line"
++        />
++      </CaseStudySection>
++
++      <CaseStudySection title={demo.workflow.title} description={demo.workflow.note}>
++        <WorkflowDiagram steps={demo.workflow.steps} />
++      </CaseStudySection>
++
++      <CaseStudySection title={demo.menu.title} description={demo.menu.description} tone="surface">
++        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
++          {demo.menu.items.map((item) => (
++            <li key={item.name} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3 text-sm sm:text-base">
++              <span className="font-medium">{item.name}</span>
++              <span className="text-muted">
++                {item.minutes}分 ・ {item.price}
++              </span>
++            </li>
++          ))}
++        </ul>
++        <p className="mt-4 text-xs text-muted">{demo.menu.note}</p>
++      </CaseStudySection>
++
++      <CTA titleLines={demo.cta.titleLines} buttonLabel={demo.cta.buttonLabel} />
++    </>
++  );
++}
+diff --git a/apps/coconala-portfolio/content/nail-salon.ts b/apps/coconala-portfolio/content/nail-salon.ts
+new file mode 100644
+index 0000000..18baea6
+--- /dev/null
++++ b/apps/coconala-portfolio/content/nail-salon.ts
+@@ -0,0 +1,55 @@
++// Copy for /works/nail-salon: a lightweight demo, not a full case study.
++// Generated by the same Factory pipeline as the Hair Salon demo
++// (AI-Agent-Coconala-Factory/projects/2026/demo-nail-salon). All data is synthetic.
++
++export const nailSalonDemo = {
++  badge: "DEMO SAMPLE",
++  eyebrow: "Nail Salon",
++  title: "ネイルサロン向け LINE予約受付デモ",
++  titleLines: ["ネイルサロン向け", "LINE予約受付デモ"],
++  metaDescription:
++    "ネイルサロンを想定した、LINE公式アカウントのリッチメニューから予約リクエスト・お問い合わせを受け付けるデモ構成。",
++  description:
++    "ヘアサロンのデモと同じ仕組みを、ネイルサロン向けの言葉・メニュー・デザインに置き換えたデモです。予約はLINEで日時を選ぶ「予約リクエスト」として記録し、店舗側で確定します。",
++  note: "実在の店舗ではなく、ネイルサロンを想定したデモです。店舗名・料金・住所はすべて架空のものです。",
++  richMenu: {
++    title: "Rich Menu",
++    description:
++      "ご予約・ネイルメニュー・お問い合わせ・アクセス・営業時間・デザイン写真の6ボタン構成。ヘアサロンと同じレイアウトのまま、ラベルと配色だけをネイルサロン向けにしています。",
++    image: {
++      src: "/demos/nail-salon/rich-menu.png",
++      width: 2500,
++      height: 1686,
++      alt: "ネイルサロン向けリッチメニューのデモ画像（ご予約・ネイルメニュー・お問い合わせ・アクセス・営業時間・デザイン写真）",
++    },
++  },
++  workflow: {
++    title: "Workflow",
++    steps: [
++      { label: "リッチメニュー", note: "「ご予約」をタップ" },
++      { label: "日時の選択", note: "LINEの日時選択画面で希望日時を選ぶ" },
++      { label: "Google Apps Script", note: "営業時間・空き状況を確認" },
++      { label: "スプレッドシート", note: "「REQUESTED（リクエスト）」として記録" },
++      { label: "メール通知", note: "店舗へお知らせ" },
++    ],
++    note: "予約は確定ではなく「リクエスト」として記録されます。ハンド／フットやデザインの内容は、受付後にLINEでご相談いただく流れです。",
++  },
++  menu: {
++    title: "Menu（デモ用）",
++    description: "「ネイルメニュー」ボタンでは、スプレッドシートに登録したメニューをLINEで返信します。以下はデモ用の架空のメニューです。",
++    // Synthetic examples only: not real prices and not an actual salon's offering.
++    items: [
++      { name: "ワンカラー", minutes: 60, price: "5,500円" },
++      { name: "グラデーション", minutes: 75, price: "6,600円" },
++      { name: "フレンチ", minutes: 75, price: "6,600円" },
++      { name: "定額デザイン", minutes: 90, price: "7,700円" },
++      { name: "フットネイル（ワンカラー）", minutes: 75, price: "6,600円" },
++      { name: "オフのみ", minutes: 30, price: "2,200円" },
++    ],
++    note: "料金・所要時間はデモ用の架空の値です。",
++  },
++  cta: {
++    titleLines: ["同じ仕組みを、", "あなたのサロンのLINEにも。"],
++    buttonLabel: "Coconalaで相談する",
++  },
++};

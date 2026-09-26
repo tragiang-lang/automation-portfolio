@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "slug": "demo-nail-salon",
+    "clientName": "Demo Nail Salon（デモ）",
+    "year": 2026,
+    "createdOn": "2026-09-26"
+  },
+  "industry": "nail_salon",
+  "businessType": "ネイリスト2名、予約制のネイルサロン（ハンド・フット）",
+  "requirements": [
+    "LINEからネイルの予約を受け付けたい",
+    "ネイルメニュー・料金を確認できるようにしたい",
+    "お問い合わせを受け付けたい",
+    "店舗のアクセス情報を確認できるようにしたい",
+    "営業時間を確認できるようにしたい"
+  ],
+  "intents": [],
+  "existingResources": [
+    "LINE Official Account",
+    "Google Spreadsheet",
+    "Instagram (design gallery)"
+  ],
+  "brand": {
+    "name": "Demo Nail Salon",
+    "preset": "quiet-luxury-v1",
+    "colors": {
+      "background": "#F8F3F1",
+      "primary": "#5A4448",
+      "onPrimary": "#FBF7F5",
+      "accent": "#A0666F",
+      "text": "#3A2E30",
+      "muted": "#6F6164",
+      "border": "#EADCD9"
+    },
+    "tone": "上品・落ち着いた・やわらかい",
+    "logoAvailable": false
+  },
+  "config": {
+    "business.name": "Demo Nail Salon",
+    "business.address": "東京都港区南青山0-0-0 デモビル3F",
+    "business.phone": "03-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-nail-salon",
+    "business.hoursText": "水〜金 11:00-20:00／土日祝 10:00-19:00（月・火曜定休）",
+    "business.accessNote": "表参道駅から徒歩5分",
+    "notification.ownerEmail": "owner@example.com",
+    "hours.mon": "closed",
+    "hours.tue": "closed",
+    "hours.wed": "11:00-20:00",
+    "hours.thu": "11:00-20:00",
+    "hours.fri": "11:00-20:00",
+    "hours.sat": "10:00-19:00",
+    "hours.sun": "10:00-19:00",
+    "reservation.slotMinutes": "30",
+    "reservation.defaultDurationMinutes": "90",
+    "reservation.capacity": "2",
+    "social.instagramUrl": "https://example.com/instagram/demo-nail-salon"
+  },
+  "overrides": {}
+}

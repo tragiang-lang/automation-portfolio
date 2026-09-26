@@ -202,6 +202,10 @@
       "version": "1.0.0",
       "sha256": "a209248ca9c4032edde6ae950d181607ffd99afaefca0a190207c80b3adfe46b"
     },
+    "industries/salon/nail-salon-v1.json": {
+      "version": "1.0.0",
+      "sha256": "4b1306b393583d56b0a5ba22f87717ab2c77c453691657a70ac44f9ff2e89276"
+    },
     "line-webhook-proxy/proxy.json": {
       "version": "1.0.0",
       "sha256": "998476a5ffc76e830ce9f729323811a36140f9e38a0416e93b90227401b070a7"
@@ -245,6 +249,10 @@
     "rich-menu/layouts/hero-1-plus-3-v1.json": {
       "version": "1.0.0",
       "sha256": "87930cda27bbd9994b9f19cd0fa34cf1bd5895e138bedf2cb0121f0e770cac59"
+    },
+    "rich-menu/menus/nail-salon-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "452d96485100d646711fe28cc7e5cdfe294e629671d58174c304aeae78722138"
     },
     "rich-menu/menus/real-estate-basic-v1.json": {
       "version": "1.0.0",

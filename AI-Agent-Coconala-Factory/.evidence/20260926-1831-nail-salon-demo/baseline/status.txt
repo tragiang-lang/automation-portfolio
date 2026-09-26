@@ -1,0 +1,4 @@
+?? AI-Agent-Coconala-Factory/.evidence/20260923-2037-phase1.5-commit/
+?? AI-Agent-Coconala-Factory/.evidence/20260923-2200-phase1.6-commit/
+?? AI-Agent-Coconala-Factory/.evidence/20260924-2014-line-factory-v1-commit/
+?? AI-Agent-Coconala-Factory/.evidence/20260926-1831-nail-salon-demo/
