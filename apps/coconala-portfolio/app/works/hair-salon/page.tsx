@@ -5,6 +5,7 @@ import { EmailMock, RichMenuImage, SpreadsheetMock } from "@/components/DemoVisu
 import { BackToWorksLink, DemoBadge } from "@/components/ui";
 import { WorkflowDiagram } from "@/components/WorkflowDiagram";
 import { hairSalonCaseStudy as cs } from "@/content/hair-salon";
+import { LayerMarker, NextVersionSections } from "./NextVersion";
 
 export const metadata: Metadata = {
   title: `${cs.eyebrow} ${cs.title}`,
@@ -71,6 +72,8 @@ export default function HairSalonCaseStudyPage() {
         </p>
         <p className="mt-4 text-xs text-muted">{cs.overview.note}</p>
       </section>
+
+      <LayerMarker {...cs.layers.current} />
 
       <CaseStudySection title={cs.beforeAfter.title} tone="surface">
         <div className="grid gap-6 md:grid-cols-2">
@@ -145,6 +148,9 @@ export default function HairSalonCaseStudyPage() {
         </ul>
         <p className="mt-6 text-xs text-muted">{cs.technology.portfolioNote}</p>
       </CaseStudySection>
+
+      <LayerMarker {...cs.layers.next} planned />
+      <NextVersionSections />
 
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <BackToWorksLink />

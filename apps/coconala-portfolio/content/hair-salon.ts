@@ -115,6 +115,114 @@ export const hairSalonCaseStudy = {
     titleLines: ["同じ仕組みを、", "あなたのお店のLINEにも。"],
     buttonLabel: "Coconalaで相談する",
   },
+  // Page layers: everything above the NEXT VERSION marker is the built demo; everything
+  // below it is a proposal. Never describe nextVersion content as built or live.
+  layers: {
+    current: {
+      eyebrow: "CURRENT DEMO",
+      title: "現在のデモ構成",
+      note: "ここから下は、制作済みのデモ構成の内容です。",
+    },
+    next: {
+      eyebrow: "NEXT VERSION",
+      title: "次期構成（構成イメージ）",
+      note: "ここから下は今後実装予定の拡張イメージです。現在のデモには含まれていません。",
+    },
+  },
+  nextVersion: {
+    badge: "構成イメージ・今後実装予定",
+    title: "次のステップ — LIFF + Google Calendar",
+    description:
+      "現在のLINE自動化を、LIFFとGoogle Calendarを組み合わせた予約・問い合わせ体験へ拡張できます。",
+    summaries: [
+      { label: "予約", chain: ["LIFF予約", "Google Calendar", "予約確定", "LINE通知"] },
+      { label: "お問い合わせ", chain: ["LIFFフォーム", "GAS", "オーナー通知"] },
+      { label: "メニュー", chain: ["LIFFメニュー", "サービス確認", "予約へ"] },
+      { label: "情報案内", chain: ["営業時間 / アクセス", "LINEで即時回答"] },
+      { label: "リマインド", chain: ["予約確定", "前日", "LINE自動リマインド"] },
+    ],
+    richMenu: {
+      title: "リッチメニューの役割分担（次期構成）",
+      description:
+        "入力が必要なボタンはLIFF画面、すぐに答えられる情報はLINEの返信、という分担を想定しています。",
+      currentLabel: "現在のデモ",
+      buttons: [
+        { label: "ご予約", kind: "LIFF", next: "LIFFの予約画面を開く", current: "LINEの日時選択画面" },
+        { label: "メニュー", kind: "LIFF", next: "LIFFのメニュー・サービスページを開く", current: "LINEで返信" },
+        { label: "お問い合わせ", kind: "LIFF", next: "LIFFのお問い合わせフォームを開く", current: "メッセージで受付" },
+        { label: "アクセス", kind: "LINE返信", next: "LINEで直接返信", current: "LINEで返信" },
+        { label: "営業時間", kind: "LINE返信", next: "LINEで直接返信", current: "LINEで返信" },
+        { label: "スタイル写真", kind: "外部URL", next: "外部ページを開く", current: "外部ページを開く" },
+      ],
+    },
+    flowsTitle: "フローの構成イメージ",
+    reservation: {
+      title: "予約フロー",
+      steps: [
+        { label: "LINEリッチメニュー", systems: ["LINE"], note: "「ご予約」をタップ" },
+        { label: "LIFF予約画面", systems: ["LIFF"], note: "LINEの中で予約画面を開く" },
+        { label: "空き時間の表示", systems: ["LIFF", "Google Calendar"], note: "カレンダーをもとに空いている枠だけを表示" },
+        { label: "空き状況の再確認", systems: ["GAS"], note: "送信時にサーバー側でもう一度確認" },
+        { label: "重複チェック", systems: ["Google Calendar"], note: "同じ時間に予定がないか確認" },
+        { label: "予約の作成", systems: ["Google Calendar", "Google Sheets"], note: "カレンダーに登録し、シートにも記録" },
+        { label: "お客様へ確定のお知らせ", systems: ["LINE"], note: "予約内容をLINEでお知らせ" },
+        { label: "オーナーへ通知", systems: ["GAS"], note: "新しい予約を店舗へお知らせ" },
+      ],
+      dataRoles: [
+        { system: "Google Calendar", role: "埋まっている時間枠の基準（正）。空き枠の表示と重複チェックはカレンダーで判断します。" },
+        { system: "Google Sheets", role: "予約・お客様の記録とステータスを管理。これまで通りスプレッドシートで一覧できます。" },
+      ],
+      note: "現在のデモは「予約リクエスト → 店舗確認後に確定」の流れです。次期構成では、空き枠を確認したうえで、その場で予約を作成する形を想定しています。",
+    },
+    otherFlows: [
+      {
+        title: "お問い合わせフロー",
+        steps: [
+          { label: "LINEリッチメニュー", systems: ["LINE"], note: "「お問い合わせ」をタップ" },
+          { label: "LIFFお問い合わせフォーム", systems: ["LIFF"], note: "項目に沿って入力" },
+          { label: "内容を保存", systems: ["GAS", "Google Sheets"], note: "お問い合わせ一覧に記録" },
+          { label: "オーナーへ通知", systems: ["GAS"], note: "店舗へお知らせ" },
+          { label: "受付のお知らせ", systems: ["LINE"], note: "お客様へ受付完了をLINEで" },
+        ],
+        note: "自由なチャットではなく、項目（ご用件・ご希望の日時など）が決まった入力フォームを想定しています。",
+      },
+      {
+        title: "メニューフロー",
+        steps: [
+          { label: "LINEリッチメニュー", systems: ["LINE"], note: "「メニュー」をタップ" },
+          { label: "LIFFメニューページ", systems: ["LIFF"], note: "LINEの中でページを開く" },
+          { label: "サービスの確認", systems: ["LIFF"], note: "メニュー名・所要時間・料金" },
+          { label: "「予約する」ボタン（任意）", systems: ["LIFF"], note: "予約画面へ進む" },
+        ],
+        note: "メニューを見たあと、そのまま予約画面へ進める導線を想定しています。",
+      },
+      {
+        title: "情報案内（営業時間・アクセス）",
+        steps: [
+          { label: "「営業時間」「アクセス」をタップ", systems: ["LINE"], note: "リッチメニューから" },
+          { label: "LINEで返信", systems: ["LINE"], note: "画面を開かずトーク内で回答" },
+        ],
+        note: "かんたんな情報はLIFFを使わず、LINEの返信で十分です（現在のデモと同じ仕組み）。",
+      },
+      {
+        title: "リマインド",
+        steps: [
+          { label: "予約確定", systems: ["Google Sheets"], note: "確定済みの予約" },
+          { label: "定期実行", systems: ["GAS"], note: "決まった間隔で予約を確認" },
+          { label: "近づいた予約を検出", systems: ["GAS"], note: "例：予約の24時間前" },
+          { label: "LINEでリマインド", systems: ["LINE"], note: "お客様へ前日のお知らせ" },
+          { label: "送信日時を記録", systems: ["Google Sheets"], note: "二重送信を防ぐ" },
+        ],
+        note: "例として「前日（24時間前）」のリマインドを想定しています。",
+      },
+    ],
+    technology: {
+      title: "次期構成で想定する技術",
+      items: ["LINE Official Account", "LIFF", "Google Apps Script", "Google Calendar", "Google Sheets"],
+    },
+    disclaimer:
+      "このセクションは次期構成の構成イメージです。LIFF画面・Google Calendarとの連携・リマインドは今後実装予定で、現在のデモには含まれていません。",
+  },
 };
 
 // Synthetic rows for the spreadsheet mock. Never put real customer data here.
