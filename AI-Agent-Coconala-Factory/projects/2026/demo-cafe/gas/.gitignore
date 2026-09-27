@@ -1,0 +1,6 @@
+node_modules/
+build/
+# real Apps Script project id, per environment
+.clasp.json
+.clasprc.json
+.env

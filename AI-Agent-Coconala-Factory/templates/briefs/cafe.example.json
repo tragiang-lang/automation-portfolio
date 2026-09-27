@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "slug": "demo-cafe",
+    "clientName": "Demo Cafe（デモ）",
+    "year": 2026,
+    "createdOn": "2026-09-27"
+  },
+  "industry": "restaurant",
+  "businessType": "Cafe",
+  "requirements": [
+    "席の予約ができる",
+    "メニューが見られる",
+    "営業時間とアクセスがわかる",
+    "問い合わせができる"
+  ],
+  "existingResources": [
+    "LINE Official Account",
+    "Google Spreadsheet"
+  ],
+  "brand": {
+    "name": "Demo Cafe",
+    "preset": "warm-natural-v1"
+  },
+  "config": {
+    "business.name": "Demo Cafe",
+    "business.address": "東京都渋谷区0-0-0",
+    "business.phone": "03-0000-0000",
+    "business.mapUrl": "https://example.com/map/demo-cafe",
+    "business.hoursText": "9:00-19:00（火曜定休）",
+    "notification.ownerEmail": "owner@example.com",
+    "hours.mon": "09:00-19:00",
+    "hours.tue": "closed",
+    "hours.wed": "09:00-19:00",
+    "hours.thu": "09:00-19:00",
+    "hours.fri": "09:00-19:00",
+    "hours.sat": "09:00-19:00",
+    "hours.sun": "09:00-19:00",
+    "reservation.slotMinutes": "30",
+    "reservation.defaultDurationMinutes": "90",
+    "reservation.capacity": "4",
+    "reservation.minLeadHours": "2",
+    "labels.serviceList": "メニュー"
+  },
+  "overrides": {
+    "richMenu": "cafe-basic-v1"
+  }
+}

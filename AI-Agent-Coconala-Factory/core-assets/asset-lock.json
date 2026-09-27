@@ -254,6 +254,10 @@
       "version": "1.0.0",
       "sha256": "87930cda27bbd9994b9f19cd0fa34cf1bd5895e138bedf2cb0121f0e770cac59"
     },
+    "rich-menu/menus/cafe-basic-v1.json": {
+      "version": "1.0.0",
+      "sha256": "715face4ce226eead5fe9072ec3d2ee1bf0983c8d60e504ac926bb3a3cc3045c"
+    },
     "rich-menu/menus/nail-salon-basic-v1.json": {
       "version": "1.0.0",
       "sha256": "452d96485100d646711fe28cc7e5cdfe294e629671d58174c304aeae78722138"

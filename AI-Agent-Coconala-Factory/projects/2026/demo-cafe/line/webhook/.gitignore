@@ -1,0 +1,5 @@
+node_modules/
+.wrangler/
+# local secrets and the real config
+.dev.vars
+wrangler.toml

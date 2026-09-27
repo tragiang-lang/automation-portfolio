@@ -1,0 +1,195 @@
+{
+  "_meta": {
+    "artifact": "rich-menu/design-spec.json",
+    "generatedBy": "design-agent",
+    "factoryVersion": "0.1.0",
+    "project": "2026/demo-cafe",
+    "industry": "restaurant",
+    "workflows": [
+      "reservation-basic-v1@1.0.0",
+      "service-menu-v1@1.0.0",
+      "business-info-v1@1.0.0",
+      "inquiry-basic-v1@1.0.0"
+    ],
+    "assets": {
+      "business-info-v1": "1.0.0",
+      "cafe-basic-v1": "1.0.0",
+      "core-config-v1": "1.0.0",
+      "createInquiry@1": "1.0.0",
+      "createReservation@1": "1.0.0",
+      "customer-intents-v1": "1.0.0",
+      "customers-basic-v1": "1.0.0",
+      "gas-modules-v1": "1.1.0",
+      "getAvailability@1": "1.0.0",
+      "getBusinessInfo@1": "1.0.0",
+      "getServiceList@1": "1.0.0",
+      "grid-2x2-v1": "1.0.0",
+      "inquiries-basic-v1": "1.0.0",
+      "inquiry-basic-v1": "1.0.0",
+      "line-webhook-proxy-v1": "1.0.0",
+      "reservation-basic-v1": "1.0.0",
+      "reservations-basic-v1": "1.0.0",
+      "restaurant-v1": "1.0.0",
+      "service-menu-v1": "1.0.0",
+      "services-basic-v1": "1.0.0",
+      "warm-natural-v1": "1.0.0"
+    }
+  },
+  "canvas": {
+    "width": 2500,
+    "height": 1686
+  },
+  "layout": "grid-2x2-v1",
+  "richMenu": "cafe-basic-v1",
+  "preset": "warm-natural-v1",
+  "brand": {
+    "name": "Demo Cafe"
+  },
+  "colorTokens": {
+    "background": "#F4EFE6",
+    "surface": "#FFFDF8",
+    "primary": "#4F5E43",
+    "onPrimary": "#FFFFFF",
+    "accent": "#B7793E",
+    "text": "#3A3129",
+    "muted": "#6E6257",
+    "border": "#E4DACB"
+  },
+  "typography": {
+    "direction": "Rounded sans (M PLUS Rounded / Zen Maru Gothic) for labels",
+    "headingStyle": "rounded sans, medium weight",
+    "labelWeight": "medium",
+    "minLabelPx": 64
+  },
+  "spacing": {
+    "gutterPx": 16,
+    "tilePaddingPx": 44,
+    "cornerRadiusPx": 32
+  },
+  "visualHierarchy": "Primary tile sage green; secondary tiles cream with soft shadow.",
+  "ctaHierarchy": [
+    "ご予約",
+    "メニュー",
+    "営業時間・アクセス",
+    "お問い合わせ"
+  ],
+  "cells": [
+    {
+      "slot": "a",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1250,
+        "height": 843
+      },
+      "label": "ご予約",
+      "subLabel": "日時を選んで予約",
+      "role": "primary",
+      "ctaRank": 1,
+      "emphasis": "normal",
+      "icon": {
+        "name": "calendar",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#4F5E43",
+      "labelColor": "#FFFFFF",
+      "contrastRatio": 6.97,
+      "subLabelColor": "#FFFFFF",
+      "iconColor": "#FFFFFF",
+      "borderColor": "#4F5E43"
+    },
+    {
+      "slot": "b",
+      "bounds": {
+        "x": 1250,
+        "y": 0,
+        "width": 1250,
+        "height": 843
+      },
+      "label": "メニュー",
+      "role": "secondary",
+      "ctaRank": 2,
+      "emphasis": "normal",
+      "icon": {
+        "name": "list",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#FFFDF8",
+      "labelColor": "#3A3129",
+      "contrastRatio": 12.51,
+      "subLabelColor": "#6E6257",
+      "iconColor": "#B7793E",
+      "borderColor": "#E4DACB"
+    },
+    {
+      "slot": "c",
+      "bounds": {
+        "x": 0,
+        "y": 843,
+        "width": 1250,
+        "height": 843
+      },
+      "label": "営業時間・アクセス",
+      "role": "secondary",
+      "ctaRank": 3,
+      "emphasis": "normal",
+      "icon": {
+        "name": "clock",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#FFFDF8",
+      "labelColor": "#3A3129",
+      "contrastRatio": 12.51,
+      "subLabelColor": "#6E6257",
+      "iconColor": "#B7793E",
+      "borderColor": "#E4DACB"
+    },
+    {
+      "slot": "d",
+      "bounds": {
+        "x": 1250,
+        "y": 843,
+        "width": 1250,
+        "height": 843
+      },
+      "label": "お問い合わせ",
+      "role": "secondary",
+      "ctaRank": 4,
+      "emphasis": "normal",
+      "icon": {
+        "name": "chat",
+        "style": "hand-drawn feel outline icons"
+      },
+      "fill": "#FFFDF8",
+      "labelColor": "#3A3129",
+      "contrastRatio": 12.51,
+      "subLabelColor": "#6E6257",
+      "iconColor": "#B7793E",
+      "borderColor": "#E4DACB"
+    }
+  ],
+  "iconRequirements": [
+    "calendar icon, hand-drawn feel outline icons, at least 160px, readable at phone size",
+    "list icon, hand-drawn feel outline icons, at least 160px, readable at phone size",
+    "clock icon, hand-drawn feel outline icons, at least 160px, readable at phone size",
+    "chat icon, hand-drawn feel outline icons, at least 160px, readable at phone size"
+  ],
+  "assetRequirements": [
+    "One 2500x1686px image containing every button (LINE uses one image per rich menu)",
+    "No logo supplied. Use the business name as text",
+    "Imagery: optional botanical line illustration in the hero tile"
+  ],
+  "exportRequirements": {
+    "format": "PNG or JPEG",
+    "maxBytes": 1048576,
+    "width": 2500,
+    "height": 1686
+  },
+  "designNotes": [
+    "Buttons are tapped on phones: keep labels at least 64px on the 2500px canvas.",
+    "Button areas are fixed by the layout bounds below. Draw each label inside its own cell so the tap area matches what the customer sees.",
+    "Button style: soft rounded tiles.",
+    "Industry: 飲食店 / Restaurant. Terminology: service=お料理・コース, reservation=席のご予約, inquiry=お問い合わせ, capacity=同じ時間帯に受けられる組数.",
+    "Colors are the Warm natural preset defaults."
+  ]
+}

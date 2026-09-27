@@ -1,0 +1,59 @@
+{
+  "kind": "rich-menu",
+  "id": "cafe-basic-v1",
+  "version": "1.0.0",
+  "description": "Four equal buttons for cafes: booking, menu, hours and inquiry on the grid-2x2 layout.",
+  "industries": [
+    "restaurant",
+    "cafe"
+  ],
+  "layout": "grid-2x2-v1",
+  "chatBarText": "メニューを開く",
+  "items": [
+    {
+      "slot": "a",
+      "label": "ご予約",
+      "subLabel": "日時を選んで予約",
+      "role": "primary",
+      "icon": "calendar",
+      "action": {
+        "type": "workflow",
+        "workflowId": "reservation-basic-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "b",
+      "label": "メニュー",
+      "role": "secondary",
+      "icon": "list",
+      "action": {
+        "type": "workflow",
+        "workflowId": "service-menu-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "c",
+      "label": "営業時間・アクセス",
+      "role": "secondary",
+      "icon": "clock",
+      "action": {
+        "type": "workflow",
+        "workflowId": "business-info-v1",
+        "entry": "default"
+      }
+    },
+    {
+      "slot": "d",
+      "label": "お問い合わせ",
+      "role": "secondary",
+      "icon": "chat",
+      "action": {
+        "type": "workflow",
+        "workflowId": "inquiry-basic-v1",
+        "entry": "default"
+      }
+    }
+  ]
+}
