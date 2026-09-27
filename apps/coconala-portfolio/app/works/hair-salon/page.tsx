@@ -81,10 +81,48 @@ export default function HairSalonCaseStudyPage() {
 
       <CaseStudySection title={cs.richMenu.title} description={cs.richMenu.description}>
         <RichMenuImage sizes="(min-width: 1024px) 976px, 100vw" priority />
+        {/* Same order as the image: top row left to right, then bottom row. */}
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+          {cs.richMenu.buttons.map((button) => {
+            const automated = button.group === "automation";
+            return (
+              <li
+                key={button.label}
+                className={`rounded-xl border p-4 ${automated ? "border-accent bg-accent-soft" : "border-line bg-surface"}`}
+              >
+                <p className={`text-xs font-medium ${automated ? "text-accent" : "text-muted"}`}>
+                  {automated ? cs.richMenu.groups.automation : cs.richMenu.groups.info}
+                </p>
+                <p className="mt-1 font-bold">{button.label}</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted">{button.summary}</p>
+              </li>
+            );
+          })}
+        </ul>
       </CaseStudySection>
 
-      <CaseStudySection title={cs.workflow.title} description={cs.workflow.note} tone="surface">
-        <WorkflowDiagram steps={cs.workflow.steps} />
+      <CaseStudySection title={cs.automation.title} description={cs.automation.description} tone="surface">
+        <div className="flex flex-col gap-12">
+          {cs.automation.flows.map((flow) => (
+            <div key={flow.title}>
+              <h3 className="mb-4 text-lg font-bold sm:text-xl">{flow.title}</h3>
+              <WorkflowDiagram steps={flow.steps} />
+              <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted">{flow.note}</p>
+            </div>
+          ))}
+        </div>
+      </CaseStudySection>
+
+      <CaseStudySection title={cs.otherButtons.title} description={cs.otherButtons.description}>
+        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+          {cs.otherButtons.items.map((item) => (
+            <li key={item.name} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3 text-sm sm:text-base">
+              <span className="font-medium">{item.name}</span>
+              <span className="text-muted">{item.detail}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-xs text-muted">{cs.otherButtons.note}</p>
       </CaseStudySection>
 
       <CaseStudySection title={cs.spreadsheet.title} description={cs.spreadsheet.description}>

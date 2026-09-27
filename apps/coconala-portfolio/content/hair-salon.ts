@@ -30,27 +30,71 @@ export const hairSalonCaseStudy = {
       summary: "受付の入口をLINEにまとめ、記録と通知は自動。",
     },
   },
+  // Buttons mirror projects/2026/demo-hair-salon/rich-menu/menu-config.json (2x3 grid,
+  // top-left to bottom-right); behavior mirrors workflow/workflow.json. Static copy only.
   richMenu: {
-    title: "Rich Menu",
+    title: "Rich Menu 全体構成",
     description:
-      "ご予約・メニュー・お問い合わせ・アクセス・営業時間・スタイル写真の6ボタン構成。「ご予約」はLINEの日時選択、「メニュー」「アクセス」「営業時間」はスプレッドシートの情報を自動で返信、「お問い合わせ」はメッセージで受け付けます。",
+      "リッチメニューは6つのボタンで構成しています。受付の仕事を自動化する「予約・お問い合わせ」と、お店の情報をご案内する「情報・案内」のボタンを、ひとつのメニューにまとめました。",
     image: {
       src: "/demos/hair-salon/rich-menu.png",
       width: 2500,
       height: 1686,
       alt: "ヘアサロン向けリッチメニューのデモ画像（ご予約・メニュー・お問い合わせ・アクセス・営業時間・スタイル写真）",
     },
-  },
-  workflow: {
-    title: "Workflow",
-    steps: [
-      { label: "リッチメニュー", note: "「ご予約」をタップ" },
-      { label: "日時の選択", note: "LINEの日時選択画面で希望日時を選ぶ" },
-      { label: "Google Apps Script", note: "営業時間・空き状況を確認" },
-      { label: "スプレッドシート", note: "「REQUESTED（リクエスト）」として記録" },
-      { label: "メール通知", note: "店舗へお知らせ" },
+    groups: {
+      automation: "予約・お問い合わせ",
+      info: "情報・案内",
+    },
+    buttons: [
+      { label: "ご予約", group: "automation", summary: "LINEの日時選択画面から予約リクエストを送れます" },
+      { label: "メニュー", group: "info", summary: "メニュー・所要時間・料金をLINEで返信します" },
+      { label: "お問い合わせ", group: "automation", summary: "メッセージでお問い合わせを受け付けます" },
+      { label: "アクセス", group: "info", summary: "住所・地図などのアクセス情報を返信します" },
+      { label: "営業時間", group: "info", summary: "営業時間を返信します" },
+      { label: "スタイル写真", group: "info", summary: "スタイル写真を載せたページを開きます" },
     ],
-    note: "予約は「リクエスト」として記録され、お客様のLINEには受付メッセージが自動で届きます。店舗側でスプレッドシートを確認し、ステータスを「CONFIRMED（確定）」に変更する流れです。お問い合わせも同じように、LINEで届いたメッセージを記録してメールでお知らせします。",
+  },
+  automation: {
+    title: "予約・お問い合わせの自動化",
+    description:
+      "リッチメニューのうち「ご予約」と「お問い合わせ」の2つは、受付・記録・店舗へのお知らせまでを自動で行います。",
+    flows: [
+      {
+        title: "ご予約",
+        steps: [
+          { label: "LINEリッチメニュー", note: "「ご予約」をタップ" },
+          { label: "日時の選択", note: "LINEの日時選択画面で希望日時を選ぶ" },
+          { label: "Google Apps Script", note: "営業時間・休業日・受付枠・既存の予約を確認" },
+          { label: "スプレッドシート", note: "「REQUESTED（リクエスト）」として記録" },
+          { label: "メール通知", note: "店舗へお知らせ" },
+        ],
+        note: "予約は自動確定ではなく、店舗確認後に確定します。お客様のLINEには「ご予約リクエストを受け付けました」という予約番号つきのメッセージが自動で届きます。店舗側でスプレッドシートのステータスを「CONFIRMED（確定）」に変更する流れです。",
+      },
+      {
+        title: "お問い合わせ",
+        steps: [
+          { label: "LINEリッチメニュー", note: "「お問い合わせ」をタップ" },
+          { label: "メッセージ入力", note: "案内に沿って、内容をトークで送信" },
+          { label: "Google Apps Script", note: "送られたメッセージを受け付け" },
+          { label: "スプレッドシート", note: "お問い合わせ一覧に記録" },
+          { label: "メール通知", note: "店舗へお知らせ" },
+        ],
+        note: "ボタンを押すと、お問い合わせ内容をメッセージで送るよう案内が届きます（10分以内に送られた内容を受け付けます）。お客様のLINEには受付番号つきの受付メッセージが自動で届き、内容へのご返信は店舗から行います。",
+      },
+    ],
+  },
+  otherButtons: {
+    title: "その他のボタン",
+    description:
+      "残りの4つは、お店の情報をご案内するボタンです。予約や受付の処理は行わず、お客様が知りたい情報にすぐたどり着けるようにしています。",
+    items: [
+      { name: "メニュー", detail: "スプレッドシートに登録したメニューの名前・所要時間・料金を、LINEで自動返信" },
+      { name: "アクセス", detail: "住所・アクセス案内・地図・電話番号を、LINEで自動返信" },
+      { name: "営業時間", detail: "営業時間と電話番号を、LINEで自動返信" },
+      { name: "スタイル写真", detail: "スタイル写真を載せたページ（Instagramなど）を開くリンク" },
+    ],
+    note: "メニュー・アクセス・営業時間の内容は、スプレッドシートを書き換えるだけで更新できます。スタイル写真のリンク先は、デモではサンプルのURLです。",
   },
   spreadsheet: {
     title: "Spreadsheet",
@@ -59,7 +103,8 @@ export const hairSalonCaseStudy = {
   },
   email: {
     title: "Email Notification",
-    description: "新しい予約リクエストが入ると、指定のメールアドレスへお知らせが届きます。",
+    description:
+      "新しい予約リクエストやお問い合わせが入ると、指定のメールアドレスへお知らせが届きます（画面は予約リクエストの例）。",
   },
   technology: {
     title: "Technology",
